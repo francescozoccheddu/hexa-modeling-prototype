@@ -1,0 +1,9 @@
+# Visual Studio
+.vs/
+CMakePresets.json
+
+# Visual Studio Code
+.vscode/
+
+# CMake output
+out/
