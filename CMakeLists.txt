@@ -20,4 +20,5 @@ add_compile_definitions (CINOLIB_DIR="${cinolib_DIR}") # TODO Remove
 find_package (cinolib REQUIRED)
 
 # Add subprojects
+add_subdirectory ("core")
 add_subdirectory ("gui")
