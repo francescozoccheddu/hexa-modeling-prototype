@@ -3,6 +3,7 @@
 project ("hexa-modeling-prototype")
 
 # Setup cinolib
+set (CINOLIB_HEADER_ONLY OFF)
 set (CINOLIB_USES_OPENGL_GLFW_IMGUI ON)
 set (cinolib_DIR "${CMAKE_CURRENT_LIST_DIR}/external/cinolib")
 find_package (cinolib REQUIRED)

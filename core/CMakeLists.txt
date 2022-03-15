@@ -30,7 +30,7 @@ set_target_properties (core PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 
-if (MSVC)
+if (MSVC AND CINOLIB_HEADER_ONLY)
     target_compile_options (core PRIVATE /bigobj)
 endif()
 

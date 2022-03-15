@@ -9,15 +9,7 @@
 
 void poly_vert_ordering(const std::vector<cinolib::vec3d>& vertices, std::vector<unsigned int>& poly);
 void find_matching_parentheses(std::string& s, std::string symbol, std::unordered_map<unsigned int, unsigned int>& dic);
-template<typename T>
-void print(const T& container)
-{
-	for (const auto& el : container)
-	{
-		std::cout << el << ", ";
-	}
-	std::cout << std::endl;
-}
+
 
 struct vert_compare
 {
