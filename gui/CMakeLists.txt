@@ -5,7 +5,7 @@ add_executable (gui
 )
 
 set_target_properties (gui PROPERTIES
-    CXX_STANDARD 17
+    CXX_STANDARD 20
     CXX_EXTENSIONS OFF
     CXX_STANDARD_REQUIRED ON
 )
