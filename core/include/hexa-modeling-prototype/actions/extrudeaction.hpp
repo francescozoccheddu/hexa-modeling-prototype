@@ -5,20 +5,25 @@
 #include <hexa-modeling-prototype/grid.hpp>
 #include <hexa-modeling-prototype/undoredo.hpp>
 
-class Grid;
-class ExtrudeAction : public Action
+namespace HMP
 {
-public:
-	ExtrudeAction(Grid& grid, unsigned int pid, unsigned int face_offset);
 
-	void execute() override;
-	void undo() override;
+	class Grid;
+	class ExtrudeAction : public Action
+	{
+	public:
+		ExtrudeAction(Grid& grid, unsigned int pid, unsigned int face_offset);
 
-private:
+		void execute() override;
+		void undo() override;
 
-	Grid& grid;
-	unsigned int pid;
-	unsigned int face_offset;
-	std::vector<unsigned int> id;
-	std::shared_ptr<Operation> op;
-};
+	private:
+
+		Grid& grid;
+		unsigned int pid;
+		unsigned int face_offset;
+		std::vector<unsigned int> id;
+		std::shared_ptr<Operation> op;
+	};
+
+}

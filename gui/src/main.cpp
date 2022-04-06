@@ -11,9 +11,9 @@
 
 int main()
 {
-	Grid grid;
+	HMP::Grid grid;
 	cinolib::GLcanvas gui;
-	cinolib::VolumeMeshControls<MeshGrid> menu{ &grid.mesh, &gui, "Grid mesh" };
+	cinolib::VolumeMeshControls<HMP::MeshGrid> menu{ &grid.mesh, &gui, "Grid mesh" };
 	gui.push(&grid.mesh);
 	gui.push(&menu);
 

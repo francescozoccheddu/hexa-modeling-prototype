@@ -6,20 +6,25 @@
 #include <hexa-modeling-prototype/grid.hpp>
 #include <hexa-modeling-prototype/undoredo.hpp>
 
-class Grid;
-class MoveAction : public Action
+namespace HMP
 {
-public:
-	MoveAction(Grid& grid, unsigned int vid, cinolib::vec3d displacement);
 
-	void execute() override;
-	void undo() override;
+	class Grid;
+	class MoveAction : public Action
+	{
+	public:
+		MoveAction(Grid& grid, unsigned int vid, cinolib::vec3d displacement);
 
-private:
+		void execute() override;
+		void undo() override;
 
-	Grid& grid;
-	unsigned int vid;
-	cinolib::vec3d displacement;
-	std::vector<std::shared_ptr<Element>> elements;
-	std::vector<unsigned int> offsets;
-};
+	private:
+
+		Grid& grid;
+		unsigned int vid;
+		cinolib::vec3d displacement;
+		std::vector<std::shared_ptr<Element>> elements;
+		std::vector<unsigned int> offsets;
+	};
+
+}

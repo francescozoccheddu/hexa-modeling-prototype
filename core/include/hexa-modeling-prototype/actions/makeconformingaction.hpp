@@ -6,19 +6,24 @@
 #include <hexa-modeling-prototype/grid.hpp>
 #include <hexa-modeling-prototype/undoredo.hpp>
 
-class Grid;
-class MakeConformingAction : public Action
+namespace HMP
 {
-public:
-	MakeConformingAction(Grid& grid);
 
-	void execute() override;
-	void undo() override;
+	class Grid;
+	class MakeConformingAction : public Action
+	{
+	public:
+		MakeConformingAction(Grid& grid);
 
-private:
+		void execute() override;
+		void undo() override;
 
-	Grid& grid;
-	std::vector<std::pair<std::vector<unsigned int>, bool>> polys_to_revert;
-	std::vector<std::vector<unsigned int>> ids;
-	std::deque<std::shared_ptr<Refine>> queue_to_revert;
-};
+	private:
+
+		Grid& grid;
+		std::vector<std::pair<std::vector<unsigned int>, bool>> polys_to_revert;
+		std::vector<std::vector<unsigned int>> ids;
+		std::deque<std::shared_ptr<Refine>> queue_to_revert;
+	};
+
+}

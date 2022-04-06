@@ -5,19 +5,24 @@
 #include <hexa-modeling-prototype/grid.hpp>
 #include <hexa-modeling-prototype/undoredo.hpp>
 
-class Grid;
-class RefineAction : public Action
+namespace HMP
 {
-public:
-	RefineAction(Grid& grid, unsigned int pid);
 
-	void execute() override;
-	void undo() override;
+	class Grid;
+	class RefineAction : public Action
+	{
+	public:
+		RefineAction(Grid& grid, unsigned int pid);
 
-private:
+		void execute() override;
+		void undo() override;
 
-	Grid& grid;
-	unsigned int pid;
-	std::vector<unsigned int> vids;
-	std::shared_ptr<Operation> op;
-};
+	private:
+
+		Grid& grid;
+		unsigned int pid;
+		std::vector<unsigned int> vids;
+		std::shared_ptr<Operation> op;
+	};
+
+}
