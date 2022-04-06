@@ -8,6 +8,7 @@ namespace HMP
 {
 
 	constexpr double pi = 3.14159265358979323846;
+	constexpr double cubeSize = 0.5;
 
 	Grid::Grid() : command_manager(CommandManager::get_instance())
 	{
@@ -21,8 +22,8 @@ namespace HMP
 
 		op_tree.clear();
 		id2element().clear();
-		std::vector<cinolib::vec3d> init_cube_coords = { cinolib::vec3d(-0.5,-0.5,-0.5), cinolib::vec3d(-0.5,-0.5, 0.5), cinolib::vec3d(0.5,-0.5,0.5), cinolib::vec3d(0.5,-0.5,-0.5),
-														cinolib::vec3d(-0.5,0.5,-0.5), cinolib::vec3d(-0.5,0.5, 0.5), cinolib::vec3d(0.5,0.5,0.5), cinolib::vec3d(0.5,0.5,-0.5) };
+		std::vector<cinolib::vec3d> init_cube_coords = { cinolib::vec3d(-cubeSize,-cubeSize,-cubeSize), cinolib::vec3d(-cubeSize,-cubeSize, cubeSize), cinolib::vec3d(cubeSize,-cubeSize,cubeSize), cinolib::vec3d(cubeSize,-cubeSize,-cubeSize),
+														cinolib::vec3d(-cubeSize,cubeSize,-cubeSize), cinolib::vec3d(-cubeSize,cubeSize, cubeSize), cinolib::vec3d(cubeSize,cubeSize,cubeSize), cinolib::vec3d(cubeSize,cubeSize,-cubeSize) };
 		std::vector<std::vector<unsigned int>> init_cube_polys = { {0,1,2,3,4,5,6,7} };
 		poly_vert_ordering(init_cube_coords, init_cube_polys[0]);
 

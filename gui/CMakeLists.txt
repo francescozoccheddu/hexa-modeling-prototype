@@ -2,6 +2,9 @@
 
 add_executable (gui 
     "src/main.cpp" 
+    "src/dag/Viewer.cpp"
+    "src/dag/Layout.cpp"
+    "src/dag/treeLayout.cpp"
 )
 
 set_target_properties (gui PROPERTIES

@@ -9,41 +9,75 @@
 #include <cinolib/gl/file_dialog_open.h>
 #include <cinolib/gl/file_dialog_save.h>
 
+struct
+{
+	cinolib::vec2d position{};
+	unsigned int pid{ 0 };
+	bool pointing{ false };
+} mouse;
+
+struct
+{
+	unsigned int vid{};
+	bool pending{ false };
+} moveOp;
+
+struct
+{
+	unsigned int pid{};
+	bool pending{ false };
+} copyOp;
+
+struct
+{
+	cinolib::DrawableTrimesh<>* p_mesh{ nullptr };
+	std::string filename{};
+} target;
+
+HMP::Grid grid{};
+cinolib::GLcanvas gui{};
+
+void updateMouse(cinolib::vec2d _screen)
+{
+	mouse.position = _screen;
+	unsigned int pid{};
+	cinolib::vec3d world;
+	bool pointing = gui.unproject(mouse.position, world);
+	if (pointing)
+	{
+		pid = grid.mesh.pick_poly(world);
+	}
+	if (pointing != mouse.pointing || (pointing && pid != mouse.pid))
+	{
+		if (mouse.pointing && mouse.pid < grid.mesh.num_polys())
+		{
+			grid.mesh.poly_data(mouse.pid).color = cinolib::Color::WHITE();
+		}
+		if (pointing)
+		{
+			grid.mesh.poly_data(pid).color = cinolib::Color::YELLOW();
+		}
+		grid.mesh.updateGL();
+	}
+	mouse.pid = pid;
+	mouse.pointing = pointing;
+}
+
+void refit(bool keepModel = true)
+{
+	gui.refit_scene(keepModel);
+	updateMouse(mouse.position);
+}
+
 int main()
 {
-	HMP::Grid grid;
-	cinolib::GLcanvas gui;
 	cinolib::VolumeMeshControls<HMP::MeshGrid> menu{ &grid.mesh, &gui, "Grid mesh" };
 	gui.push(&grid.mesh);
 	gui.push(&menu);
 
-	struct
-	{
-		cinolib::vec2d pos{};
-		bool pressed{ false };
-	} mouse;
-
-	struct
-	{
-		unsigned int vid{};
-		bool pending{ false };
-	} move_op;
-
-	struct
-	{
-		unsigned int pid{};
-		bool pending{ false };
-	} copy_op;
-
-	struct
-	{
-		cinolib::DrawableTrimesh<>* p_mesh{ nullptr };
-		std::string filename{};
-	} target;
-
 	gui.callback_mouse_moved = [&](double _x, double _y)
 	{
-		mouse.pos = cinolib::vec2d{ _x, _y };
+		updateMouse(cinolib::vec2d{ _x, _y });
 	};
 
 	gui.callback_key_pressed = [&](int _key, int _modifiers)
@@ -56,24 +90,25 @@ int main()
 				if (!_modifiers)
 				{
 					cinolib::vec3d world_mouse_pos;
-					if (gui.unproject(mouse.pos, world_mouse_pos))
+					if (gui.unproject(mouse.position, world_mouse_pos))
 					{
-						if (move_op.pending)
+						if (moveOp.pending)
 						{
 							// FIXME move in plane instead of using world_mouse_pos
-							const cinolib::vec3d offset{ world_mouse_pos - grid.mesh.vert(move_op.vid) };
-							grid.move_vert(move_op.vid, offset);
-							move_op.pending = false;
+							const cinolib::vec3d offset{ world_mouse_pos - grid.mesh.vert(moveOp.vid) };
+							grid.move_vert(moveOp.vid, offset);
+							moveOp.pending = false;
+							refit();
 						}
 						else
 						{
-							move_op.vid = grid.mesh.pick_vert(world_mouse_pos);
-							move_op.pending = true;
+							moveOp.vid = grid.mesh.pick_vert(world_mouse_pos);
+							moveOp.pending = true;
 						}
 					}
 					else
 					{
-						move_op.pending = false;
+						moveOp.pending = false;
 					}
 				}
 			}
@@ -84,7 +119,7 @@ int main()
 				if (!_modifiers)
 				{
 					cinolib::vec3d world_mouse_pos;
-					if (gui.unproject(mouse.pos, world_mouse_pos))
+					if (gui.unproject(mouse.position, world_mouse_pos))
 					{
 						const unsigned int pid = grid.mesh.pick_poly(world_mouse_pos);
 						unsigned int closest_fid{};
@@ -102,6 +137,7 @@ int main()
 						};
 						const unsigned int offset{ grid.mesh.poly_face_offset(pid, closest_fid) };
 						grid.add_extrude(pid, offset);
+						refit();
 					}
 				}
 			}
@@ -112,15 +148,15 @@ int main()
 				if (!_modifiers)
 				{
 					cinolib::vec3d world_mouse_pos;
-					if (gui.unproject(mouse.pos, world_mouse_pos))
+					if (gui.unproject(mouse.position, world_mouse_pos))
 					{
 						const unsigned int pid{ grid.mesh.pick_poly(world_mouse_pos) };
-						copy_op.pid = pid;
-						copy_op.pending = true;
+						copyOp.pid = pid;
+						copyOp.pending = true;
 					}
 					else
 					{
-						copy_op.pending = false;
+						copyOp.pending = false;
 					}
 				}
 			}
@@ -130,15 +166,16 @@ int main()
 			{
 				if (!_modifiers)
 				{
-					if (copy_op.pending)
+					if (copyOp.pending)
 					{
 						cinolib::vec3d world_mouse_pos;
-						if (gui.unproject(mouse.pos, world_mouse_pos))
+						if (gui.unproject(mouse.position, world_mouse_pos))
 						{
 							const unsigned int pid{ grid.mesh.pick_poly(world_mouse_pos) };
-							if (grid.merge(copy_op.pid, pid))
+							if (grid.merge(copyOp.pid, pid))
 							{
-								copy_op.pending = false;
+								copyOp.pending = false;
+								refit();
 							}
 							else
 							{
@@ -155,7 +192,7 @@ int main()
 				if (!_modifiers)
 				{
 					cinolib::vec3d world_mouse_pos;
-					if (gui.unproject(mouse.pos, world_mouse_pos))
+					if (gui.unproject(mouse.position, world_mouse_pos))
 					{
 						const unsigned int pid{ grid.mesh.pick_poly(world_mouse_pos) };
 						grid.add_refine(pid);
@@ -169,7 +206,7 @@ int main()
 				if (!_modifiers)
 				{
 					cinolib::vec3d world_mouse_pos;
-					if (gui.unproject(mouse.pos, world_mouse_pos))
+					if (gui.unproject(mouse.position, world_mouse_pos))
 					{
 						for (unsigned int fid_plus_one{ grid.mesh.num_faces() }; fid_plus_one > 0; fid_plus_one--)
 						{
@@ -191,10 +228,11 @@ int main()
 				if (!_modifiers)
 				{
 					cinolib::vec3d world_mouse_pos;
-					if (gui.unproject(mouse.pos, world_mouse_pos))
+					if (gui.unproject(mouse.position, world_mouse_pos))
 					{
 						const unsigned int pid{ grid.mesh.pick_poly(world_mouse_pos) };
 						grid.add_remove(pid);
+						refit();
 					}
 				}
 			}
@@ -240,9 +278,10 @@ int main()
 					if (!filename.empty())
 					{
 						grid.clear();
-						move_op.pending = copy_op.pending = false;
+						moveOp.pending = copyOp.pending = false;
 						grid.op_tree.deserialize(filename);
 						grid.apply_tree(grid.op_tree.root->operations, 0);
+						refit();
 					}
 				}
 			}
@@ -268,6 +307,7 @@ int main()
 						delete target.p_mesh;
 						target.p_mesh = nullptr;
 					}
+					refit();
 				}
 			}
 			break;
@@ -277,6 +317,7 @@ int main()
 				if (!_modifiers)
 				{
 					grid.project_on_target(*target.p_mesh);
+					refit();
 				}
 			}
 			break;
@@ -287,11 +328,13 @@ int main()
 				if (_modifiers == GLFW_MOD_CONTROL)
 				{
 					grid.undo();
+					refit();
 				}
 				// redo
 				else if (_modifiers == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT))
 				{
 					grid.redo();
+					refit();
 				}
 			}
 			break;
@@ -301,7 +344,8 @@ int main()
 				if (_modifiers == GLFW_MOD_CONTROL)
 				{
 					grid.clear();
-					move_op.pending = copy_op.pending = false;
+					moveOp.pending = copyOp.pending = false;
+					refit(false);
 				}
 			}
 			break;
@@ -309,13 +353,13 @@ int main()
 	};
 
 	gui.callback_app_controls = [&]() {
-		if (move_op.pending)
+		if (moveOp.pending)
 		{
-			ImGui::Text("Moving vertex #%u", move_op.vid);
+			ImGui::Text("Moving vertex #%u", moveOp.vid);
 		}
-		if (copy_op.pending)
+		if (copyOp.pending)
 		{
-			ImGui::Text("Copying hexahedron #%u", copy_op.pid);
+			ImGui::Text("Copying hexahedron #%u", copyOp.pid);
 		}
 		if (target.p_mesh)
 		{
