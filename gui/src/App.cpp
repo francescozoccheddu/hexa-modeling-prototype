@@ -19,10 +19,25 @@ namespace HMP::Gui
 	{
 		unsigned int pid{};
 		cinolib::vec3d world;
-		bool pending = m_canvas.unproject(m_mouse.position, world);
+		m_canvas.pop_all_markers();
+		const bool pending{ m_canvas.unproject(m_mouse.position, world) };
 		if (pending)
 		{
 			pid = m_grid.mesh.pick_poly(world);
+			const unsigned int vid{ m_grid.mesh.pick_vert(world) };
+			const unsigned int fid{ m_grid.mesh.pick_face(world) };
+			m_canvas.markers.push_back(cinolib::Marker{
+				.pos_3d = m_grid.mesh.vert(vid),
+				.color = c_highlightMarkerColor,
+				.disk_radius = c_highlightMarkerRadius,
+				.fixed_size = true
+				});
+			m_canvas.markers.push_back(cinolib::Marker{
+				.pos_3d = m_grid.mesh.face_centroid(fid),
+				.color = c_highlightMarkerColor,
+				.disk_radius = c_highlightMarkerRadius,
+				.fixed_size = true
+				});
 		}
 		if (pending != m_highlight.pending || (pending && pid != m_highlight.pid))
 		{
@@ -32,7 +47,7 @@ namespace HMP::Gui
 			}
 			if (pending)
 			{
-				m_grid.mesh.poly_data(pid).color = cinolib::Color::YELLOW();
+				m_grid.mesh.poly_data(pid).color = c_highlightPolyColor;
 			}
 			m_grid.mesh.updateGL();
 		}
@@ -251,10 +266,10 @@ namespace HMP::Gui
 		cinolib::vec3d world_mouse_pos;
 		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 		{
-			const unsigned int pid = m_grid.mesh.pick_poly(world_mouse_pos);
+			const unsigned int pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
 			unsigned int closest_fid{};
 			{
-				double closest_dist = std::numeric_limits<double>::infinity();
+				double closest_dist{ std::numeric_limits<double>::infinity() };
 				for (const unsigned int fid : m_grid.mesh.poly_faces_id(pid))
 				{
 					const double dist{ world_mouse_pos.dist_sqrd(m_grid.mesh.face_centroid(fid)) };

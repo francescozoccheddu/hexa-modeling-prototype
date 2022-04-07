@@ -3,6 +3,7 @@
 #include <hexa-modeling-prototype/grid.hpp>
 #include <cinolib/gl/glcanvas.h>
 #include <cinolib/meshes/drawable_trimesh.h>
+#include <cinolib/color.h>
 #include <string>
 
 namespace HMP::Gui
@@ -12,6 +13,10 @@ namespace HMP::Gui
 	{
 
 	private:
+
+		inline static const unsigned int c_highlightMarkerRadius{ 10u };
+		inline static const cinolib::Color c_highlightPolyColor{ cinolib::Color::YELLOW() };
+		inline static const cinolib::Color c_highlightMarkerColor{ cinolib::Color::BLUE() };
 
 		struct
 		{
