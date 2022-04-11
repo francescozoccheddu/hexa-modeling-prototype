@@ -26,18 +26,8 @@ namespace HMP::Gui
 			pid = m_grid.mesh.pick_poly(world);
 			const unsigned int vid{ m_grid.mesh.pick_vert(world) };
 			const unsigned int fid{ m_grid.mesh.pick_face(world) };
-			m_canvas.markers.push_back(cinolib::Marker{
-				.pos_3d = m_grid.mesh.vert(vid),
-				.color = c_highlightMarkerColor,
-				.disk_radius = c_highlightMarkerRadius,
-				.fixed_size = true
-				});
-			m_canvas.markers.push_back(cinolib::Marker{
-				.pos_3d = m_grid.mesh.face_centroid(fid),
-				.color = c_highlightMarkerColor,
-				.disk_radius = c_highlightMarkerRadius,
-				.fixed_size = true
-				});
+			m_canvas.push_marker(m_grid.mesh.vert(vid), "", c_highlightMarkerColor, c_highlightMarkerRadius);
+			m_canvas.push_marker(m_grid.mesh.face_centroid(fid), "", c_highlightMarkerColor, c_highlightMarkerRadius);
 		}
 		if (pending != m_highlight.pending || (pending && pid != m_highlight.pid))
 		{
@@ -55,11 +45,6 @@ namespace HMP::Gui
 		m_highlight.pending = pending;
 	}
 
-	void App::refit(bool keepModel)
-	{
-		m_canvas.refit_scene(keepModel);
-	}
-
 	// Events
 
 	void App::onCameraChange()
@@ -67,13 +52,14 @@ namespace HMP::Gui
 		updateHighlight();
 	}
 
-	void App::onMouseMove(double _x, double _y)
+	bool App::onMouseMove(double _x, double _y)
 	{
 		m_mouse.position = cinolib::vec2d{ _x, _y };
 		updateHighlight();
+		return false;
 	}
 
-	void App::onKeyPress(int _key, int _modifiers)
+	bool App::onKeyPress(int _key, int _modifiers)
 	{
 		switch (_key)
 		{
@@ -216,6 +202,7 @@ namespace HMP::Gui
 			}
 			break;
 		}
+		return false;
 	}
 
 	void App::onDrawControls()
@@ -247,7 +234,7 @@ namespace HMP::Gui
 				const cinolib::vec3d offset{ world_mouse_pos - m_grid.mesh.vert(m_move.vid) };
 				m_grid.move_vert(m_move.vid, offset);
 				m_move.pending = false;
-				refit();
+				m_canvas.refit_scene();
 			}
 			else
 			{
@@ -282,7 +269,7 @@ namespace HMP::Gui
 			};
 			const unsigned int offset{ m_grid.mesh.poly_face_offset(pid, closest_fid) };
 			m_grid.add_extrude(pid, offset);
-			refit();
+			m_canvas.refit_scene();
 		}
 	}
 
@@ -312,7 +299,7 @@ namespace HMP::Gui
 				if (m_grid.merge(m_copy.pid, pid))
 				{
 					m_copy.pending = false;
-					refit();
+					m_canvas.refit_scene();
 				}
 				else
 				{
@@ -340,7 +327,7 @@ namespace HMP::Gui
 		{
 			const unsigned int pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
 			m_grid.add_remove(pid);
-			refit();
+			m_canvas.refit_scene();
 		}
 	}
 
@@ -396,7 +383,7 @@ namespace HMP::Gui
 			m_move.pending = m_copy.pending = false;
 			m_grid.op_tree.deserialize(filename);
 			m_grid.apply_tree(m_grid.op_tree.root->operations, 0);
-			refit();
+			m_canvas.refit_scene();
 		}
 	}
 
@@ -418,32 +405,32 @@ namespace HMP::Gui
 			delete m_target.p_mesh;
 			m_target.p_mesh = nullptr;
 		}
-		refit();
+		m_canvas.refit_scene();
 	}
 
 	void App::onProjectToTarget()
 	{
 		m_grid.project_on_target(*m_target.p_mesh);
-		refit();
+		m_canvas.refit_scene();
 	}
 
 	void App::onUndo()
 	{
 		m_grid.undo();
-		refit();
+		m_canvas.refit_scene();
 	}
 
 	void App::onRedo()
 	{
 		m_grid.redo();
-		refit();
+		m_canvas.refit_scene();
 	}
 
 	void App::onClear()
 	{
 		m_grid.clear();
 		m_move.pending = m_copy.pending = false;
-		refit(false);
+		m_canvas.refit_scene();
 	}
 
 	// Launch
@@ -454,10 +441,10 @@ namespace HMP::Gui
 		m_canvas.push(&m_grid.mesh);
 		m_canvas.push(&menu);
 
-		m_canvas.callback_mouse_moved = [this](double _x, double _y) { onMouseMove(_x, _y); };
-		m_canvas.callback_key_pressed = [this](int _key, int _modifiers) { onKeyPress(_key, _modifiers); };
-		m_canvas.callback_app_controls = [this] { onDrawControls(); };
-		m_canvas.callback_camera_changed = [this] { onCameraChange(); };
+		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMove(_args...); };
+		m_canvas.callback_key_pressed = [this](auto && ..._args) { return onKeyPress(_args...); };
+		m_canvas.callback_app_controls = [this](auto && ..._args) { return onDrawControls(_args ...); };
+		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChange(_args...); };
 
 		return m_canvas.launch();
 	}

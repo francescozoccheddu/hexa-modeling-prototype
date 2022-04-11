@@ -52,11 +52,9 @@ namespace HMP::Gui
 
 		void updateHighlight();
 
-		void refit(bool keepModel = true);
-
 		void onCameraChange();
-		void onKeyPress(int _key, int _modifiers);
-		void onMouseMove(double _x, double _y);
+		bool onKeyPress(int _key, int _modifiers);
+		bool onMouseMove(double _x, double _y);
 		void onDrawControls();
 
 		void onMove();
