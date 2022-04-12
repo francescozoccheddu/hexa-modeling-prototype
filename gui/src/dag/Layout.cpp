@@ -9,26 +9,41 @@ namespace HMP::Gui::Dag
 
 	// Layout::Node
 
-	// Constructors
-
-	Layout::Node::Node(EType _type, const std::string& _text, const Point& _center)
-		: m_type{ _type }, m_text{ _text }, m_center(_center)
+	Layout::Node::Node(const Point& _center, HMP::NodeType _type, NodeData _data)
+		: m_center(_center ), m_type{_type}, m_data{_data}
 	{}
 
-	Layout::Node::Node(EType _type, std::string&& _text, Point&& _center)
-		: m_type{ _type }, m_text{ std::move(_text) }, m_center(std::move(_center))
-	{}
+	Layout::Node Layout::Node::element(const Point& _center, unsigned int _id)
+	{
+		return Node{ _center, HMP::NodeType::ELEMENT, {.m_elementId{_id}} };
+	}
 
-	// Getters
+	Layout::Node Layout::Node::operation(const Point& _center, HMP::Primitive _primitive)
+	{
+		return Node{ _center, HMP::NodeType::OPERATION, {.m_operationPrimitive{_primitive}} };
+	}
 
-	Layout::Node::EType Layout::Node::type() const
+	HMP::NodeType Layout::Node::type() const
 	{
 		return m_type;
 	}
 
-	const std::string& Layout::Node::text() const
+	unsigned int Layout::Node::elementId() const
 	{
-		return m_text;
+		if (m_type != HMP::NodeType::ELEMENT)
+		{
+			throw std::logic_error{ "not an element node" };
+		}
+		return m_data.m_elementId;
+	}
+
+	HMP::Primitive Layout::Node::operationPrimitive() const
+	{
+		if (m_type != HMP::NodeType::OPERATION)
+		{
+			throw std::logic_error{ "not an operation node" };
+		}
+		return m_data.m_operationPrimitive;
 	}
 
 	const Layout::Point& Layout::Node::center() const
@@ -36,7 +51,7 @@ namespace HMP::Gui::Dag
 		return m_center;
 	}
 
-	// Validation
+	// Layout
 
 	void Layout::validate() const
 	{
@@ -49,8 +64,6 @@ namespace HMP::Gui::Dag
 			throw std::domain_error{ "line thickness must be positive" };
 		}
 	}
-
-	// Bounding box calculation
 
 	void Layout::calculateBoundingBox()
 	{
@@ -74,21 +87,17 @@ namespace HMP::Gui::Dag
 		m_boundingBox.second.y() = std::min(m_boundingBox.second.y(), _center.y() + _extent);
 	}
 
-	// Constructors
-
-	Layout::Layout(const std::vector<Line>& _lines, const std::vector<Node>& _nodes, Real _lineThickness, Real _nodeRadius)
-		: m_lines{ _lines }, m_nodes{ _nodes }, m_lineThickness{ _lineThickness }, m_nodeRadius{ _nodeRadius }
+	Layout::Layout(const std::vector<Node>& _nodes, const std::vector<Line>& _lines, Real _nodeRadius, Real _lineThickness)
+		: m_nodes{ _nodes }, m_lines{ _lines }, m_lineThickness{ _lineThickness }, m_nodeRadius{ _nodeRadius }
 	{
 		calculateBoundingBox();
 	}
 
-	Layout::Layout(std::vector<Line>&& _lines, std::vector<Node>&& _nodes, Real _lineThickness, Real _nodeRadius)
-		: m_lines{ std::move(_lines) }, m_nodes{ std::move(_nodes) }, m_lineThickness{ _lineThickness }, m_nodeRadius{ _nodeRadius }
+	Layout::Layout(std::vector<Node>&& _nodes, std::vector<Line>&& _lines, Real _nodeRadius, Real _lineThickness)
+		: m_nodes{ std::move(_nodes) }, m_lines{ std::move(_lines) }, m_lineThickness{ _lineThickness }, m_nodeRadius{ _nodeRadius }
 	{
 		calculateBoundingBox();
 	}
-
-	// Getters
 
 	const std::vector<Layout::Line>& Layout::lines() const
 	{

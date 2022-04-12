@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include <hexa-modeling-prototype/operationstree.hpp>
 #include <cinolib/geometry/vec_mat.h>
 
 namespace HMP::Gui::Dag
@@ -15,32 +16,35 @@ namespace HMP::Gui::Dag
 	public:
 
 		using Real = double;
-		using Point = cinolib::mat<2, 1, Real>;
+		using Point = cinolib::vec<2, Real>;
 		using Line = std::pair<Point, Point>;
+		using Box = std::pair<Point, Point>;
 
 		class Node final
 		{
 
-		public:
-
-			enum class EType
-			{
-				Operation, Hexagon
-			};
-
 		private:
 
-			EType m_type;
-			std::string m_text;
+			HMP::NodeType m_type;
+
+			union NodeData
+			{
+				HMP::Primitive m_operationPrimitive;
+				unsigned int m_elementId;
+			} m_data;
+
 			Point m_center{};
+
+			Node(const Point& _center, HMP::NodeType _type, NodeData _data);
 
 		public:
 
-			Node(EType _type, const std::string& _text, const Point& _center);
-			Node(EType _type, std::string&& _text, Point&& _center);
+			static Node element(const Point& _center, unsigned int _id);
+			static Node operation(const Point& _center, HMP::Primitive _primitive);
 
-			EType type() const;
-			const std::string& text() const;
+			unsigned int elementId() const;
+			HMP::Primitive operationPrimitive() const;
+			HMP::NodeType type() const;
 			const Point& center() const;
 
 		};
@@ -49,7 +53,7 @@ namespace HMP::Gui::Dag
 
 		std::vector<Line> m_lines{};
 		std::vector<Node> m_nodes{};
-		Line m_boundingBox{};
+		Box m_boundingBox{};
 		Real m_lineThickness{};
 		Real m_nodeRadius{};
 
@@ -59,12 +63,12 @@ namespace HMP::Gui::Dag
 
 	public:
 
-		Layout(const std::vector<Line>& _lines, const std::vector<Node>& _nodes, Real _lineThickness, Real _nodeRadius);
-		Layout(std::vector<Line>&& _lines, std::vector<Node>&& _nodes, Real _lineThickness, Real _nodeRadius);
+		Layout(const std::vector<Node>& _nodes, const std::vector<Line>& _lines,  Real _lineThickness, Real _nodeRadius);
+		Layout(std::vector<Node>&& _nodes, std::vector<Line>&& _lines,  Real _lineThickness, Real _nodeRadius);
 
 		const std::vector<Line>& lines() const;
 		const std::vector<Node>& nodes() const;
-		const Line& boundingBox() const;
+		const Box& boundingBox() const;
 		Real lineThickness() const;
 		Real nodeRadius() const;
 

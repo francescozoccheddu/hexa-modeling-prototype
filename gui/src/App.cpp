@@ -9,6 +9,7 @@
 #include <GLFW/glfw3.h>
 #include <cinolib/gl/file_dialog_open.h>
 #include <cinolib/gl/file_dialog_save.h>
+#include <hexa-modeling-prototype/gui/dag/createLayout.hpp>
 
 namespace HMP::Gui
 {
@@ -138,6 +139,7 @@ namespace HMP::Gui
 			// save tree
 			case GLFW_KEY_S:
 			{
+				Dag::createLayout(m_grid.op_tree); // FIXME temp
 				// save tree
 				if (_modifiers == GLFW_MOD_CONTROL)
 				{

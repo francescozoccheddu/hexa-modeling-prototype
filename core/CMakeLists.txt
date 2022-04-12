@@ -1,12 +1,5 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 
-# cinolib
-set (CINOLIB_HEADER_ONLY OFF)
-set (CINOLIB_USES_OPENGL_GLFW_IMGUI ON)
-set (cinolib_DIR "${PROJECT_SOURCE_DIR}/external/cinolib")
-find_package (cinolib REQUIRED)
-
-# core library
 add_library (core STATIC
     "src/grid.cpp"
     "src/operationstree.cpp"

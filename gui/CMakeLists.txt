@@ -5,6 +5,7 @@ add_executable (gui
     "src/dag/Viewer.cpp"
     "src/dag/Layout.cpp"
     "src/App.cpp"
+    "src/dag/createLayout.cpp"
 )
 
 set_target_properties (gui PROPERTIES
@@ -19,4 +20,6 @@ target_include_directories (gui
 
 target_link_libraries (gui 
     PRIVATE core
+    PRIVATE OGDF
 )
+
