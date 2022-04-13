@@ -1,6 +1,7 @@
 #include <hexa-modeling-prototype/gui/dag/Viewer.hpp>
 #include <cinolib/clamp.h>
 #include <algorithm>
+#include <cmath>
 #include <cinolib/geometry/vec_mat_utils.h>
 #include <imgui.h>
 #include <string>
@@ -132,7 +133,7 @@ namespace HMP::Gui::Dag
 		{
 			ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-			constexpr ImU32 backgroundColor{ IM_COL32(50, 50, 50, 255) };
+			constexpr ImU32 backgroundColor{ IM_COL32(40, 40, 40, 255) };
 			constexpr ImU32 borderColor{ IM_COL32(255, 255, 255, 255) };
 
 			drawList->AddRectFilled(toImVec(topLeft_sw), toImVec(bottomRight_sw), backgroundColor);
@@ -146,9 +147,26 @@ namespace HMP::Gui::Dag
 
 				const double l2s{ l2n / m_windowHeight_n * n2s };
 
+				// grid
+
+				{
+					constexpr ImU32 gridColor{ IM_COL32(60, 60, 60, 255) };
+					const int gridLevel{ std::max(0, static_cast<int>(-std::log2(m_windowHeight_n / 2.0))) };
+					const double gridStep_s{ n2s / ((1 << gridLevel) * 10) / m_windowHeight_n };
+					const vec origin_ss{ sw2ss(nw2sw(nl2nw(vec{0,1}))) };
+					for (double x_s{ std::fmod(origin_ss.x(), gridStep_s) }; x_s <= bottomRight_sw.x(); x_s += gridStep_s)
+					{
+						drawList->AddLine(toImVec(vec{ x_s, topLeft_sw.y() }), toImVec(vec{ x_s, bottomRight_sw.y() }), gridColor);
+					}
+					for (double y_s{ std::fmod(origin_ss.y(), gridStep_s) }; y_s <= bottomRight_sw.y(); y_s += gridStep_s)
+					{
+						drawList->AddLine(toImVec(vec{ topLeft_sw.x(), y_s }), toImVec(vec{ bottomRight_sw.x(), y_s }), gridColor);
+					}
+				}
+
 				// edges
 
-				constexpr ImU32 strokeColor{ IM_COL32(200, 200, 200, 255) };
+				constexpr ImU32 strokeColor{ IM_COL32(220, 220, 220, 255) };
 
 				for (const Layout::Line& line : layout.lines())
 				{
@@ -169,8 +187,10 @@ namespace HMP::Gui::Dag
 					{
 						case HMP::NodeType::ELEMENT:
 						{
-							constexpr ImU32 elementColor{ IM_COL32(0, 157, 224, 255) };
-							drawList->AddRectFilled(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), elementColor);
+							constexpr ImU32 elementColor{ IM_COL32(128, 128, 128, 255) };
+							constexpr ImU32 highlightedElementColor{ IM_COL32(255, 255, 0, 255) };
+							const ImU32 color{ highlight && highlightedElementId == node.elementId() ? highlightedElementColor : elementColor };
+							drawList->AddRectFilled(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), color);
 							drawList->AddRect(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), strokeColor);
 							text = std::to_string(node.elementId());
 						}

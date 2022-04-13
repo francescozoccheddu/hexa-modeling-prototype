@@ -43,8 +43,8 @@ namespace HMP::Gui
 			}
 			m_grid.mesh.updateGL();
 		}
-		m_highlight.pid = pid;
-		m_highlight.pending = pending;
+		m_dagViewer.highlightedElementId = m_highlight.pid = pid;
+		m_dagViewer.highlight = m_highlight.pending = pending;
 	}
 
 	void App::updateDagViewer()
