@@ -1,6 +1,7 @@
 #pragma once
 
 #include <hexa-modeling-prototype/grid.hpp>
+#include <hexa-modeling-prototype/gui/dag/Viewer.hpp>
 #include <cinolib/gl/glcanvas.h>
 #include <cinolib/meshes/drawable_trimesh.h>
 #include <cinolib/color.h>
@@ -49,8 +50,10 @@ namespace HMP::Gui
 
 		HMP::Grid m_grid{};
 		cinolib::GLcanvas m_canvas{};
+		Dag::Viewer m_dagViewer{};
 
 		void updateHighlight();
+		void updateDagViewer();
 
 		void onCameraChange();
 		bool onKeyPress(int _key, int _modifiers);

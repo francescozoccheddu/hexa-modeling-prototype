@@ -2,9 +2,9 @@
 
 add_executable (gui 
     "src/main.cpp" 
+    "src/App.cpp"
     "src/dag/Viewer.cpp"
     "src/dag/Layout.cpp"
-    "src/App.cpp"
     "src/dag/createLayout.cpp"
 )
 

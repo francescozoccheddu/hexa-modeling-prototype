@@ -18,7 +18,6 @@ namespace HMP::Gui::Dag
 		using Real = double;
 		using Point = cinolib::vec<2, Real>;
 		using Line = std::pair<Point, Point>;
-		using Box = std::pair<Point, Point>;
 
 		class Node final
 		{
@@ -51,11 +50,14 @@ namespace HMP::Gui::Dag
 
 	private:
 
-		std::vector<Line> m_lines{};
-		std::vector<Node> m_nodes{};
-		Box m_boundingBox{};
-		Real m_lineThickness{};
-		Real m_nodeRadius{};
+		std::vector<Line> m_lines;
+		std::vector<Node> m_nodes;
+		Point m_bottomLeft;
+		Point m_topRight;
+		Point m_size;
+		Real m_aspectRatio;
+		Real m_lineThickness;
+		Real m_nodeRadius;
 
 		void validate() const;
 		void calculateBoundingBox();
@@ -63,12 +65,16 @@ namespace HMP::Gui::Dag
 
 	public:
 
+		Layout();
 		Layout(const std::vector<Node>& _nodes, const std::vector<Line>& _lines,  Real _lineThickness, Real _nodeRadius);
 		Layout(std::vector<Node>&& _nodes, std::vector<Line>&& _lines,  Real _lineThickness, Real _nodeRadius);
 
 		const std::vector<Line>& lines() const;
 		const std::vector<Node>& nodes() const;
-		const Box& boundingBox() const;
+		const Point& bottomLeft() const;
+		const Point& topRight() const;
+		const Point& size() const;
+		double aspectRatio() const;
 		Real lineThickness() const;
 		Real nodeRadius() const;
 

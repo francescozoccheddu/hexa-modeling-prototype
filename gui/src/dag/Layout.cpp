@@ -3,6 +3,7 @@
 #include <utility>
 #include <algorithm>
 #include <stdexcept>
+#include <stdexcept>
 
 namespace HMP::Gui::Dag
 {
@@ -10,7 +11,7 @@ namespace HMP::Gui::Dag
 	// Layout::Node
 
 	Layout::Node::Node(const Point& _center, HMP::NodeType _type, NodeData _data)
-		: m_center(_center ), m_type{_type}, m_data{_data}
+		: m_center(_center), m_type{ _type }, m_data{ _data }
 	{}
 
 	Layout::Node Layout::Node::element(const Point& _center, unsigned int _id)
@@ -67,35 +68,60 @@ namespace HMP::Gui::Dag
 
 	void Layout::calculateBoundingBox()
 	{
-		const Real halfLineThickness = m_lineThickness / 2;
-		for (const Line& line : m_lines)
+		if (m_lines.empty() && m_nodes.empty())
 		{
-			expandBoundingBox(line.first, halfLineThickness);
-			expandBoundingBox(line.second, halfLineThickness);
+			m_topRight = m_bottomLeft = Point{ 0,0 };
 		}
-		for (const Node& node : m_nodes)
+		else
 		{
-			expandBoundingBox(node.center(), m_nodeRadius);
+			if (m_nodes.empty())
+			{
+				m_topRight = m_bottomLeft = m_lines[0].first;
+			}
+			else
+			{
+				m_topRight = m_bottomLeft = m_nodes[0].center();
+			}
+			const Real halfLineThickness = m_lineThickness / 2;
+			for (const Line& line : m_lines)
+			{
+				expandBoundingBox(line.first, halfLineThickness);
+				expandBoundingBox(line.second, halfLineThickness);
+			}
+			for (const Node& node : m_nodes)
+			{
+				expandBoundingBox(node.center(), m_nodeRadius);
+			}
 		}
+		m_size = m_topRight - m_bottomLeft;
+		m_aspectRatio = m_size.y() ? m_size.x() / m_size.y() : 1;
 	}
 
 	void Layout::expandBoundingBox(const Point& _center, Real _extent)
 	{
-		m_boundingBox.first.x() = std::min(m_boundingBox.first.x(), _center.x() - _extent);
-		m_boundingBox.first.y() = std::min(m_boundingBox.first.y(), _center.y() - _extent);
-		m_boundingBox.second.x() = std::min(m_boundingBox.second.x(), _center.x() + _extent);
-		m_boundingBox.second.y() = std::min(m_boundingBox.second.y(), _center.y() + _extent);
+		m_bottomLeft.x() = std::min(m_bottomLeft.x(), _center.x() - _extent);
+		m_bottomLeft.y() = std::min(m_bottomLeft.y(), _center.y() - _extent);
+		m_topRight.x() = std::max(m_topRight.x(), _center.x() + _extent);
+		m_topRight.y() = std::max(m_topRight.y(), _center.y() + _extent);
 	}
 
-	Layout::Layout(const std::vector<Node>& _nodes, const std::vector<Line>& _lines, Real _nodeRadius, Real _lineThickness)
-		: m_nodes{ _nodes }, m_lines{ _lines }, m_lineThickness{ _lineThickness }, m_nodeRadius{ _nodeRadius }
+	Layout::Layout()
+		: m_nodes{}, m_lines{}, m_nodeRadius{ 1 }, m_lineThickness{ 0.01 }
 	{
 		calculateBoundingBox();
 	}
 
-	Layout::Layout(std::vector<Node>&& _nodes, std::vector<Line>&& _lines, Real _nodeRadius, Real _lineThickness)
-		: m_nodes{ std::move(_nodes) }, m_lines{ std::move(_lines) }, m_lineThickness{ _lineThickness }, m_nodeRadius{ _nodeRadius }
+	Layout::Layout(const std::vector<Node>& _nodes, const std::vector<Line>& _lines, Real _nodeRadius, Real _lineThickness)
+		: m_nodes{ _nodes }, m_lines{ _lines }, m_nodeRadius{ _nodeRadius }, m_lineThickness{ _lineThickness }
 	{
+		validate();
+		calculateBoundingBox();
+	}
+
+	Layout::Layout(std::vector<Node>&& _nodes, std::vector<Line>&& _lines, Real _nodeRadius, Real _lineThickness)
+		: m_nodes{ std::move(_nodes) }, m_lines{ std::move(_lines) }, m_nodeRadius{ _nodeRadius }, m_lineThickness{ _lineThickness }
+	{
+		validate();
 		calculateBoundingBox();
 	}
 
@@ -109,9 +135,24 @@ namespace HMP::Gui::Dag
 		return m_nodes;
 	}
 
-	const Layout::Line& Layout::boundingBox() const
+	const Layout::Point& Layout::bottomLeft() const
 	{
-		return m_boundingBox;
+		return m_bottomLeft;
+	}
+
+	const Layout::Point& Layout::topRight() const
+	{
+		return m_topRight;
+	}
+
+	const Layout::Point& Layout::size() const
+	{
+		return m_size;
+	}
+
+	Layout::Real Layout::aspectRatio() const
+	{
+		return m_aspectRatio;
 	}
 
 	Layout::Real Layout::lineThickness() const

@@ -10,6 +10,7 @@
 #include <cinolib/gl/file_dialog_open.h>
 #include <cinolib/gl/file_dialog_save.h>
 #include <hexa-modeling-prototype/gui/dag/createLayout.hpp>
+#include <utility>
 
 namespace HMP::Gui
 {
@@ -44,6 +45,12 @@ namespace HMP::Gui
 		}
 		m_highlight.pid = pid;
 		m_highlight.pending = pending;
+	}
+
+	void App::updateDagViewer()
+	{
+		m_dagViewer.layout = Dag::createLayout(m_grid.op_tree);
+		m_dagViewer.resetView();
 	}
 
 	// Events
@@ -139,7 +146,6 @@ namespace HMP::Gui
 			// save tree
 			case GLFW_KEY_S:
 			{
-				Dag::createLayout(m_grid.op_tree); // FIXME temp
 				// save tree
 				if (_modifiers == GLFW_MOD_CONTROL)
 				{
@@ -209,6 +215,7 @@ namespace HMP::Gui
 
 	void App::onDrawControls()
 	{
+		m_dagViewer.draw();
 		if (m_move.pending)
 		{
 			ImGui::Text("Moving vertex #%u", m_move.vid);
@@ -271,6 +278,7 @@ namespace HMP::Gui
 			};
 			const unsigned int offset{ m_grid.mesh.poly_face_offset(pid, closest_fid) };
 			m_grid.add_extrude(pid, offset);
+			updateDagViewer();
 			m_canvas.refit_scene();
 		}
 	}
@@ -301,6 +309,7 @@ namespace HMP::Gui
 				if (m_grid.merge(m_copy.pid, pid))
 				{
 					m_copy.pending = false;
+					updateDagViewer();
 					m_canvas.refit_scene();
 				}
 				else
@@ -318,6 +327,7 @@ namespace HMP::Gui
 		{
 			const unsigned int pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
 			m_grid.add_refine(pid);
+			updateDagViewer();
 			updateHighlight();
 		}
 	}
@@ -329,6 +339,7 @@ namespace HMP::Gui
 		{
 			const unsigned int pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
 			m_grid.add_remove(pid);
+			updateDagViewer();
 			m_canvas.refit_scene();
 		}
 	}
@@ -348,6 +359,7 @@ namespace HMP::Gui
 			}
 			const unsigned int fid{ m_grid.mesh.pick_face(world_mouse_pos) };
 			m_grid.add_face_refine(fid);
+			updateDagViewer();
 			updateHighlight();
 		}
 	}
@@ -355,6 +367,7 @@ namespace HMP::Gui
 	void App::onMakeConformant()
 	{
 		m_grid.make_conforming();
+		updateDagViewer();
 		updateHighlight();
 	}
 
@@ -385,6 +398,7 @@ namespace HMP::Gui
 			m_move.pending = m_copy.pending = false;
 			m_grid.op_tree.deserialize(filename);
 			m_grid.apply_tree(m_grid.op_tree.root->operations, 0);
+			updateDagViewer();
 			m_canvas.refit_scene();
 		}
 	}
@@ -413,18 +427,21 @@ namespace HMP::Gui
 	void App::onProjectToTarget()
 	{
 		m_grid.project_on_target(*m_target.p_mesh);
+		updateDagViewer();
 		m_canvas.refit_scene();
 	}
 
 	void App::onUndo()
 	{
 		m_grid.undo();
+		updateDagViewer();
 		m_canvas.refit_scene();
 	}
 
 	void App::onRedo()
 	{
 		m_grid.redo();
+		updateDagViewer();
 		m_canvas.refit_scene();
 	}
 
@@ -432,6 +449,7 @@ namespace HMP::Gui
 	{
 		m_grid.clear();
 		m_move.pending = m_copy.pending = false;
+		updateDagViewer();
 		m_canvas.refit_scene();
 	}
 
@@ -443,10 +461,13 @@ namespace HMP::Gui
 		m_canvas.push(&m_grid.mesh);
 		m_canvas.push(&menu);
 
+		m_canvas.depth_cull_markers = false;
 		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMove(_args...); };
 		m_canvas.callback_key_pressed = [this](auto && ..._args) { return onKeyPress(_args...); };
 		m_canvas.callback_app_controls = [this](auto && ..._args) { return onDrawControls(_args ...); };
 		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChange(_args...); };
+
+		updateDagViewer();
 
 		return m_canvas.launch();
 	}

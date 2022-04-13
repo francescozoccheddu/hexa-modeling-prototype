@@ -15,9 +15,9 @@
 namespace HMP::Gui::Dag
 {
 
-	constexpr double c_nodeRadius{ 1 };
-	constexpr double c_lineThickness{ 0.01 };
-	constexpr double c_nodeDistance{ 0.25 };
+	constexpr double c_nodeRadius{ 1.0 };
+	constexpr double c_lineThickness{ c_nodeRadius / 20.0 };
+	constexpr double c_nodeDistance{ c_nodeRadius + 0.25 };
 
 	std::unordered_map<const HMP::Node*, ogdf::node> populateGraph(const HMP::OperationsTree& _dag, ogdf::Graph& _graph)
 	{
