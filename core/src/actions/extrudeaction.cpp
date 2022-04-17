@@ -9,7 +9,7 @@ namespace HMP
 	{
 		auto vids = grid.mesh.poly_verts_id(pid);
 		auto id = grid.mesh.poly_verts_id(pid, true);
-		auto element = grid.id2element()[id];
+		auto element = grid.vids2element()[id];
 		auto extrude = grid.op_tree.extrude(element, face_offset);
 		if (extrude == nullptr) return;
 
@@ -17,10 +17,10 @@ namespace HMP
 
 		//update displacement
 		auto& new_element = extrude->children.front();
-		auto new_id = grid.element2id()[new_element];
+		auto new_id = grid.element2vids()[new_element];
 		this->id = new_id;
 		this->op = extrude;
-		unsigned int new_pid = grid.id2pid(new_id);
+		unsigned int new_pid = grid.vids2pid(new_id);
 		for (unsigned int off = 0; off < 8; off++)
 		{
 			grid.op_tree.move(new_element, off, grid.mesh.poly_vert(new_pid, off));
@@ -31,7 +31,7 @@ namespace HMP
 	void ExtrudeAction::undo()
 	{
 		grid.op_tree.prune(this->op);
-		unsigned int pid = grid.id2pid(id);
+		unsigned int pid = grid.vids2pid(id);
 		grid.mesh.poly_remove(pid, false);
 	}
 

@@ -20,7 +20,7 @@ namespace HMP::Gui::Dag
 
 	public:
 
-		unsigned int highlightedElementId{};
+		int highlightedElementId{};
 		bool highlight{ false };
 
 		Layout layout{};

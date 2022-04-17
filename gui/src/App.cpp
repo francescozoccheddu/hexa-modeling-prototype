@@ -26,10 +26,10 @@ namespace HMP::Gui
 		if (pending)
 		{
 			pid = m_grid.mesh.pick_poly(world);
-			const unsigned int vid{ m_grid.mesh.pick_vert(world) };
 			const unsigned int fid{ m_grid.mesh.pick_face(world) };
-			m_canvas.push_marker(m_grid.mesh.vert(vid), "", c_highlightMarkerColor, c_highlightMarkerRadius);
-			m_canvas.push_marker(m_grid.mesh.face_centroid(fid), "", c_highlightMarkerColor, c_highlightMarkerRadius);
+			const unsigned int vid{ m_grid.mesh.pick_vert(world) };
+			m_canvas.push_marker(m_grid.mesh.face_centroid(fid), "", c_highlightFaceColor, c_highlightFaceRadius);
+			m_canvas.push_marker(m_grid.mesh.vert(vid), "", c_highlightVertexColor, c_highlightVertexRadius);
 		}
 		if (pending != m_highlight.pending || (pending && pid != m_highlight.pid))
 		{
@@ -49,7 +49,7 @@ namespace HMP::Gui
 
 	void App::updateDagViewer()
 	{
-		m_dagViewer.layout = Dag::createLayout(m_grid.op_tree);
+		m_dagViewer.layout = Dag::createLayout(m_grid);
 		m_dagViewer.resetView();
 	}
 
@@ -460,6 +460,7 @@ namespace HMP::Gui
 		cinolib::VolumeMeshControls<HMP::MeshGrid> menu{ &m_grid.mesh, &m_canvas, "Grid mesh" };
 		m_canvas.push(&m_grid.mesh);
 		m_canvas.push(&menu);
+		m_grid.mesh.show_mesh_flat();
 
 		m_canvas.depth_cull_markers = false;
 		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMove(_args...); };

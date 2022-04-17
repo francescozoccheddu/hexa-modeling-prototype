@@ -29,7 +29,7 @@ namespace HMP::Gui::Dag
 			union NodeData
 			{
 				HMP::Primitive m_operationPrimitive;
-				unsigned int m_elementId;
+				int m_elementId;
 			} m_data;
 
 			Point m_center{};
@@ -38,10 +38,10 @@ namespace HMP::Gui::Dag
 
 		public:
 
-			static Node element(const Point& _center, unsigned int _id);
+			static Node element(const Point& _center, int _id);
 			static Node operation(const Point& _center, HMP::Primitive _primitive);
 
-			unsigned int elementId() const;
+			int elementId() const;
 			HMP::Primitive operationPrimitive() const;
 			HMP::NodeType type() const;
 			const Point& center() const;

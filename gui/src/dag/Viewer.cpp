@@ -192,7 +192,7 @@ namespace HMP::Gui::Dag
 							const ImU32 color{ highlight && highlightedElementId == node.elementId() ? highlightedElementColor : elementColor };
 							drawList->AddRectFilled(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), color);
 							drawList->AddRect(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), strokeColor);
-							text = std::to_string(node.elementId());
+							text = node.elementId() >= 0 ? std::to_string(node.elementId()) : "";
 						}
 						break;
 						case HMP::NodeType::OPERATION:

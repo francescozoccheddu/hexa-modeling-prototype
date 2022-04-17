@@ -21,7 +21,7 @@ namespace HMP
 	{
 
 		op_tree.clear();
-		id2element().clear();
+		vids2element().clear();
 		std::vector<cinolib::vec3d> init_cube_coords = { cinolib::vec3d(-cubeSize,-cubeSize,-cubeSize), cinolib::vec3d(-cubeSize,-cubeSize, cubeSize), cinolib::vec3d(cubeSize,-cubeSize,cubeSize), cinolib::vec3d(cubeSize,-cubeSize,-cubeSize),
 														cinolib::vec3d(-cubeSize,cubeSize,-cubeSize), cinolib::vec3d(-cubeSize,cubeSize, cubeSize), cinolib::vec3d(cubeSize,cubeSize,cubeSize), cinolib::vec3d(cubeSize,cubeSize,-cubeSize) };
 		std::vector<std::vector<unsigned int>> init_cube_polys = { {0,1,2,3,4,5,6,7} };
@@ -30,8 +30,8 @@ namespace HMP
 		mesh.clear();
 		mesh.init(init_cube_coords, init_cube_polys);
 
-		id2element()[mesh.poly_verts_id(0, true)] = op_tree.root;
-		element2id()[op_tree.root] = mesh.poly_verts_id(0, true);
+		vids2element()[mesh.poly_verts_id(0, true)] = op_tree.root;
+		element2vids()[op_tree.root] = mesh.poly_verts_id(0, true);
 
 		//update displacement
 		for (unsigned int off = 0; off < 8; off++)
@@ -200,7 +200,7 @@ namespace HMP
 			for (unsigned int i = 0; i < op->children.size(); i++)
 			{
 				const auto& child = std::static_pointer_cast<Element>(op->children[i]);
-				apply_tree_recursive(child->operations, id2pid(element2id()[child]), false);
+				apply_tree_recursive(child->operations, vids2pid(element2vids()[child]), false);
 			}
 
 		}
@@ -222,7 +222,7 @@ namespace HMP
 			for (unsigned int off = 0; off < 8; off++)
 			{
 				unsigned int vid = mesh.poly_vert_id(pid, off);
-				const auto& el = id2element()[mesh.poly_verts_id(pid, true)];
+				const auto& el = vids2element()[mesh.poly_verts_id(pid, true)];
 				move(vid, el->displacements[off] - mesh.vert(vid));
 			}
 		}
@@ -235,7 +235,7 @@ namespace HMP
 		for (auto& child : op->children)
 		{
 
-			unsigned int pid = id2pid(element2id()[child]);
+			unsigned int pid = vids2pid(element2vids()[child]);
 
 			//update displacement
 			for (unsigned int off = 0; off < 8; off++)
@@ -333,8 +333,8 @@ namespace HMP
 	{
 
 		std::list<std::shared_ptr<Operation>> new_ops;
-		auto source_el = id2element()[mesh.poly_verts_id(pid_source, true)];
-		auto destination_el = id2element()[mesh.poly_verts_id(pid_dest, true)];
+		auto source_el = vids2element()[mesh.poly_verts_id(pid_source, true)];
+		auto destination_el = vids2element()[mesh.poly_verts_id(pid_dest, true)];
 
 		cinolib::vec3d centroid_dest = mesh.poly_centroid(pid_dest);
 
@@ -364,9 +364,9 @@ namespace HMP
 			{
 				const auto& el_old = old_elements[i];
 				const auto& el_new = new_elements[i];
-				unsigned int pid = id2pid(element2id()[el_old]);
-				unsigned int new_pid = id2pid(element2id()[el_new]);
-				auto& new_el = id2element()[mesh.poly_verts_id(new_pid, true)];
+				unsigned int pid = vids2pid(element2vids()[el_old]);
+				unsigned int new_pid = vids2pid(element2vids()[el_new]);
+				auto& new_el = vids2element()[mesh.poly_verts_id(new_pid, true)];
 				for (unsigned int off = 0; off < 8; off++)
 				{
 					unsigned int vid = mesh.poly_vert_id(pid, off);
@@ -394,14 +394,14 @@ namespace HMP
 	}
 
 
-	std::map<std::vector<unsigned int>, std::shared_ptr<Element> >& Grid::id2element()
+	std::map<std::vector<unsigned int>, std::shared_ptr<Element> >& Grid::vids2element()
 	{
-		return op_tree.id2element;
+		return op_tree.vids2element;
 	}
 
-	std::unordered_map<std::shared_ptr<Element>, std::vector<unsigned int> >& Grid::element2id()
+	std::unordered_map<std::shared_ptr<Element>, std::vector<unsigned int> >& Grid::element2vids()
 	{
-		return op_tree.element2id;
+		return op_tree.element2vids;
 	}
 
 	void Grid::clear()
@@ -455,8 +455,8 @@ namespace HMP
 		unsigned int new_pid = mesh.poly_add(poly);
 		//element2id[extrude->children.front()] = incremental_id;
 		auto& element = extrude->children.front();
-		element2id()[element] = mesh.poly_verts_id(new_pid, true);
-		id2element()[mesh.poly_verts_id(new_pid, true)] = element;
+		element2vids()[element] = mesh.poly_verts_id(new_pid, true);
+		vids2element()[mesh.poly_verts_id(new_pid, true)] = element;
 
 
 
@@ -498,8 +498,8 @@ namespace HMP
 			unsigned int new_pid = mesh.poly_add(poly);
 
 			auto& element = refine->children[i];
-			element2id()[element] = mesh.poly_verts_id(new_pid, true);
-			id2element()[mesh.poly_verts_id(new_pid, true)] = element;
+			element2vids()[element] = mesh.poly_verts_id(new_pid, true);
+			vids2element()[mesh.poly_verts_id(new_pid, true)] = element;
 
 
 
@@ -526,12 +526,12 @@ namespace HMP
 		update_mesh();
 	}
 
-	int Grid::id2pid(const std::vector<unsigned int>& id) const
+	int Grid::vids2pid(const std::vector<unsigned int>& vids) const
 	{
 
-		for (unsigned int pid : mesh.adj_v2p(id[0]))
+		for (unsigned int pid : mesh.adj_v2p(vids[0]))
 		{
-			if (mesh.poly_verts_id(pid, true) == id) return pid;
+			if (mesh.poly_verts_id(pid, true) == vids) return pid;
 		}
 
 		return -1;

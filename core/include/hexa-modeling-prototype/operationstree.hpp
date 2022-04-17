@@ -117,8 +117,8 @@ namespace HMP
 		void prune(const std::shared_ptr<Operation>& operation);
 
 
-		std::map<std::vector<unsigned int>, std::shared_ptr<Element>> id2element;
-		std::unordered_map<std::shared_ptr<Element>, std::vector<unsigned int>> element2id;
+		std::map<std::vector<unsigned int>, std::shared_ptr<Element>> vids2element;
+		std::unordered_map<std::shared_ptr<Element>, std::vector<unsigned int>> element2vids;
 
 
 	private:

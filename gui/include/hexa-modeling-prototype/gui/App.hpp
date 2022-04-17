@@ -15,9 +15,11 @@ namespace HMP::Gui
 
 	private:
 
-		inline static const unsigned int c_highlightMarkerRadius{ 10u };
+		inline static const unsigned int c_highlightFaceRadius{ 10u };
+		inline static const unsigned int c_highlightVertexRadius{ 10u };
 		inline static const cinolib::Color c_highlightPolyColor{ cinolib::Color::YELLOW() };
-		inline static const cinolib::Color c_highlightMarkerColor{ cinolib::Color::BLUE() };
+		inline static const cinolib::Color c_highlightFaceColor{ cinolib::Color::PASTEL_VIOLET() };
+		inline static const cinolib::Color c_highlightVertexColor{ cinolib::Color::BLUE() };
 
 		struct
 		{

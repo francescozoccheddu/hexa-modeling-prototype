@@ -10,7 +10,7 @@ namespace HMP
 		auto vids = grid.mesh.poly_verts_id(pid);
 		auto id = grid.mesh.poly_verts_id(pid, true);
 		this->vids = grid.mesh.poly_verts_id(pid, false);;
-		auto element = grid.id2element()[id];
+		auto element = grid.vids2element()[id];
 		auto remove = grid.op_tree.remove(element);
 		this->op = remove;
 		if (remove == nullptr) return;

@@ -14,7 +14,7 @@ namespace HMP::Gui::Dag
 		: m_center(_center), m_type{ _type }, m_data{ _data }
 	{}
 
-	Layout::Node Layout::Node::element(const Point& _center, unsigned int _id)
+	Layout::Node Layout::Node::element(const Point& _center, int _id)
 	{
 		return Node{ _center, HMP::NodeType::ELEMENT, {.m_elementId{_id}} };
 	}
@@ -29,7 +29,7 @@ namespace HMP::Gui::Dag
 		return m_type;
 	}
 
-	unsigned int Layout::Node::elementId() const
+	int Layout::Node::elementId() const
 	{
 		if (m_type != HMP::NodeType::ELEMENT)
 		{

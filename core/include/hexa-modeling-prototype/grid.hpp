@@ -72,12 +72,14 @@ namespace HMP
 		bool merge(unsigned int pid_source, unsigned int pid_dest, Transform T = NONE);
 
 
-		std::map<std::vector<unsigned int>, std::shared_ptr<Element>>& id2element();
-		std::unordered_map<std::shared_ptr<Element>, std::vector<unsigned int>>& element2id();
+		std::map<std::vector<unsigned int>, std::shared_ptr<Element>>& vids2element();
+		std::unordered_map<std::shared_ptr<Element>, std::vector<unsigned int>>& element2vids();
 
 		void clear();
 
 		void save_as_mesh(std::string filename);
+
+		int vids2pid(const std::vector<unsigned int>& vids) const;
 
 	private:
 
@@ -117,10 +119,6 @@ namespace HMP
 																																								  {FACESCM, RefinementPair(FACE::weights, FACE::vids)},
 																																								  {EDGESCM, RefinementPair(EDGE::weights, EDGE::vids)},
 																																								  {FACEREF, RefinementPair(FACEREFINEMENT::weights, FACEREFINEMENT::vids)} };
-
-
-
-		int id2pid(const std::vector<unsigned int>& id) const;
 
 		std::pair<int, unsigned int> direction_to_axis(const cinolib::vec3d& dir);
 
