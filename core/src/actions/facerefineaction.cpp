@@ -1,4 +1,5 @@
 #include <HMP/actions/facerefineaction.hpp>
+#include <HMP/Refinement/schemes.hpp>
 #include <assert.h>
 
 namespace HMP
@@ -28,7 +29,7 @@ namespace HMP
 		this->op = refine;
 		this->vids = vids;
 
-		refine->scheme_type = FACEREF;
+		refine->scheme_type = Refinement::EScheme::FaceRefinement;
 
 		std::vector<unsigned int> base_vids = mesh.face_verts_id(mesh.poly_face_opposite_to(pid, fid));
 		std::vector<unsigned int> opposite_vids = mesh.face_verts_id(fid);

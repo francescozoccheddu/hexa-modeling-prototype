@@ -1,4 +1,5 @@
 #include <HMP/actions/makeconformingaction.hpp>
+#include <HMP/Refinement/schemes.hpp>
 #include <cinolib/stl_container_utilities.h>
 
 namespace HMP
@@ -39,7 +40,7 @@ namespace HMP
 				{
 					if (cinolib::CONTAINS(concavities_candidates, adj))
 					{
-						auto st = STDREF;
+						auto st = Refinement::EScheme::StandardRefinement;
 						auto refine = grid.op_tree.refine(adj, 27);
 						if (refine == nullptr)
 						{
@@ -88,12 +89,12 @@ namespace HMP
 				if (/*op_tree.isLeaf(adj)*/ is_leaf)
 				{
 
-					SchemeType st = FACESCM;
+					Refinement::EScheme st = Refinement::EScheme::FaceScheme;
 
 					unsigned int shared = mesh.poly_shared_face(father_pid, pid);
 
 
-					unsigned int num_children = grid.st2subdivision[st].first.size();
+					unsigned int num_children = Refinement::schemes.at(st)->vertices.size();
 					auto refine = grid.op_tree.refine(adj, num_children);
 					if (refine == nullptr)
 					{
@@ -176,10 +177,10 @@ namespace HMP
 					{
 						//TODO: get the scheme type somehow and apply scheme to tree
 
-						SchemeType st = EDGESCM;
+						Refinement::EScheme st = Refinement::EScheme::EdgeScheme;
 
 
-						unsigned int num_children = grid.st2subdivision[st].first.size();
+						unsigned int num_children = Refinement::schemes.at(st)->vertices.size();
 						auto refine = grid.op_tree.refine(adj, num_children);
 						if (refine == nullptr) return;
 

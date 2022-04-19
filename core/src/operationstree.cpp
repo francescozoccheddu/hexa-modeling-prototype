@@ -1,4 +1,5 @@
 #include <HMP/operationstree.hpp>
+#include <HMP/Refinement/schemes.hpp>
 
 #include <assert.h>
 #include <deque>
@@ -286,7 +287,7 @@ namespace HMP
 						new_op->scheme_type = old_ref->scheme_type;
 						new_op->vert_map = old_ref->vert_map;
 
-						if (old_ref->scheme_type == STDREF) new_op->needs_fix_topology = false;
+						if (old_ref->scheme_type == Refinement::EScheme::StandardRefinement) new_op->needs_fix_topology = false;
 						nodes_vec.push_back(new_op);
 						if (num_new_ops-- > 0) new_operations->push_back(new_op);
 						break;
@@ -551,7 +552,7 @@ namespace HMP
 						char* c = &code[1];
 						auto ref = std::static_pointer_cast<Refine>(op);
 						unsigned int type = std::atoi(c);
-						ref->scheme_type = static_cast<SchemeType>(type);
+						ref->scheme_type = static_cast<Refinement::EScheme>(type);
 						ref->is_user_defined = true;
 						ref->needs_fix_topology = false;
 						for (unsigned int i = 0; i < 8; i++) ref->vert_map[i] = line[i + 3] - 48;

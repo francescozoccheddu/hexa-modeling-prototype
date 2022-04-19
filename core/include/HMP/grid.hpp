@@ -13,7 +13,6 @@
 #include <HMP/operationstree.hpp>
 #include <HMP/utils.hpp>
 #include <cinolib/subdivision_legacy_hexa_schemes.h>
-#include <HMP/refinementschemes.hpp>
 #include <cinolib/grid_projector.h>
 #include <cinolib/feature_network.h>
 #include <cinolib/feature_mapping.h>
@@ -111,14 +110,6 @@ namespace HMP
 		CommandManager& command_manager;
 
 		std::deque<std::shared_ptr<Refine>> refine_queue;
-
-		using RefinementPair = std::pair<NestedVector3Double, NestedVector3Uint>;
-		std::unordered_map<SchemeType, RefinementPair> st2subdivision = {
-			{STDREF, RefinementPair(REFINEMENT::weights, REFINEMENT::vids)},
-			{FACESCM, RefinementPair(FACE::weights, FACE::vids)},
-			{EDGESCM, RefinementPair(EDGE::weights, EDGE::vids)},
-			{FACEREF, RefinementPair(FACEREFINEMENT::weights, FACEREFINEMENT::vids)}
-		};
 
 		std::pair<int, unsigned int> direction_to_axis(const cinolib::vec3d& dir);
 

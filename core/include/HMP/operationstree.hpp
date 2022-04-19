@@ -11,12 +11,12 @@
 #include <fstream>
 #include <sstream>
 #include <HMP/utils.hpp>
+#include <HMP/Refinement/schemes.hpp>
 #include <regex>
 
 namespace HMP
 {
 
-	enum SchemeType : unsigned int { STDREF = 0, FACESCM = 1, EDGESCM = 2, FACEREF = 3 };
 	enum Primitive { REFINE, EXTRUDE, REMOVE };
 	enum NodeType { ELEMENT, OPERATION };
 
@@ -56,11 +56,11 @@ namespace HMP
 	struct Refine : Operation
 	{
 		Refine() { primitive = REFINE; }
-		SchemeType scheme_type = STDREF;
+		Refinement::EScheme scheme_type = Refinement::EScheme::StandardRefinement;
 		std::vector<unsigned int> vert_map = { 0,1,2,3,4,5,6,7 };
 		std::string toString()
 		{
-			return "R" + std::to_string(scheme_type) +
+			return "R" + std::to_string(static_cast<int>(scheme_type)) +
 				"<" + std::to_string(vert_map[0]) + std::to_string(vert_map[1]) +
 				std::to_string(vert_map[2]) + std::to_string(vert_map[3]) +
 				std::to_string(vert_map[4]) + std::to_string(vert_map[5]) +

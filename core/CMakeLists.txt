@@ -18,6 +18,7 @@ add_library (core STATIC
     "src/Dag/Operation.cpp"
     "src/Dag/Refine.cpp"
     "src/Refinement/schemes.cpp"
+    "src/Utils/transform.cpp"
 )
 
 set_target_properties (core PROPERTIES

@@ -3,6 +3,8 @@
 #include <assert.h> // FIXME
 #include <cinolib/octree.h>
 #include <cmath>
+#include <HMP/Refinement/schemes.hpp>
+#include <HMP/Utils/transform.hpp>
 
 namespace HMP
 {
@@ -313,15 +315,15 @@ namespace HMP
 				break;
 			case ROTATE_X:
 				if (op->primitive == EXTRUDE) std::static_pointer_cast<Extrude>(op)->offset = x_rot_mask[std::static_pointer_cast<Extrude>(op)->offset];
-				if (op->primitive == REFINE) for (unsigned int& value : std::static_pointer_cast<Refine>(op)->vert_map) value = apply_rotation(0, value, 3);
+				if (op->primitive == REFINE) for (unsigned int& value : std::static_pointer_cast<Refine>(op)->vert_map) value = Utils::rotateVertices(Utils::EAxis::X, value, 3);
 				break;
 			case ROTATE_Y:
 				if (op->primitive == EXTRUDE) std::static_pointer_cast<Extrude>(op)->offset = y_rot_mask[std::static_pointer_cast<Extrude>(op)->offset];
-				if (op->primitive == REFINE) for (unsigned int& value : std::static_pointer_cast<Refine>(op)->vert_map) value = apply_rotation(1, value, 3);
+				if (op->primitive == REFINE) for (unsigned int& value : std::static_pointer_cast<Refine>(op)->vert_map) value = Utils::rotateVertices(Utils::EAxis::Y, value, 3);
 				break;
 			case ROTATE_Z:
 				if (op->primitive == EXTRUDE) std::static_pointer_cast<Extrude>(op)->offset = z_rot_mask[std::static_pointer_cast<Extrude>(op)->offset];
-				if (op->primitive == REFINE) for (unsigned int& value : std::static_pointer_cast<Refine>(op)->vert_map) value = apply_rotation(2, value, 3);
+				if (op->primitive == REFINE) for (unsigned int& value : std::static_pointer_cast<Refine>(op)->vert_map) value = Utils::rotateVertices(Utils::EAxis::Z, value, 3);
 				break;
 			default:
 				break;
@@ -466,8 +468,8 @@ namespace HMP
 	void Grid::refine(unsigned int pid, const std::shared_ptr<Refine>& refine, bool remove_father)
 	{
 
-		const auto& weights = st2subdivision[refine->scheme_type].first;
-		const auto& vids = st2subdivision[refine->scheme_type].second;
+		const auto& weights = Refinement::schemes.at(refine->scheme_type)->weights;
+		const auto& vids = Refinement::schemes.at(refine->scheme_type)->vertices;
 
 
 		for (unsigned int i = 0; i < weights.size(); i++)
