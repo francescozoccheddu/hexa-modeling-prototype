@@ -6,6 +6,11 @@
 namespace HMP
 {
 
+	enum class EScheme
+	{
+		StandardRefinement, FaceScheme, EdgeScheme, FaceRefinement
+	};
+
 	static const std::map<unsigned int, unsigned int> x_rotation_map = { {0, 3},{1,2},{2,6},{3,7},{4,0},{5,1},{6,5},{7,4} };
 	static const std::map<unsigned int, unsigned int> y_rotation_map = { {0, 3},{1,0},{2,1},{3,2},{4,7},{5,4},{6,5},{7,6} };
 	static const std::map<unsigned int, unsigned int> z_rotation_map = { {0, 4},{1,0},{2,3},{3,7},{4,5},{5,1},{6,2},{7,6} };

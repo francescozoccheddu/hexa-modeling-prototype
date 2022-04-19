@@ -112,13 +112,13 @@ namespace HMP
 
 		std::deque<std::shared_ptr<Refine>> refine_queue;
 
-
-		//std::unordered_map<SchemeType, std::vector<std::vector<std::vector<unsigned int>>>> st2subdivision = {{STDREF, cinolib::hex_to_grid_3x3x3}, {FIXSCM1, cinolib::hex_to_grid_2x2x2}};
 		using RefinementPair = std::pair<NestedVector3Double, NestedVector3Uint>;
-		std::unordered_map<SchemeType, std::pair< std::vector<std::vector<std::vector<double>>>, std::vector<std::vector<std::vector<unsigned int>>> >> st2subdivision = { {STDREF, RefinementPair(REFINEMENT::weights, REFINEMENT::vids)},
-																																								  {FACESCM, RefinementPair(FACE::weights, FACE::vids)},
-																																								  {EDGESCM, RefinementPair(EDGE::weights, EDGE::vids)},
-																																								  {FACEREF, RefinementPair(FACEREFINEMENT::weights, FACEREFINEMENT::vids)} };
+		std::unordered_map<SchemeType, RefinementPair> st2subdivision = {
+			{STDREF, RefinementPair(REFINEMENT::weights, REFINEMENT::vids)},
+			{FACESCM, RefinementPair(FACE::weights, FACE::vids)},
+			{EDGESCM, RefinementPair(EDGE::weights, EDGE::vids)},
+			{FACEREF, RefinementPair(FACEREFINEMENT::weights, FACEREFINEMENT::vids)}
+		};
 
 		std::pair<int, unsigned int> direction_to_axis(const cinolib::vec3d& dir);
 

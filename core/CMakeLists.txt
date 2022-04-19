@@ -11,17 +11,12 @@ add_library (core STATIC
     "src/actions/moveaction.cpp"
     "src/actions/refineaction.cpp"
     "src/actions/removeaction.cpp"
-    "include/hexa-modeling-prototype/grid.hpp"
-    "include/hexa-modeling-prototype/operationstree.hpp"
-    "include/hexa-modeling-prototype/refinementschemes.hpp"
-    "include/hexa-modeling-prototype/undoredo.hpp"
-    "include/hexa-modeling-prototype/utils.hpp"
-    "include/hexa-modeling-prototype/actions/extrudeaction.hpp"
-    "include/hexa-modeling-prototype/actions/facerefineaction.hpp"
-    "include/hexa-modeling-prototype/actions/makeconformingaction.hpp"
-    "include/hexa-modeling-prototype/actions/moveaction.hpp"
-    "include/hexa-modeling-prototype/actions/refineaction.hpp"
-    "include/hexa-modeling-prototype/actions/removeaction.hpp"
+    "src/dag/Delete.cpp"
+    "src/dag/Element.cpp"
+    "src/dag/Extrude.cpp"
+    "src/dag/Node.cpp"
+    "src/dag/Operation.cpp"
+    "src/dag/Refine.cpp"
 )
 
 set_target_properties (core PROPERTIES
