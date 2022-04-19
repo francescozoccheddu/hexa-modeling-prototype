@@ -3,6 +3,7 @@
 #endif
 
 #include <HMP/Utils/SetView.hpp>
+#include <stdexcept>
 
 namespace HMP::Utils
 {
@@ -96,9 +97,27 @@ namespace HMP::Utils
 	}
 
 	template<typename TInternal, typename TView>
+	void SetView<TInternal, TView>::addOrThrow(TView& _item)
+	{
+		if (!add(_item))
+		{
+			throw std::logic_error{ "not added" };
+		}
+	}
+
+	template<typename TInternal, typename TView>
 	bool SetView<TInternal, TView>::remove(const TView& _item)
 	{
-		return m_data->erase(reinterpret_cast<const TInternal*>(&_item));
+		return m_data->erase(const_cast<TInternal*>(reinterpret_cast<const TInternal*>(&_item)));
+	}
+
+	template<typename TInternal, typename TView>
+	void SetView<TInternal, TView>::removeOrThrow(const TView& _item)
+	{
+		if (!remove(_item))
+		{
+			throw std::logic_error{ "not removed" };
+		}
 	}
 
 	template<typename TInternal, typename TView>

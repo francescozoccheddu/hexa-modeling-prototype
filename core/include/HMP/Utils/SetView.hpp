@@ -2,9 +2,7 @@
 
 #include <iterator>
 #include <cstddef>
-#include <compare>
 #include <unordered_set>
-#include <concepts>
 #include <memory>
 
 namespace HMP::Utils
@@ -21,7 +19,7 @@ namespace HMP::Utils
 
 		std::unordered_set<TInternal*>::iterator m_iterator;
 
-		SetViewIterator(std::unordered_set<TInternal*>::iterator _iterator);
+		explicit SetViewIterator(std::unordered_set<TInternal*>::iterator _iterator);
 
 	public:
 
@@ -56,7 +54,7 @@ namespace HMP::Utils
 
 		std::shared_ptr<std::unordered_set<TInternal*>> m_data;
 
-		SetView(std::shared_ptr<std::unordered_set<TInternal*>> _data);
+		explicit SetView(std::shared_ptr<std::unordered_set<TInternal*>> _data);
 
 	public:
 
@@ -69,7 +67,9 @@ namespace HMP::Utils
 		SetView<TInternal, TNewView> view();
 
 		bool add(TView& _item);
+		void addOrThrow(TView& _item);
 		bool remove(const TView& _item);
+		void removeOrThrow(const TView& _item);
 		bool has(const TView& _item) const;
 		std::size_t size() const;
 		void clear();

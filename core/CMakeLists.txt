@@ -17,6 +17,7 @@ add_library (core STATIC
     "src/Dag/Node.cpp"
     "src/Dag/Operation.cpp"
     "src/Dag/Refine.cpp"
+    "src/Dag/Utils.cpp"
     "src/Refinement/schemes.cpp"
     "src/Utils/transform.cpp"
 )

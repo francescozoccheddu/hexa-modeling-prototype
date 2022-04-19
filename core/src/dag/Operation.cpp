@@ -13,22 +13,22 @@ namespace HMP::Dag
 		return m_primitive;
 	}
 
-	Utils::SetView<Operation>& Operation::dependencies()
+	Operation::DependencySetView& Operation::dependencies()
 	{
 		return m_dependencies;
 	}
 
-	const Utils::SetView<Operation>& Operation::dependencies() const
+	const Operation::DependencySetView& Operation::dependencies() const
 	{
 		return m_dependencies;
 	}
 
-	Utils::SetView<Operation>& Operation::dependents()
+	Operation::DependencySetView& Operation::dependents()
 	{
 		return m_dependents;
 	}
 
-	const Utils::SetView<Operation>& Operation::dependents() const
+	const Operation::DependencySetView& Operation::dependents() const
 	{
 		return m_dependents;
 	}
@@ -43,22 +43,22 @@ namespace HMP::Dag
 		return m_userDefined;
 	}
 
-	Utils::SetView<Element>& Operation::parents()
+	Operation::DagSetView& Operation::parents()
 	{
 		return m_parents;
 	}
 
-	const Utils::SetView<Element>& Operation::parents() const
+	const Operation::DagSetView& Operation::parents() const
 	{
 		return m_parents;
 	}
 
-	Utils::SetView<Element>& Operation::children()
+	Operation::DagSetView& Operation::children()
 	{
 		return m_children;
 	}
 
-	const Utils::SetView<Element>& Operation::children() const
+	const Operation::DagSetView& Operation::children() const
 	{
 		return m_children;
 	}

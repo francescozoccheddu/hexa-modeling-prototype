@@ -13,6 +13,8 @@ namespace HMP::Dag
 
 	public:
 
+		using SetView = HMP::Utils::SetView<Node>;
+
 		enum class EType
 		{
 			Element, Operation
@@ -21,19 +23,19 @@ namespace HMP::Dag
 	private:
 
 		const EType m_type;
-		Utils::SetView<Node> m_parents{};
-		Utils::SetView<Node> m_children{};
+		SetView m_parents{};
+		SetView m_children{};
 
 		Node& operator=(const Node&) = delete;
 		Node& operator=(Node&&) = delete;
 
 	protected:
 
-		Node(EType _type);
+		explicit Node(EType _type);
 
 	public:
 
-		virtual ~Node() = default;
+		virtual ~Node();
 
 		EType type() const;
 		bool isElement() const;
@@ -44,13 +46,21 @@ namespace HMP::Dag
 		Operation& operation();
 		const Operation& operation() const;
 
-		Utils::SetView<Node>& parents();
-		const Utils::SetView<Node>& parents() const;
-		Utils::SetView<Node>& children();
-		const Utils::SetView<Node>& children() const;
+		SetView& parents();
+		const SetView& parents() const;
+		SetView& children();
+		const SetView& children() const;
 
 		bool isRoot() const;
 		bool isLeaf() const;
+
+		void attachParent(Node& _parent);
+		void detachParent(Node& _parent);
+		void detachParents();
+		void attachChild(Node& _child);
+		void detachChild(Node& _child, bool _deleteOrphaned = true);
+		void detachChildren(bool _deleteOrphaned = true);
+		void detachAll(bool _deleteOrphaned = true);
 
 	};
 

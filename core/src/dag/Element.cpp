@@ -38,22 +38,22 @@ namespace HMP::Dag
 		return *m_parents.begin();
 	}
 
-	Utils::SetView<Operation>& Element::parents()
+	Element::DagSetView& Element::parents()
 	{
 		return m_parents;
 	}
 
-	const Utils::SetView<Operation>& Element::parents() const
+	const Element::DagSetView& Element::parents() const
 	{
 		return m_parents;
 	}
 
-	Utils::SetView<Operation>& Element::children()
+	Element::DagSetView& Element::children()
 	{
 		return m_children;
 	}
 
-	const Utils::SetView<Operation>& Element::children() const
+	const Element::DagSetView& Element::children() const
 	{
 		return m_children;
 	}

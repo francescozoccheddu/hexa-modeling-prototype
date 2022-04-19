@@ -11,13 +11,17 @@ namespace HMP::Dag
 	class Element : public Node
 	{
 
+	public:
+
+		using DagSetView = HMP::Utils::SetView<Node, Operation>;
+
 	private:
 
 		unsigned int m_pid{};
 		std::array<cinolib::vec3d, 8> m_vertices;
 
-		Utils::SetView<Operation> m_parents{ parents().view<Operation>() };
-		Utils::SetView<Operation> m_children{ children().view<Operation>() };
+		DagSetView m_parents{ Node::parents().view<Operation>() };
+		DagSetView m_children{ Node::children().view<Operation>() };
 
 	public:
 
@@ -31,10 +35,10 @@ namespace HMP::Dag
 
 		const Operation& parent() const;
 
-		Utils::SetView<Operation>& parents();
-		const Utils::SetView<Operation>& parents() const;
-		Utils::SetView<Operation>& children();
-		const Utils::SetView<Operation>& children() const;
+		DagSetView& parents();
+		const DagSetView& parents() const;
+		DagSetView& children();
+		const DagSetView& children() const;
 
 	};
 

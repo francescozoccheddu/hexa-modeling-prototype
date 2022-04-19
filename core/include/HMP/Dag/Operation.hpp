@@ -11,6 +11,9 @@ namespace HMP::Dag
 
 	public:
 
+		using DependencySetView = HMP::Utils::SetView<Operation>;
+		using DagSetView = HMP::Utils::SetView<Node, Element>;
+
 		enum class EPrimitive
 		{
 			Refine, Extrude, Delete
@@ -19,33 +22,33 @@ namespace HMP::Dag
 	private:
 
 		const EPrimitive m_primitive;
-		Utils::SetView<Operation> m_dependencies{};
-		Utils::SetView<Operation> m_dependents{};
+		DependencySetView m_dependencies{};
+		DependencySetView m_dependents{};
 		bool m_userDefined{ true };
 
-		Utils::SetView<Element> m_parents{ parents().view<Element>() };
-		Utils::SetView<Element> m_children{ children().view<Element>() };
+		DagSetView m_parents{ Node::parents().view<Element>() };
+		DagSetView m_children{ Node::children().view<Element>() };
 
 	protected:
 
-		Operation(EPrimitive _primitive);
+		explicit Operation(EPrimitive _primitive);
 
 	public:
 
 		EPrimitive primitive() const;
 
-		Utils::SetView<Operation>& dependencies();
-		const Utils::SetView<Operation>& dependencies() const;
-		Utils::SetView<Operation>& dependents();
-		const Utils::SetView<Operation>& dependents() const;
+		DependencySetView& dependencies();
+		const DependencySetView& dependencies() const;
+		DependencySetView& dependents();
+		const DependencySetView& dependents() const;
 
 		bool& userDefined();
 		bool userDefined() const;
 
-		Utils::SetView<Element>& parents();
-		const Utils::SetView<Element>& parents() const;
-		Utils::SetView<Element>& children();
-		const Utils::SetView<Element>& children() const;
+		DagSetView& parents();
+		const DagSetView& parents() const;
+		DagSetView& children();
+		const DagSetView& children() const;
 
 	};
 
