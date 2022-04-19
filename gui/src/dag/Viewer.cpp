@@ -1,4 +1,4 @@
-#include <hexa-modeling-prototype/gui/dag/Viewer.hpp>
+#include <HMP/gui/dag/Viewer.hpp>
 #include <cinolib/clamp.h>
 #include <algorithm>
 #include <cmath>

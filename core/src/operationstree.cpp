@@ -1,4 +1,4 @@
-#include <hexa-modeling-prototype/operationstree.hpp>
+#include <HMP/operationstree.hpp>
 
 #include <assert.h>
 #include <deque>

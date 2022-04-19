@@ -9,22 +9,22 @@
 #include <utility>
 #include <string>
 #include <cinolib/meshes/meshes.h>
-#include <hexa-modeling-prototype/undoredo.hpp>
-#include <hexa-modeling-prototype/operationstree.hpp>
-#include <hexa-modeling-prototype/utils.hpp>
+#include <HMP/undoredo.hpp>
+#include <HMP/operationstree.hpp>
+#include <HMP/utils.hpp>
 #include <cinolib/subdivision_legacy_hexa_schemes.h>
-#include <hexa-modeling-prototype/refinementschemes.hpp>
+#include <HMP/refinementschemes.hpp>
 #include <cinolib/grid_projector.h>
 #include <cinolib/feature_network.h>
 #include <cinolib/feature_mapping.h>
 #include <cinolib/export_surface.h>
 #include <cinolib/smoother.h>
-#include <hexa-modeling-prototype/actions/extrudeaction.hpp>
-#include <hexa-modeling-prototype/actions/removeaction.hpp>
-#include <hexa-modeling-prototype/actions/refineaction.hpp>
-#include <hexa-modeling-prototype/actions/facerefineaction.hpp>
-#include <hexa-modeling-prototype/actions/moveaction.hpp>
-#include <hexa-modeling-prototype/actions/makeconformingaction.hpp>
+#include <HMP/actions/extrudeaction.hpp>
+#include <HMP/actions/removeaction.hpp>
+#include <HMP/actions/refineaction.hpp>
+#include <HMP/actions/facerefineaction.hpp>
+#include <HMP/actions/moveaction.hpp>
+#include <HMP/actions/makeconformingaction.hpp>
 
 namespace HMP
 {

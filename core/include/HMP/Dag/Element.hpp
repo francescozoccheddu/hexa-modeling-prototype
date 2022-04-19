@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hexa-modeling-prototype/dag/Node.hpp>
+#include <HMP/Dag/Node.hpp>
 #include <span>
 #include <array>
 #include <cinolib/geometry/vec_mat.h>

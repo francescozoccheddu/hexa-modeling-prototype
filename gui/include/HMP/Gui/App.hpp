@@ -1,7 +1,7 @@
 #pragma once
 
-#include <hexa-modeling-prototype/grid.hpp>
-#include <hexa-modeling-prototype/gui/dag/Viewer.hpp>
+#include <HMP/grid.hpp>
+#include <HMP/gui/dag/Viewer.hpp>
 #include <cinolib/gl/glcanvas.h>
 #include <cinolib/meshes/drawable_trimesh.h>
 #include <cinolib/color.h>

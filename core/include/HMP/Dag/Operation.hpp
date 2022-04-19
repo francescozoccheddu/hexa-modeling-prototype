@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hexa-modeling-prototype/dag/Node.hpp>
+#include <HMP/Dag/Node.hpp>
 #include <vector>
 #include <span>
 

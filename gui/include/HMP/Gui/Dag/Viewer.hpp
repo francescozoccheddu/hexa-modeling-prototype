@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hexa-modeling-prototype/gui/dag/Layout.hpp>
+#include <HMP/gui/dag/Layout.hpp>
 #include <cinolib/geometry/vec_mat.h>
 
 namespace HMP::Gui::Dag

@@ -1,4 +1,4 @@
-#include <hexa-modeling-prototype/dag/Refine.hpp>
+#include <HMP/Dag/Refine.hpp>
 #include <stdexcept>
 
 namespace HMP::Dag
@@ -8,12 +8,12 @@ namespace HMP::Dag
 		: Operation{ EPrimitive::Refine }
 	{}
 
-	EScheme& Refine::scheme()
+	Refinement::EScheme& Refine::scheme()
 	{
 		return m_scheme;
 	}
 
-	EScheme Refine::scheme() const
+	Refinement::EScheme Refine::scheme() const
 	{
 		return m_scheme;
 	}

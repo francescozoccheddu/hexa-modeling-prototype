@@ -1,4 +1,4 @@
-#include <hexa-modeling-prototype/gui/dag/createLayout.hpp>
+#include <HMP/gui/dag/createLayout.hpp>
 
 #include <unordered_map>
 #include <deque>

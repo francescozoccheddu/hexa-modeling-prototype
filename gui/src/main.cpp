@@ -1,5 +1,5 @@
 ﻿
-#include <hexa-modeling-prototype/gui/App.hpp>
+#include <HMP/gui/App.hpp>
 
 int main()
 {

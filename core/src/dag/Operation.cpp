@@ -1,6 +1,6 @@
-#include <hexa-modeling-prototype/dag/Operation.hpp>
-#include <hexa-modeling-prototype/dag/Element.hpp>
-#include <hexa-modeling-prototype/utils/span.hpp>
+#include <HMP/Dag/Operation.hpp>
+#include <HMP/Dag/Element.hpp>
+#include <HMP/Utils/span.hpp>
 
 namespace HMP::Dag
 {

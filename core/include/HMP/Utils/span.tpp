@@ -2,7 +2,7 @@
 #error __FILE__ should not be directly included
 #endif
 
-#include <hexa-modeling-prototype/utils/span.hpp>
+#include <HMP/Utils/span.hpp>
 
 namespace HMP::Utils
 {

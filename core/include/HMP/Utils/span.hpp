@@ -26,5 +26,5 @@ namespace HMP::Utils
 }
 
 #define HMP_UTILS_SPAN_IMPL
-#include <hexa-modeling-prototype/utils/span.tpp>
+#include <HMP/Utils/span.tpp>
 #undef HMP_UTILS_SPAN_IMPL

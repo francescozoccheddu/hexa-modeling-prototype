@@ -1,4 +1,4 @@
-#include <hexa-modeling-prototype/actions/removeaction.hpp>
+#include <HMP/actions/removeaction.hpp>
 
 namespace HMP
 {

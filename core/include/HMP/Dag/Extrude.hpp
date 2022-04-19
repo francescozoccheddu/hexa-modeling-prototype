@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hexa-modeling-prototype/dag/Operation.hpp>
+#include <HMP/Dag/Operation.hpp>
 
 namespace HMP::Dag
 {

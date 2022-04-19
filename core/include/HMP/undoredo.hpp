@@ -4,7 +4,7 @@
 #include <list>
 #include <memory>
 #include <iostream>
-#include <hexa-modeling-prototype/operationstree.hpp>
+#include <HMP/operationstree.hpp>
 
 namespace HMP
 {

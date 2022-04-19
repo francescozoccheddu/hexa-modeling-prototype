@@ -1,4 +1,4 @@
-#include <hexa-modeling-prototype/undoredo.hpp>
+#include <HMP/undoredo.hpp>
 
 namespace HMP
 {

@@ -1,4 +1,4 @@
-#include <hexa-modeling-prototype/actions/moveaction.hpp>
+#include <HMP/actions/moveaction.hpp>
 
 namespace HMP
 {

@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <cmath>
-#include <hexa-modeling-prototype/operationstree.hpp>
+#include <HMP/operationstree.hpp>
 #include <cinolib/geometry/vec_mat.h>
 
 namespace HMP::Gui::Dag

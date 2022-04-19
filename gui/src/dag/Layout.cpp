@@ -1,4 +1,4 @@
-#include <hexa-modeling-prototype/gui/dag/Layout.hpp>
+#include <HMP/gui/dag/Layout.hpp>
 
 #include <utility>
 #include <algorithm>

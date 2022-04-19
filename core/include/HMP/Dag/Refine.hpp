@@ -1,7 +1,7 @@
 #pragma once
 
-#include <hexa-modeling-prototype/dag/Operation.hpp>
-#include <hexa-modeling-prototype/refinementschemes.hpp>
+#include <HMP/Dag/Operation.hpp>
+#include <HMP/Refinement/schemes.hpp>
 #include <array>
 
 namespace HMP::Dag
@@ -12,7 +12,7 @@ namespace HMP::Dag
 
 	private:
 
-		EScheme m_scheme;
+		Refinement::EScheme m_scheme;
 		bool m_needsTopologyFix;
 		std::array<unsigned int, 8> m_vertices;
 
@@ -20,8 +20,8 @@ namespace HMP::Dag
 
 		Refine();
 
-		EScheme& scheme();
-		EScheme scheme() const;
+		Refinement::EScheme& scheme();
+		Refinement::EScheme scheme() const;
 
 		std::array<unsigned int, 8>& vertices();
 		const std::array<unsigned int, 8>& vertices() const;

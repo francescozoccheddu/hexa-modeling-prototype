@@ -1,4 +1,4 @@
-#include <hexa-modeling-prototype/actions/makeconformingaction.hpp>
+#include <HMP/actions/makeconformingaction.hpp>
 #include <cinolib/stl_container_utilities.h>
 
 namespace HMP

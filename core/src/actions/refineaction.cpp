@@ -1,4 +1,4 @@
-#include <hexa-modeling-prototype/actions/refineaction.hpp>
+#include <HMP/actions/refineaction.hpp>
 
 namespace HMP
 {

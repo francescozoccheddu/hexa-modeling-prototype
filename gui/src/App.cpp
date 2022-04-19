@@ -1,6 +1,6 @@
 #pragma once
 
-#include <hexa-modeling-prototype/gui/App.hpp>
+#include <HMP/gui/App.hpp>
 #include <cinolib/gl/volume_mesh_controls.h>
 #include <cinolib/gl/glcanvas.h>
 #include <cstdlib>
@@ -9,7 +9,7 @@
 #include <GLFW/glfw3.h>
 #include <cinolib/gl/file_dialog_open.h>
 #include <cinolib/gl/file_dialog_save.h>
-#include <hexa-modeling-prototype/gui/dag/createLayout.hpp>
+#include <HMP/gui/dag/createLayout.hpp>
 #include <utility>
 
 namespace HMP::Gui

@@ -1,4 +1,4 @@
-#include <hexa-modeling-prototype/actions/facerefineaction.hpp>
+#include <HMP/actions/facerefineaction.hpp>
 #include <assert.h>
 
 namespace HMP

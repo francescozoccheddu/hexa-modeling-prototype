@@ -10,7 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#include <hexa-modeling-prototype/utils.hpp>
+#include <HMP/utils.hpp>
 #include <regex>
 
 namespace HMP

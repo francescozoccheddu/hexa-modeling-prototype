@@ -2,8 +2,8 @@
 
 #include <vector>
 #include <memory>
-#include <hexa-modeling-prototype/grid.hpp>
-#include <hexa-modeling-prototype/undoredo.hpp>
+#include <HMP/grid.hpp>
+#include <HMP/undoredo.hpp>
 
 namespace HMP
 {

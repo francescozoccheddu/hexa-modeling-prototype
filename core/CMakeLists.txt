@@ -11,12 +11,13 @@ add_library (core STATIC
     "src/actions/moveaction.cpp"
     "src/actions/refineaction.cpp"
     "src/actions/removeaction.cpp"
-    "src/dag/Delete.cpp"
-    "src/dag/Element.cpp"
-    "src/dag/Extrude.cpp"
-    "src/dag/Node.cpp"
-    "src/dag/Operation.cpp"
-    "src/dag/Refine.cpp"
+    "src/Dag/Delete.cpp"
+    "src/Dag/Element.cpp"
+    "src/Dag/Extrude.cpp"
+    "src/Dag/Node.cpp"
+    "src/Dag/Operation.cpp"
+    "src/Dag/Refine.cpp"
+    "src/Refinement/schemes.cpp"
 )
 
 set_target_properties (core PROPERTIES

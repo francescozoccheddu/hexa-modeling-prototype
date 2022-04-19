@@ -1,4 +1,4 @@
-#include <hexa-modeling-prototype/grid.hpp>
+#include <HMP/grid.hpp>
 #include <unordered_set> // FIXME
 #include <assert.h> // FIXME
 #include <cinolib/octree.h>

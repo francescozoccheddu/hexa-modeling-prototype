@@ -1,4 +1,4 @@
-#include <hexa-modeling-prototype/actions/extrudeaction.hpp>
+#include <HMP/actions/extrudeaction.hpp>
 
 namespace HMP
 {

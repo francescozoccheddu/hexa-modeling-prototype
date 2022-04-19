@@ -2,17 +2,17 @@
 
 #include <vector>
 #include <memory>
-#include <hexa-modeling-prototype/grid.hpp>
-#include <hexa-modeling-prototype/undoredo.hpp>
+#include <HMP/grid.hpp>
+#include <HMP/undoredo.hpp>
 
 namespace HMP
 {
 
 	class Grid;
-	class RemoveAction : public Action
+	class FaceRefineAction : public Action
 	{
 	public:
-		RemoveAction(Grid& grid, unsigned int pid);
+		FaceRefineAction(Grid& grid, unsigned int fid);
 
 		void execute() override;
 		void undo() override;
@@ -21,6 +21,7 @@ namespace HMP
 
 		Grid& grid;
 		unsigned int pid;
+		unsigned int face_off;
 		std::vector<unsigned int> vids;
 		std::shared_ptr<Operation> op;
 	};
