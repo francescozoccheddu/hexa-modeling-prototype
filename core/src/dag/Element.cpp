@@ -1,6 +1,5 @@
 #include <HMP/Dag/Element.hpp>
 #include <HMP/Dag/Operation.hpp>
-#include <HMP/Utils/span.hpp>
 #include <stdexcept>
 
 namespace HMP::Dag
@@ -30,28 +29,33 @@ namespace HMP::Dag
 		return m_vertices;
 	}
 
-	Operation*& Element::parent()
+	const Operation& Element::parent() const
 	{
 		if (parents().size() != 1)
 		{
 			throw std::logic_error{ "not one parent" };
 		}
-		return reinterpret_cast<Operation*&>(parents()[0]);
+		return *m_parents.begin();
 	}
 
-	const Operation* Element::parent() const
+	Utils::SetView<Operation>& Element::parents()
 	{
-		return const_cast<Element*>(this)->parent();
+		return m_parents;
 	}
 
-	std::span<Operation*> Element::children()
+	const Utils::SetView<Operation>& Element::parents() const
 	{
-		return Utils::span<Operation>(Node::children());
+		return m_parents;
 	}
 
-	std::span<const Operation* const> Element::children() const
+	Utils::SetView<Operation>& Element::children()
 	{
-		return Utils::constSpan<const Operation>(Node::children());
+		return m_children;
+	}
+
+	const Utils::SetView<Operation>& Element::children() const
+	{
+		return m_children;
 	}
 
 }

@@ -1,4 +1,4 @@
-#include <HMP/gui/dag/Layout.hpp>
+#include <HMP/Gui/Dag/Layout.hpp>
 
 #include <utility>
 #include <algorithm>

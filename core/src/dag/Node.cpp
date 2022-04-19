@@ -1,7 +1,6 @@
 #include <HMP/Dag/Node.hpp>
 #include <HMP/Dag/Element.hpp>
 #include <HMP/Dag/Operation.hpp>
-#include <HMP/Utils/span.hpp>
 #include <stdexcept>
 
 namespace HMP::Dag
@@ -54,24 +53,24 @@ namespace HMP::Dag
 		return const_cast<Node*>(this)->operation();
 	}
 
-	std::vector<Node*>& Node::parents()
+	Utils::SetView<Node>& Node::parents()
 	{
 		return m_parents;
 	}
 
-	std::span<const Node* const> Node::parents() const
+	const Utils::SetView<Node>& Node::parents() const
 	{
-		return Utils::constSpan<const Node>(m_parents);
+		return m_parents;
 	}
 
-	std::vector<Node*>& Node::children()
+	Utils::SetView<Node>& Node::children()
 	{
 		return m_children;
 	}
 
-	std::span<const Node* const> Node::children() const
+	const Utils::SetView<Node>& Node::children() const
 	{
-		return Utils::constSpan<const Node>(m_children);
+		return m_children;
 	}
 
 	bool Node::isRoot() const

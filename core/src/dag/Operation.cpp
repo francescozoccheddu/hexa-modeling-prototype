@@ -1,6 +1,5 @@
 #include <HMP/Dag/Operation.hpp>
 #include <HMP/Dag/Element.hpp>
-#include <HMP/Utils/span.hpp>
 
 namespace HMP::Dag
 {
@@ -14,24 +13,24 @@ namespace HMP::Dag
 		return m_primitive;
 	}
 
-	std::vector<Operation*>& Operation::dependencies()
+	Utils::SetView<Operation>& Operation::dependencies()
 	{
 		return m_dependencies;
 	}
 
-	std::span<const Operation* const> Operation::dependencies() const
+	const Utils::SetView<Operation>& Operation::dependencies() const
 	{
-		return Utils::constSpan<const Operation>(m_dependencies);
+		return m_dependencies;
 	}
 
-	std::vector<Operation*>& Operation::dependents()
+	Utils::SetView<Operation>& Operation::dependents()
 	{
 		return m_dependents;
 	}
 
-	std::span<const Operation* const> Operation::dependents() const
+	const Utils::SetView<Operation>& Operation::dependents() const
 	{
-		return Utils::constSpan<const Operation>(m_dependents);
+		return m_dependents;
 	}
 
 	bool& Operation::userDefined()
@@ -44,24 +43,24 @@ namespace HMP::Dag
 		return m_userDefined;
 	}
 
-	std::span<Element*> Operation::parents()
+	Utils::SetView<Element>& Operation::parents()
 	{
-		return Utils::span<Element>(Node::parents());
+		return m_parents;
 	}
 
-	std::span<const Element* const> Operation::parents() const
+	const Utils::SetView<Element>& Operation::parents() const
 	{
-		return Utils::constSpan<const Element>(Node::parents());
+		return m_parents;
 	}
 
-	std::span<Element*> Operation::children()
+	Utils::SetView<Element>& Operation::children()
 	{
-		return Utils::span<Element>(Node::children());
+		return m_children;
 	}
 
-	std::span<const Element* const> Operation::children() const
+	const Utils::SetView<Element>& Operation::children() const
 	{
-		return Utils::constSpan<const Element>(Node::children());
+		return m_children;
 	}
 
 }

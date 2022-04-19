@@ -1,8 +1,7 @@
 #pragma once
 
 #include <HMP/Dag/Node.hpp>
-#include <vector>
-#include <span>
+#include <HMP/Utils/SetView.hpp>
 
 namespace HMP::Dag
 {
@@ -20,9 +19,12 @@ namespace HMP::Dag
 	private:
 
 		const EPrimitive m_primitive;
-		std::vector<Operation*> m_dependencies{};
-		std::vector<Operation*> m_dependents{};
+		Utils::SetView<Operation> m_dependencies{};
+		Utils::SetView<Operation> m_dependents{};
 		bool m_userDefined{ true };
+
+		Utils::SetView<Element> m_parents{ parents().view<Element>() };
+		Utils::SetView<Element> m_children{ children().view<Element>() };
 
 	protected:
 
@@ -32,18 +34,18 @@ namespace HMP::Dag
 
 		EPrimitive primitive() const;
 
-		std::vector<Operation*>& dependencies();
-		std::span<const Operation* const> dependencies() const;
-		std::vector<Operation*>& dependents();
-		std::span<const Operation* const> dependents() const;
+		Utils::SetView<Operation>& dependencies();
+		const Utils::SetView<Operation>& dependencies() const;
+		Utils::SetView<Operation>& dependents();
+		const Utils::SetView<Operation>& dependents() const;
 
 		bool& userDefined();
 		bool userDefined() const;
 
-		std::span<Element*> parents();
-		std::span<const Element* const> parents() const;
-		std::span<Element*> children();
-		std::span<const Element* const> children() const;
+		Utils::SetView<Element>& parents();
+		const Utils::SetView<Element>& parents() const;
+		Utils::SetView<Element>& children();
+		const Utils::SetView<Element>& children() const;
 
 	};
 

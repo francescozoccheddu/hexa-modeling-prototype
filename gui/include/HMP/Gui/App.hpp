@@ -1,7 +1,7 @@
 #pragma once
 
 #include <HMP/grid.hpp>
-#include <HMP/gui/dag/Viewer.hpp>
+#include <HMP/Gui/Dag/Viewer.hpp>
 #include <cinolib/gl/glcanvas.h>
 #include <cinolib/meshes/drawable_trimesh.h>
 #include <cinolib/color.h>

@@ -1,5 +1,5 @@
 ﻿
-#include <HMP/gui/App.hpp>
+#include <HMP/Gui/App.hpp>
 
 int main()
 {

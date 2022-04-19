@@ -1,7 +1,6 @@
 #pragma once
 
-#include <vector>
-#include <span>
+#include <HMP/Utils/SetView.hpp>
 
 namespace HMP::Dag
 {
@@ -22,8 +21,8 @@ namespace HMP::Dag
 	private:
 
 		const EType m_type;
-		std::vector<Node*> m_parents{};
-		std::vector<Node*> m_children{};
+		Utils::SetView<Node> m_parents{};
+		Utils::SetView<Node> m_children{};
 
 		Node& operator=(const Node&) = delete;
 		Node& operator=(Node&&) = delete;
@@ -45,10 +44,10 @@ namespace HMP::Dag
 		Operation& operation();
 		const Operation& operation() const;
 
-		std::vector<Node*>& parents();
-		std::span<const Node* const> parents() const;
-		std::vector<Node*>& children();
-		std::span<const Node* const> children() const;
+		Utils::SetView<Node>& parents();
+		const Utils::SetView<Node>& parents() const;
+		Utils::SetView<Node>& children();
+		const Utils::SetView<Node>& children() const;
 
 		bool isRoot() const;
 		bool isLeaf() const;

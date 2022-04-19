@@ -1,4 +1,4 @@
-#include <HMP/gui/dag/Viewer.hpp>
+#include <HMP/Gui/Dag/Viewer.hpp>
 #include <cinolib/clamp.h>
 #include <algorithm>
 #include <cmath>

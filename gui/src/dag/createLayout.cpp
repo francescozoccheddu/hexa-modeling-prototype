@@ -1,4 +1,4 @@
-#include <HMP/gui/dag/createLayout.hpp>
+#include <HMP/Gui/Dag/createLayout.hpp>
 
 #include <unordered_map>
 #include <deque>
