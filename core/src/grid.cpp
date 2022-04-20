@@ -3,8 +3,9 @@
 #include <assert.h> // FIXME
 #include <cinolib/octree.h>
 #include <cmath>
+#include <array>
 #include <HMP/Refinement/schemes.hpp>
-#include <HMP/Utils/Transform.hpp>
+#include <HMP/Utils/Geometry.hpp>
 
 namespace HMP
 {
@@ -23,13 +24,16 @@ namespace HMP
 	{
 
 		op_tree.clear();
-		std::vector<cinolib::vec3d> init_cube_coords = { cinolib::vec3d(-cubeSize,-cubeSize,-cubeSize), cinolib::vec3d(-cubeSize,-cubeSize, cubeSize), cinolib::vec3d(cubeSize,-cubeSize,cubeSize), cinolib::vec3d(cubeSize,-cubeSize,-cubeSize),
+		std::array<cinolib::vec3d, 8> init_cube_coords = { cinolib::vec3d(-cubeSize,-cubeSize,-cubeSize), cinolib::vec3d(-cubeSize,-cubeSize, cubeSize), cinolib::vec3d(cubeSize,-cubeSize,cubeSize), cinolib::vec3d(cubeSize,-cubeSize,-cubeSize),
 														cinolib::vec3d(-cubeSize,cubeSize,-cubeSize), cinolib::vec3d(-cubeSize,cubeSize, cubeSize), cinolib::vec3d(cubeSize,cubeSize,cubeSize), cinolib::vec3d(cubeSize,cubeSize,-cubeSize) };
-		std::vector<std::vector<unsigned int>> init_cube_polys = { {0,1,2,3,4,5,6,7} };
-		poly_vert_ordering(init_cube_coords, init_cube_polys[0]);
+		std::array<unsigned int, 8> init_cube_polys = { 0,1,2,3,4,5,6,7 };
+		Utils::Geometry::sortVids(init_cube_polys, init_cube_coords);
 
 		mesh.clear();
-		mesh.init(init_cube_coords, init_cube_polys);
+		mesh.init(
+			std::vector<cinolib::vec3d>{ init_cube_coords.begin(), init_cube_coords.end() },
+			std::vector<std::vector<unsigned int>>{ std::vector<unsigned int>{init_cube_polys.begin(), init_cube_polys.end()} }
+		);
 
 		mesh.poly_data(0).element = op_tree.root;
 		op_tree.root->pid() = 0;
@@ -295,41 +299,7 @@ namespace HMP
 
 	}
 
-	void Grid::apply_transform(Dag::Operation& op, Transform T)
-	{
-
-		if (op.primitive() != Dag::Operation::EPrimitive::Extrude && op.primitive() != Dag::Operation::EPrimitive::Refine) return;
-
-		switch (T)
-		{
-			case REFLECT_XZ:
-				if (op.primitive() == Dag::Operation::EPrimitive::Extrude) static_cast<Dag::Extrude&>(op).offset() = xz_refl_mask[static_cast<Dag::Extrude&>(op).offset()];
-				break;
-			case REFLECT_XY:
-				if (op.primitive() == Dag::Operation::EPrimitive::Extrude) static_cast<Dag::Extrude&>(op).offset() = xy_refl_mask[static_cast<Dag::Extrude&>(op).offset()];
-				break;
-			case REFLECT_YZ:
-				if (op.primitive() == Dag::Operation::EPrimitive::Extrude) static_cast<Dag::Extrude&>(op).offset() = yz_refl_mask[static_cast<Dag::Extrude&>(op).offset()];
-				break;
-			case ROTATE_X:
-				if (op.primitive() == Dag::Operation::EPrimitive::Extrude) static_cast<Dag::Extrude&>(op).offset() = x_rot_mask[static_cast<Dag::Extrude&>(op).offset()];
-				if (op.primitive() == Dag::Operation::EPrimitive::Refine) for (unsigned int& value : static_cast<Dag::Refine&>(op).vertices()) value = Utils::Transform::rotateVid(Utils::Transform::EAxis::X, value, 3);
-				break;
-			case ROTATE_Y:
-				if (op.primitive() == Dag::Operation::EPrimitive::Extrude) static_cast<Dag::Extrude&>(op).offset() = y_rot_mask[static_cast<Dag::Extrude&>(op).offset()];
-				if (op.primitive() == Dag::Operation::EPrimitive::Refine) for (unsigned int& value : static_cast<Dag::Refine&>(op).vertices()) value = Utils::Transform::rotateVid(Utils::Transform::EAxis::Y, value, 3);
-				break;
-			case ROTATE_Z:
-				if (op.primitive() == Dag::Operation::EPrimitive::Extrude) static_cast<Dag::Extrude&>(op).offset() = z_rot_mask[static_cast<Dag::Extrude&>(op).offset()];
-				if (op.primitive() == Dag::Operation::EPrimitive::Refine) for (unsigned int& value : static_cast<Dag::Refine&>(op).vertices()) value = Utils::Transform::rotateVid(Utils::Transform::EAxis::Z, value, 3);
-				break;
-			default:
-				break;
-		}
-
-	}
-
-	bool Grid::merge(unsigned int pid_source, unsigned int pid_dest, Transform T)
+	bool Grid::merge(unsigned int pid_source, unsigned int pid_dest)
 	{
 
 		std::vector<Dag::Operation*> new_ops;

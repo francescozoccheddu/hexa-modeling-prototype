@@ -10,7 +10,7 @@
 #include <cinolib/meshes/meshes.h>
 #include <HMP/undoredo.hpp>
 #include <HMP/operationstree.hpp>
-#include <HMP/utils.hpp>
+#include <HMP/Utils/Geometry.hpp>
 #include <HMP/Dag/Element.hpp>
 #include <HMP/Dag/Operation.hpp>
 #include <cinolib/subdivision_legacy_hexa_schemes.h>
@@ -35,8 +35,6 @@ namespace HMP
 	};
 
 	typedef cinolib::DrawableHexmesh<cinolib::Mesh_std_attributes, cinolib::Vert_std_attributes, cinolib::Edge_std_attributes, cinolib::Polygon_std_attributes, PolyhedronAttributes> MeshGrid;
-
-	enum Transform { NONE, REFLECT_XZ, REFLECT_XY, REFLECT_YZ, ROTATE_X, ROTATE_Y, ROTATE_Z };
 
 	class Grid
 	{
@@ -68,20 +66,13 @@ namespace HMP
 
 		void project_on_target(cinolib::Trimesh<>& target);
 
-		bool merge(unsigned int pid_source, unsigned int pid_dest, Transform T = NONE);
+		bool merge(unsigned int pid_source, unsigned int pid_dest);
 
 		void clear();
 
 		void save_as_mesh(std::string filename);
 
 	private:
-
-		std::vector<unsigned int> xz_refl_mask = { 2,1,0,3,4,5 };
-		std::vector<unsigned int> xy_refl_mask = { 0,1,2,3,5,4 };
-		std::vector<unsigned int> yz_refl_mask = { 0,3,2,1,4,5 };
-		std::vector<unsigned int> x_rot_mask = { 4,1,5,3,2,0 };
-		std::vector<unsigned int> y_rot_mask = { 0,5,2,4,1,3 };
-		std::vector<unsigned int> z_rot_mask = { 3,0,1,2,4,5 };
 
 		void extrude(unsigned int pid, unsigned int offset, Dag::Extrude& extrude, bool merge_vertices = true);
 		void refine(unsigned int pid, Dag::Refine& refine, bool remove_father = false);
@@ -96,11 +87,11 @@ namespace HMP
 		void remove_operation(const Dag::Operation& op, std::vector<unsigned int>& polys_to_remove);
 		void apply_tree_recursive(const std::vector<Dag::Operation*>& operations, unsigned int pid, bool is_user_defined = true);
 
-		void apply_transform(Dag::Operation& op, Transform T);
+		void apply_transform(Dag::Operation& op);
 
 		void update_displacement_for_op(Dag::Operation& op);
 
-		std::map<cinolib::vec3d, unsigned int, vert_compare> v_map;
+		std::map<cinolib::vec3d, unsigned int, Utils::Geometry::VertexComparer> v_map;
 		CommandManager& command_manager;
 
 		std::deque<Dag::Refine*> refine_queue;

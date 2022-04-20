@@ -4,7 +4,6 @@ add_library (core STATIC
     "src/grid.cpp"
     "src/operationstree.cpp"
     "src/undoredo.cpp"
-    "src/utils.cpp"
     "src/actions/extrudeaction.cpp"
     "src/actions/facerefineaction.cpp"
     "src/actions/makeconformingaction.cpp"
@@ -19,7 +18,7 @@ add_library (core STATIC
     "src/Dag/Refine.cpp"
     "src/Dag/Utils.cpp"
     "src/Refinement/schemes.cpp"
-    "src/Utils/transform.cpp"
+    "src/Utils/Geometry.cpp"
 )
 
 set_target_properties (core PROPERTIES

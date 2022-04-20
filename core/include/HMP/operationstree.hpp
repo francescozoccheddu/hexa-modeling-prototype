@@ -3,7 +3,6 @@
 #include <vector>
 #include <list>
 #include <string>
-#include <HMP/utils.hpp>
 #include <HMP/Refinement/schemes.hpp>
 #include <HMP/Dag/Element.hpp>
 #include <HMP/Dag/Delete.hpp>
