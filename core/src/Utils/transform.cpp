@@ -1,11 +1,11 @@
-#include <HMP/Utils/transform.hpp>
+#include <HMP/Utils/Transform.hpp>
 #include <unordered_map>
 #include <array>
 
-namespace HMP::Utils
+namespace HMP::Utils::Transform
 {
 
-	unsigned int rotateVertices(EAxis _axis, unsigned int _id, int _times)
+	unsigned int rotateVid(EAxis _axis, unsigned int _id, int _times)
 	{
 
 		static const std::unordered_map<EAxis, std::array<unsigned int, 8>> rotationAxisMap{

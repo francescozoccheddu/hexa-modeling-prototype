@@ -1,6 +1,6 @@
 #pragma once
 
-namespace HMP::Utils
+namespace HMP::Utils::Transform
 {
 
 	enum class EAxis
@@ -8,6 +8,6 @@ namespace HMP::Utils
 		X, Y, Z
 	};
 
-	unsigned int rotateVertices(EAxis _axis, unsigned int _id, int _times);
+	unsigned int rotateVid(EAxis _axis, unsigned int _id, int _times);
 
 }

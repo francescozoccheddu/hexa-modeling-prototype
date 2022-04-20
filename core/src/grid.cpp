@@ -4,7 +4,7 @@
 #include <cinolib/octree.h>
 #include <cmath>
 #include <HMP/Refinement/schemes.hpp>
-#include <HMP/Utils/transform.hpp>
+#include <HMP/Utils/Transform.hpp>
 
 namespace HMP
 {
@@ -315,15 +315,15 @@ namespace HMP
 				break;
 			case ROTATE_X:
 				if (op->primitive == EXTRUDE) std::static_pointer_cast<Extrude>(op)->offset = x_rot_mask[std::static_pointer_cast<Extrude>(op)->offset];
-				if (op->primitive == REFINE) for (unsigned int& value : std::static_pointer_cast<Refine>(op)->vert_map) value = Utils::rotateVertices(Utils::EAxis::X, value, 3);
+				if (op->primitive == REFINE) for (unsigned int& value : std::static_pointer_cast<Refine>(op)->vert_map) value = Utils::Transform::rotateVid(Utils::Transform::EAxis::X, value, 3);
 				break;
 			case ROTATE_Y:
 				if (op->primitive == EXTRUDE) std::static_pointer_cast<Extrude>(op)->offset = y_rot_mask[std::static_pointer_cast<Extrude>(op)->offset];
-				if (op->primitive == REFINE) for (unsigned int& value : std::static_pointer_cast<Refine>(op)->vert_map) value = Utils::rotateVertices(Utils::EAxis::Y, value, 3);
+				if (op->primitive == REFINE) for (unsigned int& value : std::static_pointer_cast<Refine>(op)->vert_map) value = Utils::Transform::rotateVid(Utils::Transform::EAxis::Y, value, 3);
 				break;
 			case ROTATE_Z:
 				if (op->primitive == EXTRUDE) std::static_pointer_cast<Extrude>(op)->offset = z_rot_mask[std::static_pointer_cast<Extrude>(op)->offset];
-				if (op->primitive == REFINE) for (unsigned int& value : std::static_pointer_cast<Refine>(op)->vert_map) value = Utils::rotateVertices(Utils::EAxis::Z, value, 3);
+				if (op->primitive == REFINE) for (unsigned int& value : std::static_pointer_cast<Refine>(op)->vert_map) value = Utils::Transform::rotateVid(Utils::Transform::EAxis::Z, value, 3);
 				break;
 			default:
 				break;
