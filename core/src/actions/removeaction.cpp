@@ -7,16 +7,12 @@ namespace HMP
 
 	void RemoveAction::execute()
 	{
-		auto vids = grid.mesh.poly_verts_id(pid);
-		auto id = grid.mesh.poly_verts_id(pid, true);
 		this->vids = grid.mesh.poly_verts_id(pid, false);;
-		auto element = grid.vids2element()[id];
+		auto element = grid.mesh.poly_data(pid).element;
 		auto remove = grid.op_tree.remove(element);
 		this->op = remove;
 		if (remove == nullptr) return;
-
 		grid.remove(pid);
-
 	}
 
 	void RemoveAction::undo()

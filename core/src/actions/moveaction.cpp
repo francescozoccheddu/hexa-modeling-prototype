@@ -13,8 +13,7 @@ namespace HMP
         {
 
             unsigned int vert_offset = mesh.poly_vert_offset(pid, vid);
-            auto id = mesh.poly_verts_id(pid, true);
-            auto element = grid.vids2element()[id];
+            auto element = grid.mesh.poly_data(pid).element;
 
             elements.push_back(element);
             offsets.push_back(vert_offset);
@@ -37,7 +36,7 @@ namespace HMP
             grid.op_tree.move(el, off, -displacement);
         }
 
-        unsigned int pid = grid.vids2pid(grid.element2vids()[elements.front()]);
+        unsigned int pid = elements.front()->pid;
         unsigned int vid = grid.mesh.poly_vert_id(pid, offsets.front());
 
         grid.move(vid, -displacement);

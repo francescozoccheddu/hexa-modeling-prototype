@@ -44,6 +44,7 @@ namespace HMP
 	{
 
 		Element() { type = ELEMENT; }
+		unsigned int pid;
 		std::list<std::shared_ptr<Operation>> operations;
 		std::vector<cinolib::vec3d> displacements = std::vector<cinolib::vec3d>(8);
 		std::string toString()
@@ -115,11 +116,6 @@ namespace HMP
 		void get_branch_operations(const std::shared_ptr<Element>& source, std::vector<std::shared_ptr<Operation>>& operations);
 		void get_branch_operations(const std::shared_ptr<Operation>& source, std::vector<std::shared_ptr<Operation>>& operations);
 		void prune(const std::shared_ptr<Operation>& operation);
-
-
-		std::map<std::vector<unsigned int>, std::shared_ptr<Element>> vids2element;
-		std::unordered_map<std::shared_ptr<Element>, std::vector<unsigned int>> element2vids;
-
 
 	private:
 

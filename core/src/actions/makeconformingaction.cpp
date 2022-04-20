@@ -30,11 +30,11 @@ namespace HMP
 			if (!op->needs_fix_topology) continue;
 
 			const auto& father = std::static_pointer_cast<Element>(op->parents.front());
-			unsigned int father_pid = grid.vids2pid(grid.element2vids()[father]);
+			unsigned int father_pid = father->pid;
 
 			for (unsigned int pid : mesh.adj_p2p(father_pid))
 			{
-				const auto& adj = grid.vids2element()[mesh.poly_verts_id(pid, true)];
+				const auto& adj = mesh.poly_data(pid).element;
 				bool is_leaf = !mesh.poly_data(pid).flags[cinolib::HIDDEN];
 				if (is_leaf)
 				{
@@ -79,12 +79,12 @@ namespace HMP
 
 
 			const auto& father = std::static_pointer_cast<Element>(op->parents.front());
-			unsigned int father_pid = grid.vids2pid(grid.element2vids()[father]);
+			unsigned int father_pid = father->pid;
 
 			for (unsigned int pid : mesh.adj_p2p(father_pid))
 			{
 
-				const auto& adj = grid.vids2element()[mesh.poly_verts_id(pid, true)];
+				const auto& adj = grid.mesh.poly_data(pid).element;
 				bool is_leaf = !mesh.poly_data(pid).flags[cinolib::HIDDEN];
 				if (/*op_tree.isLeaf(adj)*/ is_leaf)
 				{
@@ -159,7 +159,7 @@ namespace HMP
 
 
 			const auto& father = std::static_pointer_cast<Element>(op->parents.front());
-			unsigned int father_pid = grid.vids2pid(grid.element2vids()[father]);
+			unsigned int father_pid = father->pid;
 
 			//FIX EDGE ADJACENTS
 			for (unsigned int eid : mesh.adj_p2e(father_pid))
@@ -170,7 +170,7 @@ namespace HMP
 
 					if (pid == father_pid || mesh.poly_shared_face(father_pid, pid) != -1) continue;
 
-					const auto& adj = grid.vids2element()[mesh.poly_verts_id(pid, true)];
+					const auto& adj = mesh.poly_data(pid).element;
 					bool is_leaf = !mesh.poly_data(pid).flags[cinolib::HIDDEN];
 
 					if (is_leaf)
@@ -251,6 +251,7 @@ namespace HMP
 		for (unsigned int i = 0; i < num_polys_delta; i++)
 		{
 			ids.push_back(mesh.poly_verts_id(mesh.num_polys() - i - 1, true));
+			pids.push_back(mesh.num_polys() - i - 1);
 		}
 
 		std::sort(to_remove.begin(), to_remove.end(), std::greater());
@@ -269,13 +270,13 @@ namespace HMP
 
 	void MakeConformingAction::undo()
 	{
-		std::vector<unsigned int> polys_to_remove(ids.size());
+		std::vector<unsigned int> polys_to_remove(pids.size());
 		std::set<std::shared_ptr<Operation>> ops;
-		for (unsigned int i = 0; i < ids.size(); i++)
+		for (unsigned int i = 0; i < pids.size(); i++)
 		{
-			int pid = grid.vids2pid(ids[i]);
+			int pid = pids[i];
 			if (pid == -1) continue;
-			auto& element = grid.vids2element()[ids[i]];
+			auto& element = grid.mesh.poly_data(pid).element;
 			for (auto& node : element->parents)
 			{
 				auto op = std::static_pointer_cast<Operation>(node);
@@ -300,6 +301,7 @@ namespace HMP
 
 		queue_to_revert.clear();
 		ids.clear();
+		pids.clear();
 		polys_to_revert.clear();
 	}
 

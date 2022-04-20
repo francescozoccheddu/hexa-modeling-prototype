@@ -22,7 +22,7 @@ namespace HMP
 		Grid& grid;
 		unsigned int pid;
 		unsigned int face_offset;
-		std::vector<unsigned int> id;
+		unsigned int new_pid;
 		std::shared_ptr<Operation> op;
 	};
 

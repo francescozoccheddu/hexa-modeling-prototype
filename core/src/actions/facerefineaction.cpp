@@ -18,8 +18,7 @@ namespace HMP
 		auto& mesh = grid.mesh;
 
 		auto vids = mesh.poly_verts_id(pid);
-		auto id = mesh.poly_verts_id(pid, true);
-		auto element = grid.vids2element()[id];
+		auto element = grid.mesh.poly_data(pid).element;
 		auto refine = grid.op_tree.refine(element, 6);
 
 		unsigned int fid = mesh.poly_face_id(pid, face_off);
@@ -66,7 +65,7 @@ namespace HMP
 		for (auto& child : refine->children)
 		{
 
-			unsigned int pid = grid.vids2pid(grid.element2vids()[child]);
+			unsigned int pid = child->pid;
 
 			//update displacement
 			for (unsigned int off = 0; off < 8; off++)
@@ -88,11 +87,8 @@ namespace HMP
 		for (const auto& child : op->children)
 		{
 
-			unsigned int pid = grid.vids2pid(grid.element2vids()[child]);
+			unsigned int pid = child->pid;
 			polys_to_remove.push_back(pid);
-			grid.vids2element().erase(grid.element2vids()[child]);
-			grid.element2vids().erase(child);
-
 		}
 		std::sort(polys_to_remove.begin(), polys_to_remove.end(), std::greater<unsigned int>());
 		for (unsigned int pid : polys_to_remove) grid.mesh.poly_remove(pid, false);

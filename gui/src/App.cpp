@@ -49,7 +49,7 @@ namespace HMP::Gui
 
 	void App::updateDagViewer()
 	{
-		m_dagViewer.layout = Dag::createLayout(m_grid);
+		m_dagViewer.layout = Dag::createLayout(m_grid.op_tree);
 		m_dagViewer.resetView();
 	}
 

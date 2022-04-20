@@ -1,6 +1,5 @@
 #include <HMP/Gui/Dag/createLayout.hpp>
 
-#include <unordered_map>
 #include <deque>
 #include <ogdf/basic/Logger.h>
 #include <ogdf/basic/Graph.h>
@@ -92,7 +91,7 @@ namespace HMP::Gui::Dag
 		return graphAttributes;
 	}
 
-	Layout::Node createLayoutNode(const HMP::Node& _dagNode, const ogdf::node& _graphNode, const HMP::Grid& _grid, const std::unordered_map<const HMP::Element*, std::shared_ptr<HMP::Element>>& _elementsMap, const ogdf::GraphAttributes& _graphAttributes)
+	Layout::Node createLayoutNode(const HMP::Node& _dagNode, const ogdf::node& _graphNode, const ogdf::GraphAttributes& _graphAttributes)
 	{
 		const Layout::Point center{ _graphAttributes.x(_graphNode), -_graphAttributes.y(_graphNode) };
 		switch (_dagNode.type)
@@ -100,8 +99,7 @@ namespace HMP::Gui::Dag
 			case NodeType::ELEMENT:
 			{
 				const HMP::Element& dagElement{ static_cast<const HMP::Element&>(_dagNode) };
-				const std::vector<unsigned int> vids{ _grid.op_tree.element2vids.at(_elementsMap.at(&dagElement)) };
-				return Layout::Node::element(center, _grid.vids2pid(vids));
+				return Layout::Node::element(center, dagElement.pid);
 			}
 			case NodeType::OPERATION:
 			{
@@ -113,18 +111,13 @@ namespace HMP::Gui::Dag
 		}
 	}
 
-	std::vector<Layout::Node> createLayoutNodes(const HMP::Grid& _grid, const std::unordered_map<const HMP::Node*, ogdf::node>& _dagToGraphNodeMap, const ogdf::GraphAttributes& _graphAttributes)
+	std::vector<Layout::Node> createLayoutNodes(const std::unordered_map<const HMP::Node*, ogdf::node>& _dagToGraphNodeMap, const ogdf::GraphAttributes& _graphAttributes)
 	{
 		std::vector<Layout::Node> nodes{ };
 		nodes.reserve(static_cast<size_t>(_graphAttributes.constGraph().numberOfNodes()));
-		std::unordered_map<const HMP::Element*, std::shared_ptr<HMP::Element>> elementsMap{}; // this is ugly
-		for (auto const& [element, vids] : _grid.op_tree.element2vids)
-		{
-			elementsMap.emplace(element.get(), element);
-		}
 		for (auto const& [dagNode, graphNode] : _dagToGraphNodeMap)
 		{
-			nodes.push_back(createLayoutNode(*dagNode, graphNode, _grid, elementsMap, _graphAttributes));
+			nodes.push_back(createLayoutNode(*dagNode, graphNode, _graphAttributes));
 		}
 		return nodes;
 	}
@@ -155,13 +148,13 @@ namespace HMP::Gui::Dag
 		return lines;
 	}
 
-	Layout createLayout(const HMP::Grid& _grid)
+	Layout createLayout(const HMP::OperationsTree& _dag)
 	{
 		ogdf::Logger::globalLogLevel(ogdf::Logger::Level::Alarm);
 		ogdf::Graph graph{};
-		const std::unordered_map<const HMP::Node*, ogdf::node> dagToGraphNodeMap{ populateGraph(_grid.op_tree, graph) };
+		const std::unordered_map<const HMP::Node*, ogdf::node> dagToGraphNodeMap{ populateGraph(_dag, graph)};
 		const ogdf::GraphAttributes graphAttributes{ layoutGraph(graph) };
-		std::vector<Layout::Node> nodes{ createLayoutNodes(_grid, dagToGraphNodeMap, graphAttributes) };
+		std::vector<Layout::Node> nodes{ createLayoutNodes(dagToGraphNodeMap, graphAttributes) };
 		std::vector<Layout::Line> lines{ createLayoutLines(graphAttributes) };
 		return Layout{ std::move(nodes), std::move(lines),  c_nodeRadius, c_lineThickness };
 	}

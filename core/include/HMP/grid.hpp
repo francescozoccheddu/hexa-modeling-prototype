@@ -29,12 +29,12 @@ namespace HMP
 {
 
 
-	struct MeshGridAttributes : cinolib::Polyhedron_std_attributes
+	struct PolyhedronAttributes final : cinolib::Polyhedron_std_attributes
 	{
-		unsigned int id;
+		std::shared_ptr<Element> element;
 	};
 
-	typedef cinolib::DrawableHexmesh<cinolib::Mesh_std_attributes, cinolib::Vert_std_attributes, cinolib::Edge_std_attributes, cinolib::Polygon_std_attributes, MeshGridAttributes> MeshGrid;
+	typedef cinolib::DrawableHexmesh<cinolib::Mesh_std_attributes, cinolib::Vert_std_attributes, cinolib::Edge_std_attributes, cinolib::Polygon_std_attributes, PolyhedronAttributes> MeshGrid;
 
 	enum Transform { NONE, REFLECT_XZ, REFLECT_XY, REFLECT_YZ, ROTATE_X, ROTATE_Y, ROTATE_Z };
 
@@ -70,15 +70,9 @@ namespace HMP
 
 		bool merge(unsigned int pid_source, unsigned int pid_dest, Transform T = NONE);
 
-
-		std::map<std::vector<unsigned int>, std::shared_ptr<Element>>& vids2element();
-		std::unordered_map<std::shared_ptr<Element>, std::vector<unsigned int>>& element2vids();
-
 		void clear();
 
 		void save_as_mesh(std::string filename);
-
-		int vids2pid(const std::vector<unsigned int>& vids) const;
 
 	private:
 
