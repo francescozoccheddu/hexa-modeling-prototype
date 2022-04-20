@@ -10,7 +10,7 @@ namespace HMP::Dag
 
 	private:
 
-		unsigned int m_offset;
+		unsigned int m_offset{};
 
 	protected:
 

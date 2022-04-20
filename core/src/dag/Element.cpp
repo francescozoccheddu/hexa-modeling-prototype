@@ -1,13 +1,16 @@
 #include <HMP/Dag/Element.hpp>
 #include <HMP/Dag/Operation.hpp>
 #include <stdexcept>
+#include <algorithm>
 
 namespace HMP::Dag
 {
 
 	Element::Element()
 		: Node{ EType::Element }
-	{}
+	{
+		m_vertices.fill(cinolib::vec3d{ 0,0,0 });
+	}
 
 	unsigned int& Element::pid()
 	{

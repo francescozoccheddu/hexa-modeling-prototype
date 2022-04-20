@@ -5,20 +5,22 @@
 #include <HMP/Dag/Element.hpp>
 #include <HMP/Utils/stream.hpp>
 #include <deque>
+#include <vector>
+#include <unordered_set>
 #include <unordered_map>
 
 namespace HMP::Dag::Utils
 {
 
-	using HMP::Utils::SetView;
-
-	SetView<Node> descendants(Node& _node, std::function<bool(const Node&)> _branchSelector)
+	std::vector<Node*> descendants(Node& _node, std::function<bool(const Node&)> _branchSelector)
 	{
-		SetView<Node> nodes{};
+		std::vector<Node*> nodes{};
+		std::unordered_set<Node*> visited{};
 		std::deque<Node*> toVisit{};
 		if (_branchSelector(_node))
 		{
-			nodes.add(_node);
+			nodes.push_back(&_node);
+			visited.emplace(&_node);
 			toVisit.push_back(&_node);
 		}
 		while (!toVisit.empty())
@@ -27,8 +29,9 @@ namespace HMP::Dag::Utils
 			toVisit.pop_front();
 			for (Node& child : node.children())
 			{
-				if (_branchSelector(child) && nodes.add(child))
+				if (_branchSelector(child) && visited.emplace(&child).second)
 				{
+					nodes.push_back(&child);
 					toVisit.push_back(&child);
 				}
 			}
@@ -36,27 +39,19 @@ namespace HMP::Dag::Utils
 		return nodes;
 	}
 
-	SetView<Node, const Node> descendants(const Node& _node, std::function<bool(const Node&)> _branchSelector)
+	std::vector<const Node*> descendants(const Node& _node, std::function<bool(const Node&)> _branchSelector)
 	{
-		return descendants(const_cast<Node&>(_node), _branchSelector).view<const Node>();
+		std::vector<Node*> result{ descendants(const_cast<Node&>(_node), _branchSelector) };
+		return std::vector<const Node*>{&result[0], (&result[0]) + result.size()};
 	}
 
 	std::ostream& operator<<(std::ostream& _stream, const Node& _node)
 	{
 		using HMP::Utils::operator<<;
 		constexpr char sep = ' ';
-		std::unordered_map<const Node*, std::size_t> nodeMap{};
-		{
-			SetView<Node, const Node> nodes{ descendants(_node) };
-			nodeMap.reserve(nodes.size());
-			unsigned int i{ 0 };
-			for (const Node& node : nodes)
-			{
-				nodeMap.emplace(&node, i++);
-			}
-		}
-		_stream << nodeMap.size() << sep;
-		for (const auto [node, i] : nodeMap)
+		const std::vector<const Node*> nodes{ descendants(_node) };
+		_stream << nodes.size() << sep;
+		for (const Node* node : nodes)
 		{
 			_stream << node->type() << sep;
 			switch (node->type())
@@ -107,12 +102,23 @@ namespace HMP::Dag::Utils
 				break;
 			}
 		}
-		for (const auto [node, i] : nodeMap)
 		{
-			_stream << node->parents().size() << sep;
-			for (const Node& parent : node->parents())
+			std::unordered_map<const Node*, std::size_t> nodeMap{};
 			{
-				_stream << nodeMap.at(&parent) << sep;
+				nodeMap.reserve(nodes.size());
+				unsigned int i{ 0 };
+				for (const Node* node : nodes)
+				{
+					nodeMap.emplace(node, i++);
+				}
+			}
+			for (const Node* node : nodes)
+			{
+				_stream << node->parents().size() << sep;
+				for (const Node& parent : node->parents())
+				{
+					_stream << nodeMap.at(&parent) << sep;
+				}
 			}
 		}
 		return _stream;
@@ -133,7 +139,7 @@ namespace HMP::Dag::Utils
 			{
 				case Node::EType::Element:
 				{
-					Element& element{ *new Element };
+					Element& element{ *new Element{} };
 					// TODO pid
 					for (cinolib::vec3d& vertex : element.vertices())
 					{
@@ -152,20 +158,20 @@ namespace HMP::Dag::Utils
 					{
 						case Operation::EPrimitive::Delete:
 						{
-							Delete& deleteOperation{ *new Delete };
+							Delete& deleteOperation{ *new Delete{} };
 							operation = &deleteOperation;
 						}
 						break;
 						case Operation::EPrimitive::Extrude:
 						{
-							Extrude& extrudeOperation{ *new Extrude };
+							Extrude& extrudeOperation{ *new Extrude{} };
 							_stream >> extrudeOperation.offset();
 							operation = &extrudeOperation;
 						}
 						break;
 						case Operation::EPrimitive::Refine:
 						{
-							Refine& refineOperation{ *new Refine };
+							Refine& refineOperation{ *new Refine{} };
 							_stream
 								>> refineOperation.needsTopologyFix()
 								>> refineOperation.scheme();
