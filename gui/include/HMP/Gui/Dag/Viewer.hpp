@@ -1,6 +1,7 @@
 #pragma once
 
 #include <HMP/Gui/Dag/Layout.hpp>
+#include <HMP/Dag/Element.hpp>
 #include <cinolib/geometry/vec_mat.h>
 
 namespace HMP::Gui::Dag
@@ -20,8 +21,7 @@ namespace HMP::Gui::Dag
 
 	public:
 
-		int highlightedElementId{};
-		bool highlight{ false };
+		const HMP::Dag::Element* highlight{};
 
 		Layout layout{};
 

@@ -43,13 +43,14 @@ namespace HMP::Gui
 			}
 			m_grid.mesh.updateGL();
 		}
-		m_dagViewer.highlightedElementId = m_highlight.pid = pid;
-		m_dagViewer.highlight = m_highlight.pending = pending;
+		m_highlight.pid = pid;
+		m_highlight.pending = pending;
+		m_dagViewer.highlight = pending ? m_grid.mesh.poly_data(pid).element : nullptr;
 	}
 
 	void App::updateDagViewer()
 	{
-		m_dagViewer.layout = Dag::createLayout(m_grid.op_tree);
+		m_dagViewer.layout = Dag::createLayout(*m_grid.op_tree.root);
 		m_dagViewer.resetView();
 	}
 
@@ -397,7 +398,7 @@ namespace HMP::Gui
 			m_grid.clear();
 			m_move.pending = m_copy.pending = false;
 			m_grid.op_tree.deserialize(filename);
-			m_grid.apply_tree(m_grid.op_tree.root->operations, 0);
+			m_grid.apply_tree(m_grid.op_tree.root->children().vector(), 0);
 			updateDagViewer();
 			m_canvas.refit_scene();
 		}

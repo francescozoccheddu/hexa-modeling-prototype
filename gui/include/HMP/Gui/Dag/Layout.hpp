@@ -4,7 +4,7 @@
 #include <vector>
 #include <string>
 #include <cmath>
-#include <HMP/operationstree.hpp>
+#include <HMP/Dag/Node.hpp>
 #include <cinolib/geometry/vec_mat.h>
 
 namespace HMP::Gui::Dag
@@ -24,26 +24,15 @@ namespace HMP::Gui::Dag
 
 		private:
 
-			HMP::NodeType m_type;
-
-			union NodeData
-			{
-				HMP::Primitive m_operationPrimitive;
-				int m_elementId;
-			} m_data;
-
+			const HMP::Dag::Node* m_node{};
 			Point m_center{};
 
-			Node(const Point& _center, HMP::NodeType _type, NodeData _data);
 
 		public:
 
-			static Node element(const Point& _center, int _id);
-			static Node operation(const Point& _center, HMP::Primitive _primitive);
+			Node(const Point& _center, const HMP::Dag::Node& _node);
 
-			int elementId() const;
-			HMP::Primitive operationPrimitive() const;
-			HMP::NodeType type() const;
+			const HMP::Dag::Node& node() const;
 			const Point& center() const;
 
 		};
@@ -66,8 +55,8 @@ namespace HMP::Gui::Dag
 	public:
 
 		Layout();
-		Layout(const std::vector<Node>& _nodes, const std::vector<Line>& _lines,  Real _lineThickness, Real _nodeRadius);
-		Layout(std::vector<Node>&& _nodes, std::vector<Line>&& _lines,  Real _lineThickness, Real _nodeRadius);
+		Layout(const std::vector<Node>& _nodes, const std::vector<Line>& _lines, Real _lineThickness, Real _nodeRadius);
+		Layout(std::vector<Node>&& _nodes, std::vector<Line>&& _lines, Real _lineThickness, Real _nodeRadius);
 
 		const std::vector<Line>& lines() const;
 		const std::vector<Node>& nodes() const;

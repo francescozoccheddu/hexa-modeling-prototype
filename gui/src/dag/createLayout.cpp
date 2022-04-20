@@ -11,53 +11,35 @@
 #include <memory>
 #include <utility>
 #include <stdexcept>
+#include <HMP/Dag/Utils.hpp>
 
 namespace HMP::Gui::Dag
 {
+
+	using namespace HMP::Dag;
 
 	constexpr double c_nodeRadius{ 1.0 };
 	constexpr double c_lineThickness{ c_nodeRadius / 20.0 };
 	constexpr double c_nodeDistance{ c_nodeRadius + 0.25 };
 
-	std::unordered_map<const HMP::Node*, ogdf::node> populateGraph(const HMP::OperationsTree& _dag, ogdf::Graph& _graph)
+	std::unordered_map<const Dag::Node*, ogdf::node> populateGraph(const Dag::Node& _dag, ogdf::Graph& _graph)
 	{
-		std::unordered_map<const HMP::Node*, ogdf::node> dagToGraphNodeMap{};
+		std::unordered_map<const Dag::Node*, ogdf::node> dagToGraphNodeMap{};
 		// nodes
 		{
-			std::deque<const HMP::Node*> dagNodesToVisit{ _dag.root.get() };
-			while (!dagNodesToVisit.empty())
+			const std::vector<const Dag::Node*> dagNodes{ Dag::Utils::descendants(_dag) };
+			for (const Dag::Node* dagNode : dagNodes)
 			{
-				const HMP::Node* dagNode{ dagNodesToVisit.front() };
-				dagNodesToVisit.pop_front();
-				const std::pair<decltype(dagToGraphNodeMap)::iterator, bool> insertion{ dagToGraphNodeMap.insert({ dagNode, nullptr }) };
-				if (insertion.second)
-				{
-					insertion.first->second = _graph.newNode();
-					switch (dagNode->type)
-					{
-						case HMP::NodeType::ELEMENT:
-							for (const std::shared_ptr<HMP::Operation> child : static_cast<const HMP::Element*>(dagNode)->operations)
-							{
-								dagNodesToVisit.push_back(child.get());
-							}
-							break;
-						case HMP::NodeType::OPERATION:
-							for (const std::shared_ptr<HMP::Element> child : static_cast<const HMP::Operation*>(dagNode)->children)
-							{
-								dagNodesToVisit.push_back(child.get());
-							}
-							break;
-					}
-				}
+				dagToGraphNodeMap.emplace(dagNode, _graph.newNode());
 			}
 		}
 		// edges
 		{
 			for (auto const& [dagNode, graphNode] : dagToGraphNodeMap)
 			{
-				for (const std::shared_ptr<HMP::Node> dagParent : dagNode->parents)
+				for (const Dag::Node& dagParent : dagNode->parents())
 				{
-					const ogdf::node graphParent{ dagToGraphNodeMap[dagParent.get()] };
+					const ogdf::node graphParent{ dagToGraphNodeMap[&dagParent] };
 					_graph.newEdge(graphParent, graphNode);
 				}
 			}
@@ -91,33 +73,14 @@ namespace HMP::Gui::Dag
 		return graphAttributes;
 	}
 
-	Layout::Node createLayoutNode(const HMP::Node& _dagNode, const ogdf::node& _graphNode, const ogdf::GraphAttributes& _graphAttributes)
-	{
-		const Layout::Point center{ _graphAttributes.x(_graphNode), -_graphAttributes.y(_graphNode) };
-		switch (_dagNode.type)
-		{
-			case NodeType::ELEMENT:
-			{
-				const HMP::Element& dagElement{ static_cast<const HMP::Element&>(_dagNode) };
-				return Layout::Node::element(center, dagElement.pid);
-			}
-			case NodeType::OPERATION:
-			{
-				const HMP::Operation& dagOperation{ static_cast<const HMP::Operation&>(_dagNode) };
-				return Layout::Node::operation(center, dagOperation.primitive);
-			}
-			default:
-				throw std::domain_error{ "unknown node type" };
-		}
-	}
-
-	std::vector<Layout::Node> createLayoutNodes(const std::unordered_map<const HMP::Node*, ogdf::node>& _dagToGraphNodeMap, const ogdf::GraphAttributes& _graphAttributes)
+	std::vector<Layout::Node> createLayoutNodes(const std::unordered_map<const Dag::Node*, ogdf::node>& _dagToGraphNodeMap, const ogdf::GraphAttributes& _graphAttributes)
 	{
 		std::vector<Layout::Node> nodes{ };
 		nodes.reserve(static_cast<size_t>(_graphAttributes.constGraph().numberOfNodes()));
 		for (auto const& [dagNode, graphNode] : _dagToGraphNodeMap)
 		{
-			nodes.push_back(createLayoutNode(*dagNode, graphNode, _graphAttributes));
+			const Layout::Point center{ _graphAttributes.x(graphNode), -_graphAttributes.y(graphNode) };
+			nodes.push_back(Layout::Node{ center, *dagNode });
 		}
 		return nodes;
 	}
@@ -148,11 +111,11 @@ namespace HMP::Gui::Dag
 		return lines;
 	}
 
-	Layout createLayout(const HMP::OperationsTree& _dag)
+	Layout createLayout(const Dag::Node& _dag)
 	{
 		ogdf::Logger::globalLogLevel(ogdf::Logger::Level::Alarm);
 		ogdf::Graph graph{};
-		const std::unordered_map<const HMP::Node*, ogdf::node> dagToGraphNodeMap{ populateGraph(_dag, graph)};
+		const std::unordered_map<const Dag::Node*, ogdf::node> dagToGraphNodeMap{ populateGraph(_dag, graph) };
 		const ogdf::GraphAttributes graphAttributes{ layoutGraph(graph) };
 		std::vector<Layout::Node> nodes{ createLayoutNodes(dagToGraphNodeMap, graphAttributes) };
 		std::vector<Layout::Line> lines{ createLayoutLines(graphAttributes) };

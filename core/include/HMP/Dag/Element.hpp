@@ -33,8 +33,6 @@ namespace HMP::Dag
 		std::array<cinolib::vec3d, 8>& vertices();
 		const std::array<cinolib::vec3d, 8>& vertices() const;
 
-		const Operation& parent() const;
-
 		DagSetView& parents();
 		const DagSetView& parents() const;
 		DagSetView& children();

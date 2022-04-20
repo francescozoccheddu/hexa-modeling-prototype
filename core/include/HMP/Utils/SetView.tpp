@@ -84,6 +84,12 @@ namespace HMP::Utils
 	{}
 
 	template<typename TInternal, typename TView>
+	SetView<TInternal, TView>::SetView(std::size_t _capacity) : SetView{}
+	{
+		m_data->reserve(_capacity);
+	}
+
+	template<typename TInternal, typename TView>
 	template<typename TNewView>
 	SetView<TInternal, TNewView> SetView<TInternal, TView>::view()
 	{
@@ -93,7 +99,7 @@ namespace HMP::Utils
 	template<typename TInternal, typename TView>
 	bool SetView<TInternal, TView>::add(TView& _item)
 	{
-		return m_data->emplace(reinterpret_cast<TInternal*>(& _item)).second;
+		return m_data->insert(reinterpret_cast<TInternal*>(&_item)).second;
 	}
 
 	template<typename TInternal, typename TView>
@@ -127,6 +133,32 @@ namespace HMP::Utils
 	}
 
 	template<typename TInternal, typename TView>
+	bool SetView<TInternal, TView>::any(std::function<bool(const TView&)> _predicate) const
+	{
+		for (const TView& item : *this)
+		{
+			if (_predicate(item))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	template<typename TInternal, typename TView>
+	bool SetView<TInternal, TView>::all(std::function<bool(const TView&)> _predicate) const
+	{
+		for (const TView& item : *this)
+		{
+			if (!_predicate(item))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	template<typename TInternal, typename TView>
 	std::size_t SetView<TInternal, TView>::size() const
 	{
 		return m_data->size();
@@ -142,6 +174,54 @@ namespace HMP::Utils
 	bool SetView<TInternal, TView>::empty() const
 	{
 		return m_data->empty();
+	}
+
+	template<typename TInternal, typename TView>
+	TView& SetView<TInternal, TView>::single()
+	{
+		if (size() != 1)
+		{
+			throw std::logic_error{ "not a singleton" };
+		}
+		return *begin();
+	}
+
+	template<typename TInternal, typename TView>
+	const TView& SetView<TInternal, TView>::single() const
+	{
+		return const_cast<SetView*>(this)->single();
+	}
+
+	template<typename TInternal, typename TView>
+	TView& SetView<TInternal, TView>::first()
+	{
+		if (empty())
+		{
+			throw std::logic_error{ "empty" };
+		}
+		return *begin();
+	}
+
+	template<typename TInternal, typename TView>
+	const TView& SetView<TInternal, TView>::first() const
+	{
+		return const_cast<SetView*>(this)->first();
+	}
+
+	template<typename TInternal, typename TView>
+	TView& SetView<TInternal, TView>::last()
+	{
+		if (empty())
+		{
+			throw std::logic_error{ "empty" };
+		}
+		return *rbegin();
+	}
+
+	template<typename TInternal, typename TView>
+	const TView& SetView<TInternal, TView>::last() const
+	{
+		return const_cast<SetView*>(this)->last();
 	}
 
 	template<typename TInternal, typename TView>
@@ -214,6 +294,54 @@ namespace HMP::Utils
 	SetView<TInternal, TView>::ConstIterator SetView<TInternal, TView>::crend() const
 	{
 		return ConstIterator{ m_data->crend() };
+	}
+
+	template<typename TInternal, typename TView>
+	std::unordered_set<TView*> SetView<TInternal, TView>::set()
+	{
+		std::unordered_set<TView*> set{};
+		set.reserve(size());
+		for (TView& item : *this)
+		{
+			set.insert(&item);
+		}
+		return set;
+	}
+
+	template<typename TInternal, typename TView>
+	std::unordered_set<const TView*> SetView<TInternal, TView>::constSet() const
+	{
+		std::unordered_set<const TView*> set{};
+		set.reserve(size());
+		for (const TView& item : *this)
+		{
+			set.insert(&item);
+		}
+		return set;
+	}
+
+	template<typename TInternal, typename TView>
+	std::vector<TView*> SetView<TInternal, TView>::vector()
+	{
+		std::vector<TView*> vector{};
+		vector.reserve(size());
+		for (TView& item : *this)
+		{
+			vector.push_back(&item);
+		}
+		return vector;
+	}
+
+	template<typename TInternal, typename TView>
+	std::vector<const TView*> SetView<TInternal, TView>::constVector() const
+	{
+		std::vector<const TView*> vector{};
+		vector.reserve(size());
+		for (const TView& item : *this)
+		{
+			vector.push_back(&item);
+		}
+		return vector;
 	}
 
 }

@@ -6,7 +6,12 @@ namespace HMP::Dag
 
 	Refine::Refine()
 		: Operation{ EPrimitive::Refine }
-	{}
+	{
+		for (unsigned int i{ 0 }; i < m_vertices.size(); i++)
+		{
+			m_vertices[i] = i;
+		}
+	}
 
 	Refinement::EScheme& Refine::scheme()
 	{

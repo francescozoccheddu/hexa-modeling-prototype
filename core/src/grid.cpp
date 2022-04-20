@@ -32,12 +32,12 @@ namespace HMP
 		mesh.init(init_cube_coords, init_cube_polys);
 
 		mesh.poly_data(0).element = op_tree.root;
-		op_tree.root->pid = 0;
+		op_tree.root->pid() = 0;
 
 		//update displacement
 		for (unsigned int off = 0; off < 8; off++)
 		{
-			op_tree.move(op_tree.root, off, mesh.poly_vert(0, off));
+			op_tree.move(*op_tree.root, off, mesh.poly_vert(0, off));
 		}
 
 		v_map.clear();
@@ -89,7 +89,7 @@ namespace HMP
 	void Grid::add_refine(unsigned int pid)
 	{
 		auto refine_action = std::shared_ptr<Action>(new RefineAction(*this, pid));
-		std::list<std::shared_ptr<Action>> action_list;
+		std::vector<std::shared_ptr<Action>> action_list;
 		action_list.push_back(refine_action);
 		command_manager.execute(action_list);
 	}
@@ -98,7 +98,7 @@ namespace HMP
 	{
 
 		auto face_refine_action = std::shared_ptr<Action>(new FaceRefineAction(*this, fid));
-		std::list<std::shared_ptr<Action>> action_list;
+		std::vector<std::shared_ptr<Action>> action_list;
 		action_list.push_back(face_refine_action);
 		command_manager.execute(action_list);
 
@@ -108,7 +108,7 @@ namespace HMP
 	{
 
 		auto extrude_action = std::shared_ptr<Action>(new ExtrudeAction(*this, pid, face_offset));
-		std::list<std::shared_ptr<Action>> action_list;
+		std::vector<std::shared_ptr<Action>> action_list;
 		action_list.push_back(extrude_action);
 		command_manager.execute(action_list);
 
@@ -118,7 +118,7 @@ namespace HMP
 	{
 
 		auto move_action = std::shared_ptr<Action>(new MoveAction(*this, vid, displacement));
-		std::list<std::shared_ptr<Action>> action_list;
+		std::vector<std::shared_ptr<Action>> action_list;
 		action_list.push_back(move_action);
 		command_manager.execute(action_list);
 
@@ -127,7 +127,7 @@ namespace HMP
 	void Grid::add_remove(unsigned int pid)
 	{
 		auto remove_action = std::shared_ptr<Action>(new RemoveAction(*this, pid));
-		std::list<std::shared_ptr<Action>> action_list;
+		std::vector<std::shared_ptr<Action>> action_list;
 		action_list.push_back(remove_action);
 		command_manager.execute(action_list);
 	}
@@ -150,7 +150,7 @@ namespace HMP
 		update_mesh();
 	}
 
-	void Grid::prune_tree(const std::shared_ptr<Operation>& operation, bool is_user_defined)
+	void Grid::prune_tree(const Dag::Operation& operation, bool is_user_defined)
 	{
 
 		/*    std::vector<unsigned int> polys_to_remove;
@@ -172,36 +172,35 @@ namespace HMP
 	}
 
 
-	void Grid::apply_tree_recursive(const std::list<std::shared_ptr<Operation>>& operations, unsigned int pid, bool is_user_defined)
+	void Grid::apply_tree_recursive(const std::vector<Dag::Operation*>& operations, unsigned int pid, bool is_user_defined)
 	{
 
-		for (const auto& op : operations)
+		for (auto op : operations)
 		{
-			switch (op->primitive)
+			switch (op->primitive())
 			{
-				case REFINE:
+				case Dag::Operation::EPrimitive::Refine:
 				{
-					auto re = std::static_pointer_cast<Refine>(op);
+					auto re = static_cast<Dag::Refine*>(op);
 					if (!is_user_defined) refine_queue.push_back(re);
-					refine(pid, re, true);
+					refine(pid, *re, true);
 					break;
 				}
-				case EXTRUDE:
+				case Dag::Operation::EPrimitive::Extrude:
 				{
-					auto ex = std::static_pointer_cast<Extrude>(op);
-					extrude(pid, ex->offset, ex);
+					auto ex = static_cast<Dag::Extrude*>(op);
+					extrude(pid, ex->offset(), *ex);
 					break;
 				}
 
-				case REMOVE:
+				case Dag::Operation::EPrimitive::Delete:
 					remove(pid);
 					break;
 			}
 
-			for (unsigned int i = 0; i < op->children.size(); i++)
+			for (auto& child : op->children())
 			{
-				const auto& child = std::static_pointer_cast<Element>(op->children[i]);
-				apply_tree_recursive(child->operations, child->pid, false);
+				apply_tree_recursive(child.children().vector(), child.pid(), false);
 			}
 
 		}
@@ -212,7 +211,7 @@ namespace HMP
 
 
 
-	void Grid::apply_tree(const std::list<std::shared_ptr<Operation>>& operations, unsigned int pid, bool is_user_defined)
+	void Grid::apply_tree(const std::vector < Dag::Operation* >& operations, unsigned int pid, bool is_user_defined)
 	{
 
 		apply_tree_recursive(operations, pid, is_user_defined);
@@ -224,19 +223,19 @@ namespace HMP
 			{
 				unsigned int vid = mesh.poly_vert_id(pid, off);
 				const auto& el = mesh.poly_data(pid).element;
-				move(vid, el->displacements[off] - mesh.vert(vid));
+				move(vid, el->vertices()[off] - mesh.vert(vid));
 			}
 		}
 
 		update_mesh();
 	}
 
-	void Grid::update_displacement_for_op(const std::shared_ptr<Operation>& op)
+	void Grid::update_displacement_for_op(Dag::Operation& op)
 	{
-		for (auto& child : op->children)
+		for (auto& child : op.children())
 		{
 
-			unsigned int pid = child->pid;
+			unsigned int pid = child.pid();
 
 			//update displacement
 			for (unsigned int off = 0; off < 8; off++)
@@ -249,7 +248,7 @@ namespace HMP
 	void Grid::make_conforming()
 	{
 		auto make_conforming_action = std::shared_ptr<Action>(new MakeConformingAction(*this));
-		std::list<std::shared_ptr<Action>> action_list;
+		std::vector<std::shared_ptr<Action>> action_list;
 		action_list.push_back(make_conforming_action);
 		command_manager.execute(action_list);
 		update_mesh();
@@ -296,33 +295,33 @@ namespace HMP
 
 	}
 
-	void Grid::apply_transform(std::shared_ptr<Operation>& op, Transform T)
+	void Grid::apply_transform(Dag::Operation& op, Transform T)
 	{
 
-		if (op->primitive != EXTRUDE && op->primitive != REFINE) return;
+		if (op.primitive() != Dag::Operation::EPrimitive::Extrude && op.primitive() != Dag::Operation::EPrimitive::Refine) return;
 
 		switch (T)
 		{
 			case REFLECT_XZ:
-				if (op->primitive == EXTRUDE) std::static_pointer_cast<Extrude>(op)->offset = xz_refl_mask[std::static_pointer_cast<Extrude>(op)->offset];
+				if (op.primitive() == Dag::Operation::EPrimitive::Extrude) static_cast<Dag::Extrude&>(op).offset() = xz_refl_mask[static_cast<Dag::Extrude&>(op).offset()];
 				break;
 			case REFLECT_XY:
-				if (op->primitive == EXTRUDE) std::static_pointer_cast<Extrude>(op)->offset = xy_refl_mask[std::static_pointer_cast<Extrude>(op)->offset];
+				if (op.primitive() == Dag::Operation::EPrimitive::Extrude) static_cast<Dag::Extrude&>(op).offset() = xy_refl_mask[static_cast<Dag::Extrude&>(op).offset()];
 				break;
 			case REFLECT_YZ:
-				if (op->primitive == EXTRUDE) std::static_pointer_cast<Extrude>(op)->offset = yz_refl_mask[std::static_pointer_cast<Extrude>(op)->offset];
+				if (op.primitive() == Dag::Operation::EPrimitive::Extrude) static_cast<Dag::Extrude&>(op).offset() = yz_refl_mask[static_cast<Dag::Extrude&>(op).offset()];
 				break;
 			case ROTATE_X:
-				if (op->primitive == EXTRUDE) std::static_pointer_cast<Extrude>(op)->offset = x_rot_mask[std::static_pointer_cast<Extrude>(op)->offset];
-				if (op->primitive == REFINE) for (unsigned int& value : std::static_pointer_cast<Refine>(op)->vert_map) value = Utils::Transform::rotateVid(Utils::Transform::EAxis::X, value, 3);
+				if (op.primitive() == Dag::Operation::EPrimitive::Extrude) static_cast<Dag::Extrude&>(op).offset() = x_rot_mask[static_cast<Dag::Extrude&>(op).offset()];
+				if (op.primitive() == Dag::Operation::EPrimitive::Refine) for (unsigned int& value : static_cast<Dag::Refine&>(op).vertices()) value = Utils::Transform::rotateVid(Utils::Transform::EAxis::X, value, 3);
 				break;
 			case ROTATE_Y:
-				if (op->primitive == EXTRUDE) std::static_pointer_cast<Extrude>(op)->offset = y_rot_mask[std::static_pointer_cast<Extrude>(op)->offset];
-				if (op->primitive == REFINE) for (unsigned int& value : std::static_pointer_cast<Refine>(op)->vert_map) value = Utils::Transform::rotateVid(Utils::Transform::EAxis::Y, value, 3);
+				if (op.primitive() == Dag::Operation::EPrimitive::Extrude) static_cast<Dag::Extrude&>(op).offset() = y_rot_mask[static_cast<Dag::Extrude&>(op).offset()];
+				if (op.primitive() == Dag::Operation::EPrimitive::Refine) for (unsigned int& value : static_cast<Dag::Refine&>(op).vertices()) value = Utils::Transform::rotateVid(Utils::Transform::EAxis::Y, value, 3);
 				break;
 			case ROTATE_Z:
-				if (op->primitive == EXTRUDE) std::static_pointer_cast<Extrude>(op)->offset = z_rot_mask[std::static_pointer_cast<Extrude>(op)->offset];
-				if (op->primitive == REFINE) for (unsigned int& value : std::static_pointer_cast<Refine>(op)->vert_map) value = Utils::Transform::rotateVid(Utils::Transform::EAxis::Z, value, 3);
+				if (op.primitive() == Dag::Operation::EPrimitive::Extrude) static_cast<Dag::Extrude&>(op).offset() = z_rot_mask[static_cast<Dag::Extrude&>(op).offset()];
+				if (op.primitive() == Dag::Operation::EPrimitive::Refine) for (unsigned int& value : static_cast<Dag::Refine&>(op).vertices()) value = Utils::Transform::rotateVid(Utils::Transform::EAxis::Z, value, 3);
 				break;
 			default:
 				break;
@@ -333,17 +332,17 @@ namespace HMP
 	bool Grid::merge(unsigned int pid_source, unsigned int pid_dest, Transform T)
 	{
 
-		std::list<std::shared_ptr<Operation>> new_ops;
-		auto source_el = mesh.poly_data(pid_source).element;
-		auto destination_el = mesh.poly_data(pid_dest).element;
+		std::vector<Dag::Operation*> new_ops;
+		auto& source_el = *mesh.poly_data(pid_source).element;
+		auto& destination_el = *mesh.poly_data(pid_dest).element;
 
 		cinolib::vec3d centroid_dest = mesh.poly_centroid(pid_dest);
 
 		if (op_tree.merge(source_el, destination_el, &new_ops))
 		{
 
-			std::vector<std::shared_ptr<Operation>> branch_ops;
-			for (auto& op : new_ops) op_tree.get_branch_operations(op, branch_ops);
+			std::vector<const Dag::Operation*> branch_ops;
+			for (auto& op : new_ops) op_tree.get_branch_operations(*op, branch_ops);
 			//The offset of the first extrude primitive must be changed to reflect the destination node local frame
 			//If the first primitive is a rfine, then its vertex map must be rotated to reflect the destination node local frame
 			//for(auto &op : branch_ops) apply_transform(op, ROTATE_Y);
@@ -352,29 +351,29 @@ namespace HMP
 			return true;
 
 			std::map<unsigned int, cinolib::vec3d> vert_map;
-			std::vector<std::shared_ptr<Element>> old_elements;
-			std::vector<std::shared_ptr<Element>> new_elements;
+			std::vector<const Dag::Element*> old_elements;
+			std::vector<const Dag::Element*> new_elements;
 
 			op_tree.get_branch_elements(source_el, old_elements);
 
-			for (const auto& op : new_ops) op_tree.get_branch_elements(op, new_elements);
+			for (const auto& op : new_ops) op_tree.get_branch_elements(*op, new_elements);
 
 			assert(old_elements.size() == new_elements.size());
 
 			for (unsigned int i = 0; i < old_elements.size(); i++)
 			{
-				const auto& el_old = old_elements[i];
-				const auto& el_new = new_elements[i];
-				unsigned int pid = el_old->pid;
-				unsigned int new_pid = el_new->pid;
-				auto& new_el = mesh.poly_data(new_pid).element;
+				const auto& el_old = *old_elements[i];
+				const auto& el_new = *new_elements[i];
+				unsigned int pid = el_old.pid();
+				unsigned int new_pid = el_new.pid();
+				auto& new_el = *mesh.poly_data(new_pid).element;
 				for (unsigned int off = 0; off < 8; off++)
 				{
 					unsigned int vid = mesh.poly_vert_id(pid, off);
 					unsigned int vid_dest = mesh.poly_vert_id(new_pid, off);
 					if (mesh.poly_contains_vert(pid_dest, vid_dest)) continue;
 					vert_map[vid_dest] = mesh.vert(vid) - mesh.poly_centroid(pid_source);
-					new_el->displacements[off] = centroid_dest + vert_map[vid_dest];
+					new_el.vertices()[off] = centroid_dest + vert_map[vid_dest];
 				}
 			}
 
@@ -416,7 +415,7 @@ namespace HMP
 		m.save(filename.c_str());
 	}
 
-	void Grid::extrude(unsigned int pid, unsigned int offset, const std::shared_ptr<Extrude>& extrude, bool merge_vertices)
+	void Grid::extrude(unsigned int pid, unsigned int offset, Dag::Extrude& extrude, bool merge_vertices)
 	{
 		unsigned int fid = mesh.poly_face_id(pid, offset);
 		cinolib::vec3d normal = mesh.face_data(fid).normal;
@@ -444,19 +443,20 @@ namespace HMP
 		//poly_vert_ordering(mesh.vector_verts(), poly);
 		unsigned int new_pid = mesh.poly_add(poly);
 		//element2id[extrude->children.front()] = incremental_id;
-		auto& element = extrude->children.front();
-		element->pid = new_pid;
-		mesh.poly_data(new_pid).element = element;
+		auto& element = *extrude.children().begin();
+		element.pid() = new_pid;
+		mesh.poly_data(new_pid).element = &element;
 
 		update_mesh();
 	}
 
-	void Grid::refine(unsigned int pid, const std::shared_ptr<Refine>& refine, bool remove_father)
+	void Grid::refine(unsigned int pid, Dag::Refine& refine, bool remove_father)
 	{
 
-		const auto& weights = Refinement::schemes.at(refine->scheme_type)->weights;
-		const auto& vids = Refinement::schemes.at(refine->scheme_type)->vertices;
+		const auto& weights = Refinement::schemes.at(refine.scheme())->weights;
+		const auto& vids = Refinement::schemes.at(refine.scheme())->vertices;
 
+		auto childrenIterator{ refine.children().begin() };
 
 		for (unsigned int i = 0; i < weights.size(); i++)
 		{
@@ -469,7 +469,8 @@ namespace HMP
 				cinolib::vec3d vert(0, 0, 0);
 				for (unsigned int k = 0; k < 4; k++)
 				{
-					unsigned int off = refine->vert_map.empty() ? vids[i][j][k] : refine->vert_map[vids[i][j][k]];
+					//unsigned int off = refine->vert_map.empty() ? vids[i][j][k] : refine->vert_map[vids[i][j][k]];
+					unsigned int off = refine.vertices()[vids[i][j][k]];
 
 					vert += tmp[k] * mesh.poly_vert(pid, off);
 				}
@@ -485,10 +486,10 @@ namespace HMP
 			//poly_vert_ordering(mesh.vector_verts(), poly);
 			unsigned int new_pid = mesh.poly_add(poly);
 
-			auto& element = refine->children[i];
-			element->pid = new_pid;
-			mesh.poly_data(new_pid).element = element;
-
+			auto& element = *childrenIterator;
+			element.pid() = new_pid;
+			mesh.poly_data(new_pid).element = &element;
+			childrenIterator++;
 		}
 		if (remove_father) mesh.poly_remove(pid, false);
 		else 			  mesh.poly_data(pid).flags[cinolib::HIDDEN] = true;

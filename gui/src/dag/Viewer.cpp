@@ -1,4 +1,8 @@
 #include <HMP/Gui/Dag/Viewer.hpp>
+
+#include <HMP/Dag/Node.hpp>
+#include <HMP/Dag/Operation.hpp>
+#include <HMP/Dag/Element.hpp>
 #include <cinolib/clamp.h>
 #include <algorithm>
 #include <cmath>
@@ -7,8 +11,11 @@
 #include <string>
 #include <limits>
 
+
 namespace HMP::Gui::Dag
 {
+
+	using namespace HMP::Dag;
 
 	void Viewer::resetView()
 	{
@@ -183,33 +190,33 @@ namespace HMP::Gui::Dag
 					constexpr ImU32 textColor{ backgroundColor };
 					const vec center{ ll2ss(node.center()) };
 					std::string text{};
-					switch (node.type())
+					switch (node.node().type())
 					{
-						case HMP::NodeType::ELEMENT:
+						case Dag::Node::EType::Element:
 						{
 							constexpr ImU32 elementColor{ IM_COL32(128, 128, 128, 255) };
 							constexpr ImU32 highlightedElementColor{ IM_COL32(255, 255, 0, 255) };
-							const ImU32 color{ highlight && highlightedElementId == node.elementId() ? highlightedElementColor : elementColor };
+							const ImU32 color{ highlight == &node.node() ? highlightedElementColor : elementColor };
 							drawList->AddRectFilled(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), color);
 							drawList->AddRect(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), strokeColor);
-							text = node.elementId() >= 0 ? std::to_string(node.elementId()) : "";
+							text = std::to_string(node.node().element().pid());
 						}
 						break;
-						case HMP::NodeType::OPERATION:
+						case Dag::Node::EType::Operation:
 						{
 							constexpr int circleSegments{ 10 };
 							ImU32 operationColor{};
-							switch (node.operationPrimitive())
+							switch (node.node().operation().primitive())
 							{
-								case HMP::Primitive::EXTRUDE:
+								case Dag::Operation::EPrimitive::Extrude:
 									text = "E";
 									operationColor = IM_COL32(214, 0, 114, 255);
 									break;
-								case HMP::Primitive::REFINE:
+								case Dag::Operation::EPrimitive::Refine:
 									text = "S";
 									operationColor = IM_COL32(0, 209, 91, 255);
 									break;
-								case HMP::Primitive::REMOVE:
+								case Dag::Operation::EPrimitive::Delete:
 									text = "D";
 									operationColor = IM_COL32(214, 107, 0, 255);
 									break;

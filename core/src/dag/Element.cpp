@@ -32,15 +32,6 @@ namespace HMP::Dag
 		return m_vertices;
 	}
 
-	const Operation& Element::parent() const
-	{
-		if (parents().size() != 1)
-		{
-			throw std::logic_error{ "not one parent" };
-		}
-		return *m_parents.begin();
-	}
-
 	Element::DagSetView& Element::parents()
 	{
 		return m_parents;

@@ -3,7 +3,9 @@
 #include <iterator>
 #include <cstddef>
 #include <unordered_set>
+#include <vector>
 #include <memory>
+#include <functional>
 
 namespace HMP::Utils
 {
@@ -62,6 +64,7 @@ namespace HMP::Utils
 		using ConstIterator = SetViewIterator<TInternal, const TView>;
 
 		SetView();
+		SetView(std::size_t _capacity);
 
 		template <typename TNewView>
 		SetView<TInternal, TNewView> view();
@@ -71,9 +74,18 @@ namespace HMP::Utils
 		bool remove(const TView& _item);
 		void removeOrThrow(const TView& _item);
 		bool has(const TView& _item) const;
+		bool any(std::function<bool(const TView&)> _predicate) const;
+		bool all(std::function<bool(const TView&)> _predicate) const;
 		std::size_t size() const;
 		void clear();
 		bool empty() const;
+
+		TView& single();
+		const TView& single() const;
+		TView& first();
+		const TView& first() const;
+		TView& last();
+		const TView& last() const;
 
 		Iterator begin();
 		Iterator rbegin();
@@ -87,6 +99,11 @@ namespace HMP::Utils
 		ConstIterator crbegin() const;
 		ConstIterator cend() const;
 		ConstIterator crend() const;
+
+		std::unordered_set<TView*> set();
+		std::unordered_set<const TView*> constSet() const;
+		std::vector<TView*> vector();
+		std::vector<const TView*> constVector() const;
 
 	};
 

@@ -3,48 +3,19 @@
 #include <utility>
 #include <algorithm>
 #include <stdexcept>
-#include <stdexcept>
 
 namespace HMP::Gui::Dag
 {
 
 	// Layout::Node
 
-	Layout::Node::Node(const Point& _center, HMP::NodeType _type, NodeData _data)
-		: m_center(_center), m_type{ _type }, m_data{ _data }
+	Layout::Node::Node(const Point& _center, const HMP::Dag::Node& _node)
+		: m_center(_center), m_node{ &_node }
 	{}
 
-	Layout::Node Layout::Node::element(const Point& _center, int _id)
+	const HMP::Dag::Node& Layout::Node::node() const
 	{
-		return Node{ _center, HMP::NodeType::ELEMENT, {.m_elementId{_id}} };
-	}
-
-	Layout::Node Layout::Node::operation(const Point& _center, HMP::Primitive _primitive)
-	{
-		return Node{ _center, HMP::NodeType::OPERATION, {.m_operationPrimitive{_primitive}} };
-	}
-
-	HMP::NodeType Layout::Node::type() const
-	{
-		return m_type;
-	}
-
-	int Layout::Node::elementId() const
-	{
-		if (m_type != HMP::NodeType::ELEMENT)
-		{
-			throw std::logic_error{ "not an element node" };
-		}
-		return m_data.m_elementId;
-	}
-
-	HMP::Primitive Layout::Node::operationPrimitive() const
-	{
-		if (m_type != HMP::NodeType::OPERATION)
-		{
-			throw std::logic_error{ "not an operation node" };
-		}
-		return m_data.m_operationPrimitive;
+		return *m_node;
 	}
 
 	const Layout::Point& Layout::Node::center() const

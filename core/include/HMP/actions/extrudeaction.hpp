@@ -23,7 +23,7 @@ namespace HMP
 		unsigned int pid;
 		unsigned int face_offset;
 		unsigned int new_pid;
-		std::shared_ptr<Operation> op;
+		Dag::Operation* op;
 	};
 
 }

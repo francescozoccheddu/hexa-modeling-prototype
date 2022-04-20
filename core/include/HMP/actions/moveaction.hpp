@@ -23,7 +23,7 @@ namespace HMP
 		Grid& grid;
 		unsigned int vid;
 		cinolib::vec3d displacement;
-		std::vector<std::shared_ptr<Element>> elements;
+		std::vector<Dag::Element*> elements;
 		std::vector<unsigned int> offsets;
 	};
 

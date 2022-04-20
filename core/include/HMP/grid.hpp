@@ -2,7 +2,6 @@
 
 #include <cinolib/geometry/vec_mat.h>
 #include <memory>
-#include <list>
 #include <vector>
 #include <map>
 #include <unordered_map>
@@ -12,6 +11,8 @@
 #include <HMP/undoredo.hpp>
 #include <HMP/operationstree.hpp>
 #include <HMP/utils.hpp>
+#include <HMP/Dag/Element.hpp>
+#include <HMP/Dag/Operation.hpp>
 #include <cinolib/subdivision_legacy_hexa_schemes.h>
 #include <cinolib/grid_projector.h>
 #include <cinolib/feature_network.h>
@@ -28,10 +29,9 @@
 namespace HMP
 {
 
-
 	struct PolyhedronAttributes final : cinolib::Polyhedron_std_attributes
 	{
-		std::shared_ptr<Element> element;
+		Dag::Element* element;
 	};
 
 	typedef cinolib::DrawableHexmesh<cinolib::Mesh_std_attributes, cinolib::Vert_std_attributes, cinolib::Edge_std_attributes, cinolib::Polygon_std_attributes, PolyhedronAttributes> MeshGrid;
@@ -56,14 +56,14 @@ namespace HMP
 		void add_move(unsigned int vid, const cinolib::vec3d& displacement);
 		void add_remove(unsigned int pid);
 
-		void add_operation(const std::shared_ptr<Operation>& op);
+		void add_operation(const Dag::Operation& op);
 
 		void undo();
 		void redo();
 
-		void apply_tree(const std::list<std::shared_ptr<Operation> >& operations, unsigned int pid, bool is_user_defined = true);
-		void prune_tree(const std::shared_ptr<Operation>& operation, bool is_user_defined = true);
-		void fix_topology(const std::shared_ptr<Operation>& op, bool removing = false);
+		void apply_tree(const std::vector<Dag::Operation*>& operations, unsigned int pid, bool is_user_defined = true);
+		void prune_tree(const Dag::Operation& operation, bool is_user_defined = true);
+		void fix_topology(const Dag::Operation& op, bool removing = false);
 		void make_conforming();
 
 		void project_on_target(cinolib::Trimesh<>& target);
@@ -83,27 +83,27 @@ namespace HMP
 		std::vector<unsigned int> y_rot_mask = { 0,5,2,4,1,3 };
 		std::vector<unsigned int> z_rot_mask = { 3,0,1,2,4,5 };
 
-		void extrude(unsigned int pid, unsigned int offset, const std::shared_ptr<Extrude>& extrude, bool merge_vertices = true);
-		void refine(unsigned int pid, const std::shared_ptr<Refine>& refine, bool remove_father = false);
+		void extrude(unsigned int pid, unsigned int offset, Dag::Extrude& extrude, bool merge_vertices = true);
+		void refine(unsigned int pid, Dag::Refine& refine, bool remove_father = false);
 		void move(unsigned int vid, const cinolib::vec3d& displacement);
 		void remove(unsigned int pid);
 
-		void remove_refine(const std::shared_ptr<Refine>& op, std::vector<unsigned int>& polys_to_remove);
-		void remove_extrude(const std::shared_ptr<Extrude>& op, std::vector<unsigned int>& polys_to_remove);
-		void remove_move(std::vector<std::shared_ptr<Element>>& elements, std::vector<unsigned int>& offsets, cinolib::vec3d& displacement);
-		void remove_remove(const std::shared_ptr<Remove>& op);
+		void remove_refine(const Dag::Refine& op, std::vector<unsigned int>& polys_to_remove);
+		void remove_extrude(const Dag::Extrude& op, std::vector<unsigned int>& polys_to_remove);
+		void remove_move(std::vector<Dag::Element*>& elements, std::vector<unsigned int>& offsets, cinolib::vec3d& displacement);
+		void remove_remove(const Dag::Delete& op);
 
-		void remove_operation(const std::shared_ptr<Operation>& op, std::vector<unsigned int>& polys_to_remove);
-		void apply_tree_recursive(const std::list<std::shared_ptr<Operation> >& operations, unsigned int pid, bool is_user_defined = true);
+		void remove_operation(const Dag::Operation& op, std::vector<unsigned int>& polys_to_remove);
+		void apply_tree_recursive(const std::vector<Dag::Operation*>& operations, unsigned int pid, bool is_user_defined = true);
 
-		void apply_transform(std::shared_ptr<Operation>& op, Transform T);
+		void apply_transform(Dag::Operation& op, Transform T);
 
-		void update_displacement_for_op(const std::shared_ptr<Operation>& op);
+		void update_displacement_for_op(Dag::Operation& op);
 
 		std::map<cinolib::vec3d, unsigned int, vert_compare> v_map;
 		CommandManager& command_manager;
 
-		std::deque<std::shared_ptr<Refine>> refine_queue;
+		std::deque<Dag::Refine*> refine_queue;
 
 		std::pair<int, unsigned int> direction_to_axis(const cinolib::vec3d& dir);
 

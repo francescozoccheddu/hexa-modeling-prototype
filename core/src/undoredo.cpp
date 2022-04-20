@@ -8,7 +8,7 @@ namespace HMP
 
 	}
 
-	void CommandManager::execute(std::list<std::shared_ptr<Action>> actions)
+	void CommandManager::execute(std::vector<std::shared_ptr<Action>> actions)
 	{
 		for (auto& action : actions)
 		{
@@ -43,7 +43,7 @@ namespace HMP
 	void CommandManager::collapse_last_n_actions(unsigned int n)
 	{
 
-		std::list<std::shared_ptr<Action>> actions;
+		std::vector<std::shared_ptr<Action>> actions;
 		for (unsigned int i = 0; i < n; i++)
 		{
 			auto& curr = undo_stack.top();
@@ -55,11 +55,11 @@ namespace HMP
 
 	void CommandManager::clear_undo()
 	{
-		undo_stack = std::stack<std::list<std::shared_ptr<Action>>>();
+		undo_stack = std::stack<std::vector<std::shared_ptr<Action>>>();
 	}
 	void CommandManager::clear_redo()
 	{
-		redo_stack = std::stack<std::list<std::shared_ptr<Action>>>();
+		redo_stack = std::stack<std::vector<std::shared_ptr<Action>>>();
 
 	}
 

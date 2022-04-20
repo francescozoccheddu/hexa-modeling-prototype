@@ -13,12 +13,12 @@ namespace HMP
 		auto& mesh = grid.mesh;
 
 		std::vector<unsigned int> to_remove;
-		std::map<unsigned int, std::shared_ptr<Refine>> ref_map;
-		std::deque<std::shared_ptr<Refine>> c_queue = grid.refine_queue;
+		std::map<unsigned int, Dag::Refine*> ref_map;
+		std::deque<Dag::Refine*> c_queue = grid.refine_queue;
 
 		//FILL CONCAVITIES
 
-		std::set<std::shared_ptr<Element>> concavities_candidates;
+		std::set<Dag::Element*> concavities_candidates;
 		unsigned int num_polys_start = mesh.num_polys();
 
 
@@ -27,10 +27,10 @@ namespace HMP
 			const auto& op = c_queue.front();
 			c_queue.pop_front();
 
-			if (!op->needs_fix_topology) continue;
+			if (!op->needsTopologyFix()) continue;
 
-			const auto& father = std::static_pointer_cast<Element>(op->parents.front());
-			unsigned int father_pid = father->pid;
+			const auto& father = *op->parents().begin();
+			unsigned int father_pid = father.pid();
 
 			for (unsigned int pid : mesh.adj_p2p(father_pid))
 			{
@@ -41,17 +41,17 @@ namespace HMP
 					if (cinolib::CONTAINS(concavities_candidates, adj))
 					{
 						auto st = Refinement::EScheme::StandardRefinement;
-						auto refine = grid.op_tree.refine(adj, 27);
+						auto refine = grid.op_tree.refine(*adj, 27);
 						if (refine == nullptr)
 						{
-							refine = std::shared_ptr<Refine>(new Refine);
+							refine = new Dag::Refine{};
 						}
 
-						refine->scheme_type = st;
-						refine->is_user_defined = false;
-						refine->depends_on.push_back(op);
+						refine->scheme() = st;
+						refine->userDefined() = false;
+						refine->dependencies().add(*op);
 
-						grid.refine(pid, refine);
+						grid.refine(pid, *refine);
 
 						c_queue.push_back(refine);
 						grid.refine_queue.push_back(refine);
@@ -64,8 +64,8 @@ namespace HMP
 			}
 		}
 
-		std::deque<std::shared_ptr<Refine>> face_queue = grid.refine_queue;
-		std::deque<std::shared_ptr<Refine>> edge_queue = grid.refine_queue;
+		std::deque<Dag::Refine*> face_queue = grid.refine_queue;
+		std::deque<Dag::Refine*> edge_queue = grid.refine_queue;
 
 		//FIX FACE ADJACENTS
 
@@ -75,11 +75,11 @@ namespace HMP
 			const auto& op = face_queue.front();
 			face_queue.pop_front();
 
-			if (!op->needs_fix_topology) continue;
+			if (!op->needsTopologyFix()) continue;
 
 
-			const auto& father = std::static_pointer_cast<Element>(op->parents.front());
-			unsigned int father_pid = father->pid;
+			const auto& father = op->parents().first();
+			unsigned int father_pid = father.pid();
 
 			for (unsigned int pid : mesh.adj_p2p(father_pid))
 			{
@@ -95,15 +95,15 @@ namespace HMP
 
 
 					unsigned int num_children = Refinement::schemes.at(st)->vertices.size();
-					auto refine = grid.op_tree.refine(adj, num_children);
+					auto refine = grid.op_tree.refine(*adj, num_children);
 					if (refine == nullptr)
 					{
-						refine = std::shared_ptr<Refine>(new Refine);
+						refine = new Dag::Refine{};
 					}
 
-					refine->scheme_type = st;
-					refine->is_user_defined = false;
-					refine->depends_on.push_back(op);
+					refine->scheme() = st;
+					refine->userDefined() = false;
+					refine->dependencies().add(*op);
 
 					//POLY VERTS REORDERING
 					std::vector<unsigned int> shared_vids = mesh.face_verts_id(shared);
@@ -123,21 +123,18 @@ namespace HMP
 						std::rotate(opposite_vids.begin(), opposite_vids.begin() + 1, opposite_vids.end());
 					}
 
-
-					refine->vert_map.resize(8);
-
 					for (unsigned int i = 0; i < 4; i++)
 					{
-						refine->vert_map[i] = mesh.poly_vert_offset(pid, shared_vids[i]);
+						refine->vertices()[i] = mesh.poly_vert_offset(pid, shared_vids[i]);
 					}
 					for (unsigned int i = 4; i < 8; i++)
 					{
-						refine->vert_map[i] = mesh.poly_vert_offset(pid, opposite_vids[i - 4]);
+						refine->vertices()[i] = mesh.poly_vert_offset(pid, opposite_vids[i - 4]);
 					}
 
-					grid.refine(pid, refine);
+					grid.refine(pid, *refine);
 
-					grid.update_displacement_for_op(refine);
+					grid.update_displacement_for_op(*refine);
 
 					to_remove.push_back(pid);
 
@@ -155,11 +152,11 @@ namespace HMP
 			const auto& op = edge_queue.front();
 			edge_queue.pop_front();
 
-			if (!op->needs_fix_topology) continue;
+			if (!op->needsTopologyFix()) continue;
 
 
-			const auto& father = std::static_pointer_cast<Element>(op->parents.front());
-			unsigned int father_pid = father->pid;
+			const auto& father = op->parents().first();
+			unsigned int father_pid = father.pid();
 
 			//FIX EDGE ADJACENTS
 			for (unsigned int eid : mesh.adj_p2e(father_pid))
@@ -181,12 +178,12 @@ namespace HMP
 
 
 						unsigned int num_children = Refinement::schemes.at(st)->vertices.size();
-						auto refine = grid.op_tree.refine(adj, num_children);
+						auto refine = grid.op_tree.refine(*adj, num_children);
 						if (refine == nullptr) return;
 
-						refine->scheme_type = st;
-						refine->is_user_defined = false;
-						refine->depends_on.push_back(op);
+						refine->scheme() = st;
+						refine->userDefined() = false;
+						refine->dependencies().add(*op);
 
 						unsigned int base = 0;
 						for (unsigned int fid : mesh.adj_e2f(eid))
@@ -221,24 +218,22 @@ namespace HMP
 						}
 
 
-						refine->vert_map.resize(8);
-
 						for (unsigned int i = 0; i < 4; i++)
 						{
-							refine->vert_map[i] = mesh.poly_vert_offset(pid, shared_vids[i]);
+							refine->vertices()[i] = mesh.poly_vert_offset(pid, shared_vids[i]);
 						}
 						for (unsigned int i = 4; i < 8; i++)
 						{
-							refine->vert_map[i] = mesh.poly_vert_offset(pid, opposite_vids[i - 4]);
+							refine->vertices()[i] = mesh.poly_vert_offset(pid, opposite_vids[i - 4]);
 						}
 
 
 						//print(refine->rotations);
 
-						op->dependency_of.push_back(refine);
+						op->dependents().add(*refine);
 
 
-						grid.refine(pid, refine, false);
+						grid.refine(pid, *refine, false);
 
 						to_remove.push_back(pid);
 					}
@@ -271,20 +266,20 @@ namespace HMP
 	void MakeConformingAction::undo()
 	{
 		std::vector<unsigned int> polys_to_remove(pids.size());
-		std::set<std::shared_ptr<Operation>> ops;
+		std::set<Dag::Operation*> ops;
 		for (unsigned int i = 0; i < pids.size(); i++)
 		{
 			int pid = pids[i];
 			if (pid == -1) continue;
 			auto& element = grid.mesh.poly_data(pid).element;
-			for (auto& node : element->parents)
+			for (Dag::Node& node : element->parents())
 			{
-				auto op = std::static_pointer_cast<Operation>(node);
-				ops.insert(op);
+				auto& op = node.operation();
+				ops.insert(&op);
 			}
 			polys_to_remove[i] = pid;
 		}
-		for (auto& op : ops) grid.op_tree.prune(op);
+		for (auto& op : ops) grid.op_tree.prune(*op);
 
 		std::sort(polys_to_remove.begin(), polys_to_remove.end(), std::greater());
 		for (unsigned int pid : polys_to_remove)

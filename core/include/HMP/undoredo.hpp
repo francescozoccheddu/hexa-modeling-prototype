@@ -33,7 +33,7 @@ namespace HMP
 		void operator=(CommandManager const&) = delete;
 
 
-		void execute(std::list<std::shared_ptr<Action> > actions);
+		void execute(std::vector<std::shared_ptr<Action> > actions);
 		bool undo();
 		bool redo();
 		void clear();
@@ -47,8 +47,8 @@ namespace HMP
 
 		CommandManager();
 
-		std::stack<std::list<std::shared_ptr<Action>>> undo_stack;
-		std::stack<std::list<std::shared_ptr<Action>>> redo_stack;
+		std::stack<std::vector<std::shared_ptr<Action>>> undo_stack;
+		std::stack<std::vector<std::shared_ptr<Action>>> redo_stack;
 
 	};
 

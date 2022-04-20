@@ -89,6 +89,11 @@ namespace HMP::Dag
 		return m_children.empty();
 	}
 
+	bool Node::operator==(const Node& _other) const
+	{
+		return this == &_other;
+	}
+
 	void Node::attachParent(Node& _parent)
 	{
 		_parent.attachChild(*this);

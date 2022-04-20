@@ -9,20 +9,20 @@ namespace HMP
 	{
 		auto vids = grid.mesh.poly_verts_id(pid);
 		auto element = grid.mesh.poly_data(pid).element;
-		auto refine = grid.op_tree.refine(element);
+		auto refine = grid.op_tree.refine(*element);
 		this->op = refine;
 		this->vids = vids;
 
 		if (refine == nullptr) return;
 
-		grid.refine(pid, refine, false);
+		grid.refine(pid, *refine, false);
 
 		grid.refine_queue.push_back(refine);
 
-		for (auto& child : refine->children)
+		for (auto& child : refine->children())
 		{
 
-			unsigned int pid = child->pid;
+			unsigned int pid = child.pid();
 
 			//update displacement
 			for (unsigned int off = 0; off < 8; off++)
@@ -35,12 +35,12 @@ namespace HMP
 
 	void RefineAction::undo()
 	{
-		grid.op_tree.prune(this->op);
+		grid.op_tree.prune(*this->op);
 		std::vector<unsigned int> polys_to_remove;
-		for (const auto& child : op->children)
+		for (const auto& child : op->children())
 		{
 
-			unsigned int pid = child->pid;
+			unsigned int pid = child.pid();
 			polys_to_remove.push_back(pid);
 		}
 		std::sort(polys_to_remove.begin(), polys_to_remove.end(), std::greater<unsigned int>());

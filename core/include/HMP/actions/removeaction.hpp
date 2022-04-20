@@ -22,7 +22,7 @@ namespace HMP
 		Grid& grid;
 		unsigned int pid;
 		std::vector<unsigned int> vids;
-		std::shared_ptr<Operation> op;
+		Dag::Operation* op;
 	};
 
 }

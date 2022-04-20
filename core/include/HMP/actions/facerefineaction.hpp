@@ -23,7 +23,7 @@ namespace HMP
 		unsigned int pid;
 		unsigned int face_off;
 		std::vector<unsigned int> vids;
-		std::shared_ptr<Operation> op;
+		Dag::Operation* op;
 	};
 
 }

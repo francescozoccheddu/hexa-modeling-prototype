@@ -19,7 +19,7 @@ namespace HMP
 
 		auto vids = mesh.poly_verts_id(pid);
 		auto element = grid.mesh.poly_data(pid).element;
-		auto refine = grid.op_tree.refine(element, 6);
+		auto refine = grid.op_tree.refine(*element, 6);
 
 		unsigned int fid = mesh.poly_face_id(pid, face_off);
 
@@ -28,7 +28,7 @@ namespace HMP
 		this->op = refine;
 		this->vids = vids;
 
-		refine->scheme_type = Refinement::EScheme::FaceRefinement;
+		refine->scheme() = Refinement::EScheme::FaceRefinement;
 
 		std::vector<unsigned int> base_vids = mesh.face_verts_id(mesh.poly_face_opposite_to(pid, fid));
 		std::vector<unsigned int> opposite_vids = mesh.face_verts_id(fid);
@@ -47,25 +47,22 @@ namespace HMP
 			std::rotate(opposite_vids.begin(), opposite_vids.begin() + 1, opposite_vids.end());
 		}
 
-
-		refine->vert_map.resize(8);
-
 		for (unsigned int i = 0; i < 4; i++)
 		{
-			refine->vert_map[i] = mesh.poly_vert_offset(pid, base_vids[i]);
+			refine->vertices()[i] = mesh.poly_vert_offset(pid, base_vids[i]);
 		}
 		for (unsigned int i = 4; i < 8; i++)
 		{
-			refine->vert_map[i] = mesh.poly_vert_offset(pid, opposite_vids[i - 4]);
+			refine->vertices()[i] = mesh.poly_vert_offset(pid, opposite_vids[i - 4]);
 		}
 
 
-		grid.refine(pid, refine);
+		grid.refine(pid, *refine);
 
-		for (auto& child : refine->children)
+		for (auto& child : refine->children())
 		{
 
-			unsigned int pid = child->pid;
+			unsigned int pid = child.pid();
 
 			//update displacement
 			for (unsigned int off = 0; off < 8; off++)
@@ -82,12 +79,12 @@ namespace HMP
 	void FaceRefineAction::undo()
 	{
 
-		grid.op_tree.prune(this->op);
+		grid.op_tree.prune(*this->op);
 		std::vector<unsigned int> polys_to_remove;
-		for (const auto& child : op->children)
+		for (const auto& child : op->children())
 		{
 
-			unsigned int pid = child->pid;
+			unsigned int pid = child.pid();
 			polys_to_remove.push_back(pid);
 		}
 		std::sort(polys_to_remove.begin(), polys_to_remove.end(), std::greater<unsigned int>());

@@ -54,6 +54,9 @@ namespace HMP::Dag
 		bool isRoot() const;
 		bool isLeaf() const;
 
+		bool operator==(const Node& _other) const;
+		bool operator!=(const Node& _other) const = default;
+
 		void attachParent(Node& _parent);
 		void detachParent(Node& _parent);
 		void detachParents();
