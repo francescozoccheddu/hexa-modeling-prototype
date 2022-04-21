@@ -10,6 +10,7 @@ add_library (core STATIC
     "src/actions/moveaction.cpp"
     "src/actions/refineaction.cpp"
     "src/actions/removeaction.cpp"
+    "src/Commander.cpp"
     "src/Dag/Delete.cpp"
     "src/Dag/Element.cpp"
     "src/Dag/Extrude.cpp"

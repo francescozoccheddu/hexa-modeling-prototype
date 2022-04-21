@@ -13,7 +13,7 @@ namespace HMP::Dag
 	private:
 
 		Refinement::EScheme m_scheme{ Refinement::EScheme::StandardRefinement };
-		bool m_needsTopologyFix{ false };
+		bool m_needsTopologyFix{ true };
 		std::array<unsigned int, 8> m_vertices{};
 
 	public:
