@@ -52,13 +52,13 @@ namespace HMP
 	}
 
 
-	Extrude* OperationsTree::extrude(Element& element, unsigned int offset)
+	Extrude* OperationsTree::extrude(Element& element, unsigned int faceOffset)
 	{
 		if (!is_leaf(element)) return nullptr;
-		assert(offset <= 6);
+		assert(faceOffset <= 6);
 
 		Extrude& extrude{ *new Extrude{} };
-		extrude.offset() = offset;
+		extrude.faceOffset() = faceOffset;
 		Element& child{ *new Element{} };
 		extrude.attachChild(child);
 		element.attachChild(extrude);
@@ -66,12 +66,12 @@ namespace HMP
 		return &extrude;
 	}
 
-	void OperationsTree::move(Element& element, unsigned int offset, const cinolib::vec3d& displacement)
+	void OperationsTree::move(Element& element, unsigned int faceOffset, const cinolib::vec3d& displacement)
 	{
 		if (!is_leaf(element)) return;
 
-		assert(offset <= 7);
-		element.vertices()[offset] = displacement;
+		assert(faceOffset <= 7);
+		element.vertices()[faceOffset] = displacement;
 	}
 
 
@@ -204,7 +204,7 @@ namespace HMP
 			if (op.primitive() == Operation::EPrimitive::Extrude)
 			{
 				const auto& ex = static_cast<const Extrude&>(op);
-				extrude_offsets_source.push_back(ex.offset());
+				extrude_offsets_source.push_back(ex.faceOffset());
 			}
 		}
 
@@ -213,7 +213,7 @@ namespace HMP
 			if (op.primitive() == Operation::EPrimitive::Extrude)
 			{
 				const auto& ex = static_cast<const Extrude&>(op);
-				extrude_offsets_dest.push_back(ex.offset());
+				extrude_offsets_dest.push_back(ex.faceOffset());
 			}
 		}
 
@@ -290,8 +290,8 @@ namespace HMP
 					{
 						auto new_op = new Extrude{};
 						auto& old_ex = static_cast<Extrude&>(op);
-						unsigned int offset = old_ex.offset();
-						new_op->offset() = offset;
+						unsigned int faceOffset = old_ex.faceOffset();
+						new_op->faceOffset() = faceOffset;
 						nodes_vec.push_back(new_op);
 						if (num_new_ops-- > 0) new_operations->push_back(new_op);
 						break;

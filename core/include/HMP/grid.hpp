@@ -19,8 +19,8 @@
 #include <cinolib/feature_mapping.h>
 #include <cinolib/export_surface.h>
 #include <cinolib/smoother.h>
+#include <HMP/actions/Delete.hpp>
 #include <HMP/actions/Extrude.hpp>
-#include <HMP/actions/removeaction.hpp>
 #include <HMP/actions/refineaction.hpp>
 #include <HMP/actions/facerefineaction.hpp>
 #include <HMP/actions/moveaction.hpp>
@@ -76,16 +76,20 @@ namespace HMP
 		const Commander& commander() const;
 
 		Dag::Element& element(unsigned int _pid);
+		void element(unsigned int _pid, Dag::Element& _element);
 		const Dag::Element& element(unsigned int _pid) const;
+
+		std::array<cinolib::vec3d, 8> polyVerts(unsigned int _pid) const;
+		unsigned int addPoly(const std::array<unsigned int, 8>& _vids, Dag::Element& _element);
+		void removePoly(unsigned int _pid);
+		unsigned int addPoly(const std::array<cinolib::vec3d, 8> _verts, Dag::Element& _element);
+		unsigned int addOrGetVert(const cinolib::vec3d&  _vert);
 
 	private:
 
 		void extrude(unsigned int _pid, unsigned int _faceOffset, Dag::Extrude& _operation);
 		void refine(unsigned int pid, Dag::Refine& refine, bool remove_father = false);
 		void move(unsigned int vid, const cinolib::vec3d& displacement);
-		void removePoly(unsigned int _pid);
-		unsigned int addPoly(const std::array<cinolib::vec3d, 8> _verts);
-		unsigned int addOrGetVert(const cinolib::vec3d&  _vert);
 
 		void remove_refine(const Dag::Refine& op, std::vector<unsigned int>& polys_to_remove);
 		void remove_extrude(const Dag::Extrude& op, std::vector<unsigned int>& polys_to_remove);
@@ -111,7 +115,7 @@ namespace HMP
 		void init();
 
 		friend class Actions::Extrude;
-		friend class RemoveAction;
+		friend class Actions::Delete;
 		friend class RefineAction;
 		friend class FaceRefineAction;
 		friend class MoveAction;

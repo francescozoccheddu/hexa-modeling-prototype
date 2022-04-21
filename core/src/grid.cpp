@@ -122,7 +122,7 @@ namespace HMP
 
 	void Grid::add_remove(unsigned int pid)
 	{
-		m_commander.apply(*new RemoveAction(*this, pid));
+		m_commander.apply(*new Actions::Delete(pid));
 	}
 
 	//REMOVE OPERATIONS############################################################################################################################
@@ -164,7 +164,7 @@ namespace HMP
 
 	void Grid::apply_tree_recursive(const std::vector<Dag::Operation*>& operations, unsigned int pid, bool is_user_defined)
 	{
-
+		throw std::logic_error{ "not implemented" };
 		for (auto op : operations)
 		{
 			switch (op->primitive())
@@ -179,7 +179,7 @@ namespace HMP
 				case Dag::Operation::EPrimitive::Extrude:
 				{
 					auto ex = static_cast<Dag::Extrude*>(op);
-					extrude(pid, ex->offset(), *ex);
+					extrude(pid, ex->faceOffset(), *ex);
 					break;
 				}
 
@@ -461,7 +461,10 @@ namespace HMP
 	void Grid::removePoly(unsigned int _pid)
 	{
 		mesh.poly_remove(_pid, true);
-		mesh.poly_data(0).element->pid() = 0;
+		if (_pid < mesh.num_polys())
+		{
+			element(_pid).pid() = _pid;
+		}
 	}
 
 	void Grid::update_mesh()
@@ -469,20 +472,25 @@ namespace HMP
 		mesh.updateGL();
 	}
 
-	unsigned int Grid::addPoly(const std::array<cinolib::vec3d, 8> _vertices)
+	unsigned int Grid::addPoly(const std::array<cinolib::vec3d, 8> _vertices, Dag::Element& _element)
 	{
 		std::array<unsigned int, 8> vids;
 		for (size_t i{ 0 }; i < 8; i++)
 		{
 			vids[i] = addOrGetVert(_vertices[i]);
 		}
-		return mesh.poly_add(std::vector<unsigned int>{ vids.begin(), vids.end() });
+		return addPoly(vids, _element);
 	}
 
 	unsigned int Grid::addOrGetVert(const cinolib::vec3d& _vert)
 	{
-		const auto& it{ v_map.find(_vert) };
-		return it != v_map.end() ? it->second : mesh.vert_add(_vert);
+		constexpr double maxDistance{ 1e-6 };
+		unsigned int vid{ mesh.pick_vert(_vert) };
+		if (mesh.vert(vid).dist(_vert) > maxDistance)
+		{
+			vid = mesh.vert_add(_vert);
+		}
+		return vid;
 	}
 
 	Dag::Element& Grid::element(unsigned int _pid)
@@ -490,9 +498,30 @@ namespace HMP
 		return *mesh.poly_data(_pid).element;
 	}
 
+	void Grid::element(unsigned int _pid, Dag::Element& _element)
+	{
+		mesh.poly_data(_pid).element = &_element;
+		_element.pid() = _pid;
+	}
+
 	const Dag::Element& Grid::element(unsigned int _pid) const
 	{
 		return const_cast<Grid*>(this)->element(_pid);
+	}
+
+	std::array<cinolib::vec3d, 8> Grid::polyVerts(unsigned int _pid) const
+	{
+		const std::vector<cinolib::vec3d> verts{ mesh.poly_verts(_pid) };
+		std::array<cinolib::vec3d, 8> vertsArray;
+		std::move(verts.begin(), verts.end(), vertsArray.begin());
+		return vertsArray;
+	}
+
+	unsigned int Grid::addPoly(const std::array<unsigned int, 8>& _vids, Dag::Element& _element)
+	{
+		const unsigned int pid{ mesh.poly_add(std::vector<unsigned int>{_vids.begin(), _vids.end()}) };
+		element(pid, _element);
+		return pid;
 	}
 
 }

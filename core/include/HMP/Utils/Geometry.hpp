@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cinolib/geometry/vec_mat.h>
+#include <vector>
 #include <array>
 
 namespace HMP::Utils::Geometry

@@ -19,8 +19,8 @@ namespace HMP::Dag
 
 		Extrude();
 
-		unsigned int& offset();
-		unsigned int offset() const;
+		unsigned int& faceOffset();
+		unsigned int faceOffset() const;
 
 	};
 

@@ -7,12 +7,12 @@ namespace HMP::Dag
 		: Operation{ EPrimitive::Extrude }
 	{}
 
-	unsigned int& Extrude::offset()
+	unsigned int& Extrude::faceOffset()
 	{
 		return m_offset;
 	}
 
-	unsigned int Extrude::offset() const
+	unsigned int Extrude::faceOffset() const
 	{
 		return m_offset;
 	}

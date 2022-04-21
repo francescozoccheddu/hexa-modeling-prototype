@@ -81,7 +81,7 @@ namespace HMP::Dag::Utils
 						case Operation::EPrimitive::Extrude:
 						{
 							const Extrude& extrudeOperation{ static_cast<const Extrude&>(operation) };
-							_stream << extrudeOperation.offset() << sep;
+							_stream << extrudeOperation.faceOffset() << sep;
 						}
 						break;
 						case Operation::EPrimitive::Refine:
@@ -165,7 +165,7 @@ namespace HMP::Dag::Utils
 						case Operation::EPrimitive::Extrude:
 						{
 							Extrude& extrudeOperation{ *new Extrude{} };
-							_stream >> extrudeOperation.offset();
+							_stream >> extrudeOperation.faceOffset();
 							operation = &extrudeOperation;
 						}
 						break;

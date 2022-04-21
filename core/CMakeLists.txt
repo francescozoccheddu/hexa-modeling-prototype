@@ -7,7 +7,7 @@ add_library (core STATIC
     "src/actions/makeconformingaction.cpp"
     "src/actions/moveaction.cpp"
     "src/actions/refineaction.cpp"
-    "src/actions/removeaction.cpp"
+    "src/actions/Delete.cpp"
     "src/actions/Extrude.cpp"
     "src/Commander.cpp"
     "src/Dag/Delete.cpp"
