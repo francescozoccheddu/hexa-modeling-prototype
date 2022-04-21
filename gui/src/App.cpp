@@ -241,8 +241,7 @@ namespace HMP::Gui
 			if (m_move.pending)
 			{
 				// FIXME move in plane instead of using world_mouse_pos
-				const cinolib::vec3d offset{ world_mouse_pos - m_grid.mesh.vert(m_move.vid) };
-				m_grid.move_vert(m_move.vid, offset);
+				m_grid.move_vert(m_move.vid, world_mouse_pos);
 				m_move.pending = false;
 				m_canvas.refit_scene();
 			}

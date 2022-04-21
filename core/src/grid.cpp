@@ -13,6 +13,7 @@ namespace HMP
 
 	constexpr double pi = 3.14159265358979323846;
 	constexpr double cubeSize = 0.5;
+	constexpr double c_maxVertDistance{ 1e-6 };
 
 	Grid::Grid()
 	{
@@ -117,7 +118,7 @@ namespace HMP
 
 	void Grid::add_move(unsigned int vid, const cinolib::vec3d& displacement)
 	{
-		m_commander.apply(*new MoveAction(*this, vid, displacement));
+		m_commander.apply(*new Actions::MoveVert(vid, displacement));
 	}
 
 	void Grid::add_remove(unsigned int pid)
@@ -484,13 +485,34 @@ namespace HMP
 
 	unsigned int Grid::addOrGetVert(const cinolib::vec3d& _vert)
 	{
-		constexpr double maxDistance{ 1e-6 };
-		unsigned int vid{ mesh.pick_vert(_vert) };
-		if (mesh.vert(vid).dist(_vert) > maxDistance)
+		unsigned int vid;
+		if (!getVert(_vert, vid))
 		{
 			vid = mesh.vert_add(_vert);
 		}
 		return vid;
+	}
+
+	bool Grid::getVert(const cinolib::vec3d& _vert, unsigned int& _vid) const
+	{
+		_vid = mesh.pick_vert(_vert);
+		return mesh.vert(_vid).dist(_vert) <= c_maxVertDistance;
+	}
+
+	unsigned int Grid::getVert(const cinolib::vec3d& _vert) const
+	{
+		unsigned int vid;
+		if (!getVert(_vert, vid))
+		{
+			throw std::logic_error{ "not found" };
+		}
+		return vid;
+	}
+
+	bool Grid::hasVert(const cinolib::vec3d& _vert) const
+	{
+		unsigned int vid;
+		return getVert(_vert, vid);
 	}
 
 	Dag::Element& Grid::element(unsigned int _pid)
@@ -522,6 +544,21 @@ namespace HMP
 		const unsigned int pid{ mesh.poly_add(std::vector<unsigned int>{_vids.begin(), _vids.end()}) };
 		element(pid, _element);
 		return pid;
+	}
+
+	void Grid::vert(unsigned int _vid, const cinolib::vec3d& _position)
+	{
+		unsigned int closestVid;
+		if (getVert(_position, closestVid) && closestVid != _vid)
+		{
+			throw std::logic_error{ "move will result in vertex merge" };
+		}
+		for (const unsigned int pid : mesh.adj_v2p(_vid))
+		{
+			const unsigned int offset{ mesh.poly_vert_offset(pid, _vid) };
+			element(pid).vertices()[offset] = _position;
+		}
+		mesh.vert(_vid) = _position;
 	}
 
 }
