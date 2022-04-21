@@ -1,6 +1,7 @@
 #include <HMP/actions/Delete.hpp>
 
 #include <HMP/grid.hpp>
+#include <stdexcept>
 
 namespace HMP::Actions
 {

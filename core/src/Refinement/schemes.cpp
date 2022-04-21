@@ -7,7 +7,7 @@ namespace HMP::Refinement
 	{
 
 		const Scheme standardRefinement{
-			.vertices{
+			.offsets{
 				{
 					{1, 3, 0, 7},
 					{2, 7, 3, 1},
@@ -554,7 +554,7 @@ namespace HMP::Refinement
 		};
 
 		const Scheme faceScheme{
-			.vertices{
+			.offsets{
 				{
 					{1, 3, 0, 7},
 					{1, 3, 0, 7},
@@ -821,7 +821,7 @@ namespace HMP::Refinement
 		};
 
 		const Scheme edgeScheme{
-			.vertices{
+			.offsets{
 				{
 					{1, 3, 0, 7},
 					{1, 3, 0, 7},
@@ -928,7 +928,7 @@ namespace HMP::Refinement
 		};
 
 		const Scheme faceRefinement{
-			.vertices{
+			.offsets{
 				{
 					{1, 3, 0, 7},
 					{1, 3, 0, 7},

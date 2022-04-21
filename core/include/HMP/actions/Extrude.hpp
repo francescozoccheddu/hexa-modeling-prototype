@@ -18,8 +18,8 @@ namespace HMP::Actions
 
 	private:
 
-		unsigned int m_pid;
-		unsigned int m_faceOffset;
+		const unsigned int m_pid;
+		const unsigned int m_faceOffset;
 		Dag::Extrude* m_operation{};
 
 	};

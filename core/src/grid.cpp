@@ -103,7 +103,7 @@ namespace HMP
 
 	void Grid::add_refine(unsigned int pid)
 	{
-		m_commander.apply(*new RefineAction(*this, pid));
+		m_commander.apply(*new Actions::Refine3x3(pid));
 	}
 
 	void Grid::add_face_refine(unsigned int fid)
@@ -407,7 +407,7 @@ namespace HMP
 	{
 
 		const auto& weights = Refinement::schemes.at(refine.scheme())->weights;
-		const auto& vids = Refinement::schemes.at(refine.scheme())->vertices;
+		const auto& vids = Refinement::schemes.at(refine.scheme())->offsets;
 
 		auto childrenIterator{ refine.children().begin() };
 
@@ -539,10 +539,16 @@ namespace HMP
 		return vertsArray;
 	}
 
+	unsigned int Grid::addPoly(Dag::Element& _element)
+	{
+		return addPoly(_element.vertices(), _element);
+	}
+
 	unsigned int Grid::addPoly(const std::array<unsigned int, 8>& _vids, Dag::Element& _element)
 	{
 		const unsigned int pid{ mesh.poly_add(std::vector<unsigned int>{_vids.begin(), _vids.end()}) };
 		element(pid, _element);
+		_element.vertices() = polyVerts(pid);
 		return pid;
 	}
 

@@ -5,14 +5,18 @@
 namespace HMP::Refinement
 {
 
-	struct Scheme final
+	class Scheme final // TODO Use array instead of vector and compute refinement here
 	{
+
+	public:
 
 		template<typename T>
 		using NestedVector = std::vector<std::vector<std::vector<T>>>;
 
-		NestedVector<unsigned int> vertices;
+		NestedVector<unsigned int> offsets;
 		NestedVector<double> weights;
+
+		std::size_t polyCount() const;
 
 	};
 

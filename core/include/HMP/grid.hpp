@@ -21,7 +21,7 @@
 #include <cinolib/smoother.h>
 #include <HMP/actions/Delete.hpp>
 #include <HMP/actions/Extrude.hpp>
-#include <HMP/actions/refineaction.hpp>
+#include <HMP/actions/Refine3x3.hpp>
 #include <HMP/actions/facerefineaction.hpp>
 #include <HMP/actions/MoveVert.hpp>
 #include <HMP/actions/makeconformingaction.hpp>
@@ -72,6 +72,8 @@ namespace HMP
 
 		void save_as_mesh(std::string filename);
 
+		/* ------------- new-dag ------------- */
+
 		Commander& commander();
 		const Commander& commander() const;
 
@@ -80,6 +82,7 @@ namespace HMP
 		const Dag::Element& element(unsigned int _pid) const;
 
 		std::array<cinolib::vec3d, 8> polyVerts(unsigned int _pid) const;
+		unsigned int addPoly(Dag::Element& _element);
 		unsigned int addPoly(const std::array<unsigned int, 8>& _vids, Dag::Element& _element);
 		void removePoly(unsigned int _pid);
 		unsigned int addPoly(const std::array<cinolib::vec3d, 8> _verts, Dag::Element& _element);
@@ -88,6 +91,8 @@ namespace HMP
 		unsigned int getVert(const cinolib::vec3d&  _vert) const;
 		bool hasVert(const cinolib::vec3d&  _vert) const;
 		void vert(unsigned int _vid, const cinolib::vec3d& _position);
+
+		/* ^^^^^^^^^^^^^ new-dag ^^^^^^^^^^^^^ */
 
 	private:
 
@@ -120,7 +125,7 @@ namespace HMP
 
 		friend class Actions::Extrude;
 		friend class Actions::Delete;
-		friend class RefineAction;
+		friend class Actions::Refine3x3;
 		friend class FaceRefineAction;
 		friend class Actions::MoveVert;
 		friend class MakeConformingAction;

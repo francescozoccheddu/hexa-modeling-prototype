@@ -20,7 +20,7 @@ namespace HMP::Actions
 
 	private:
 
-		unsigned int m_pid;
+		const unsigned int m_pid;
 		std::array<cinolib::vec3d, 8> m_vertices;
 		Dag::Delete* m_operation{};
 

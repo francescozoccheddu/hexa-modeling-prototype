@@ -94,7 +94,7 @@ namespace HMP
 					unsigned int shared = mesh.poly_shared_face(father_pid, pid);
 
 
-					unsigned int num_children = Refinement::schemes.at(st)->vertices.size();
+					unsigned int num_children = Refinement::schemes.at(st)->offsets.size();
 					auto refine = grid.op_tree.refine(*adj, num_children);
 					if (refine == nullptr)
 					{
@@ -177,7 +177,7 @@ namespace HMP
 						Refinement::EScheme st = Refinement::EScheme::EdgeScheme;
 
 
-						unsigned int num_children = Refinement::schemes.at(st)->vertices.size();
+						unsigned int num_children = Refinement::schemes.at(st)->offsets.size();
 						auto refine = grid.op_tree.refine(*adj, num_children);
 						if (refine == nullptr) return;
 

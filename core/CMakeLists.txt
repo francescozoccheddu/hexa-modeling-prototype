@@ -5,7 +5,7 @@ add_library (core STATIC
     "src/operationstree.cpp"
     "src/actions/facerefineaction.cpp"
     "src/actions/makeconformingaction.cpp"
-    "src/actions/refineaction.cpp"
+    "src/actions/Refine3x3.cpp"
     "src/actions/MoveVert.cpp"
     "src/actions/Delete.cpp"
     "src/actions/Extrude.cpp"
@@ -17,6 +17,7 @@ add_library (core STATIC
     "src/Dag/Operation.cpp"
     "src/Dag/Refine.cpp"
     "src/Dag/Utils.cpp"
+    "src/Refinement/Scheme.cpp"
     "src/Refinement/schemes.cpp"
     "src/Utils/Geometry.cpp"
 )

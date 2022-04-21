@@ -6,7 +6,7 @@
 namespace HMP::Actions
 {
 
-	class MoveVert : public Commander::Action
+	class MoveVert final : public Commander::Action
 	{
 
 	public:
@@ -18,8 +18,8 @@ namespace HMP::Actions
 
 	private:
 
-		unsigned int m_vid;
-		cinolib::vec3d m_position;
+		const unsigned int m_vid;
+		const cinolib::vec3d m_position;
 		cinolib::vec3d m_oldPosition;
 
 	};
