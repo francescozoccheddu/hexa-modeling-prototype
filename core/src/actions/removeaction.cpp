@@ -12,7 +12,7 @@ namespace HMP
 		auto remove = grid.op_tree.remove(*element);
 		this->op = remove;
 		if (remove == nullptr) return;
-		grid.remove(pid);
+		grid.removePoly(pid);
 	}
 
 	void RemoveAction::unapply()

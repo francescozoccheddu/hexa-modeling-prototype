@@ -19,7 +19,7 @@
 #include <cinolib/feature_mapping.h>
 #include <cinolib/export_surface.h>
 #include <cinolib/smoother.h>
-#include <HMP/actions/extrudeaction.hpp>
+#include <HMP/actions/Extrude.hpp>
 #include <HMP/actions/removeaction.hpp>
 #include <HMP/actions/refineaction.hpp>
 #include <HMP/actions/facerefineaction.hpp>
@@ -75,12 +75,17 @@ namespace HMP
 		Commander& commander();
 		const Commander& commander() const;
 
+		Dag::Element& element(unsigned int _pid);
+		const Dag::Element& element(unsigned int _pid) const;
+
 	private:
 
-		void extrude(unsigned int pid, unsigned int offset, Dag::Extrude& extrude, bool merge_vertices = true);
+		void extrude(unsigned int _pid, unsigned int _faceOffset, Dag::Extrude& _operation);
 		void refine(unsigned int pid, Dag::Refine& refine, bool remove_father = false);
 		void move(unsigned int vid, const cinolib::vec3d& displacement);
-		void remove(unsigned int pid);
+		void removePoly(unsigned int _pid);
+		unsigned int addPoly(const std::array<cinolib::vec3d, 8> _verts);
+		unsigned int addOrGetVert(const cinolib::vec3d&  _vert);
 
 		void remove_refine(const Dag::Refine& op, std::vector<unsigned int>& polys_to_remove);
 		void remove_extrude(const Dag::Extrude& op, std::vector<unsigned int>& polys_to_remove);
@@ -105,7 +110,7 @@ namespace HMP
 		void update_mesh();
 		void init();
 
-		friend class ExtrudeAction;
+		friend class Actions::Extrude;
 		friend class RemoveAction;
 		friend class RefineAction;
 		friend class FaceRefineAction;

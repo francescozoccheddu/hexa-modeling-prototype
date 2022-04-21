@@ -63,4 +63,17 @@ namespace HMP::Dag
 		return m_children;
 	}
 
+	std::vector<Element*> Operation::attachChildren(std::size_t _count)
+	{
+		std::vector<Element*> children{};
+		children.reserve(_count);
+		while (_count-- > 0)
+		{
+			Element& child{ *new Element{} };
+			attachChild(child);
+			children.push_back(&child);
+		}
+		return children;
+	}
+
 }

@@ -6,6 +6,7 @@
 #include <array>
 #include <HMP/Refinement/schemes.hpp>
 #include <HMP/Utils/Geometry.hpp>
+#include <HMP/Dag/Utils.hpp>
 
 namespace HMP
 {
@@ -111,7 +112,7 @@ namespace HMP
 
 	void Grid::add_extrude(unsigned int pid, unsigned int face_offset)
 	{
-		m_commander.apply(*new ExtrudeAction(*this, pid, face_offset));
+		m_commander.apply(*new Actions::Extrude(pid, face_offset));
 	}
 
 	void Grid::add_move(unsigned int vid, const cinolib::vec3d& displacement)
@@ -183,7 +184,7 @@ namespace HMP
 				}
 
 				case Dag::Operation::EPrimitive::Delete:
-					remove(pid);
+					removePoly(pid);
 					break;
 			}
 
@@ -367,39 +368,38 @@ namespace HMP
 		m.save(filename.c_str());
 	}
 
-	void Grid::extrude(unsigned int pid, unsigned int offset, Dag::Extrude& extrude, bool merge_vertices)
+	void Grid::extrude(unsigned int _pid, unsigned int _offset, Dag::Extrude& _operation)
 	{
-		unsigned int fid = mesh.poly_face_id(pid, offset);
-		cinolib::vec3d normal = mesh.face_data(fid).normal;
-		std::vector<unsigned int> poly = mesh.face_verts_id(fid);
-		std::vector<cinolib::vec3d> face_verts = mesh.face_verts(fid);
+		const unsigned int fid = mesh.poly_face_id(_pid, _offset);
 
-		//std::cout<<normal<<std::endl;
-
-		double edge_avg_length = 0;
-
-		for (unsigned int eid : mesh.adj_f2e(fid)) edge_avg_length += mesh.edge_length(eid);
-
-		edge_avg_length /= mesh.adj_f2e(fid).size();
-
-		for (auto& vert : face_verts)
+		double avgFaceEdgeLength{};
 		{
-			cinolib::vec3d new_vert = vert + normal * edge_avg_length;
-
-			auto query = v_map.find(new_vert);
-			unsigned int new_vid = query == v_map.end() || !merge_vertices ? mesh.vert_add(new_vert) : query->second;
-			if (query == v_map.end()) v_map[new_vert] = new_vid;
-
-			poly.push_back(new_vid);
+			const std::vector<unsigned int> faceEids{ mesh.adj_f2e(fid) };
+			for (const unsigned int eid : faceEids)
+			{
+				avgFaceEdgeLength += mesh.edge_length(eid);
+			}
+			avgFaceEdgeLength /= mesh.adj_f2e(fid).size();
 		}
-		//poly_vert_ordering(mesh.vector_verts(), poly);
-		unsigned int new_pid = mesh.poly_add(poly);
-		//element2id[extrude->children.front()] = incremental_id;
-		auto& element = *extrude.children().begin();
-		element.pid() = new_pid;
-		mesh.poly_data(new_pid).element = &element;
 
-		update_mesh();
+		const std::vector<cinolib::vec3d> faceVerts = mesh.face_verts(fid);
+		const cinolib::vec3d faceNormal = mesh.face_data(fid).normal;
+		std::array<unsigned int, 8> vids;
+		{
+			const std::vector<unsigned int> faceVids{ mesh.face_verts_id(fid) };
+			std::copy(faceVids.begin(), faceVids.end(), vids.begin());
+		}
+		int i{ 4 };
+		for (const cinolib::vec3d& faceVert : faceVerts)
+		{
+			const cinolib::vec3d vert{ faceVert + faceNormal * avgFaceEdgeLength };
+			vids[i++] = addOrGetVert(vert);
+		}
+
+		const unsigned int pid = mesh.poly_add(std::vector<unsigned int>{vids.begin(), vids.end() });
+		Dag::Element& element{ _operation.children().single() };
+		element.pid() = pid;
+		mesh.poly_data(pid).element = &element;
 	}
 
 	void Grid::refine(unsigned int pid, Dag::Refine& refine, bool remove_father)
@@ -458,16 +458,41 @@ namespace HMP
 		update_mesh();
 	}
 
-	void Grid::remove(unsigned int pid)
+	void Grid::removePoly(unsigned int _pid)
 	{
-		//mesh.poly_data(pid).flags[cinolib::HIDDEN] = true;
-		mesh.poly_remove(pid, false);
-		update_mesh();
+		mesh.poly_remove(_pid, true);
+		mesh.poly_data(0).element->pid() = 0;
 	}
 
 	void Grid::update_mesh()
 	{
 		mesh.updateGL();
+	}
+
+	unsigned int Grid::addPoly(const std::array<cinolib::vec3d, 8> _vertices)
+	{
+		std::array<unsigned int, 8> vids;
+		for (size_t i{ 0 }; i < 8; i++)
+		{
+			vids[i] = addOrGetVert(_vertices[i]);
+		}
+		return mesh.poly_add(std::vector<unsigned int>{ vids.begin(), vids.end() });
+	}
+
+	unsigned int Grid::addOrGetVert(const cinolib::vec3d& _vert)
+	{
+		const auto& it{ v_map.find(_vert) };
+		return it != v_map.end() ? it->second : mesh.vert_add(_vert);
+	}
+
+	Dag::Element& Grid::element(unsigned int _pid)
+	{
+		return *mesh.poly_data(_pid).element;
+	}
+
+	const Dag::Element& Grid::element(unsigned int _pid) const
+	{
+		return const_cast<Grid*>(this)->element(_pid);
 	}
 
 }

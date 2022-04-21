@@ -2,6 +2,7 @@
 
 #include <HMP/Dag/Node.hpp>
 #include <HMP/Utils/SetView.hpp>
+#include <vector>
 
 namespace HMP::Dag
 {
@@ -49,6 +50,8 @@ namespace HMP::Dag
 		const DagSetView& parents() const;
 		DagSetView& children();
 		const DagSetView& children() const;
+
+		std::vector<Element*> attachChildren(std::size_t _count);
 
 	};
 
