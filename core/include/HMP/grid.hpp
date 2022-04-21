@@ -8,7 +8,7 @@
 #include <utility>
 #include <string>
 #include <cinolib/meshes/meshes.h>
-#include <HMP/undoredo.hpp>
+#include <HMP/Commander.hpp>
 #include <HMP/operationstree.hpp>
 #include <HMP/Utils/Geometry.hpp>
 #include <HMP/Dag/Element.hpp>
@@ -72,6 +72,9 @@ namespace HMP
 
 		void save_as_mesh(std::string filename);
 
+		Commander& commander();
+		const Commander& commander() const;
+
 	private:
 
 		void extrude(unsigned int pid, unsigned int offset, Dag::Extrude& extrude, bool merge_vertices = true);
@@ -92,12 +95,12 @@ namespace HMP
 		void update_displacement_for_op(Dag::Operation& op);
 
 		std::map<cinolib::vec3d, unsigned int, Utils::Geometry::VertexComparer> v_map;
-		CommandManager& command_manager;
 
 		std::deque<Dag::Refine*> refine_queue;
 
 		std::pair<int, unsigned int> direction_to_axis(const cinolib::vec3d& dir);
 
+		Commander m_commander{ *this };
 
 		void update_mesh();
 		void init();

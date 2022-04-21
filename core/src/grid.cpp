@@ -13,12 +13,21 @@ namespace HMP
 	constexpr double pi = 3.14159265358979323846;
 	constexpr double cubeSize = 0.5;
 
-	Grid::Grid() : command_manager(CommandManager::get_instance())
+	Grid::Grid()
 	{
 		init();
 	}
 
+	Commander& Grid::commander()
+	{
+		return m_commander;
+	}
 
+
+	const Commander& Grid::commander() const
+	{
+		return m_commander;
+	}
 
 	void Grid::init()
 	{
@@ -45,7 +54,7 @@ namespace HMP
 		}
 
 		v_map.clear();
-		command_manager.clear();
+		m_commander.clear();
 		refine_queue.clear();
 
 		for (unsigned int i = 0; i < 8; i++)
@@ -92,65 +101,41 @@ namespace HMP
 
 	void Grid::add_refine(unsigned int pid)
 	{
-		auto refine_action = std::shared_ptr<Action>(new RefineAction(*this, pid));
-		std::vector<std::shared_ptr<Action>> action_list;
-		action_list.push_back(refine_action);
-		command_manager.execute(action_list);
+		m_commander.apply(*new RefineAction(*this, pid));
 	}
 
 	void Grid::add_face_refine(unsigned int fid)
 	{
-
-		auto face_refine_action = std::shared_ptr<Action>(new FaceRefineAction(*this, fid));
-		std::vector<std::shared_ptr<Action>> action_list;
-		action_list.push_back(face_refine_action);
-		command_manager.execute(action_list);
-
+		m_commander.apply(*new FaceRefineAction(*this, fid));
 	}
 
 	void Grid::add_extrude(unsigned int pid, unsigned int face_offset)
 	{
-
-		auto extrude_action = std::shared_ptr<Action>(new ExtrudeAction(*this, pid, face_offset));
-		std::vector<std::shared_ptr<Action>> action_list;
-		action_list.push_back(extrude_action);
-		command_manager.execute(action_list);
-
+		m_commander.apply(*new ExtrudeAction(*this, pid, face_offset));
 	}
 
 	void Grid::add_move(unsigned int vid, const cinolib::vec3d& displacement)
 	{
-
-		auto move_action = std::shared_ptr<Action>(new MoveAction(*this, vid, displacement));
-		std::vector<std::shared_ptr<Action>> action_list;
-		action_list.push_back(move_action);
-		command_manager.execute(action_list);
-
+		m_commander.apply(*new MoveAction(*this, vid, displacement));
 	}
 
 	void Grid::add_remove(unsigned int pid)
 	{
-		auto remove_action = std::shared_ptr<Action>(new RemoveAction(*this, pid));
-		std::vector<std::shared_ptr<Action>> action_list;
-		action_list.push_back(remove_action);
-		command_manager.execute(action_list);
+		m_commander.apply(*new RemoveAction(*this, pid));
 	}
-
-
-
 
 	//REMOVE OPERATIONS############################################################################################################################
 
 	void Grid::undo()
 	{
-		command_manager.undo();
+		m_commander.undo();
 		update_mesh();
 
 	}
 
 	void Grid::redo()
 	{
-		command_manager.redo();
+		m_commander.redo();
 		update_mesh();
 	}
 
@@ -251,10 +236,7 @@ namespace HMP
 
 	void Grid::make_conforming()
 	{
-		auto make_conforming_action = std::shared_ptr<Action>(new MakeConformingAction(*this));
-		std::vector<std::shared_ptr<Action>> action_list;
-		action_list.push_back(make_conforming_action);
-		command_manager.execute(action_list);
+		m_commander.apply(*new MakeConformingAction(*this));
 		update_mesh();
 	}
 
@@ -290,8 +272,8 @@ namespace HMP
 				count++;
 			}
 		}
-
-		command_manager.collapse_last_n_actions(count);
+		// TODO collapse
+		//command_manager.collapse_last_n_actions(count); 
 
 		update_mesh();
 

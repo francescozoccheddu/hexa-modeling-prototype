@@ -3,19 +3,19 @@
 #include <vector>
 #include <memory>
 #include <HMP/grid.hpp>
-#include <HMP/undoredo.hpp>
+#include <HMP/Commander.hpp>
 
 namespace HMP
 {
 
 	class Grid;
-	class RefineAction : public Action
+	class RefineAction : public Commander::Action
 	{
 	public:
 		RefineAction(Grid& grid, unsigned int pid);
 
-		void execute() override;
-		void undo() override;
+		void apply() override;
+		void unapply() override;
 
 	private:
 

@@ -5,7 +5,7 @@ namespace HMP
 
     MoveAction::MoveAction(Grid& grid, unsigned int vid, cinolib::vec3d displacement) : grid(grid), vid(vid), displacement(displacement) {}
 
-    void MoveAction::execute()
+    void MoveAction::apply()
     {
         auto& mesh = grid.mesh;
 
@@ -25,7 +25,7 @@ namespace HMP
 
     }
 
-    void MoveAction::undo()
+    void MoveAction::unapply()
     {
         for (unsigned int i = 0; i < elements.size(); i++)
         {

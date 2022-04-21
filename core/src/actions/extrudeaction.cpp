@@ -5,7 +5,7 @@ namespace HMP
 
 	ExtrudeAction::ExtrudeAction(Grid& grid, unsigned int pid, unsigned int face_offset) : grid(grid), pid(pid), face_offset(face_offset) {}
 
-	void ExtrudeAction::execute()
+	void ExtrudeAction::apply()
 	{
 		auto vids = grid.mesh.poly_verts_id(pid);
 		auto element = grid.mesh.poly_data(pid).element;
@@ -25,7 +25,7 @@ namespace HMP
 
 	}
 
-	void ExtrudeAction::undo()
+	void ExtrudeAction::unapply()
 	{
 		grid.op_tree.prune(*this->op);
 		grid.mesh.poly_remove(new_pid, false);

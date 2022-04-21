@@ -4,19 +4,19 @@
 #include <vector>
 #include <deque>
 #include <HMP/grid.hpp>
-#include <HMP/undoredo.hpp>
+#include <HMP/Commander.hpp>
 
 namespace HMP
 {
 
 	class Grid;
-	class MakeConformingAction : public Action
+	class MakeConformingAction : public Commander::Action
 	{
 	public:
 		MakeConformingAction(Grid& grid);
 
-		void execute() override;
-		void undo() override;
+		void apply() override;
+		void unapply() override;
 
 	private:
 

@@ -23,7 +23,6 @@ namespace HMP
 			throw std::logic_error{ "already attached" };
 		}
 		m_commander = &_commander;
-		m_applied = false;
 	}
 
 	void Commander::Action::prepareAndApply()

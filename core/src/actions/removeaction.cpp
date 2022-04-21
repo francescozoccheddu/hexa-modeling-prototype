@@ -5,7 +5,7 @@ namespace HMP
 
 	RemoveAction::RemoveAction(Grid& grid, unsigned int pid) : grid(grid), pid(pid) {}
 
-	void RemoveAction::execute()
+	void RemoveAction::apply()
 	{
 		this->vids = grid.mesh.poly_verts_id(pid, false);;
 		auto element = grid.mesh.poly_data(pid).element;
@@ -15,7 +15,7 @@ namespace HMP
 		grid.remove(pid);
 	}
 
-	void RemoveAction::undo()
+	void RemoveAction::unapply()
 	{
 		grid.op_tree.prune(*this->op);
 		grid.mesh.poly_add(this->vids);

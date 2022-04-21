@@ -8,7 +8,7 @@ namespace HMP
 	MakeConformingAction::MakeConformingAction(Grid& grid) : grid(grid) {}
 
 
-	void MakeConformingAction::execute()
+	void MakeConformingAction::apply()
 	{
 		auto& mesh = grid.mesh;
 
@@ -263,7 +263,7 @@ namespace HMP
 
 	}
 
-	void MakeConformingAction::undo()
+	void MakeConformingAction::unapply()
 	{
 		std::vector<unsigned int> polys_to_remove(pids.size());
 		std::set<Dag::Operation*> ops;

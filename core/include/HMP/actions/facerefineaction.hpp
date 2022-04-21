@@ -3,19 +3,19 @@
 #include <vector>
 #include <memory>
 #include <HMP/grid.hpp>
-#include <HMP/undoredo.hpp>
+#include <HMP/Commander.hpp>
 
 namespace HMP
 {
 
 	class Grid;
-	class FaceRefineAction : public Action
+	class FaceRefineAction : public Commander::Action
 	{
 	public:
 		FaceRefineAction(Grid& grid, unsigned int fid);
 
-		void execute() override;
-		void undo() override;
+		void apply() override;
+		void unapply() override;
 
 	private:
 

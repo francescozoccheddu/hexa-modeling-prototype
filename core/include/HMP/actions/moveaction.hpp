@@ -4,19 +4,19 @@
 #include <memory>
 #include <cinolib/geometry/vec_mat.h>
 #include <HMP/grid.hpp>
-#include <HMP/undoredo.hpp>
+#include <HMP/Commander.hpp>
 
 namespace HMP
 {
 
 	class Grid;
-	class MoveAction : public Action
+	class MoveAction : public Commander::Action
 	{
 	public:
 		MoveAction(Grid& grid, unsigned int vid, cinolib::vec3d displacement);
 
-		void execute() override;
-		void undo() override;
+		void apply() override;
+		void unapply() override;
 
 	private:
 

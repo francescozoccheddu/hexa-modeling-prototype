@@ -13,7 +13,7 @@ namespace HMP
 
 	}
 
-	void FaceRefineAction::execute()
+	void FaceRefineAction::apply()
 	{
 		auto& mesh = grid.mesh;
 
@@ -76,7 +76,7 @@ namespace HMP
 
 	}
 
-	void FaceRefineAction::undo()
+	void FaceRefineAction::unapply()
 	{
 
 		grid.op_tree.prune(*this->op);

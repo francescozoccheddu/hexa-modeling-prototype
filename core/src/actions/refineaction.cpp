@@ -5,7 +5,7 @@ namespace HMP
 
 	RefineAction::RefineAction(Grid& grid, unsigned int pid) : grid(grid), pid(pid) {}
 
-	void RefineAction::execute()
+	void RefineAction::apply()
 	{
 		auto vids = grid.mesh.poly_verts_id(pid);
 		auto element = grid.mesh.poly_data(pid).element;
@@ -33,7 +33,7 @@ namespace HMP
 
 	}
 
-	void RefineAction::undo()
+	void RefineAction::unapply()
 	{
 		grid.op_tree.prune(*this->op);
 		std::vector<unsigned int> polys_to_remove;

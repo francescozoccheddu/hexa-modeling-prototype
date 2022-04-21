@@ -3,19 +3,19 @@
 #include <vector>
 #include <memory>
 #include <HMP/grid.hpp>
-#include <HMP/undoredo.hpp>
+#include <HMP/Commander.hpp>
 
 namespace HMP
 {
 
 	class Grid;
-	class ExtrudeAction : public Action
+	class ExtrudeAction : public Commander::Action
 	{
 	public:
 		ExtrudeAction(Grid& grid, unsigned int pid, unsigned int face_offset);
 
-		void execute() override;
-		void undo() override;
+		void apply() override;
+		void unapply() override;
 
 	private:
 

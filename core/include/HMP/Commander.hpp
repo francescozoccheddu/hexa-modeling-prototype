@@ -18,8 +18,8 @@ namespace HMP
 		private:
 
 			friend class Commander;
-			Commander* m_commander;
-			bool m_applied;
+			Commander* m_commander{};
+			bool m_applied{ false };
 
 			void ensureAttached() const;
 			void attach(Commander& _commander);
