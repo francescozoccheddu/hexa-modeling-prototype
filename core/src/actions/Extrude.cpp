@@ -1,39 +1,41 @@
 #include <HMP/actions/Extrude.hpp>
 
 #include <HMP/grid.hpp>
+#include <array>
 #include <stdexcept>
+#include <algorithm>
 
 namespace HMP::Actions
 {
 
-	Extrude::Extrude(unsigned int _pid, unsigned int _faceOffset)
-		: m_pid{ _pid }, m_faceOffset{ _faceOffset }
+	Extrude::Extrude(const cinolib::vec3d& _polyCentroid, const cinolib::vec3d& _faceCentroid)
+		: m_polyCentroid(_polyCentroid), m_faceCentroid(_faceCentroid)
 	{}
 
 	void Extrude::apply()
 	{
 		Grid& grid{ this->grid() };
-		Dag::Element& element{ grid.element(m_pid) };
+		Dag::Element& element{ grid.element(grid.mesh.pick_poly(m_polyCentroid)) };
+		const unsigned int fid{ grid.closestPolyFid(element.pid(), m_faceCentroid) };
+		const unsigned int faceOffset{ grid.mesh.poly_face_offset(element.pid(), fid) };
 		for (const Dag::Operation& child : element.children())
 		{
 			if (child.primitive() != Dag::Operation::EPrimitive::Extrude)
 			{
 				throw std::logic_error{ "element has non-extrude child" };
 			}
-			if (static_cast<const Dag::Extrude&>(child).faceOffset() == m_faceOffset)
+			if (static_cast<const Dag::Extrude&>(child).faceOffset() == faceOffset)
 			{
 				throw std::logic_error{ "element already has equivalent child" };
 			}
 		}
 		Dag::Extrude& operation{ *new Dag::Extrude{} };
 		m_operation = &operation;
-		operation.faceOffset() = m_faceOffset;
+		operation.faceOffset() = faceOffset;
 		Dag::Element& child{ *new Dag::Element{} };
 		operation.attachChild(child);
 		element.attachChild(operation);
 		{
-			const unsigned int fid = grid.mesh.poly_face_id(m_pid, m_faceOffset);
-
 			double avgFaceEdgeLength{};
 			{
 				const std::vector<unsigned int> faceEids{ grid.mesh.adj_f2e(fid) };
@@ -44,24 +46,16 @@ namespace HMP::Actions
 				avgFaceEdgeLength /= faceEids.size();
 			}
 
+			std::array<cinolib::vec3d, 8> verts;
 			const std::vector<cinolib::vec3d> faceVerts = grid.mesh.face_verts(fid);
-			std::copy(faceVerts.begin(), faceVerts.end(), child.vertices().begin());
+			std::copy(faceVerts.begin(), faceVerts.end(), verts.begin());
 			const cinolib::vec3d faceNormal = grid.mesh.face_data(fid).normal;
-			std::array<unsigned int, 8> vids;
-			{
-				const std::vector<unsigned int> faceVids{ grid.mesh.face_verts_id(fid) };
-				std::copy(faceVids.begin(), faceVids.end(), vids.begin());
-			}
 			int i{ 4 };
 			for (const cinolib::vec3d& faceVert : faceVerts)
 			{
-				const cinolib::vec3d vert{ faceVert + faceNormal * avgFaceEdgeLength };
-				element.vertices()[i] = vert;
-				vids[i] = grid.addOrGetVert(vert);
-				i++;
+				verts[i++] = faceVert + faceNormal * avgFaceEdgeLength;
 			}
-
-			grid.addPoly(vids, child);
+			grid.addPoly(verts, child);
 			grid.update_mesh();
 		}
 	}

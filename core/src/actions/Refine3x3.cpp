@@ -7,14 +7,14 @@
 namespace HMP::Actions
 {
 
-	Refine3x3::Refine3x3(unsigned int _pid)
-		: m_pid(_pid)
+	Refine3x3::Refine3x3(const cinolib::vec3d& _polyCentroid)
+		: m_polyCentroid(_polyCentroid)
 	{}
 
 	void Refine3x3::apply()
 	{
 		Grid& grid{ this->grid() };
-		Dag::Element& element{ grid.element(m_pid) };
+		Dag::Element& element{ grid.element(grid.mesh.pick_poly(m_polyCentroid)) };
 		if (element.children().any([](const Dag::Operation& _child) {return _child.primitive() != Dag::Operation::EPrimitive::Extrude; }))
 		{
 			throw std::logic_error{ "element has non-extrude child" };
@@ -36,13 +36,13 @@ namespace HMP::Actions
 					const auto& vertOffsets = scheme.offsets[i][j];
 					for (std::size_t k{ 0 }; k < vertWeights.size(); k++)
 					{
-						verts[j] += vertWeights[k] * grid.mesh.poly_vert(m_pid, vertOffsets[k]);
+						verts[j] += vertWeights[k] * grid.mesh.poly_vert(element.pid(), vertOffsets[k]);
 					}
 				}
 
 				grid.addPoly(*children[i]);
 			}
-			grid.removePoly(m_pid);
+			grid.removePoly(element.pid());
 			grid.update_mesh();
 		}
 	}

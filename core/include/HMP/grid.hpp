@@ -91,6 +91,7 @@ namespace HMP
 		unsigned int getVert(const cinolib::vec3d&  _vert) const;
 		bool hasVert(const cinolib::vec3d&  _vert) const;
 		void vert(unsigned int _vid, const cinolib::vec3d& _position);
+		unsigned int closestPolyFid(unsigned int _pid, const cinolib::vec3d& _centroid) const;
 
 		/* ^^^^^^^^^^^^^ new-dag ^^^^^^^^^^^^^ */
 

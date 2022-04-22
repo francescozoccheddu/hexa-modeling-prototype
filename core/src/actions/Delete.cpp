@@ -6,14 +6,18 @@
 namespace HMP::Actions
 {
 
-	Delete::Delete(unsigned int _pid)
-		: m_pid(_pid)
+	Delete::Delete(const cinolib::vec3d& _polyCentroid)
+		: m_polyCentroid(_polyCentroid)
 	{}
 
 	void Delete::apply()
 	{
 		Grid& grid{ this->grid() };
-		Dag::Element& element{ grid.element(m_pid) };
+		Dag::Element& element{ grid.element(grid.mesh.pick_poly(m_polyCentroid)) };
+		if (element.isRoot())
+		{
+			throw std::logic_error{ "element is root" };
+		}
 		if (element.children().any([](const Dag::Operation& _child) {return _child.primitive() != Dag::Operation::EPrimitive::Extrude; }))
 		{
 			throw std::logic_error{ "element has non-extrude child" };
@@ -21,14 +25,14 @@ namespace HMP::Actions
 		Dag::Delete& operation{ *new Dag::Delete{} };
 		m_operation = &operation;
 		element.attachChild(operation);
-		m_vertices = grid.polyVerts(m_pid);
-		grid.removePoly(m_pid);
+		grid.removePoly(element.pid());
 		grid.update_mesh();
 	}
 
 	void Delete::unapply()
 	{
-		grid().addPoly(m_vertices, m_operation->parents().single());
+		grid().addPoly(m_operation->parents().single());
+		grid().update_mesh();
 		delete m_operation;
 	}
 

@@ -11,16 +11,14 @@ namespace HMP::Actions
 
 	public:
 
-		MoveVert(unsigned int _vid, cinolib::vec3d _position);
+		MoveVert(const cinolib::vec3d& _oldPosition, const cinolib::vec3d& _newPosition);
 
 		void apply() override;
 		void unapply() override;
 
 	private:
 
-		const unsigned int m_vid;
-		const cinolib::vec3d m_position;
-		cinolib::vec3d m_oldPosition;
+		const cinolib::vec3d m_oldPosition, m_newPosition;
 
 	};
 

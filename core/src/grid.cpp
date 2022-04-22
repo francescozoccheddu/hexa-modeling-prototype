@@ -103,7 +103,7 @@ namespace HMP
 
 	void Grid::add_refine(unsigned int pid)
 	{
-		m_commander.apply(*new Actions::Refine3x3(pid));
+		m_commander.apply(*new Actions::Refine3x3(mesh.poly_centroid(pid)));
 	}
 
 	void Grid::add_face_refine(unsigned int fid)
@@ -113,17 +113,17 @@ namespace HMP
 
 	void Grid::add_extrude(unsigned int pid, unsigned int face_offset)
 	{
-		m_commander.apply(*new Actions::Extrude(pid, face_offset));
+		m_commander.apply(*new Actions::Extrude(mesh.poly_centroid(pid), mesh.face_centroid(mesh.poly_faces_id(pid)[face_offset])));
 	}
 
 	void Grid::add_move(unsigned int vid, const cinolib::vec3d& displacement)
 	{
-		m_commander.apply(*new Actions::MoveVert(vid, displacement));
+		m_commander.apply(*new Actions::MoveVert(mesh.vert(vid), displacement));
 	}
 
 	void Grid::add_remove(unsigned int pid)
 	{
-		m_commander.apply(*new Actions::Delete(pid));
+		m_commander.apply(*new Actions::Delete(mesh.poly_centroid(pid)));
 	}
 
 	//REMOVE OPERATIONS############################################################################################################################
@@ -565,6 +565,22 @@ namespace HMP
 			element(pid).vertices()[offset] = _position;
 		}
 		mesh.vert(_vid) = _position;
+	}
+
+	unsigned int Grid::closestPolyFid(unsigned int _pid, const cinolib::vec3d& _centroid) const
+	{
+		double closestDist{ cinolib::inf_double };
+		unsigned int closestFid{};
+		for (unsigned int fid : mesh.poly_faces_id(_pid))
+		{
+			const double dist{ _centroid.dist(mesh.face_centroid(fid)) };
+			if (dist < closestDist)
+			{
+				closestDist = dist;
+				closestFid = fid;
+			}
+		}
+		return closestFid;
 	}
 
 }

@@ -13,15 +13,14 @@ namespace HMP::Actions
 
 	public:
 		
-		Delete(unsigned int _pid);
+		Delete(const cinolib::vec3d& _polyCentroid);
 
 		void apply() override;
 		void unapply() override;
 
 	private:
 
-		const unsigned int m_pid;
-		std::array<cinolib::vec3d, 8> m_vertices;
+		const cinolib::vec3d m_polyCentroid;
 		Dag::Delete* m_operation{};
 
 	};

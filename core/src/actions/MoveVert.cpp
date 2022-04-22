@@ -5,23 +5,21 @@
 namespace HMP::Actions
 {
 
-    MoveVert::MoveVert(unsigned int _vid, cinolib::vec3d _position) 
-        : m_vid(_vid), m_position(_position) 
+    MoveVert::MoveVert(const cinolib::vec3d& _oldPosition, const cinolib::vec3d& _newPosition) 
+        : m_oldPosition(_oldPosition), m_newPosition(_newPosition) 
     {}
 
     void MoveVert::apply()
     {
         Grid& grid{ this->grid() };
-        m_oldPosition = grid.mesh.vert(m_vid);
-        grid.vert(m_vid, m_position);
+        grid.vert(grid.getVert(m_oldPosition), m_newPosition);
         grid.update_mesh();
     }
 
     void MoveVert::unapply()
     {
         Grid& grid{ this->grid() };
-        const unsigned int vid{ grid.getVert(m_position) };
-        grid.vert(m_vid, m_oldPosition);
+        grid.vert(grid.getVert(m_newPosition), m_oldPosition);
         grid.update_mesh();
     }
 
