@@ -1,9 +1,8 @@
 #pragma once
 
+#include <HMP/types.hpp>
 #include <HMP/Dag/Node.hpp>
 #include <HMP/Utils/SetView.hpp>
-#include <array>
-#include <cinolib/geometry/vec_mat.h>
 
 namespace HMP::Dag
 {
@@ -17,8 +16,8 @@ namespace HMP::Dag
 
 	private:
 
-		unsigned int m_pid{};
-		std::array<cinolib::vec3d, 8> m_vertices;
+		Id m_pid{};
+		PolyVerts m_vertices;
 
 		DagSetView m_parents{ Node::parents().view<Operation>() };
 		DagSetView m_children{ Node::children().view<Operation>() };
@@ -27,11 +26,11 @@ namespace HMP::Dag
 
 		Element();
 
-		unsigned int& pid();
-		unsigned int pid() const;
+		Id& pid();
+		Id pid() const;
 
-		std::array<cinolib::vec3d, 8>& vertices();
-		const std::array<cinolib::vec3d, 8>& vertices() const;
+		PolyVerts& vertices();
+		const PolyVerts& vertices() const;
 
 		DagSetView& parents();
 		const DagSetView& parents() const;

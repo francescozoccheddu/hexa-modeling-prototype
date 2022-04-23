@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <HMP/types.hpp>
 #include <vector>
 #include <list>
 #include <string>
@@ -22,9 +23,9 @@ namespace HMP
 		Dag::Element* root{};
 
 		//Methods
-		Dag::Refine* refine(Dag::Element& element, unsigned int num_children = 27);
-		Dag::Extrude* extrude(Dag::Element& element, unsigned int offset);
-		void move(Dag::Element& element, unsigned int offset, const cinolib::vec3d& displacement);
+		Dag::Refine* refine(Dag::Element& element, Id num_children = 27);
+		Dag::Extrude* extrude(Dag::Element& element, Id offset);
+		void move(Dag::Element& element, Id offset, const Vec& displacement);
 		Dag::Delete* remove(Dag::Element& element);
 		void clear();
 		bool is_leaf(const Dag::Element& element);
@@ -35,7 +36,7 @@ namespace HMP
 		bool serialize(std::string filename);
 		bool deserialize(std::string filename);
 		int op_element_offset(const Dag::Operation& op, const Dag::Element& element);
-		void add_children_to_refine(Dag::Refine& refine, unsigned int num_children);
+		void add_children_to_refine(Dag::Refine& refine, Id num_children);
 		void get_branch_elements(const Dag::Element& source, std::vector<const Dag::Element*>& elements, bool leaf_only = true);
 		void get_branch_elements(const Dag::Operation& source, std::vector<const Dag::Element*>& elements, bool leaf_only = true);
 		void get_branch_operations(const Dag::Element& source, std::vector<const Dag::Operation*>& operations);

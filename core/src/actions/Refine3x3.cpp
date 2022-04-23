@@ -8,7 +8,7 @@
 namespace HMP::Actions
 {
 
-	Refine3x3::Refine3x3(const cinolib::vec3d& _polyCentroid)
+	Refine3x3::Refine3x3(const Vec& _polyCentroid)
 		: m_polyCentroid(_polyCentroid)
 	{}
 
@@ -24,7 +24,7 @@ namespace HMP::Actions
 		m_operation = &operation;
 		element.attachChild(operation);
 		const Refinement::Scheme& scheme{ *Refinement::schemes.at(Refinement::EScheme::StandardRefinement) };
-		const std::vector<std::array<cinolib::vec3d, 8>> polys{ scheme.apply(Utils::Collections::toVector(element.vertices())) };
+		const std::vector<PolyVerts> polys{ scheme.apply(Utils::Collections::toVector(element.vertices())) };
 		const std::vector<Dag::Element*> children{ operation.attachChildren(scheme.polyCount()) };
 		for (const auto& [child, polyVerts] : Utils::Collections::zip(children, polys))
 		{

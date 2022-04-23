@@ -1,5 +1,6 @@
 #pragma once
 
+#include <HMP/types.hpp>
 #include <memory>
 #include <vector>
 #include <deque>
@@ -21,9 +22,9 @@ namespace HMP
 	private:
 
 		Grid& grid;
-		std::vector<std::pair<std::vector<unsigned int>, bool>> polys_to_revert;
-		std::vector<std::vector<unsigned int>> ids;
-		std::vector<unsigned int> pids;
+		std::vector<std::pair<std::vector<Id>, bool>> polys_to_revert;
+		std::vector<std::vector<Id>> ids;
+		std::vector<Id> pids;
 		std::deque<Dag::Refine*> queue_to_revert;
 	};
 

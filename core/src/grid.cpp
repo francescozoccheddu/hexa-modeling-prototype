@@ -11,9 +11,9 @@
 namespace HMP
 {
 
-	constexpr double pi = 3.14159265358979323846;
-	constexpr double cubeSize = 0.5;
-	constexpr double c_maxVertDistance{ 1e-6 };
+	constexpr Real pi = 3.14159265358979323846;
+	constexpr Real cubeSize = 0.5;
+	constexpr Real c_maxVertDistance{ 1e-6 };
 
 	Grid::Grid()
 	{
@@ -35,22 +35,22 @@ namespace HMP
 	{
 
 		op_tree.clear();
-		std::array<cinolib::vec3d, 8> init_cube_coords = { cinolib::vec3d(-cubeSize,-cubeSize,-cubeSize), cinolib::vec3d(-cubeSize,-cubeSize, cubeSize), cinolib::vec3d(cubeSize,-cubeSize,cubeSize), cinolib::vec3d(cubeSize,-cubeSize,-cubeSize),
-														cinolib::vec3d(-cubeSize,cubeSize,-cubeSize), cinolib::vec3d(-cubeSize,cubeSize, cubeSize), cinolib::vec3d(cubeSize,cubeSize,cubeSize), cinolib::vec3d(cubeSize,cubeSize,-cubeSize) };
-		std::array<unsigned int, 8> init_cube_polys = { 0,1,2,3,4,5,6,7 };
+		PolyVerts init_cube_coords = { Vec(-cubeSize,-cubeSize,-cubeSize), Vec(-cubeSize,-cubeSize, cubeSize), Vec(cubeSize,-cubeSize,cubeSize), Vec(cubeSize,-cubeSize,-cubeSize),
+														Vec(-cubeSize,cubeSize,-cubeSize), Vec(-cubeSize,cubeSize, cubeSize), Vec(cubeSize,cubeSize,cubeSize), Vec(cubeSize,cubeSize,-cubeSize) };
+		PolyIds init_cube_polys = { 0,1,2,3,4,5,6,7 };
 		Utils::Geometry::sortVids(init_cube_polys, init_cube_coords);
 
 		mesh.clear();
 		mesh.init(
-			std::vector<cinolib::vec3d>{ init_cube_coords.begin(), init_cube_coords.end() },
-			std::vector<std::vector<unsigned int>>{ std::vector<unsigned int>{init_cube_polys.begin(), init_cube_polys.end()} }
+			std::vector<Vec>{ init_cube_coords.begin(), init_cube_coords.end() },
+			std::vector<std::vector<Id>>{ std::vector<Id>{init_cube_polys.begin(), init_cube_polys.end()} }
 		);
 
 		mesh.poly_data(0).element = op_tree.root;
 		op_tree.root->pid() = 0;
 
 		//update displacement
-		for (unsigned int off = 0; off < 8; off++)
+		for (Id off = 0; off < 8; off++)
 		{
 			op_tree.move(*op_tree.root, off, mesh.poly_vert(0, off));
 		}
@@ -59,7 +59,7 @@ namespace HMP
 		m_commander.clear();
 		refine_queue.clear();
 
-		for (unsigned int i = 0; i < 8; i++)
+		for (Id i = 0; i < 8; i++)
 		{
 			v_map[init_cube_coords[i]] = i;
 		}
@@ -69,15 +69,15 @@ namespace HMP
 
 	}
 
-	void Grid::move_vert(unsigned int vid, const cinolib::vec3d& displacement)
+	void Grid::move_vert(Id vid, const Vec& displacement)
 	{
 
 		add_move(vid, displacement);
 	}
 
-	void Grid::move_edge(unsigned int eid, const cinolib::vec3d& displacement)
+	void Grid::move_edge(Id eid, const Vec& displacement)
 	{
-		for (unsigned int vid : mesh.adj_e2v(eid))
+		for (Id vid : mesh.adj_e2v(eid))
 		{
 
 			add_move(vid, displacement);
@@ -86,10 +86,10 @@ namespace HMP
 		update_mesh();
 	}
 
-	void Grid::move_face(unsigned int fid, const cinolib::vec3d& displacement)
+	void Grid::move_face(Id fid, const Vec& displacement)
 	{
 
-		for (unsigned int vid : mesh.adj_f2v(fid))
+		for (Id vid : mesh.adj_f2v(fid))
 		{
 
 			add_move(vid, displacement);
@@ -101,27 +101,27 @@ namespace HMP
 	//ADD OPERATIONS############################################################################################################################
 
 
-	void Grid::add_refine(unsigned int pid)
+	void Grid::add_refine(Id pid)
 	{
 		m_commander.apply(*new Actions::Refine3x3(mesh.poly_centroid(pid)));
 	}
 
-	void Grid::add_face_refine(unsigned int fid)
+	void Grid::add_face_refine(Id fid)
 	{
 		m_commander.apply(*new FaceRefineAction(*this, fid));
 	}
 
-	void Grid::add_extrude(unsigned int pid, unsigned int face_offset)
+	void Grid::add_extrude(Id pid, Id face_offset)
 	{
 		m_commander.apply(*new Actions::Extrude(mesh.poly_centroid(pid), mesh.face_centroid(mesh.poly_faces_id(pid)[face_offset])));
 	}
 
-	void Grid::add_move(unsigned int vid, const cinolib::vec3d& displacement)
+	void Grid::add_move(Id vid, const Vec& displacement)
 	{
 		m_commander.apply(*new Actions::MoveVert(mesh.vert(vid), displacement));
 	}
 
-	void Grid::add_remove(unsigned int pid)
+	void Grid::add_remove(Id pid)
 	{
 		m_commander.apply(*new Actions::Delete(mesh.poly_centroid(pid)));
 	}
@@ -144,7 +144,7 @@ namespace HMP
 	void Grid::prune_tree(const Dag::Operation& operation, bool is_user_defined)
 	{
 
-		/*    std::vector<unsigned int> polys_to_remove;
+		/*    std::vector<Id> polys_to_remove;
 			remove_operation(operation, polys_to_remove);
 
 			for(auto &node : operation->parents){
@@ -156,14 +156,14 @@ namespace HMP
 			operation->parents.clear();
 
 			std::sort(polys_to_remove.begin(), polys_to_remove.end(), std::greater());
-			for(unsigned int pid : polys_to_remove) mesh.poly_remove(pid, false);
+			for(Id pid : polys_to_remove) mesh.poly_remove(pid, false);
 
 			update_mesh();*/
 
 	}
 
 
-	void Grid::apply_tree_recursive(const std::vector<Dag::Operation*>& operations, unsigned int pid, bool is_user_defined)
+	void Grid::apply_tree_recursive(const std::vector<Dag::Operation*>& operations, Id pid, bool is_user_defined)
 	{
 		throw std::logic_error{ "not implemented" };
 		for (auto op : operations)
@@ -202,17 +202,17 @@ namespace HMP
 
 
 
-	void Grid::apply_tree(const std::vector < Dag::Operation* >& operations, unsigned int pid, bool is_user_defined)
+	void Grid::apply_tree(const std::vector < Dag::Operation* >& operations, Id pid, bool is_user_defined)
 	{
 
 		apply_tree_recursive(operations, pid, is_user_defined);
 
 
-		for (unsigned int pid = 0; pid < mesh.num_polys(); pid++)
+		for (Id pid = 0; pid < mesh.num_polys(); pid++)
 		{
-			for (unsigned int off = 0; off < 8; off++)
+			for (Id off = 0; off < 8; off++)
 			{
-				unsigned int vid = mesh.poly_vert_id(pid, off);
+				Id vid = mesh.poly_vert_id(pid, off);
 				const auto& el = mesh.poly_data(pid).element;
 				move(vid, el->vertices()[off] - mesh.vert(vid));
 			}
@@ -226,10 +226,10 @@ namespace HMP
 		for (auto& child : op.children())
 		{
 
-			unsigned int pid = child.pid();
+			Id pid = child.pid();
 
 			//update displacement
-			for (unsigned int off = 0; off < 8; off++)
+			for (Id off = 0; off < 8; off++)
 			{
 				op_tree.move(child, off, mesh.poly_vert(pid, off));
 			}
@@ -245,11 +245,11 @@ namespace HMP
 	void Grid::project_on_target(cinolib::Trimesh<>& target)
 	{
 		cinolib::Quadmesh<> peel;
-		std::unordered_map<unsigned int, unsigned int> h2q, q2h;
+		std::unordered_map<Id, Id> h2q, q2h;
 		cinolib::export_surface(mesh, peel, h2q, q2h);
 
-		std::unordered_map<unsigned int, unsigned int> m_map;
-		std::unordered_map<unsigned int, unsigned int> v_map;
+		std::unordered_map<Id, Id> m_map;
+		std::unordered_map<Id, Id> v_map;
 		cinolib::export_surface(mesh, peel, m_map, v_map);
 		target.edge_set_flag(cinolib::MARKED, false);
 		peel.edge_set_flag(cinolib::MARKED, false);
@@ -264,8 +264,8 @@ namespace HMP
 		cinolib::mesh_smoother(peel, target, options);
 		std::cout << "Projecting..." << std::endl;
 
-		unsigned int count = 0;
-		for (unsigned int vid = 0; vid < peel.num_verts(); vid++)
+		Id count = 0;
+		for (Id vid = 0; vid < peel.num_verts(); vid++)
 		{
 			if (!(mesh.vert(v_map[vid]) == peel.vert(vid)))
 			{
@@ -283,14 +283,14 @@ namespace HMP
 
 	}
 
-	bool Grid::merge(unsigned int pid_source, unsigned int pid_dest)
+	bool Grid::merge(Id pid_source, Id pid_dest)
 	{
 
 		std::vector<Dag::Operation*> new_ops;
 		auto& source_el = *mesh.poly_data(pid_source).element;
 		auto& destination_el = *mesh.poly_data(pid_dest).element;
 
-		cinolib::vec3d centroid_dest = mesh.poly_centroid(pid_dest);
+		Vec centroid_dest = mesh.poly_centroid(pid_dest);
 
 		if (op_tree.merge(source_el, destination_el, &new_ops))
 		{
@@ -304,7 +304,7 @@ namespace HMP
 
 			return true;
 
-			std::map<unsigned int, cinolib::vec3d> vert_map;
+			std::map<Id, Vec> vert_map;
 			std::vector<const Dag::Element*> old_elements;
 			std::vector<const Dag::Element*> new_elements;
 
@@ -314,17 +314,17 @@ namespace HMP
 
 			assert(old_elements.size() == new_elements.size());
 
-			for (unsigned int i = 0; i < old_elements.size(); i++)
+			for (Id i = 0; i < old_elements.size(); i++)
 			{
 				const auto& el_old = *old_elements[i];
 				const auto& el_new = *new_elements[i];
-				unsigned int pid = el_old.pid();
-				unsigned int new_pid = el_new.pid();
+				Id pid = el_old.pid();
+				Id new_pid = el_new.pid();
 				auto& new_el = *mesh.poly_data(new_pid).element;
-				for (unsigned int off = 0; off < 8; off++)
+				for (Id off = 0; off < 8; off++)
 				{
-					unsigned int vid = mesh.poly_vert_id(pid, off);
-					unsigned int vid_dest = mesh.poly_vert_id(new_pid, off);
+					Id vid = mesh.poly_vert_id(pid, off);
+					Id vid_dest = mesh.poly_vert_id(new_pid, off);
 					if (mesh.poly_contains_vert(pid_dest, vid_dest)) continue;
 					vert_map[vid_dest] = mesh.vert(vid) - mesh.poly_centroid(pid_source);
 					new_el.vertices()[off] = centroid_dest + vert_map[vid_dest];
@@ -334,10 +334,10 @@ namespace HMP
 
 			for (const auto& pair : vert_map)
 			{
-				unsigned int vid = pair.first;
-				cinolib::vec3d displ = pair.second;
-				cinolib::vec3d final_displ = -mesh.vert(vid) + centroid_dest + displ;
-				final_displ.rotate(cinolib::vec3d(0, 1, 0), pi / 2);
+				Id vid = pair.first;
+				Vec displ = pair.second;
+				Vec final_displ = -mesh.vert(vid) + centroid_dest + displ;
+				final_displ.rotate(Vec(0, 1, 0), pi / 2);
 				move(vid, -mesh.vert(vid) + centroid_dest + displ);
 			}
 
@@ -354,9 +354,9 @@ namespace HMP
 
 	void Grid::save_as_mesh(std::string filename)
 	{
-		std::vector<std::vector<unsigned int>> polys;
+		std::vector<std::vector<Id>> polys;
 
-		for (unsigned int pid = 0; pid < mesh.num_polys(); pid++)
+		for (Id pid = 0; pid < mesh.num_polys(); pid++)
 		{
 			if (!mesh.poly_data(pid).flags[cinolib::HIDDEN])
 			{
@@ -369,41 +369,41 @@ namespace HMP
 		m.save(filename.c_str());
 	}
 
-	void Grid::extrude(unsigned int _pid, unsigned int _offset, Dag::Extrude& _operation)
+	void Grid::extrude(Id _pid, Id _offset, Dag::Extrude& _operation)
 	{
-		const unsigned int fid = mesh.poly_face_id(_pid, _offset);
+		const Id fid = mesh.poly_face_id(_pid, _offset);
 
-		double avgFaceEdgeLength{};
+		Real avgFaceEdgeLength{};
 		{
-			const std::vector<unsigned int> faceEids{ mesh.adj_f2e(fid) };
-			for (const unsigned int eid : faceEids)
+			const std::vector<Id> faceEids{ mesh.adj_f2e(fid) };
+			for (const Id eid : faceEids)
 			{
 				avgFaceEdgeLength += mesh.edge_length(eid);
 			}
 			avgFaceEdgeLength /= mesh.adj_f2e(fid).size();
 		}
 
-		const std::vector<cinolib::vec3d> faceVerts = mesh.face_verts(fid);
-		const cinolib::vec3d faceNormal = mesh.face_data(fid).normal;
-		std::array<unsigned int, 8> vids;
+		const std::vector<Vec> faceVerts = mesh.face_verts(fid);
+		const Vec faceNormal = mesh.face_data(fid).normal;
+		PolyIds vids;
 		{
-			const std::vector<unsigned int> faceVids{ mesh.face_verts_id(fid) };
+			const std::vector<Id> faceVids{ mesh.face_verts_id(fid) };
 			std::copy(faceVids.begin(), faceVids.end(), vids.begin());
 		}
 		int i{ 4 };
-		for (const cinolib::vec3d& faceVert : faceVerts)
+		for (const Vec& faceVert : faceVerts)
 		{
-			const cinolib::vec3d vert{ faceVert + faceNormal * avgFaceEdgeLength };
+			const Vec vert{ faceVert + faceNormal * avgFaceEdgeLength };
 			vids[i++] = addOrGetVert(vert);
 		}
 
-		const unsigned int pid = mesh.poly_add(std::vector<unsigned int>{vids.begin(), vids.end() });
+		const Id pid = mesh.poly_add(std::vector<Id>{vids.begin(), vids.end() });
 		Dag::Element& element{ _operation.children().single() };
 		element.pid() = pid;
 		mesh.poly_data(pid).element = &element;
 	}
 
-	void Grid::refine(unsigned int pid, Dag::Refine& refine, bool remove_father)
+	void Grid::refine(Id pid, Dag::Refine& refine, bool remove_father)
 	{
 
 		const auto& weights = Refinement::schemes.at(refine.scheme())->weights;
@@ -411,25 +411,25 @@ namespace HMP
 
 		auto childrenIterator{ refine.children().begin() };
 
-		for (unsigned int i = 0; i < weights.size(); i++)
+		for (Id i = 0; i < weights.size(); i++)
 		{
 
-			std::vector<unsigned int> poly;
+			std::vector<Id> poly;
 
-			for (unsigned int j = 0; j < weights[i].size(); j++)
+			for (Id j = 0; j < weights[i].size(); j++)
 			{
 				const auto& tmp = weights[i][j];
-				cinolib::vec3d vert(0, 0, 0);
-				for (unsigned int k = 0; k < 4; k++)
+				Vec vert(0, 0, 0);
+				for (Id k = 0; k < 4; k++)
 				{
-					//unsigned int off = refine->vert_map.empty() ? vids[i][j][k] : refine->vert_map[vids[i][j][k]];
-					unsigned int off = refine.vertices()[vids[i][j][k]];
+					//Id off = refine->vert_map.empty() ? vids[i][j][k] : refine->vert_map[vids[i][j][k]];
+					Id off = refine.vertices()[vids[i][j][k]];
 
 					vert += tmp[k] * mesh.poly_vert(pid, off);
 				}
 
 				auto query = v_map.find(vert);
-				unsigned int vid = query == v_map.end() ? mesh.vert_add(vert) : query->second;
+				Id vid = query == v_map.end() ? mesh.vert_add(vert) : query->second;
 				if (query == v_map.end()) v_map[vert] = vid;
 
 				poly.push_back(vid);
@@ -437,7 +437,7 @@ namespace HMP
 
 
 			//poly_vert_ordering(mesh.vector_verts(), poly);
-			unsigned int new_pid = mesh.poly_add(poly);
+			Id new_pid = mesh.poly_add(poly);
 
 			auto& element = *childrenIterator;
 			element.pid() = new_pid;
@@ -451,7 +451,7 @@ namespace HMP
 
 	}
 
-	void Grid::move(unsigned int vid, const cinolib::vec3d& displacement)
+	void Grid::move(Id vid, const Vec& displacement)
 	{
 		v_map.erase(mesh.vert(vid));
 		mesh.vert(vid) += displacement;
@@ -459,7 +459,7 @@ namespace HMP
 		update_mesh();
 	}
 
-	void Grid::removePoly(unsigned int _pid)
+	void Grid::removePoly(Id _pid)
 	{
 		mesh.poly_remove(_pid, true);
 		if (_pid < mesh.num_polys())
@@ -473,9 +473,9 @@ namespace HMP
 		mesh.updateGL();
 	}
 
-	unsigned int Grid::addPoly(const std::array<cinolib::vec3d, 8> _vertices, Dag::Element& _element)
+	Id Grid::addPoly(const PolyVerts _vertices, Dag::Element& _element)
 	{
-		std::array<unsigned int, 8> vids;
+		PolyIds vids;
 		for (size_t i{ 0 }; i < 8; i++)
 		{
 			vids[i] = addOrGetVert(_vertices[i]);
@@ -483,9 +483,9 @@ namespace HMP
 		return addPoly(vids, _element);
 	}
 
-	unsigned int Grid::addOrGetVert(const cinolib::vec3d& _vert)
+	Id Grid::addOrGetVert(const Vec& _vert)
 	{
-		unsigned int vid;
+		Id vid;
 		if (!getVert(_vert, vid))
 		{
 			vid = mesh.vert_add(_vert);
@@ -493,15 +493,15 @@ namespace HMP
 		return vid;
 	}
 
-	bool Grid::getVert(const cinolib::vec3d& _vert, unsigned int& _vid) const
+	bool Grid::getVert(const Vec& _vert, Id& _vid) const
 	{
 		_vid = mesh.pick_vert(_vert);
 		return mesh.vert(_vid).dist(_vert) <= c_maxVertDistance;
 	}
 
-	unsigned int Grid::getVert(const cinolib::vec3d& _vert) const
+	Id Grid::getVert(const Vec& _vert) const
 	{
-		unsigned int vid;
+		Id vid;
 		if (!getVert(_vert, vid))
 		{
 			throw std::logic_error{ "not found" };
@@ -509,71 +509,71 @@ namespace HMP
 		return vid;
 	}
 
-	bool Grid::hasVert(const cinolib::vec3d& _vert) const
+	bool Grid::hasVert(const Vec& _vert) const
 	{
-		unsigned int vid;
+		Id vid;
 		return getVert(_vert, vid);
 	}
 
-	Dag::Element& Grid::element(unsigned int _pid)
+	Dag::Element& Grid::element(Id _pid)
 	{
 		return *mesh.poly_data(_pid).element;
 	}
 
-	void Grid::element(unsigned int _pid, Dag::Element& _element)
+	void Grid::element(Id _pid, Dag::Element& _element)
 	{
 		mesh.poly_data(_pid).element = &_element;
 		_element.pid() = _pid;
 	}
 
-	const Dag::Element& Grid::element(unsigned int _pid) const
+	const Dag::Element& Grid::element(Id _pid) const
 	{
 		return const_cast<Grid*>(this)->element(_pid);
 	}
 
-	std::array<cinolib::vec3d, 8> Grid::polyVerts(unsigned int _pid) const
+	PolyVerts Grid::polyVerts(Id _pid) const
 	{
-		const std::vector<cinolib::vec3d> verts{ mesh.poly_verts(_pid) };
-		std::array<cinolib::vec3d, 8> vertsArray;
+		const std::vector<Vec> verts{ mesh.poly_verts(_pid) };
+		PolyVerts vertsArray;
 		std::move(verts.begin(), verts.end(), vertsArray.begin());
 		return vertsArray;
 	}
 
-	unsigned int Grid::addPoly(Dag::Element& _element)
+	Id Grid::addPoly(Dag::Element& _element)
 	{
 		return addPoly(_element.vertices(), _element);
 	}
 
-	unsigned int Grid::addPoly(const std::array<unsigned int, 8>& _vids, Dag::Element& _element)
+	Id Grid::addPoly(const PolyIds& _vids, Dag::Element& _element)
 	{
-		const unsigned int pid{ mesh.poly_add(std::vector<unsigned int>{_vids.begin(), _vids.end()}) };
+		const Id pid{ mesh.poly_add(std::vector<Id>{_vids.begin(), _vids.end()}) };
 		element(pid, _element);
 		_element.vertices() = polyVerts(pid);
 		return pid;
 	}
 
-	void Grid::vert(unsigned int _vid, const cinolib::vec3d& _position)
+	void Grid::vert(Id _vid, const Vec& _position)
 	{
-		unsigned int closestVid;
+		Id closestVid;
 		if (getVert(_position, closestVid) && closestVid != _vid)
 		{
 			throw std::logic_error{ "move will result in vertex merge" };
 		}
-		for (const unsigned int pid : mesh.adj_v2p(_vid))
+		for (const Id pid : mesh.adj_v2p(_vid))
 		{
-			const unsigned int offset{ mesh.poly_vert_offset(pid, _vid) };
+			const Id offset{ mesh.poly_vert_offset(pid, _vid) };
 			element(pid).vertices()[offset] = _position;
 		}
 		mesh.vert(_vid) = _position;
 	}
 
-	unsigned int Grid::closestPolyFid(unsigned int _pid, const cinolib::vec3d& _centroid) const
+	Id Grid::closestPolyFid(Id _pid, const Vec& _centroid) const
 	{
-		double closestDist{ cinolib::inf_double };
-		unsigned int closestFid{};
-		for (unsigned int fid : mesh.poly_faces_id(_pid))
+		Real closestDist{ cinolib::inf_double };
+		Id closestFid{};
+		for (Id fid : mesh.poly_faces_id(_pid))
 		{
-			const double dist{ _centroid.dist(mesh.face_centroid(fid)) };
+			const Real dist{ _centroid.dist(mesh.face_centroid(fid)) };
 			if (dist < closestDist)
 			{
 				closestDist = dist;

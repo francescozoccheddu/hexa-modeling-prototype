@@ -7,7 +7,7 @@ namespace HMP::Dag
 	Refine::Refine()
 		: Operation{ EPrimitive::Refine }
 	{
-		for (unsigned int i{ 0 }; i < m_vertices.size(); i++)
+		for (Id i{ 0 }; i < m_vertices.size(); i++)
 		{
 			m_vertices[i] = i;
 		}
@@ -23,12 +23,12 @@ namespace HMP::Dag
 		return m_scheme;
 	}
 
-	std::array<unsigned int, 8>& Refine::vertices()
+	PolyIds& Refine::vertices()
 	{
 		return m_vertices;
 	}
 
-	const std::array<unsigned int, 8>& Refine::vertices() const
+	const PolyIds& Refine::vertices() const
 	{
 		return m_vertices;
 	}

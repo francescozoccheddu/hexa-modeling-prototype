@@ -1,8 +1,8 @@
 #pragma once
 
+#include <HMP/types.hpp>
 #include <vector>
 #include <array>
-#include <cinolib/geometry/vec_mat.h>
 
 namespace HMP::Refinement
 {
@@ -15,10 +15,10 @@ namespace HMP::Refinement
 		template<typename T>
 		using NestedVector = std::vector<std::vector<std::vector<T>>>;
 
-		NestedVector<unsigned int> offsets;
-		NestedVector<double> weights;
+		NestedVector<Id> offsets;
+		NestedVector<Real> weights;
 
-		std::vector<std::array<cinolib::vec3d, 8>> apply(const std::vector<cinolib::vec3d>& _source) const;
+		std::vector<PolyVerts> apply(const std::vector<Vec>& _source) const;
 
 		std::size_t polyCount() const;
 

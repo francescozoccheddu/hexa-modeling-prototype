@@ -88,6 +88,12 @@ namespace HMP::Utils::Collections
 	template<typename TValue, std::size_t TCount>
 	std::vector<TValue> toVector(std::array<TValue, TCount>&& _array);
 
+	template<typename TValue, std::size_t TCount>
+	std::array<TValue, TCount> toArray(const std::vector<TValue>& _vector);
+
+	template<typename TValue, std::size_t TCount>
+	std::array<TValue, TCount> toArray(std::vector<TValue>&& _vector);
+
 }
 
 #define HMP_UTILS_COLLECTIONS_IMPL

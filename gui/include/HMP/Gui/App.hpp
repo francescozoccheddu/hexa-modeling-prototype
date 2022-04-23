@@ -28,19 +28,19 @@ namespace HMP::Gui
 
 		struct
 		{
-			unsigned int pid{ 0 };
+			Id pid{ 0 };
 			bool pending{ false };
 		} m_highlight;
 
 		struct
 		{
-			unsigned int vid{};
+			Id vid{};
 			bool pending{ false };
 		} m_move;
 
 		struct
 		{
-			unsigned int pid{};
+			Id pid{};
 			bool pending{ false };
 		} m_copy;
 

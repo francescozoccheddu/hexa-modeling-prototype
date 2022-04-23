@@ -1,5 +1,6 @@
 #pragma once
 
+#include <HMP/types.hpp>
 #include <HMP/Dag/Node.hpp>
 #include <HMP/Utils/SetView.hpp>
 #include <vector>

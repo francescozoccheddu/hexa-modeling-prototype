@@ -1,5 +1,6 @@
 #pragma once
 
+#include <HMP/types.hpp>
 #include <HMP/Dag/Operation.hpp>
 
 namespace HMP::Dag
@@ -10,7 +11,7 @@ namespace HMP::Dag
 
 	private:
 
-		unsigned int m_offset{};
+		Id m_offset{};
 
 	protected:
 
@@ -19,8 +20,8 @@ namespace HMP::Dag
 
 		Extrude();
 
-		unsigned int& faceOffset();
-		unsigned int faceOffset() const;
+		Id& faceOffset();
+		Id faceOffset() const;
 
 	};
 

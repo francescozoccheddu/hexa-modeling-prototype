@@ -5,7 +5,7 @@
 namespace HMP::Actions
 {
 
-    MoveVert::MoveVert(const cinolib::vec3d& _oldPosition, const cinolib::vec3d& _newPosition) 
+    MoveVert::MoveVert(const Vec& _oldPosition, const Vec& _newPosition) 
         : m_oldPosition(_oldPosition), m_newPosition(_newPosition) 
     {}
 

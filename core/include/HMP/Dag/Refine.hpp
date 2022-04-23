@@ -1,8 +1,8 @@
 #pragma once
 
+#include <HMP/types.hpp>
 #include <HMP/Dag/Operation.hpp>
 #include <HMP/Refinement/schemes.hpp>
-#include <array>
 
 namespace HMP::Dag
 {
@@ -14,7 +14,7 @@ namespace HMP::Dag
 
 		Refinement::EScheme m_scheme{ Refinement::EScheme::StandardRefinement };
 		bool m_needsTopologyFix{ true };
-		std::array<unsigned int, 8> m_vertices{};
+		PolyIds m_vertices{};
 
 	public:
 
@@ -23,8 +23,8 @@ namespace HMP::Dag
 		Refinement::EScheme& scheme();
 		Refinement::EScheme scheme() const;
 
-		std::array<unsigned int, 8>& vertices();
-		const std::array<unsigned int, 8>& vertices() const;
+		PolyIds& vertices();
+		const PolyIds& vertices() const;
 
 		bool& needsTopologyFix();
 		bool needsTopologyFix() const;

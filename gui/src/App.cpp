@@ -19,15 +19,15 @@ namespace HMP::Gui
 
 	void App::updateHighlight()
 	{
-		unsigned int pid{};
+		Id pid{};
 		cinolib::vec3d world;
 		m_canvas.pop_all_markers();
 		const bool pending{ m_canvas.unproject(m_mouse.position, world) };
 		if (pending)
 		{
 			pid = m_grid.mesh.pick_poly(world);
-			const unsigned int fid{ m_grid.mesh.pick_face(world) };
-			const unsigned int vid{ m_grid.mesh.pick_vert(world) };
+			const Id fid{ m_grid.mesh.pick_face(world) };
+			const Id vid{ m_grid.mesh.pick_vert(world) };
 			m_canvas.push_marker(m_grid.mesh.face_centroid(fid), "", c_highlightFaceColor, c_highlightFaceRadius);
 			m_canvas.push_marker(m_grid.mesh.vert(vid), "", c_highlightVertexColor, c_highlightVertexRadius);
 		}
@@ -262,11 +262,11 @@ namespace HMP::Gui
 		cinolib::vec3d world_mouse_pos;
 		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 		{
-			const unsigned int pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
-			unsigned int closest_fid{};
+			const Id pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
+			Id closest_fid{};
 			{
 				double closest_dist{ std::numeric_limits<double>::infinity() };
-				for (const unsigned int fid : m_grid.mesh.poly_faces_id(pid))
+				for (const Id fid : m_grid.mesh.poly_faces_id(pid))
 				{
 					const double dist{ world_mouse_pos.dist_sqrd(m_grid.mesh.face_centroid(fid)) };
 					if (dist < closest_dist)
@@ -276,7 +276,7 @@ namespace HMP::Gui
 					}
 				}
 			};
-			const unsigned int offset{ m_grid.mesh.poly_face_offset(pid, closest_fid) };
+			const Id offset{ m_grid.mesh.poly_face_offset(pid, closest_fid) };
 			m_grid.add_extrude(pid, offset);
 			updateDagViewer();
 			m_canvas.refit_scene();
@@ -288,7 +288,7 @@ namespace HMP::Gui
 		cinolib::vec3d world_mouse_pos;
 		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 		{
-			const unsigned int pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
+			const Id pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
 			m_copy.pid = pid;
 			m_copy.pending = true;
 		}
@@ -305,7 +305,7 @@ namespace HMP::Gui
 			cinolib::vec3d world_mouse_pos;
 			if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 			{
-				const unsigned int pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
+				const Id pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
 				if (m_grid.merge(m_copy.pid, pid))
 				{
 					m_copy.pending = false;
@@ -325,7 +325,7 @@ namespace HMP::Gui
 		cinolib::vec3d world_mouse_pos;
 		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 		{
-			const unsigned int pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
+			const Id pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
 			m_grid.add_refine(pid);
 			updateDagViewer();
 			updateHighlight();
@@ -337,7 +337,7 @@ namespace HMP::Gui
 		cinolib::vec3d world_mouse_pos;
 		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 		{
-			const unsigned int pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
+			const Id pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
 			m_grid.add_remove(pid);
 			updateDagViewer();
 			m_canvas.refit_scene();
@@ -349,15 +349,15 @@ namespace HMP::Gui
 		cinolib::vec3d world_mouse_pos;
 		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 		{
-			for (unsigned int fid_plus_one{ m_grid.mesh.num_faces() }; fid_plus_one > 0; fid_plus_one--)
+			for (Id fid_plus_one{ m_grid.mesh.num_faces() }; fid_plus_one > 0; fid_plus_one--)
 			{
-				const unsigned int fid{ fid_plus_one - 1 };
+				const Id fid{ fid_plus_one - 1 };
 				if (!m_grid.mesh.adj_f2p(fid).size())
 				{
 					m_grid.mesh.face_remove_unreferenced(fid);
 				}
 			}
-			const unsigned int fid{ m_grid.mesh.pick_face(world_mouse_pos) };
+			const Id fid{ m_grid.mesh.pick_face(world_mouse_pos) };
 			m_grid.add_face_refine(fid);
 			updateDagViewer();
 			updateHighlight();

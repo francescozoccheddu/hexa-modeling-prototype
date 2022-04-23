@@ -1,5 +1,6 @@
 #pragma once
 
+#include <HMP/types.hpp>
 #include <HMP/Utils/SetView.hpp>
 
 namespace HMP::Dag

@@ -6,7 +6,7 @@
 namespace HMP::Actions
 {
 
-	Delete::Delete(const cinolib::vec3d& _polyCentroid)
+	Delete::Delete(const Vec& _polyCentroid)
 		: m_polyCentroid(_polyCentroid)
 	{}
 

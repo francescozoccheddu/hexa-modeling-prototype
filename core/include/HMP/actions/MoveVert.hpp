@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cinolib/geometry/vec_mat.h>
+#include <HMP/types.hpp>
 #include <HMP/Commander.hpp>
 
 namespace HMP::Actions
@@ -11,14 +11,14 @@ namespace HMP::Actions
 
 	public:
 
-		MoveVert(const cinolib::vec3d& _oldPosition, const cinolib::vec3d& _newPosition);
+		MoveVert(const Vec& _oldPosition, const Vec& _newPosition);
 
 		void apply() override;
 		void unapply() override;
 
 	private:
 
-		const cinolib::vec3d m_oldPosition, m_newPosition;
+		const Vec m_oldPosition, m_newPosition;
 
 	};
 

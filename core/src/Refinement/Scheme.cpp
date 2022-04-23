@@ -3,14 +3,14 @@
 namespace HMP::Refinement
 {
 
-	std::vector<std::array<cinolib::vec3d, 8>> Scheme::apply(const std::vector<cinolib::vec3d>& _source) const
+	std::vector<PolyVerts> Scheme::apply(const std::vector<Vec>& _source) const
 	{
-		std::vector<std::array<cinolib::vec3d, 8>> polys{};
+		std::vector<PolyVerts> polys{};
 		polys.reserve(polyCount());
 		for (std::size_t i{ 0 }; i < polyCount(); i++)
 		{
-			std::array<cinolib::vec3d, 8> verts;
-			verts.fill(cinolib::vec3d{ 0,0,0 });
+			PolyVerts verts;
+			verts.fill(Vec{ 0,0,0 });
 			for (std::size_t j{ 0 }; j < 8; j++)
 			{
 				const auto& vertWeights = weights[i][j];

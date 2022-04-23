@@ -9,25 +9,25 @@ namespace HMP::Dag
 	Element::Element()
 		: Node{ EType::Element }
 	{
-		m_vertices.fill(cinolib::vec3d{ 0,0,0 });
+		m_vertices.fill(Vec{ 0,0,0 });
 	}
 
-	unsigned int& Element::pid()
+	Id& Element::pid()
 	{
 		return m_pid;
 	}
 
-	unsigned int Element::pid() const
+	Id Element::pid() const
 	{
 		return m_pid;
 	}
 
-	std::array<cinolib::vec3d, 8>& Element::vertices()
+	PolyVerts& Element::vertices()
 	{
 		return m_vertices;
 	}
 
-	const std::array<cinolib::vec3d, 8>& Element::vertices() const
+	const PolyVerts& Element::vertices() const
 	{
 		return m_vertices;
 	}

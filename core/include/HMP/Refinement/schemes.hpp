@@ -1,5 +1,6 @@
 #pragma once
 
+#include <HMP/types.hpp>
 #include <HMP/Refinement/Scheme.hpp>
 #include <unordered_map>
 

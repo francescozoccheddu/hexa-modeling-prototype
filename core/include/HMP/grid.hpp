@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cinolib/geometry/vec_mat.h>
+#include <HMP/types.hpp>
 #include <memory>
 #include <vector>
 #include <map>
@@ -44,29 +44,29 @@ namespace HMP
 		MeshGrid mesh;
 		OperationsTree op_tree;
 
-		void move_vert(unsigned int vid, const cinolib::vec3d& displacement);
-		void move_edge(unsigned int eid, const cinolib::vec3d& displacement);
-		void move_face(unsigned int fid, const cinolib::vec3d& displacement);
+		void move_vert(Id vid, const Vec& displacement);
+		void move_edge(Id eid, const Vec& displacement);
+		void move_face(Id fid, const Vec& displacement);
 
-		void add_refine(unsigned int pid);
-		void add_face_refine(unsigned int fid);
-		void add_extrude(unsigned int pid, unsigned int face_offset);
-		void add_move(unsigned int vid, const cinolib::vec3d& displacement);
-		void add_remove(unsigned int pid);
+		void add_refine(Id pid);
+		void add_face_refine(Id fid);
+		void add_extrude(Id pid, Id face_offset);
+		void add_move(Id vid, const Vec& displacement);
+		void add_remove(Id pid);
 
 		void add_operation(const Dag::Operation& op);
 
 		void undo();
 		void redo();
 
-		void apply_tree(const std::vector<Dag::Operation*>& operations, unsigned int pid, bool is_user_defined = true);
+		void apply_tree(const std::vector<Dag::Operation*>& operations, Id pid, bool is_user_defined = true);
 		void prune_tree(const Dag::Operation& operation, bool is_user_defined = true);
 		void fix_topology(const Dag::Operation& op, bool removing = false);
 		void make_conforming();
 
 		void project_on_target(cinolib::Trimesh<>& target);
 
-		bool merge(unsigned int pid_source, unsigned int pid_dest);
+		bool merge(Id pid_source, Id pid_dest);
 
 		void clear();
 
@@ -77,47 +77,47 @@ namespace HMP
 		Commander& commander();
 		const Commander& commander() const;
 
-		Dag::Element& element(unsigned int _pid);
-		void element(unsigned int _pid, Dag::Element& _element);
-		const Dag::Element& element(unsigned int _pid) const;
+		Dag::Element& element(Id _pid);
+		void element(Id _pid, Dag::Element& _element);
+		const Dag::Element& element(Id _pid) const;
 
-		std::array<cinolib::vec3d, 8> polyVerts(unsigned int _pid) const;
-		unsigned int addPoly(Dag::Element& _element);
-		unsigned int addPoly(const std::array<unsigned int, 8>& _vids, Dag::Element& _element);
-		void removePoly(unsigned int _pid);
-		unsigned int addPoly(const std::array<cinolib::vec3d, 8> _verts, Dag::Element& _element);
-		unsigned int addOrGetVert(const cinolib::vec3d&  _vert);
-		bool getVert(const cinolib::vec3d&  _vert, unsigned int& _vid) const;
-		unsigned int getVert(const cinolib::vec3d&  _vert) const;
-		bool hasVert(const cinolib::vec3d&  _vert) const;
-		void vert(unsigned int _vid, const cinolib::vec3d& _position);
-		unsigned int closestPolyFid(unsigned int _pid, const cinolib::vec3d& _centroid) const;
+		PolyVerts polyVerts(Id _pid) const;
+		Id addPoly(Dag::Element& _element);
+		Id addPoly(const PolyIds& _vids, Dag::Element& _element);
+		void removePoly(Id _pid);
+		Id addPoly(const PolyVerts _verts, Dag::Element& _element);
+		Id addOrGetVert(const Vec&  _vert);
+		bool getVert(const Vec&  _vert, Id& _vid) const;
+		Id getVert(const Vec&  _vert) const;
+		bool hasVert(const Vec&  _vert) const;
+		void vert(Id _vid, const Vec& _position);
+		Id closestPolyFid(Id _pid, const Vec& _centroid) const;
 
 		/* ^^^^^^^^^^^^^ new-dag ^^^^^^^^^^^^^ */
 
 	private:
 
-		void extrude(unsigned int _pid, unsigned int _faceOffset, Dag::Extrude& _operation);
-		void refine(unsigned int pid, Dag::Refine& refine, bool remove_father = false);
-		void move(unsigned int vid, const cinolib::vec3d& displacement);
+		void extrude(Id _pid, Id _faceOffset, Dag::Extrude& _operation);
+		void refine(Id pid, Dag::Refine& refine, bool remove_father = false);
+		void move(Id vid, const Vec& displacement);
 
-		void remove_refine(const Dag::Refine& op, std::vector<unsigned int>& polys_to_remove);
-		void remove_extrude(const Dag::Extrude& op, std::vector<unsigned int>& polys_to_remove);
-		void remove_move(std::vector<Dag::Element*>& elements, std::vector<unsigned int>& offsets, cinolib::vec3d& displacement);
+		void remove_refine(const Dag::Refine& op, std::vector<Id>& polys_to_remove);
+		void remove_extrude(const Dag::Extrude& op, std::vector<Id>& polys_to_remove);
+		void remove_move(std::vector<Dag::Element*>& elements, std::vector<Id>& offsets, Vec& displacement);
 		void remove_remove(const Dag::Delete& op);
 
-		void remove_operation(const Dag::Operation& op, std::vector<unsigned int>& polys_to_remove);
-		void apply_tree_recursive(const std::vector<Dag::Operation*>& operations, unsigned int pid, bool is_user_defined = true);
+		void remove_operation(const Dag::Operation& op, std::vector<Id>& polys_to_remove);
+		void apply_tree_recursive(const std::vector<Dag::Operation*>& operations, Id pid, bool is_user_defined = true);
 
 		void apply_transform(Dag::Operation& op);
 
 		void update_displacement_for_op(Dag::Operation& op);
 
-		std::map<cinolib::vec3d, unsigned int, Utils::Geometry::VertexComparer> v_map;
+		std::map<Vec, Id, Utils::Geometry::VertexComparer> v_map;
 
 		std::deque<Dag::Refine*> refine_queue;
 
-		std::pair<int, unsigned int> direction_to_axis(const cinolib::vec3d& dir);
+		std::pair<int, Id> direction_to_axis(const Vec& dir);
 
 		Commander m_commander{ *this };
 

@@ -60,7 +60,7 @@ namespace HMP::Dag::Utils
 				{
 					const Element& element{ node->element() };
 					// TODO pid
-					for (const cinolib::vec3d& vertex : element.vertices())
+					for (const Vec& vertex : element.vertices())
 					{
 						_stream << vertex << sep;
 					}
@@ -90,7 +90,7 @@ namespace HMP::Dag::Utils
 							_stream
 								<< refineOperation.needsTopologyFix() << sep
 								<< refineOperation.scheme() << sep;
-							for (unsigned int vid : refineOperation.vertices())
+							for (Id vid : refineOperation.vertices())
 							{
 								_stream << vid << sep;
 							}
@@ -106,7 +106,7 @@ namespace HMP::Dag::Utils
 			std::unordered_map<const Node*, std::size_t> nodeMap{};
 			{
 				nodeMap.reserve(nodes.size());
-				unsigned int i{ 0 };
+				Id i{ 0 };
 				for (const Node* node : nodes)
 				{
 					nodeMap.emplace(node, i++);
@@ -141,7 +141,7 @@ namespace HMP::Dag::Utils
 				{
 					Element& element{ *new Element{} };
 					// TODO pid
-					for (cinolib::vec3d& vertex : element.vertices())
+					for (Vec& vertex : element.vertices())
 					{
 						_stream >> vertex;
 					}
@@ -175,7 +175,7 @@ namespace HMP::Dag::Utils
 							_stream
 								>> refineOperation.needsTopologyFix()
 								>> refineOperation.scheme();
-							for (unsigned int& vid : refineOperation.vertices())
+							for (Id& vid : refineOperation.vertices())
 							{
 								_stream >> vid;
 							}

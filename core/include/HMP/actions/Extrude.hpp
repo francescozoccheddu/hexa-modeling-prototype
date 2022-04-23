@@ -1,7 +1,7 @@
 #pragma once
 
+#include <HMP/types.hpp>
 #include <HMP/Dag/Extrude.hpp>
-#include <cinolib/geometry/vec_mat.h>
 #include <HMP/Commander.hpp>
 
 namespace HMP::Actions
@@ -12,14 +12,14 @@ namespace HMP::Actions
 
 	public:
 
-		Extrude(const cinolib::vec3d& _polyCentroid, const cinolib::vec3d& _faceCentroid);
+		Extrude(const Vec& _polyCentroid, const Vec& _faceCentroid);
 
 		void apply() override;
 		void unapply() override;
 
 	private:
 
-		const cinolib::vec3d m_polyCentroid, m_faceCentroid;
+		const Vec m_polyCentroid, m_faceCentroid;
 		Dag::Extrude* m_operation{};
 
 	};

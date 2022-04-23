@@ -28,20 +28,20 @@ namespace HMP
 	}
 
 
-	void OperationsTree::add_children_to_refine(Refine& refine, unsigned int num_children)
+	void OperationsTree::add_children_to_refine(Refine& refine, Id num_children)
 	{
-		for (unsigned int i = 0; i < num_children; i++)
+		for (Id i = 0; i < num_children; i++)
 		{
 			refine.attachChild(*new Element{});
 		}
 	}
 
-	Refine* OperationsTree::refine(Element& element, unsigned int num_children)
+	Refine* OperationsTree::refine(Element& element, Id num_children)
 	{
 		if (!is_leaf(element)) return nullptr;
 
 		Refine& refine{ *new Refine{} };
-		for (unsigned int i = 0; i < num_children; i++)
+		for (Id i = 0; i < num_children; i++)
 		{
 			refine.attachChild(*new Element{});
 		}
@@ -52,7 +52,7 @@ namespace HMP
 	}
 
 
-	Extrude* OperationsTree::extrude(Element& element, unsigned int faceOffset)
+	Extrude* OperationsTree::extrude(Element& element, Id faceOffset)
 	{
 		if (!is_leaf(element)) return nullptr;
 		assert(faceOffset <= 6);
@@ -66,7 +66,7 @@ namespace HMP
 		return &extrude;
 	}
 
-	void OperationsTree::move(Element& element, unsigned int faceOffset, const cinolib::vec3d& displacement)
+	void OperationsTree::move(Element& element, Id faceOffset, const Vec& displacement)
 	{
 		if (!is_leaf(element)) return;
 
@@ -196,8 +196,8 @@ namespace HMP
 	{
 		return true;
 
-		std::vector<unsigned int> extrude_offsets_source;
-		std::vector<unsigned int> extrude_offsets_dest;
+		std::vector<Id> extrude_offsets_source;
+		std::vector<Id> extrude_offsets_dest;
 
 		for (const auto& op : source.children())
 		{
@@ -220,7 +220,7 @@ namespace HMP
 		std::sort(extrude_offsets_source.begin(), extrude_offsets_source.end());
 		std::sort(extrude_offsets_dest.begin(), extrude_offsets_dest.end());
 
-		std::vector<unsigned int> set_intersect;
+		std::vector<Id> set_intersect;
 		std::set_intersection(extrude_offsets_source.begin(), extrude_offsets_source.end(), extrude_offsets_dest.begin(), extrude_offsets_dest.end(), std::back_inserter(set_intersect));
 
 		return set_intersect.size() == 0;
@@ -230,10 +230,10 @@ namespace HMP
 	{
 		if (!is_leaf(dest) || !check_compatibility(source, dest)) return false;
 
-		std::unordered_map<const Node*, unsigned int> old_nodes;
+		std::unordered_map<const Node*, Id> old_nodes;
 		std::vector<Node*> old_nodes_vec;
 		std::vector<Node*> nodes_vec;
-		unsigned int counter = 0;
+		Id counter = 0;
 		int num_new_ops = source.children().size();
 		std::deque<Node*> queue;
 		queue.push_back(&source);
@@ -290,7 +290,7 @@ namespace HMP
 					{
 						auto new_op = new Extrude{};
 						auto& old_ex = static_cast<Extrude&>(op);
-						unsigned int faceOffset = old_ex.faceOffset();
+						Id faceOffset = old_ex.faceOffset();
 						new_op->faceOffset() = faceOffset;
 						nodes_vec.push_back(new_op);
 						if (num_new_ops-- > 0) new_operations->push_back(new_op);
@@ -313,7 +313,7 @@ namespace HMP
 
 		}
 
-		for (unsigned int i = 0; i < old_nodes_vec.size(); i++)
+		for (Id i = 0; i < old_nodes_vec.size(); i++)
 		{
 
 			auto& node = old_nodes_vec[i];
@@ -326,13 +326,13 @@ namespace HMP
 
 				for (const auto& father : old_operation.parents())
 				{
-					unsigned int idx_father = old_nodes[&father];
+					Id idx_father = old_nodes[&father];
 					auto& new_father = nodes_vec[idx_father]->element();
 					new_father.attachChild(new_operation);
 				}
 				for (auto& child : old_operation.children())
 				{
-					unsigned int idx_child = old_nodes[&child];
+					Id idx_child = old_nodes[&child];
 					auto& new_child = nodes_vec[idx_child]->element();
 					new_operation.attachChild(new_child);
 				}
@@ -344,7 +344,7 @@ namespace HMP
 
 	int OperationsTree::op_element_offset(const Operation& op, const Element& element)
 	{
-		std::vector<unsigned int> offsets;
+		std::vector<Id> offsets;
 		switch (op.primitive())
 		{
 			case Operation::EPrimitive::Extrude:
@@ -355,7 +355,7 @@ namespace HMP
 		}
 
 		int off = -1;
-		unsigned int i = 0;
+		Id i = 0;
 
 		for (const auto& parent : op.parents())
 		{

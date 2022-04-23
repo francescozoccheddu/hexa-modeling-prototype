@@ -1,5 +1,6 @@
 #pragma once
 
+#include <HMP/types.hpp>
 #include <vector>
 #include <memory>
 #include <HMP/grid.hpp>
@@ -12,7 +13,7 @@ namespace HMP
 	class FaceRefineAction : public Commander::Action
 	{
 	public:
-		FaceRefineAction(Grid& grid, unsigned int fid);
+		FaceRefineAction(Grid& grid, Id fid);
 
 		void apply() override;
 		void unapply() override;
@@ -20,9 +21,9 @@ namespace HMP
 	private:
 
 		Grid& grid;
-		unsigned int pid;
-		unsigned int face_off;
-		std::vector<unsigned int> vids;
+		Id pid;
+		Id face_off;
+		std::vector<Id> vids;
 		Dag::Operation* op;
 	};
 

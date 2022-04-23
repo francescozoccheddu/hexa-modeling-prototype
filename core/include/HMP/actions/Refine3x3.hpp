@@ -1,8 +1,8 @@
 #pragma once
 
+#include <HMP/types.hpp>
 #include <HMP/Commander.hpp>
 #include <HMP/Dag/Refine.hpp>
-#include <cinolib/geometry/vec_mat.h>
 
 namespace HMP::Actions
 {
@@ -12,14 +12,14 @@ namespace HMP::Actions
 
 	public:
 
-		Refine3x3(const cinolib::vec3d& _polyCentroid);
+		Refine3x3(const Vec& _polyCentroid);
 
 		void apply() override;
 		void unapply() override;
 
 	private:
 
-		const cinolib::vec3d m_polyCentroid;
+		const Vec m_polyCentroid;
 		Dag::Refine* m_operation{};
 
 	};
