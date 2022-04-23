@@ -496,6 +496,10 @@ namespace HMP
 
 	bool Grid::getVert(const Vec& _vert, Id& _vid) const
 	{
+		if (!mesh.num_verts())
+		{
+			return false;
+		}
 		_vid = mesh.pick_vert(_vert);
 		return mesh.vert(_vid).dist(_vert) <= c_maxVertDistance;
 	}
