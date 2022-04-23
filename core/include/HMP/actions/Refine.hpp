@@ -7,19 +7,20 @@
 namespace HMP::Actions
 {
 
-	class Refine3x3 final : public Commander::Action
+	class Refine final : public Commander::Action
 	{
 
 	public:
 
-		Refine3x3(const Vec& _polyCentroid);
+		Refine(const Vec& _polyCentroid, const Vec& _faceCentroid, Refinement::EScheme _scheme);
 
 		void apply() override;
 		void unapply() override;
 
 	private:
 
-		const Vec m_polyCentroid;
+		const Vec m_polyCentroid, m_faceCentroid;
+		const Refinement::EScheme m_scheme;
 		Dag::Refine* m_operation{};
 
 	};

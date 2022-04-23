@@ -21,8 +21,7 @@
 #include <cinolib/smoother.h>
 #include <HMP/actions/Delete.hpp>
 #include <HMP/actions/Extrude.hpp>
-#include <HMP/actions/Refine3x3.hpp>
-#include <HMP/actions/facerefineaction.hpp>
+#include <HMP/actions/Refine.hpp>
 #include <HMP/actions/MoveVert.hpp>
 #include <HMP/actions/makeconformingaction.hpp>
 
@@ -81,6 +80,7 @@ namespace HMP
 		void element(Id _pid, Dag::Element& _element);
 		const Dag::Element& element(Id _pid) const;
 
+		PolyVerts polyVerts(Id _pid, Id _faceOffset) const;
 		PolyVerts polyVerts(Id _pid) const;
 		Id addPoly(Dag::Element& _element);
 		Id addPoly(const PolyIds& _vids, Dag::Element& _element);
@@ -126,8 +126,7 @@ namespace HMP
 
 		friend class Actions::Extrude;
 		friend class Actions::Delete;
-		friend class Actions::Refine3x3;
-		friend class FaceRefineAction;
+		friend class Actions::Refine;
 		friend class Actions::MoveVert;
 		friend class MakeConformingAction;
 

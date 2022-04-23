@@ -188,24 +188,28 @@ namespace HMP::Utils::Collections
 		return std::vector<TValue>{std::make_move_iterator(_array.begin()), std::make_move_iterator(_array.end())};
 	}
 
-	template<typename TValue, std::size_t TCount>
-	std::array<TValue, TCount > toVector(const std::vector<TValue>& _vector)
+	template<std::size_t TCount, typename TValue>
+	std::array<TValue, TCount > toArray(const std::vector<TValue>& _vector)
 	{
 		if (_vector.size() != TCount)
 		{
 			throw std::logic_error{ "size mismatch" };
 		}
-		return std::array<TValue, TCount>{_vector.begin(), _vector.end()};
+		std::array<TValue, TCount> array;
+		std::copy(_vector.begin(), _vector.end(), array.begin());
+		return array;
 	}
 
-	template<typename TValue, std::size_t TCount>
-	std::array<TValue, TCount> toVector(std::vector<TValue>&& _vector)
+	template<std::size_t TCount, typename TValue>
+	std::array<TValue, TCount> toArray(std::vector<TValue>&& _vector)
 	{
 		if (_vector.size() != TCount)
 		{
 			throw std::logic_error{ "size mismatch" };
 		}
-		return std::array<TValue, TCount>{std::make_move_iterator(_vector.begin()), std::make_move_iterator(_vector.end())};
+		std::array<TValue, TCount> array;
+		std::move(_vector.begin(), _vector.end(), array.begin());
+		return array;
 	}
 
 }

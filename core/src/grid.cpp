@@ -6,6 +6,7 @@
 #include <array>
 #include <HMP/Refinement/schemes.hpp>
 #include <HMP/Utils/Geometry.hpp>
+#include <HMP/Utils/Collections.hpp>
 #include <HMP/Dag/Utils.hpp>
 
 namespace HMP
@@ -103,12 +104,12 @@ namespace HMP
 
 	void Grid::add_refine(Id pid)
 	{
-		m_commander.apply(*new Actions::Refine3x3(mesh.poly_centroid(pid)));
+		m_commander.apply(*new Actions::Refine(mesh.poly_centroid(pid), mesh.face_centroid(mesh.poly_faces_id(pid)[0]), Refinement::EScheme::StandardRefinement));
 	}
 
 	void Grid::add_face_refine(Id fid)
 	{
-		m_commander.apply(*new FaceRefineAction(*this, fid));
+		m_commander.apply(*new Actions::Refine(mesh.poly_centroid(mesh.adj_f2p(fid).front()), mesh.face_centroid(fid), Refinement::EScheme::FaceRefinement));
 	}
 
 	void Grid::add_extrude(Id pid, Id face_offset)
@@ -533,10 +534,42 @@ namespace HMP
 
 	PolyVerts Grid::polyVerts(Id _pid) const
 	{
-		const std::vector<Vec> verts{ mesh.poly_verts(_pid) };
-		PolyVerts vertsArray;
-		std::move(verts.begin(), verts.end(), vertsArray.begin());
-		return vertsArray;
+		return Utils::Collections::toArray<8>(mesh.poly_verts(_pid));
+	}
+
+	PolyVerts Grid::polyVerts(Id _pid, Id _faceOffset) const
+	{
+		const Id frontFid{ mesh.poly_faces_id(_pid)[_faceOffset] };
+		const Id backFid{ mesh.poly_face_opposite_to(_pid, frontFid) };
+		std::vector<Id> frontFaceVids = mesh.face_verts_id(frontFid);
+		std::vector<Id> backFaceVids = mesh.face_verts_id(backFid);
+
+		if (mesh.poly_face_winding(_pid, frontFid))
+		{
+			std::reverse(frontFaceVids.begin(), frontFaceVids.end());
+		}
+		if (!mesh.poly_face_winding(_pid, backFid))
+		{
+			std::reverse(backFaceVids.begin(), backFaceVids.end());
+		}
+
+		while (mesh.edge_id(frontFaceVids[0], backFaceVids[0]) == -1)
+		{
+			std::rotate(backFaceVids.begin(), backFaceVids.begin() + 1, backFaceVids.end());
+		}
+
+		PolyVerts verts;
+		size_t i{ 0 };
+		for (const Id vid : frontFaceVids)
+		{
+			verts[i++] = mesh.vert(vid);
+		}
+		for (const Id vid : backFaceVids)
+		{
+			verts[i++] = mesh.vert(vid);
+		}
+
+		return verts;
 	}
 
 	Id Grid::addPoly(Dag::Element& _element)
