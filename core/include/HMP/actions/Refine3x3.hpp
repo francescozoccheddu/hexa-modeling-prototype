@@ -20,7 +20,7 @@ namespace HMP::Actions
 	private:
 
 		const cinolib::vec3d m_polyCentroid;
-		Dag::Refine* m_operation;
+		Dag::Refine* m_operation{};
 
 	};
 

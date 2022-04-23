@@ -3,7 +3,7 @@
 #include <HMP/Dag/Refine.hpp>
 #include <HMP/Dag/Extrude.hpp>
 #include <HMP/Dag/Element.hpp>
-#include <HMP/Utils/stream.hpp>
+#include <HMP/Utils/enums.hpp>
 #include <deque>
 #include <vector>
 #include <unordered_set>

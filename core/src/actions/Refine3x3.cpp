@@ -2,6 +2,7 @@
 
 #include <HMP/grid.hpp>
 #include <HMP/Refinement/schemes.hpp>
+#include <HMP/Utils/Collections.hpp>
 #include <stdexcept>
 
 namespace HMP::Actions
@@ -23,28 +24,14 @@ namespace HMP::Actions
 		m_operation = &operation;
 		element.attachChild(operation);
 		const Refinement::Scheme& scheme{ *Refinement::schemes.at(Refinement::EScheme::StandardRefinement) };
+		const std::vector<std::array<cinolib::vec3d, 8>> polys{ scheme.apply(Utils::Collections::toVector(element.vertices())) };
 		const std::vector<Dag::Element*> children{ operation.attachChildren(scheme.polyCount()) };
+		for (const auto& [child, polyVerts] : Utils::Collections::zip(children, polys))
 		{
-			for (std::size_t i{ 0 }; i < scheme.weights.size(); i++)
-			{
-				std::array<cinolib::vec3d, 8>& verts{ children[i]->vertices() };
-				verts.fill(cinolib::vec3d{ 0,0,0 });
-
-				for (std::size_t j{ 0 }; j < 8; j++)
-				{
-					const auto& vertWeights = scheme.weights[i][j];
-					const auto& vertOffsets = scheme.offsets[i][j];
-					for (std::size_t k{ 0 }; k < vertWeights.size(); k++)
-					{
-						verts[j] += vertWeights[k] * grid.mesh.poly_vert(element.pid(), vertOffsets[k]);
-					}
-				}
-
-				grid.addPoly(*children[i]);
-			}
-			grid.removePoly(element.pid());
-			grid.update_mesh();
+			grid.addPoly(polyVerts, *child);
 		}
+		grid.removePoly(element.pid());
+		grid.update_mesh();
 	}
 
 	void Refine3x3::unapply()

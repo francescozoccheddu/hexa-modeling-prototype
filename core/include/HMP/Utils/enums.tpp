@@ -1,8 +1,8 @@
-#ifndef HMP_UTILS_STREAM_IMPL
+#ifndef HMP_UTILS_ENUMS_IMPL
 #error __FILE__ should not be directly included
 #endif
 
-#include <HMP/Utils/stream.hpp>
+#include <HMP/Utils/enums.hpp>
 
 namespace HMP::Utils
 {

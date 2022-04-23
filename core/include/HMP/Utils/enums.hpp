@@ -17,6 +17,6 @@ namespace HMP::Utils
 }
 
 
-#define HMP_UTILS_STREAM_IMPL
-#include <HMP/Utils/stream.tpp>
-#undef HMP_UTILS_STREAM_IMPL
+#define HMP_UTILS_ENUMS_IMPL
+#include <HMP/Utils/enums.tpp>
+#undef HMP_UTILS_ENUMS_IMPL
