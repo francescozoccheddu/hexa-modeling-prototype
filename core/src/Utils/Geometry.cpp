@@ -81,55 +81,44 @@ namespace HMP::Utils::Geometry
 		return transform<2>(map, _axis, _fid, _times);
 	}
 
-	void sortVids(PolyIds& _vids, const PolyVerts& _vertices)
+	void sortVertices(PolyVerts& _verts)
 	{
-		using Vert = std::pair<Vec, Id>;
 
 		struct OrderX final
 		{
-			inline bool operator() (const Vert& _a, const Vert& _b)
+			inline bool operator() (const Vec& _a, const Vec& _b)
 			{
-				return _a.first.x() < _b.first.x();
+				return _a.x() < _b.x();
 			}
 		};
 
 		struct OrderY final
 		{
-			inline bool operator() (const Vert& _a, const Vert& _b)
+			inline bool operator() (const Vec& _a, const Vec& _b)
 			{
-				return _a.first.y() < _b.first.y();
+				return _a.y() < _b.y();
 			}
 		};
 
 		struct OrderZ final
 		{
-			inline bool operator() (const Vert& _a, const Vert& _b)
+			inline bool operator() (const Vec& _a, const Vec& _b)
 			{
-				return _a.first.z() < _b.first.z();
+				return _a.z() < _b.z();
 			}
 		};
 
-		std::array<Vert, 8> tmp;
-		for (Id i = 0; i < 8; i++)
-		{
-			tmp[i] = { _vertices[_vids[i]], _vids[i] };
-		}
-		std::sort(tmp.begin(), tmp.end(), OrderY());
-		std::sort(tmp.begin(), tmp.begin() + 4, OrderX());
-		std::sort(tmp.begin() + 4, tmp.end(), OrderX());
-		std::sort(tmp.begin(), tmp.begin() + 2, OrderZ());
-		std::sort(tmp.begin() + 2, tmp.begin() + 4, OrderZ());
-		std::sort(tmp.begin() + 4, tmp.begin() + 6, OrderZ());
-		std::sort(tmp.begin() + 6, tmp.end(), OrderZ());
-		std::swap(tmp[0], tmp[3]);
-		std::swap(tmp[0], tmp[1]);
-		std::swap(tmp[4], tmp[7]);
-		std::swap(tmp[4], tmp[5]);
-
-		for (std::size_t i{ 0 }; i < 8; i++)
-		{
-			_vids[i] = tmp[i].second;
-		}
+		std::sort(_verts.begin(), _verts.end(), OrderY());
+		std::sort(_verts.begin(), _verts.begin() + 4, OrderX());
+		std::sort(_verts.begin() + 4, _verts.end(), OrderX());
+		std::sort(_verts.begin(), _verts.begin() + 2, OrderZ());
+		std::sort(_verts.begin() + 2, _verts.begin() + 4, OrderZ());
+		std::sort(_verts.begin() + 4, _verts.begin() + 6, OrderZ());
+		std::sort(_verts.begin() + 6, _verts.end(), OrderZ());
+		std::swap(_verts[0], _verts[3]);
+		std::swap(_verts[0], _verts[1]);
+		std::swap(_verts[4], _verts[7]);
+		std::swap(_verts[4], _verts[5]);
 	}
 
 

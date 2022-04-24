@@ -1,0 +1,195 @@
+#include <HMP/actions/MakeConforming.hpp>
+
+#include <HMP/Refinement/schemes.hpp>
+#include <HMP/grid.hpp>
+#include <HMP/Dag/Utils.hpp>
+#include <HMP/Utils/Collections.hpp>
+#include <cinolib/stl_container_utilities.h>
+
+namespace HMP::Actions
+{
+
+	MakeConforming::MakeConforming() {}
+
+
+	void MakeConforming::apply()
+	{
+		Grid& grid{ this->grid() };
+
+		std::vector<Dag::Refine*> refines{};
+		std::unordered_set<Id> removedPids{};
+
+		for (Dag::Node* node : Dag::Utils::descendants(*grid.op_tree.root))
+		{
+			if (node->isOperation() && node->operation().primitive() == Dag::Operation::EPrimitive::Refine)
+			{
+				Dag::Refine& refine{ static_cast<Dag::Refine&>(node->operation()) };
+				if (refine.needsTopologyFix())
+				{
+					refines.push_back(&refine);
+				}
+			}
+		}
+
+		// Subdivide3x3
+		{
+			std::deque<Dag::Refine*> sources(refines.begin(), refines.end());
+			std::set<Dag::Element*> targetCandidates;
+
+			while (!sources.empty())
+			{
+				Dag::Refine& sourceRefine = *sources.front();
+				sources.pop_front();
+
+				Dag::Element& sourceElement = sourceRefine.parents().single();
+				grid.addPoly(sourceElement);
+
+				for (Id targetPid : grid.mesh.adj_p2p(sourceElement.pid()))
+				{
+					Dag::Element& targetElement = *grid.mesh.poly_data(targetPid).element;
+					if (!targetCandidates.insert(&targetElement).second)
+					{
+						Dag::Refine& targetRefine{ *new Dag::Refine{} };
+						m_operations.push_back(&targetRefine);
+						targetRefine.scheme() = Refinement::EScheme::Subdivide3x3;
+						targetRefine.needsTopologyFix() = true;
+						targetElement.attachChild(targetRefine);
+						const Refinement::Scheme& scheme{ *Refinement::schemes.at(Refinement::EScheme::Subdivide3x3) };
+						const std::vector<PolyVerts> polys{ scheme.apply(Utils::Collections::toVector(targetElement.vertices())) };
+						const std::vector<Dag::Element*> children{ targetRefine.attachChildren(scheme.polyCount()) };
+						for (const auto& [child, polyVerts] : Utils::Collections::zip(children, polys))
+						{
+							grid.addPoly(polyVerts, *child);
+						}
+						removedPids.insert(targetElement.pid());
+						refines.push_back(&targetRefine);
+						sources.push_back(&targetRefine);
+						m_fixedRefines.insert(&sourceRefine);
+						sourceRefine.needsTopologyFix() = false;
+					}
+				}
+				removedPids.insert(sourceElement.pid());
+			}
+
+		}
+
+		// InterfaceFace
+		{
+			std::deque<Dag::Refine*> sources(refines.begin(), refines.end());
+			while (!sources.empty())
+			{
+				Dag::Refine& sourceRefine = *sources.front();
+				sources.pop_front();
+
+				Dag::Element& sourceElement = sourceRefine.parents().single();
+				grid.addPoly(sourceElement);
+
+				for (Id targetPid : grid.mesh.adj_p2p(sourceElement.pid()))
+				{
+					if (removedPids.contains(targetPid))
+					{
+						continue;
+					}
+					const Id fid = grid.mesh.poly_shared_face(sourceElement.pid(), targetPid);
+					if (targetPid == sourceElement.pid() || fid == -1)
+					{
+						continue;
+					}
+					Dag::Element& targetElement = *grid.mesh.poly_data(targetPid).element;
+					Dag::Refine& targetRefine{ *new Dag::Refine{} };
+					m_operations.push_back(&targetRefine);
+					targetRefine.scheme() = Refinement::EScheme::InterfaceFace;
+					targetRefine.needsTopologyFix() = false;
+					targetElement.attachChild(targetRefine);
+					const Id faceOffset{ grid.mesh.poly_face_offset(targetElement.pid(), fid) };
+					const Refinement::Scheme& scheme{ *Refinement::schemes.at(Refinement::EScheme::InterfaceFace) };
+					const std::vector<PolyVerts> polys{ scheme.apply(Utils::Collections::toVector(grid.polyVertsFromFace(targetElement.pid(), faceOffset))) };
+					const std::vector<Dag::Element*> children{ targetRefine.attachChildren(scheme.polyCount()) };
+					for (const auto& [child, polyVerts] : Utils::Collections::zip(children, polys))
+					{
+						grid.addPoly(polyVerts, *child);
+					}
+					removedPids.insert(targetElement.pid());
+					m_fixedRefines.insert(&sourceRefine);
+					sourceRefine.needsTopologyFix() = false;
+				}
+				removedPids.insert(sourceElement.pid());
+			}
+		}
+
+		// InterfaceEdge
+		{
+			std::deque<Dag::Refine*> sources(refines.begin(), refines.end());
+			while (!sources.empty())
+			{
+				Dag::Refine& sourceRefine = *sources.front();
+				sources.pop_front();
+
+				Dag::Element& sourceElement = sourceRefine.parents().single();
+				grid.addPoly(sourceElement);
+
+				for (Id targetEid : grid.mesh.adj_p2e(sourceElement.pid()))
+				{
+					for (Id targetPid : grid.mesh.adj_e2p(targetEid))
+					{
+						if (removedPids.contains(targetPid))
+						{
+							continue;
+						}
+						if (targetPid == sourceElement.pid() || grid.mesh.poly_shared_face(targetPid, sourceElement.pid()) != -1)
+						{
+							continue;
+						}
+						Dag::Element& targetElement = *grid.mesh.poly_data(targetPid).element;
+						Dag::Refine& targetRefine{ *new Dag::Refine{} };
+						m_operations.push_back(&targetRefine);
+						targetRefine.scheme() = Refinement::EScheme::InterfaceEdge;
+						targetRefine.needsTopologyFix() = false;
+						targetElement.attachChild(targetRefine);
+						const Refinement::Scheme& scheme{ *Refinement::schemes.at(Refinement::EScheme::InterfaceEdge) };
+						const std::vector<PolyVerts> polys{ scheme.apply(Utils::Collections::toVector(grid.polyVertsFromEdge(targetElement.pid(), targetEid))) };
+						const std::vector<Dag::Element*> children{ targetRefine.attachChildren(scheme.polyCount()) };
+						for (const auto& [child, polyVerts] : Utils::Collections::zip(children, polys))
+						{
+							grid.addPoly(polyVerts, *child);
+						}
+						removedPids.insert(targetElement.pid());
+						m_fixedRefines.insert(&sourceRefine);
+						sourceRefine.needsTopologyFix() = false;
+					}
+				}
+				removedPids.insert(sourceElement.pid());
+			}
+		}
+
+		{
+			std::vector<Id> pids(removedPids.begin(), removedPids.end());
+			std::sort(pids.begin(), pids.end(), std::greater<Id>{});
+			for (Id pid : pids)
+			{
+				grid.removePoly(pid);
+			}
+		}
+
+	}
+
+	void MakeConforming::unapply()
+	{
+		Grid& grid{ this->grid() };
+		for (Dag::Refine* operation : m_operations)
+		{
+			for (Dag::Element& child : operation->children())
+			{
+				grid.removePoly(child.pid());
+			}
+			grid.addPoly(operation->parents().single());
+			delete operation;
+		}
+		for (Dag::Refine* fixedRefine : m_fixedRefines)
+		{
+			fixedRefine->needsTopologyFix() = true;
+		}
+		m_operations.clear();
+	}
+
+}

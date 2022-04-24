@@ -6,7 +6,7 @@ namespace HMP::Refinement
 	namespace Schemes
 	{
 
-		const Scheme standardRefinement{
+		const Scheme subdivide3x3{
 			.offsets{
 				{
 					{1, 3, 0, 7},
@@ -553,7 +553,7 @@ namespace HMP::Refinement
 			}
 		};
 
-		const Scheme faceScheme{
+		const Scheme interfaceFace{
 			.offsets{
 				{
 					{1, 3, 0, 7},
@@ -820,7 +820,7 @@ namespace HMP::Refinement
 			}
 		};
 
-		const Scheme edgeScheme{
+		const Scheme interfaceEdge{
 			.offsets{
 				{
 					{1, 3, 0, 7},
@@ -927,7 +927,7 @@ namespace HMP::Refinement
 			}
 		};
 
-		const Scheme faceRefinement{
+		const Scheme inset{
 			.offsets{
 				{
 					{1, 3, 0, 7},
@@ -1057,10 +1057,10 @@ namespace HMP::Refinement
 	}
 
 	const std::unordered_map<EScheme, const Scheme*> schemes{
-		{EScheme::StandardRefinement, &Schemes::standardRefinement},
-		{EScheme::EdgeScheme, &Schemes::edgeScheme},
-		{EScheme::FaceScheme, &Schemes::faceScheme},
-		{EScheme::FaceRefinement, &Schemes::faceRefinement}
+		{EScheme::Subdivide3x3, &Schemes::subdivide3x3},
+		{EScheme::InterfaceEdge, &Schemes::interfaceEdge},
+		{EScheme::InterfaceFace, &Schemes::interfaceFace},
+		{EScheme::Inset, &Schemes::inset}
 	};
 
 }

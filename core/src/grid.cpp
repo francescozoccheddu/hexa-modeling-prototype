@@ -39,7 +39,7 @@ namespace HMP
 		PolyVerts init_cube_coords = { Vec(-cubeSize,-cubeSize,-cubeSize), Vec(-cubeSize,-cubeSize, cubeSize), Vec(cubeSize,-cubeSize,cubeSize), Vec(cubeSize,-cubeSize,-cubeSize),
 														Vec(-cubeSize,cubeSize,-cubeSize), Vec(-cubeSize,cubeSize, cubeSize), Vec(cubeSize,cubeSize,cubeSize), Vec(cubeSize,cubeSize,-cubeSize) };
 		PolyIds init_cube_polys = { 0,1,2,3,4,5,6,7 };
-		Utils::Geometry::sortVids(init_cube_polys, init_cube_coords);
+		Utils::Geometry::sortVertices(init_cube_coords);
 
 		mesh.clear();
 		mesh.init(
@@ -104,12 +104,12 @@ namespace HMP
 
 	void Grid::add_refine(Id pid)
 	{
-		m_commander.apply(*new Actions::Refine(mesh.poly_centroid(pid), mesh.face_centroid(mesh.poly_faces_id(pid)[0]), Refinement::EScheme::StandardRefinement));
+		m_commander.apply(*new Actions::Refine(mesh.poly_centroid(pid), mesh.face_centroid(mesh.poly_faces_id(pid)[0]), Refinement::EScheme::Subdivide3x3));
 	}
 
 	void Grid::add_face_refine(Id fid)
 	{
-		m_commander.apply(*new Actions::Refine(mesh.poly_centroid(mesh.adj_f2p(fid).front()), mesh.face_centroid(fid), Refinement::EScheme::FaceRefinement));
+		m_commander.apply(*new Actions::Refine(mesh.poly_centroid(mesh.adj_f2p(fid).front()), mesh.face_centroid(fid), Refinement::EScheme::Inset));
 	}
 
 	void Grid::add_extrude(Id pid, Id face_offset)
@@ -239,7 +239,7 @@ namespace HMP
 
 	void Grid::make_conforming()
 	{
-		m_commander.apply(*new MakeConformingAction(*this));
+		m_commander.apply(*new Actions::MakeConforming());
 		update_mesh();
 	}
 
@@ -541,7 +541,7 @@ namespace HMP
 		return Utils::Collections::toArray<8>(mesh.poly_verts(_pid));
 	}
 
-	PolyVerts Grid::polyVerts(Id _pid, Id _faceOffset) const
+	PolyVerts Grid::polyVertsFromFace(Id _pid, Id _faceOffset) const
 	{
 		const Id frontFid{ mesh.poly_faces_id(_pid)[_faceOffset] };
 		const Id backFid{ mesh.poly_face_opposite_to(_pid, frontFid) };
@@ -555,6 +555,55 @@ namespace HMP
 		if (!mesh.poly_face_winding(_pid, backFid))
 		{
 			std::reverse(backFaceVids.begin(), backFaceVids.end());
+		}
+
+		while (mesh.edge_id(frontFaceVids[0], backFaceVids[0]) == -1)
+		{
+			std::rotate(backFaceVids.begin(), backFaceVids.begin() + 1, backFaceVids.end());
+		}
+
+		PolyVerts verts;
+		size_t i{ 0 };
+		for (const Id vid : frontFaceVids)
+		{
+			verts[i++] = mesh.vert(vid);
+		}
+		for (const Id vid : backFaceVids)
+		{
+			verts[i++] = mesh.vert(vid);
+		}
+
+		return verts;
+	}
+
+	PolyVerts Grid::polyVertsFromEdge(Id _pid, Id _eid) const
+	{
+		Id fid = 0;
+		for (Id edgeFid : mesh.adj_e2f(_eid))
+		{
+			if (mesh.poly_contains_face(_pid, edgeFid))
+			{
+				fid = edgeFid;
+				break;
+			}
+		}
+		const Id frontFid{ fid };
+		const Id backFid{ mesh.poly_face_opposite_to(_pid, frontFid) };
+		std::vector<Id> frontFaceVids = mesh.face_verts_id(frontFid);
+		std::vector<Id> backFaceVids = mesh.face_verts_id(backFid);
+
+		if (mesh.poly_face_winding(_pid, frontFid))
+		{
+			std::reverse(frontFaceVids.begin(), frontFaceVids.end());
+		}
+		if (!mesh.poly_face_winding(_pid, backFid))
+		{
+			std::reverse(backFaceVids.begin(), backFaceVids.end());
+		}
+
+		while ((frontFaceVids[0] + frontFaceVids[1]) - (mesh.edge_vert_id(_eid, 0) + mesh.edge_vert_id(_eid, 1)) != 0)
+		{
+			std::rotate(frontFaceVids.begin(), frontFaceVids.begin() + 1, frontFaceVids.end());
 		}
 
 		while (mesh.edge_id(frontFaceVids[0], backFaceVids[0]) == -1)

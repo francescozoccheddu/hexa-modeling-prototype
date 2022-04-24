@@ -23,7 +23,7 @@
 #include <HMP/actions/Extrude.hpp>
 #include <HMP/actions/Refine.hpp>
 #include <HMP/actions/MoveVert.hpp>
-#include <HMP/actions/makeconformingaction.hpp>
+#include <HMP/actions/MakeConforming.hpp>
 
 namespace HMP
 {
@@ -80,7 +80,8 @@ namespace HMP
 		void element(Id _pid, Dag::Element& _element);
 		const Dag::Element& element(Id _pid) const;
 
-		PolyVerts polyVerts(Id _pid, Id _faceOffset) const;
+		PolyVerts polyVertsFromFace(Id _pid, Id _faceOffset) const;
+		PolyVerts polyVertsFromEdge(Id _pid, Id _eid) const;
 		PolyVerts polyVerts(Id _pid) const;
 		Id addPoly(Dag::Element& _element);
 		Id addPoly(const PolyIds& _vids, Dag::Element& _element);
@@ -128,7 +129,7 @@ namespace HMP
 		friend class Actions::Delete;
 		friend class Actions::Refine;
 		friend class Actions::MoveVert;
-		friend class MakeConformingAction;
+		friend class Actions::MakeConforming;
 
 	};
 

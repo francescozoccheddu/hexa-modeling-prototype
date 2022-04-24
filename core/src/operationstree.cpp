@@ -281,7 +281,7 @@ namespace HMP
 						new_op->scheme() = old_ref.scheme();
 						new_op->vertices() = old_ref.vertices();
 
-						if (old_ref.scheme() == Refinement::EScheme::StandardRefinement) new_op->needsTopologyFix() = false;
+						if (old_ref.scheme() == Refinement::EScheme::Subdivide3x3) new_op->needsTopologyFix() = false;
 						nodes_vec.push_back(new_op);
 						if (num_new_ops-- > 0) new_operations->push_back(new_op);
 						break;

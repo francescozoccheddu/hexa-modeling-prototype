@@ -24,10 +24,11 @@ namespace HMP::Actions
 		}
 		Dag::Refine& operation{ *new Dag::Refine{} };
 		operation.scheme() = m_scheme;
+		operation.needsTopologyFix() = true;
 		m_operation = &operation;
 		element.attachChild(operation);
 		const Refinement::Scheme& scheme{ *Refinement::schemes.at(m_scheme) };
-		const std::vector<PolyVerts> polys{ scheme.apply(Utils::Collections::toVector(grid.polyVerts(element.pid(), faceOffset))) };
+		const std::vector<PolyVerts> polys{ scheme.apply(Utils::Collections::toVector(grid.polyVertsFromFace(element.pid(), faceOffset))) };
 		const std::vector<Dag::Element*> children{ operation.attachChildren(scheme.polyCount()) };
 		for (const auto& [child, polyVerts] : Utils::Collections::zip(children, polys))
 		{

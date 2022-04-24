@@ -9,7 +9,7 @@ namespace HMP::Refinement
 
 	enum class EScheme
 	{
-		StandardRefinement, FaceScheme, EdgeScheme, FaceRefinement
+		Subdivide3x3, InterfaceFace, InterfaceEdge, Inset
 	};
 
 	extern const std::unordered_map<EScheme, const Scheme*> schemes;
@@ -17,10 +17,10 @@ namespace HMP::Refinement
 	namespace Schemes
 	{
 
-		extern const Scheme standardRefinement;
-		extern const Scheme faceScheme;
-		extern const Scheme edgeScheme;
-		extern const Scheme faceRefinement;
+		extern const Scheme subdivide3x3;
+		extern const Scheme interfaceFace;
+		extern const Scheme interfaceEdge;
+		extern const Scheme inset;
 
 	}
 

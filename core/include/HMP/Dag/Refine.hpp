@@ -12,7 +12,7 @@ namespace HMP::Dag
 
 	private:
 
-		Refinement::EScheme m_scheme{ Refinement::EScheme::StandardRefinement };
+		Refinement::EScheme m_scheme{ Refinement::EScheme::Subdivide3x3 };
 		bool m_needsTopologyFix{ true };
 		PolyIds m_vertices{};
 
