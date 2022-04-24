@@ -19,11 +19,11 @@
 #include <cinolib/feature_mapping.h>
 #include <cinolib/export_surface.h>
 #include <cinolib/smoother.h>
-#include <HMP/actions/Delete.hpp>
-#include <HMP/actions/Extrude.hpp>
-#include <HMP/actions/Refine.hpp>
-#include <HMP/actions/MoveVert.hpp>
-#include <HMP/actions/MakeConforming.hpp>
+#include <HMP/Actions/Delete.hpp>
+#include <HMP/Actions/Extrude.hpp>
+#include <HMP/Actions/Refine.hpp>
+#include <HMP/Actions/MoveVert.hpp>
+#include <HMP/Actions/MakeConforming.hpp>
 
 namespace HMP
 {

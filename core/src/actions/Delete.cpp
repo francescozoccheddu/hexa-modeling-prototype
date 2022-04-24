@@ -1,4 +1,4 @@
-#include <HMP/actions/Delete.hpp>
+#include <HMP/Actions/Delete.hpp>
 
 #include <HMP/grid.hpp>
 #include <stdexcept>

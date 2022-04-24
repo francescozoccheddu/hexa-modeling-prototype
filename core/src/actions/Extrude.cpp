@@ -1,4 +1,4 @@
-#include <HMP/actions/Extrude.hpp>
+#include <HMP/Actions/Extrude.hpp>
 
 #include <HMP/grid.hpp>
 #include <array>

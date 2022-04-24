@@ -1,4 +1,4 @@
-#include <HMP/actions/Refine.hpp>
+#include <HMP/Actions/Refine.hpp>
 
 #include <HMP/grid.hpp>
 #include <HMP/Refinement/schemes.hpp>

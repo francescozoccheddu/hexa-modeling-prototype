@@ -1,4 +1,4 @@
-#include <HMP/actions/MakeConforming.hpp>
+#include <HMP/Actions/MakeConforming.hpp>
 
 #include <HMP/Refinement/schemes.hpp>
 #include <HMP/grid.hpp>

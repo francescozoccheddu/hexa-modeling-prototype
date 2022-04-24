@@ -1,4 +1,4 @@
-#include <HMP/actions/MoveVert.hpp>
+#include <HMP/Actions/MoveVert.hpp>
 
 #include <HMP/grid.hpp>
 
