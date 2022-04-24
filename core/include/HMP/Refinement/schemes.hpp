@@ -12,7 +12,7 @@ namespace HMP::Refinement
 		Subdivide3x3, InterfaceFace, InterfaceEdge, Inset
 	};
 
-	extern const std::unordered_map<EScheme, const Scheme*> schemes;
+	extern const std::unordered_map<EScheme, const Scheme&> schemes;
 
 	namespace Schemes
 	{

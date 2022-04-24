@@ -1,23 +1,31 @@
 #include <HMP/Refinement/Scheme.hpp>
 
+#include <utility>
+
 namespace HMP::Refinement
 {
+
+	Scheme::Effect::Effect(std::size_t _index, Real _weight)
+		: index{ _index }, weight{ _weight }
+	{}
+
+	Scheme::Scheme(Scheme::EffectList&& _effects)
+		: m_effects{ std::forward<Scheme::EffectList>(_effects) }
+	{}
 
 	std::vector<PolyVerts> Scheme::apply(const std::vector<Vec>& _source) const
 	{
 		std::vector<PolyVerts> polys{};
 		polys.reserve(polyCount());
-		for (std::size_t i{ 0 }; i < polyCount(); i++)
+		for (std::size_t p{ 0 }; p < polyCount(); p++)
 		{
 			PolyVerts verts;
 			verts.fill(Vec{ 0,0,0 });
-			for (std::size_t j{ 0 }; j < 8; j++)
+			for (std::size_t v{ 0 }; v < 8; v++)
 			{
-				const auto& vertWeights = weights[i][j];
-				const auto& vertOffsets = offsets[i][j];
-				for (std::size_t k{ 0 }; k < vertWeights.size(); k++)
+				for (const Effect& effect : m_effects[p][v])
 				{
-					verts[j] += vertWeights[k] * _source[vertOffsets[k]];
+					verts[v] += effect.weight * _source[effect.index];
 				}
 			}
 			polys.push_back(verts);
@@ -27,7 +35,7 @@ namespace HMP::Refinement
 
 	std::size_t Scheme::polyCount() const
 	{
-		return offsets.size();
+		return m_effects.size();
 	}
 
 }

@@ -55,7 +55,7 @@ namespace HMP::Actions
 						targetRefine.scheme() = Refinement::EScheme::Subdivide3x3;
 						targetRefine.needsTopologyFix() = true;
 						targetElement.attachChild(targetRefine);
-						const Refinement::Scheme& scheme{ *Refinement::schemes.at(Refinement::EScheme::Subdivide3x3) };
+						const Refinement::Scheme& scheme{ Refinement::schemes.at(Refinement::EScheme::Subdivide3x3) };
 						const std::vector<PolyVerts> polys{ scheme.apply(Utils::Collections::toVector(targetElement.vertices())) };
 						const std::vector<Dag::Element*> children{ targetRefine.attachChildren(scheme.polyCount()) };
 						for (const auto& [child, polyVerts] : Utils::Collections::zip(children, polys))
@@ -103,7 +103,7 @@ namespace HMP::Actions
 					targetRefine.needsTopologyFix() = false;
 					targetElement.attachChild(targetRefine);
 					const Id faceOffset{ mesh.poly_face_offset(targetElement.pid(), fid) };
-					const Refinement::Scheme& scheme{ *Refinement::schemes.at(Refinement::EScheme::InterfaceFace) };
+					const Refinement::Scheme& scheme{ Refinement::schemes.at(Refinement::EScheme::InterfaceFace) };
 					const std::vector<PolyVerts> polys{ scheme.apply(Utils::Collections::toVector(grid.polyVertsFromFace(targetElement.pid(), faceOffset))) };
 					const std::vector<Dag::Element*> children{ targetRefine.attachChildren(scheme.polyCount()) };
 					for (const auto& [child, polyVerts] : Utils::Collections::zip(children, polys))
@@ -147,7 +147,7 @@ namespace HMP::Actions
 						targetRefine.scheme() = Refinement::EScheme::InterfaceEdge;
 						targetRefine.needsTopologyFix() = false;
 						targetElement.attachChild(targetRefine);
-						const Refinement::Scheme& scheme{ *Refinement::schemes.at(Refinement::EScheme::InterfaceEdge) };
+						const Refinement::Scheme& scheme{ Refinement::schemes.at(Refinement::EScheme::InterfaceEdge) };
 						const std::vector<PolyVerts> polys{ scheme.apply(Utils::Collections::toVector(grid.polyVertsFromEdge(targetElement.pid(), targetEid))) };
 						const std::vector<Dag::Element*> children{ targetRefine.attachChildren(scheme.polyCount()) };
 						for (const auto& [child, polyVerts] : Utils::Collections::zip(children, polys))
