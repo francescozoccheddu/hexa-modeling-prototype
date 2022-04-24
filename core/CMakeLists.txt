@@ -2,7 +2,6 @@
 
 add_library (core STATIC
     "src/grid.cpp"
-    "src/operationstree.cpp"
     "src/Actions/MakeConforming.cpp"
     "src/Actions/Refine.cpp"
     "src/Actions/MoveVert.cpp"

@@ -13,7 +13,8 @@ namespace HMP::Actions
 	void Delete::apply()
 	{
 		Grid& grid{ this->grid() };
-		Dag::Element& element{ grid.element(grid.mesh.pick_poly(m_polyCentroid)) };
+		Grid::Mesh& mesh{ grid.mesh()};
+		Dag::Element& element{ grid.element(mesh.pick_poly(m_polyCentroid)) };
 		if (element.isRoot())
 		{
 			throw std::logic_error{ "element is root" };
@@ -26,13 +27,13 @@ namespace HMP::Actions
 		m_operation = &operation;
 		element.attachChild(operation);
 		grid.removePoly(element.pid());
-		grid.update_mesh();
+		grid.mesh().updateGL();
 	}
 
 	void Delete::unapply()
 	{
 		grid().addPoly(m_operation->parents().single());
-		grid().update_mesh();
+		grid().mesh().updateGL();
 		delete m_operation;
 	}
 

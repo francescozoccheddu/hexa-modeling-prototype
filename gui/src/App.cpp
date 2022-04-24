@@ -5,6 +5,8 @@
 #include <cinolib/gl/glcanvas.h>
 #include <cstdlib>
 #include <iostream>
+#include <fstream>
+#include <HMP/Dag/Utils.hpp>
 #include <imgui.h>
 #include <GLFW/glfw3.h>
 #include <cinolib/gl/file_dialog_open.h>
@@ -19,38 +21,39 @@ namespace HMP::Gui
 
 	void App::updateHighlight()
 	{
+		Grid::Mesh& mesh{ m_grid.mesh() };
 		Id pid{};
 		cinolib::vec3d world;
 		m_canvas.pop_all_markers();
 		const bool pending{ m_canvas.unproject(m_mouse.position, world) };
 		if (pending)
 		{
-			pid = m_grid.mesh.pick_poly(world);
-			const Id fid{ m_grid.mesh.pick_face(world) };
-			const Id vid{ m_grid.mesh.pick_vert(world) };
-			m_canvas.push_marker(m_grid.mesh.face_centroid(fid), "", c_highlightFaceColor, c_highlightFaceRadius);
-			m_canvas.push_marker(m_grid.mesh.vert(vid), "", c_highlightVertexColor, c_highlightVertexRadius);
+			pid = mesh.pick_poly(world);
+			const Id fid{ mesh.pick_face(world) };
+			const Id vid{ mesh.pick_vert(world) };
+			m_canvas.push_marker(mesh.face_centroid(fid), "", c_highlightFaceColor, c_highlightFaceRadius);
+			m_canvas.push_marker(mesh.vert(vid), "", c_highlightVertexColor, c_highlightVertexRadius);
 		}
 		if (pending != m_highlight.pending || (pending && pid != m_highlight.pid))
 		{
-			if (m_highlight.pending && m_highlight.pid < m_grid.mesh.num_polys())
+			if (m_highlight.pending && m_highlight.pid < mesh.num_polys())
 			{
-				m_grid.mesh.poly_data(m_highlight.pid).color = cinolib::Color::WHITE();
+				mesh.poly_data(m_highlight.pid).color = cinolib::Color::WHITE();
 			}
 			if (pending)
 			{
-				m_grid.mesh.poly_data(pid).color = c_highlightPolyColor;
+				mesh.poly_data(pid).color = c_highlightPolyColor;
 			}
-			m_grid.mesh.updateGL();
+			mesh.updateGL();
 		}
 		m_highlight.pid = pid;
 		m_highlight.pending = pending;
-		m_dagViewer.highlight = pending ? m_grid.mesh.poly_data(pid).element : nullptr;
+		m_dagViewer.highlight = pending ? mesh.poly_data(pid).element : nullptr;
 	}
 
 	void App::updateDagViewer()
 	{
-		m_dagViewer.layout = Dag::createLayout(*m_grid.op_tree.root);
+		m_dagViewer.layout = Dag::createLayout(m_grid.root());
 		m_dagViewer.resetView();
 	}
 
@@ -241,13 +244,13 @@ namespace HMP::Gui
 			if (m_move.pending)
 			{
 				// FIXME move in plane instead of using world_mouse_pos
-				m_grid.move_vert(m_move.vid, world_mouse_pos);
+				m_grid.add_move(m_move.vid, world_mouse_pos);
 				m_move.pending = false;
 				m_canvas.refit_scene();
 			}
 			else
 			{
-				m_move.vid = m_grid.mesh.pick_vert(world_mouse_pos);
+				m_move.vid = m_grid.mesh().pick_vert(world_mouse_pos);
 				m_move.pending = true;
 			}
 		}
@@ -262,13 +265,13 @@ namespace HMP::Gui
 		cinolib::vec3d world_mouse_pos;
 		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 		{
-			const Id pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
+			const Id pid{ m_grid.mesh().pick_poly(world_mouse_pos) };
 			Id closest_fid{};
 			{
 				double closest_dist{ std::numeric_limits<double>::infinity() };
-				for (const Id fid : m_grid.mesh.poly_faces_id(pid))
+				for (const Id fid : m_grid.mesh().poly_faces_id(pid))
 				{
-					const double dist{ world_mouse_pos.dist_sqrd(m_grid.mesh.face_centroid(fid)) };
+					const double dist{ world_mouse_pos.dist_sqrd(m_grid.mesh().face_centroid(fid)) };
 					if (dist < closest_dist)
 					{
 						closest_dist = dist;
@@ -276,7 +279,7 @@ namespace HMP::Gui
 					}
 				}
 			};
-			const Id offset{ m_grid.mesh.poly_face_offset(pid, closest_fid) };
+			const Id offset{ m_grid.mesh().poly_face_offset(pid, closest_fid) };
 			m_grid.add_extrude(pid, offset);
 			updateDagViewer();
 			m_canvas.refit_scene();
@@ -288,7 +291,7 @@ namespace HMP::Gui
 		cinolib::vec3d world_mouse_pos;
 		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 		{
-			const Id pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
+			const Id pid{ m_grid.mesh().pick_poly(world_mouse_pos) };
 			m_copy.pid = pid;
 			m_copy.pending = true;
 		}
@@ -305,7 +308,7 @@ namespace HMP::Gui
 			cinolib::vec3d world_mouse_pos;
 			if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 			{
-				const Id pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
+				const Id pid{ m_grid.mesh().pick_poly(world_mouse_pos) };
 				if (m_grid.merge(m_copy.pid, pid))
 				{
 					m_copy.pending = false;
@@ -325,7 +328,7 @@ namespace HMP::Gui
 		cinolib::vec3d world_mouse_pos;
 		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 		{
-			const Id pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
+			const Id pid{ m_grid.mesh().pick_poly(world_mouse_pos) };
 			m_grid.add_refine(pid);
 			updateDagViewer();
 			updateHighlight();
@@ -337,7 +340,7 @@ namespace HMP::Gui
 		cinolib::vec3d world_mouse_pos;
 		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 		{
-			const Id pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
+			const Id pid{ m_grid.mesh().pick_poly(world_mouse_pos) };
 			m_grid.add_remove(pid);
 			updateDagViewer();
 			m_canvas.refit_scene();
@@ -349,15 +352,15 @@ namespace HMP::Gui
 		cinolib::vec3d world_mouse_pos;
 		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 		{
-			for (Id fid_plus_one{ m_grid.mesh.num_faces() }; fid_plus_one > 0; fid_plus_one--)
+			for (Id fid_plus_one{ m_grid.mesh().num_faces() }; fid_plus_one > 0; fid_plus_one--)
 			{
 				const Id fid{ fid_plus_one - 1 };
-				if (!m_grid.mesh.adj_f2p(fid).size())
+				if (!m_grid.mesh().adj_f2p(fid).size())
 				{
-					m_grid.mesh.face_remove_unreferenced(fid);
+					m_grid.mesh().face_remove_unreferenced(fid);
 				}
 			}
-			const Id fid{ m_grid.mesh.pick_face(world_mouse_pos) };
+			const Id fid{ m_grid.mesh().pick_face(world_mouse_pos) };
 			m_grid.add_face_refine(fid);
 			updateDagViewer();
 			updateHighlight();
@@ -385,7 +388,11 @@ namespace HMP::Gui
 		const std::string filename{ cinolib::file_dialog_save() };
 		if (!filename.empty())
 		{
-			m_grid.op_tree.serialize(filename);
+			using HMP::Dag::Utils::operator<<;
+			std::ofstream file;
+			file.open(filename);
+			file << m_grid.root();
+			file.close();
 		}
 	}
 
@@ -394,10 +401,13 @@ namespace HMP::Gui
 		const std::string filename{ cinolib::file_dialog_open() };
 		if (!filename.empty())
 		{
-			m_grid.clear();
-			m_move.pending = m_copy.pending = false;
-			m_grid.op_tree.deserialize(filename);
-			m_grid.apply_tree(m_grid.op_tree.root->children().vector(), 0);
+			using HMP::Dag::Utils::operator>>;
+			std::ifstream file;
+			file.open(filename);
+			HMP::Dag::Node* root;
+			file >> root;
+			file.close();
+			m_grid.replaceDag(root->element());
 			updateDagViewer();
 			m_canvas.refit_scene();
 		}
@@ -457,10 +467,9 @@ namespace HMP::Gui
 
 	int App::launch()
 	{
-		cinolib::VolumeMeshControls<HMP::MeshGrid> menu{ &m_grid.mesh, &m_canvas, "Grid mesh" };
-		m_canvas.push(&m_grid.mesh);
+		cinolib::VolumeMeshControls<Grid::Mesh> menu{ &m_grid.mesh(), &m_canvas, "Grid mesh" };
+		m_canvas.push(&m_grid.mesh());
 		m_canvas.push(&menu);
-		m_grid.mesh.show_mesh_flat();
 
 		m_canvas.depth_cull_markers = false;
 		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMove(_args...); };

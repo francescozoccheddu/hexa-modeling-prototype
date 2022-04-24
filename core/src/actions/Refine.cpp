@@ -15,9 +15,10 @@ namespace HMP::Actions
 	void Refine::apply()
 	{
 		Grid& grid{ this->grid() };
-		Dag::Element& element{ grid.element(grid.mesh.pick_poly(m_polyCentroid)) };
+		Grid::Mesh& mesh{ grid.mesh() };
+		Dag::Element& element{ grid.element(mesh.pick_poly(m_polyCentroid)) };
 		const Id fid{ grid.closestPolyFid(element.pid(), m_faceCentroid) };
-		const Id faceOffset{ grid.mesh.poly_face_offset(element.pid(), fid) };
+		const Id faceOffset{ mesh.poly_face_offset(element.pid(), fid) };
 		if (element.children().any([](const Dag::Operation& _child) {return _child.primitive() != Dag::Operation::EPrimitive::Extrude; }))
 		{
 			throw std::logic_error{ "element has non-extrude child" };
@@ -35,7 +36,7 @@ namespace HMP::Actions
 			grid.addPoly(polyVerts, *child);
 		}
 		grid.removePoly(element.pid());
-		grid.update_mesh();
+		mesh.updateGL();
 	}
 
 	void Refine::unapply()

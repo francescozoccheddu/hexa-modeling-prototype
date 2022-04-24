@@ -15,11 +15,12 @@ namespace HMP::Actions
 	void MakeConforming::apply()
 	{
 		Grid& grid{ this->grid() };
+		Grid::Mesh& mesh{ grid.mesh() };
 
 		std::vector<Dag::Refine*> refines{};
 		std::unordered_set<Id> removedPids{};
 
-		for (Dag::Node* node : Dag::Utils::descendants(*grid.op_tree.root))
+		for (Dag::Node* node : Dag::Utils::descendants(grid.root()))
 		{
 			if (node->isOperation() && node->operation().primitive() == Dag::Operation::EPrimitive::Refine)
 			{
@@ -44,9 +45,9 @@ namespace HMP::Actions
 				Dag::Element& sourceElement = sourceRefine.parents().single();
 				grid.addPoly(sourceElement);
 
-				for (Id targetPid : grid.mesh.adj_p2p(sourceElement.pid()))
+				for (Id targetPid : mesh.adj_p2p(sourceElement.pid()))
 				{
-					Dag::Element& targetElement = *grid.mesh.poly_data(targetPid).element;
+					Dag::Element& targetElement = *mesh.poly_data(targetPid).element;
 					if (!targetCandidates.insert(&targetElement).second)
 					{
 						Dag::Refine& targetRefine{ *new Dag::Refine{} };
@@ -84,24 +85,24 @@ namespace HMP::Actions
 				Dag::Element& sourceElement = sourceRefine.parents().single();
 				grid.addPoly(sourceElement);
 
-				for (Id targetPid : grid.mesh.adj_p2p(sourceElement.pid()))
+				for (Id targetPid : mesh.adj_p2p(sourceElement.pid()))
 				{
 					if (removedPids.contains(targetPid))
 					{
 						continue;
 					}
-					const Id fid = grid.mesh.poly_shared_face(sourceElement.pid(), targetPid);
+					const Id fid = mesh.poly_shared_face(sourceElement.pid(), targetPid);
 					if (targetPid == sourceElement.pid() || fid == -1)
 					{
 						continue;
 					}
-					Dag::Element& targetElement = *grid.mesh.poly_data(targetPid).element;
+					Dag::Element& targetElement = *mesh.poly_data(targetPid).element;
 					Dag::Refine& targetRefine{ *new Dag::Refine{} };
 					m_operations.push_back(&targetRefine);
 					targetRefine.scheme() = Refinement::EScheme::InterfaceFace;
 					targetRefine.needsTopologyFix() = false;
 					targetElement.attachChild(targetRefine);
-					const Id faceOffset{ grid.mesh.poly_face_offset(targetElement.pid(), fid) };
+					const Id faceOffset{ mesh.poly_face_offset(targetElement.pid(), fid) };
 					const Refinement::Scheme& scheme{ *Refinement::schemes.at(Refinement::EScheme::InterfaceFace) };
 					const std::vector<PolyVerts> polys{ scheme.apply(Utils::Collections::toVector(grid.polyVertsFromFace(targetElement.pid(), faceOffset))) };
 					const std::vector<Dag::Element*> children{ targetRefine.attachChildren(scheme.polyCount()) };
@@ -128,19 +129,19 @@ namespace HMP::Actions
 				Dag::Element& sourceElement = sourceRefine.parents().single();
 				grid.addPoly(sourceElement);
 
-				for (Id targetEid : grid.mesh.adj_p2e(sourceElement.pid()))
+				for (Id targetEid : mesh.adj_p2e(sourceElement.pid()))
 				{
-					for (Id targetPid : grid.mesh.adj_e2p(targetEid))
+					for (Id targetPid : mesh.adj_e2p(targetEid))
 					{
 						if (removedPids.contains(targetPid))
 						{
 							continue;
 						}
-						if (targetPid == sourceElement.pid() || grid.mesh.poly_shared_face(targetPid, sourceElement.pid()) != -1)
+						if (targetPid == sourceElement.pid() || mesh.poly_shared_face(targetPid, sourceElement.pid()) != -1)
 						{
 							continue;
 						}
-						Dag::Element& targetElement = *grid.mesh.poly_data(targetPid).element;
+						Dag::Element& targetElement = *mesh.poly_data(targetPid).element;
 						Dag::Refine& targetRefine{ *new Dag::Refine{} };
 						m_operations.push_back(&targetRefine);
 						targetRefine.scheme() = Refinement::EScheme::InterfaceEdge;

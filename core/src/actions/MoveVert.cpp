@@ -13,14 +13,14 @@ namespace HMP::Actions
     {
         Grid& grid{ this->grid() };
         grid.vert(grid.getVert(m_oldPosition), m_newPosition);
-        grid.update_mesh();
+        grid.mesh().updateGL();
     }
 
     void MoveVert::unapply()
     {
         Grid& grid{ this->grid() };
         grid.vert(grid.getVert(m_newPosition), m_oldPosition);
-        grid.update_mesh();
+        grid.mesh().updateGL();
     }
 
 }
