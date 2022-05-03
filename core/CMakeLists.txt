@@ -36,4 +36,5 @@ target_include_directories (core
 
 target_link_libraries (core 
     PUBLIC cinolib
+    PUBLIC cpputils
 )
