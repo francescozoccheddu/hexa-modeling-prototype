@@ -1,24 +1,150 @@
 #include <HMP/Dag/Node.hpp>
+
 #include <HMP/Dag/Element.hpp>
 #include <HMP/Dag/Operation.hpp>
 #include <stdexcept>
-#include <deque>
 
 namespace HMP::Dag
 {
 
-	Node::Node(EType _type)
-		: m_type{ _type }
+	Node::Node(EType _type) :
+		m_type{ _type },
+		m_parentsImpl{}, m_childrenImpl{},
+		m_parents{
+			m_parentsImpl,
+			[this](auto && ..._args) { return onParentAttach(_args...); },
+			[this](auto && ..._args) { return onParentDetach(_args...); },
+			[this](auto && ..._args) { return onParentsDetachAll(_args...); }
+	},
+		m_children{
+			m_childrenImpl,
+			[this](auto && ..._args) { return onChildAttach(_args...); },
+			[this](auto && ..._args) { return onChildDetach(_args...); },
+			[this](auto && ..._args) { return onChildrenDetachAll(_args...); }
+	}
 	{}
+
+	void assertSync(bool _condition)
+	{
+		if (!_condition)
+		{
+			throw std::logic_error{ "desync" };
+		}
+	}
+
+	void Node::deleteDangling(std::queue<Node*>& _dangling, bool _descending)
+	{
+		while (!_dangling.empty())
+		{
+			Node& node{ *_dangling.front() };
+			_dangling.pop();
+			assertSync(node.back(_descending).empty());
+			for (Node& next : node.forward(_descending))
+			{
+				assertSync(next.back(_descending).data().remove(node));
+				if (next.back(_descending).empty())
+				{
+					_dangling.push(&next);
+				}
+			}
+			assertSync(node.forward(_descending).data().clear());
+			delete& node;
+		}
+	}
+
+	bool Node::onAttach(Node& _node, bool _descending)
+	{
+		if (forward(_descending).data().add(_node))
+		{
+			assertSync(_node.back(_descending).data().add(*this));
+			return true;
+		}
+		return false;
+	}
+
+	bool Node::onDetach(Node& _node, bool _deleteDangling, bool _descending)
+	{
+		if (forward(_descending).data().remove(_node))
+		{
+			assertSync(_node.back(_descending).data().remove(*this));
+			if (_deleteDangling && _node.back(_descending).empty())
+			{
+				std::queue<Node*> dangling{};
+				dangling.push(&_node);
+				deleteDangling(dangling, _descending);
+			}
+			return true;
+		}
+		return false;
+	}
+
+	bool Node::onDetachAll(bool _deleteDangling, bool _descending)
+	{
+		std::queue<Node*> dangling{};
+		bool done{ false };
+		for (Node& next : forward(_descending))
+		{
+			assertSync(next.back(_descending).data().remove(*this));
+			if (_deleteDangling && next.back(_descending).empty())
+			{
+				dangling.push(&next);
+			}
+		}
+		assertSync(done == forward(_descending).data().clear());
+		deleteDangling(dangling, _descending);
+		return done;
+	}
+
+	bool Node::onParentAttach(Node& _parent)
+	{
+		onParentAttaching(_parent);
+		return onAttach(_parent, false);
+	}
+
+	bool Node::onParentDetach(Node& _parent, bool _deleteDangling)
+	{
+		return onDetach(_parent, _deleteDangling, false);
+	}
+
+	bool Node::onParentsDetachAll(bool _deleteDangling)
+	{
+		return onDetachAll(_deleteDangling, false);
+	}
+
+	bool Node::onChildAttach(Node& _child)
+	{
+		onChildAttaching(_child);
+		return onAttach(_child, true);
+	}
+
+	bool Node::onChildDetach(Node& _child, bool _deleteDangling)
+	{
+		return onDetach(_child, _deleteDangling, true);
+	}
+
+	bool Node::onChildrenDetachAll(bool _deleteDangling)
+	{
+		return onDetachAll(_deleteDangling, true);
+	}
+
+	void Node::onParentAttaching(Node& _child) const {}
+
+	void Node::onChildAttaching(Node& _child) const {}
+
+	Internal::NodeSetHandle& Node::parentsHandle()
+	{
+		return m_parents.handle();
+	}
+
+	Internal::NodeSetHandle& Node::childrenHandle()
+	{
+		return m_children.handle();
+	}
 
 	Node::~Node()
 	{
-		detachAll(true);
-	}
-
-	Node::EType Node::type() const
-	{
-		return m_type;
+		m_parents.detachAll(false);
+		m_children.detachAll(false);
 	}
 
 	bool Node::isElement() const
@@ -31,54 +157,6 @@ namespace HMP::Dag
 		return m_type == EType::Operation;
 	}
 
-	Element& Node::element()
-	{
-		if (!isElement())
-		{
-			throw std::logic_error{ "not an element" };
-		}
-		return static_cast<Element&>(*this);
-	}
-
-	const Element& Node::element() const
-	{
-		return const_cast<Node*>(this)->element();
-	}
-
-	Operation& Node::operation()
-	{
-		if (!isOperation())
-		{
-			throw std::logic_error{ "not an operation" };
-		}
-		return static_cast<Operation&>(*this);
-	}
-
-	const Operation& Node::operation() const
-	{
-		return const_cast<Node*>(this)->operation();
-	}
-
-	Node::SetView& Node::parents()
-	{
-		return m_parents;
-	}
-
-	const Node::SetView& Node::parents() const
-	{
-		return m_parents;
-	}
-
-	Node::SetView& Node::children()
-	{
-		return m_children;
-	}
-
-	const Node::SetView& Node::children() const
-	{
-		return m_children;
-	}
-
 	bool Node::isRoot() const
 	{
 		return m_parents.empty();
@@ -89,79 +167,64 @@ namespace HMP::Dag
 		return m_children.empty();
 	}
 
-	bool Node::operator==(const Node& _other) const
+	Element& Node::element()
 	{
-		return this == &_other;
+		return reinterpret_cast<Element&>(*this);
 	}
 
-	void Node::attachParent(Node& _parent)
+	const Element& Node::element() const
 	{
-		_parent.attachChild(*this);
+		return reinterpret_cast<const Element&>(*this);
 	}
 
-	void Node::detachParent(Node& _parent)
+	Operation& Node::operation()
 	{
-		_parent.detachChild(*this);
+		return reinterpret_cast<Operation&>(*this);
 	}
 
-	void Node::detachParents()
+	const Operation& Node::operation() const
 	{
-		for (Node& parent : m_parents)
-		{
-			parent.m_children.remove(*this);
-		}
-		m_parents.clear();
+		return reinterpret_cast<const Operation&>(*this);
 	}
 
-	void Node::attachChild(Node& _child)
+	Node::Set& Node::forward(bool _descending)
 	{
-		_child.m_parents.add(*this);
-		m_children.add(_child);
+		return _descending ? m_children : m_parents;
 	}
 
-	void Node::detachChild(Node& _child, bool _deleteOrphaned)
+	const Node::Set& Node::forward(bool _descending) const
 	{
-		_child.m_parents.remove(*this);
-		m_children.remove(_child);
+		return const_cast<Node*>(this)->forward(_descending);
 	}
 
-	void deleteOrphaned(std::deque<Node*> _orphaned)
+	Node::Set& Node::back(bool _descending)
 	{
-		while (!_orphaned.empty())
-		{
-			Node& orphan{ *_orphaned.front() };
-			_orphaned.pop_front();
-			orphan.detachParents();
-			for (Node& child : orphan.children())
-			{
-				if (child.parents().remove(orphan) && child.isRoot())
-				{
-					_orphaned.push_back(&child);
-				}
-			}
-			orphan.children().clear();
-			delete& orphan;
-		}
+		return forward(!_descending);
 	}
 
-	void Node::detachChildren(bool _deleteOrphaned)
+	const Node::Set& Node::back(bool _descending) const
 	{
-		std::deque<Node*> orphaned{};
-		for (Node& child : m_children)
-		{
-			if (child.m_parents.remove(*this) && child.isRoot() && _deleteOrphaned)
-			{
-				orphaned.push_back(&child);
-			}
-		}
-		m_children.clear();
-		deleteOrphaned(orphaned);
+		return const_cast<Node*>(this)->back(_descending);
 	}
 
-	void Node::detachAll(bool _deleteOrphaned)
+	Node::Set& Node::parents()
 	{
-		detachParents();
-		detachChildren(_deleteOrphaned);
+		return m_parents;
+	}
+
+	const Node::Set& Node::parents() const
+	{
+		return m_parents;
+	}
+
+	Node::Set& Node::children()
+	{
+		return m_children;
+	}
+
+	const Node::Set& Node::children() const
+	{
+		return m_children;
 	}
 
 }

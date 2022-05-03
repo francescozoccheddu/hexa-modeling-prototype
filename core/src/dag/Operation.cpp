@@ -5,32 +5,12 @@ namespace HMP::Dag
 {
 
 	Operation::Operation(EPrimitive _primitive)
-		: Node{ EType::Operation }, m_primitive{ _primitive }
+		: Node{ EType::Operation }, m_primitive{ _primitive }, m_parents{ parentsHandle() }, m_children{ childrenHandle() }
 	{}
 
 	Operation::EPrimitive Operation::primitive() const
 	{
 		return m_primitive;
-	}
-
-	Operation::DependencySetView& Operation::dependencies()
-	{
-		return m_dependencies;
-	}
-
-	const Operation::DependencySetView& Operation::dependencies() const
-	{
-		return m_dependencies;
-	}
-
-	Operation::DependencySetView& Operation::dependents()
-	{
-		return m_dependents;
-	}
-
-	const Operation::DependencySetView& Operation::dependents() const
-	{
-		return m_dependents;
 	}
 
 	bool& Operation::userDefined()
@@ -43,37 +23,43 @@ namespace HMP::Dag
 		return m_userDefined;
 	}
 
-	Operation::DagSetView& Operation::parents()
+	Operation::Set& Operation::forward(bool _descending)
+	{
+		return _descending ? m_children : m_parents;
+	}
+
+	const Operation::Set& Operation::forward(bool _descending) const
+	{
+		return const_cast<Operation*>(this)->forward(_descending);
+	}
+
+	Operation::Set& Operation::back(bool _descending)
+	{
+		return forward(!_descending);
+	}
+
+	const Operation::Set& Operation::back(bool _descending) const
+	{
+		return const_cast<Operation*>(this)->back(_descending);
+	}
+
+	Operation::Set& Operation::parents()
 	{
 		return m_parents;
 	}
 
-	const Operation::DagSetView& Operation::parents() const
+	const Operation::Set& Operation::parents() const
 	{
 		return m_parents;
 	}
 
-	Operation::DagSetView& Operation::children()
+	Operation::Set& Operation::children()
 	{
 		return m_children;
 	}
 
-	const Operation::DagSetView& Operation::children() const
+	const Operation::Set& Operation::children() const
 	{
 		return m_children;
 	}
 
-	std::vector<Element*> Operation::attachChildren(std::size_t _count)
-	{
-		std::vector<Element*> children{};
-		children.reserve(_count);
-		while (_count-- > 0)
-		{
-			Element& child{ *new Element{} };
-			attachChild(child);
-			children.push_back(&child);
-		}
-		return children;
-	}
-
-}

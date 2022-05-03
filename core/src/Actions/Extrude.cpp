@@ -34,8 +34,8 @@ namespace HMP::Actions
 		m_operation = &operation;
 		operation.faceOffset() = faceOffset;
 		Dag::Element& child{ *new Dag::Element{} };
-		operation.attachChild(child);
-		element.attachChild(operation);
+		operation.children().attach(child);
+		element.children().attach(operation);
 		{
 			Real avgFaceEdgeLength{};
 			{

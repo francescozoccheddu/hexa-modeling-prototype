@@ -368,6 +368,7 @@ namespace HMP
 	{
 		if (m_root)
 		{
+			m_root->children().detachAll(true);
 			delete m_root;
 		}
 		m_mesh.clear();
@@ -379,7 +380,15 @@ namespace HMP
 			if (node->isElement())
 			{
 				Dag::Element& element{ node->element() };
-				if (element.children().all([](const Dag::Operation& _child) {return _child.primitive() == Dag::Operation::EPrimitive::Extrude; }))
+				bool active{ true };
+				for (const Dag::Operation& child : element.children())
+				{
+					if (child.primitive() != Dag::Operation::EPrimitive::Extrude)
+					{
+						active = false;
+					}
+				}
+				if (active)
 				{
 					addPoly(element);
 				}

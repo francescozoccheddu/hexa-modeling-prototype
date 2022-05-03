@@ -12,15 +12,14 @@ namespace HMP::Dag
 
 	public:
 
-		using DagSetView = HMP::Utils::SetView<Node, Operation>;
+		using Set = NodeSet<Operation>;
 
 	private:
 
 		Id m_pid{};
 		PolyVerts m_vertices;
 
-		DagSetView m_parents{ Node::parents().view<Operation>() };
-		DagSetView m_children{ Node::children().view<Operation>() };
+		Set m_parents, m_children;
 
 	public:
 
@@ -32,10 +31,15 @@ namespace HMP::Dag
 		PolyVerts& vertices();
 		const PolyVerts& vertices() const;
 
-		DagSetView& parents();
-		const DagSetView& parents() const;
-		DagSetView& children();
-		const DagSetView& children() const;
+		Set& forward(bool _descending);
+		const Set& forward(bool _descending) const;
+		Set& back(bool _descending);
+		const Set& back(bool _descending) const;
+
+		Set& parents();
+		const Set& parents() const;
+		Set& children();
+		const Set& children() const;
 
 	};
 

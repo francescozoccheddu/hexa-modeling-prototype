@@ -13,19 +13,22 @@ namespace HMP::Actions
 	void Delete::apply()
 	{
 		Grid& grid{ this->grid() };
-		Grid::Mesh& mesh{ grid.mesh()};
+		Grid::Mesh& mesh{ grid.mesh() };
 		Dag::Element& element{ grid.element(mesh.pick_poly(m_polyCentroid)) };
 		if (element.isRoot())
 		{
 			throw std::logic_error{ "element is root" };
 		}
-		if (element.children().any([](const Dag::Operation& _child) {return _child.primitive() != Dag::Operation::EPrimitive::Extrude; }))
+		for (Dag::Operation& child : element.children())
 		{
-			throw std::logic_error{ "element has non-extrude child" };
+			if (child.primitive() != Dag::Operation::EPrimitive::Extrude)
+			{
+				throw std::logic_error{ "element has non-extrude child" };
+			}
 		}
 		Dag::Delete& operation{ *new Dag::Delete{} };
 		m_operation = &operation;
-		element.attachChild(operation);
+		element.children().attach(operation);
 		grid.removePoly(element.pid());
 		grid.mesh().updateGL();
 	}
