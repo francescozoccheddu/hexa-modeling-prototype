@@ -1,14 +1,14 @@
 #include <HMP/Actions/Refine.hpp>
 
 #include <HMP/grid.hpp>
-#include <HMP/Refinement/schemes.hpp>
+#include <HMP/Meshing/refinementSchemes.hpp>
 #include <HMP/Utils/Collections.hpp>
 #include <stdexcept>
 
 namespace HMP::Actions
 {
 
-	Refine::Refine(const Vec& _polyCentroid, const Vec& _faceCentroid, Refinement::EScheme _scheme)
+	Refine::Refine(const Vec& _polyCentroid, const Vec& _faceCentroid, Meshing::ERefinementScheme _scheme)
 		: m_polyCentroid(_polyCentroid), m_faceCentroid(_faceCentroid), m_scheme{ _scheme }
 	{}
 
@@ -28,9 +28,9 @@ namespace HMP::Actions
 		operation.needsTopologyFix() = true;
 		m_operation = &operation;
 		element.attachChild(operation);
-		const Refinement::Scheme& scheme{ Refinement::schemes.at(m_scheme) };
-		const std::vector<PolyVerts> polys{ scheme.apply(Utils::Collections::toVector(grid.polyVertsFromFace(element.pid(), faceOffset))) };
-		const std::vector<Dag::Element*> children{ operation.attachChildren(scheme.polyCount()) };
+		const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(m_scheme) };
+		const std::vector<PolyVerts> polys{ refinement.apply(Utils::Collections::toVector(grid.polyVertsFromFace(element.pid(), faceOffset))) };
+		const std::vector<Dag::Element*> children{ operation.attachChildren(refinement.polyCount()) };
 		for (const auto& [child, polyVerts] : Utils::Collections::zip(children, polys))
 		{
 			grid.addPoly(polyVerts, *child);

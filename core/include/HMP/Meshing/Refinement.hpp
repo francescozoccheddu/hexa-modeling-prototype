@@ -1,14 +1,15 @@
 #pragma once
 
-#include <HMP/types.hpp>
+#include <HMP/Meshing/types.hpp>
+#include <cpputils/mixins/ReferenceClass.hpp>
 #include <cstddef>
 #include <vector>
 #include <array>
 
-namespace HMP::Refinement
+namespace HMP::Meshing
 {
 
-	class Scheme final
+	class Refinement final : public cpputils::mixins::ReferenceClass
 	{
 
 	public:
@@ -25,7 +26,7 @@ namespace HMP::Refinement
 
 		};
 
-		using EffectList = std::vector<Poly<std::vector<Effect>>>;
+		using EffectList = std::vector<PolyVertData<std::vector<Effect>>>;
 
 	private:
 
@@ -33,7 +34,7 @@ namespace HMP::Refinement
 
 	public:
 
-		explicit Scheme(EffectList&& _effects);
+		explicit Refinement(EffectList&& _effects);
 
 		std::vector<PolyVerts> apply(const std::vector<Vec>& _source) const;
 

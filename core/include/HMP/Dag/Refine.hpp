@@ -2,7 +2,7 @@
 
 #include <HMP/types.hpp>
 #include <HMP/Dag/Operation.hpp>
-#include <HMP/Refinement/schemes.hpp>
+#include <HMP/Meshing/refinementSchemes.hpp>
 
 namespace HMP::Dag
 {
@@ -12,7 +12,7 @@ namespace HMP::Dag
 
 	private:
 
-		Refinement::EScheme m_scheme{ Refinement::EScheme::Subdivide3x3 };
+		Meshing::ERefinementScheme m_scheme{ Meshing::ERefinementScheme::Subdivide3x3 };
 		bool m_needsTopologyFix{ true };
 		PolyIds m_vertices{};
 
@@ -20,8 +20,8 @@ namespace HMP::Dag
 
 		Refine();
 
-		Refinement::EScheme& scheme();
-		Refinement::EScheme scheme() const;
+		Meshing::ERefinementScheme& scheme();
+		Meshing::ERefinementScheme scheme() const;
 
 		PolyIds& vertices();
 		const PolyIds& vertices() const;

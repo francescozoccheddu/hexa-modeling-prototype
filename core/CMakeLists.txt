@@ -15,8 +15,8 @@ add_library (core STATIC
     "src/Dag/Operation.cpp"
     "src/Dag/Refine.cpp"
     "src/Dag/Utils.cpp"
-    "src/Refinement/Scheme.cpp"
-    "src/Refinement/schemes.cpp"
+    "src/Meshing/Refinement.cpp"
+    "src/Meshing/refinementSchemes.cpp"
     "src/Utils/Geometry.cpp"
 )
 

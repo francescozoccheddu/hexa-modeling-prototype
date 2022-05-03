@@ -1,12 +1,12 @@
-#include <HMP/Refinement/schemes.hpp>
+#include <HMP/Meshing/refinementSchemes.hpp>
 
-namespace HMP::Refinement
+namespace HMP::Meshing
 {
 
-	namespace Schemes
+	namespace RefinementSchemes
 	{
 
-		const Scheme inset{ {
+		const Refinement inset{ {
 			{{
 				{{5, -0}, {7, -0}, {4, 1}, {3, -0}, },
 				{{5, 1}, {7, -0}, {4, -0}, {3, -0}, },
@@ -69,7 +69,7 @@ namespace HMP::Refinement
 			}},
 		} };
 
-		const Scheme subdivide3x3{ {
+		const Refinement subdivide3x3{ {
 			{{
 				{{1, 0.333333}, {3, -0}, {0, -0}, {7, 0.666667}, },
 				{{2, 0.333333}, {7, 0.666667}, {3, 2.77556e-17}, {1, -0}, },
@@ -342,7 +342,7 @@ namespace HMP::Refinement
 			}},
 		} };
 
-		const Scheme interfaceEdge{ {
+		const Refinement interfaceEdge{ {
 			{{
 				{{1, 0.333333}, {3, -0}, {0, 0.666667}, {7, -0}, },
 				{{1, 0.333333}, {3, 0.666667}, {0, -0}, {7, -0}, },
@@ -395,7 +395,7 @@ namespace HMP::Refinement
 			}},
 		} };
 
-		const Scheme interfaceFace{ {
+		const Refinement interfaceFace{ {
 			{{
 				{{1, 0.333333}, {3, 0.333333}, {0, 0.333333}, {7, -0}, },
 				{{1, 0.333333}, {3, 0.666667}, {0, -0}, {7, -0}, },
@@ -530,11 +530,11 @@ namespace HMP::Refinement
 
 	}
 
-	const std::unordered_map<EScheme, const Scheme&> schemes{
-		{EScheme::Subdivide3x3, Schemes::subdivide3x3},
-		{EScheme::InterfaceEdge, Schemes::interfaceEdge},
-		{EScheme::InterfaceFace, Schemes::interfaceFace},
-		{EScheme::Inset, Schemes::inset}
+	const std::unordered_map<ERefinementScheme, const Refinement&> refinementSchemes{
+		{ERefinementScheme::Subdivide3x3, RefinementSchemes::subdivide3x3},
+		{ERefinementScheme::InterfaceEdge, RefinementSchemes::interfaceEdge},
+		{ERefinementScheme::InterfaceFace, RefinementSchemes::interfaceFace},
+		{ERefinementScheme::Inset, RefinementSchemes::inset}
 	};
 
 }

@@ -1,6 +1,6 @@
 #include <HMP/Actions/MakeConforming.hpp>
 
-#include <HMP/Refinement/schemes.hpp>
+#include <HMP/Meshing/refinementSchemes.hpp>s
 #include <HMP/grid.hpp>
 #include <HMP/Dag/Utils.hpp>
 #include <HMP/Utils/Collections.hpp>
@@ -52,12 +52,12 @@ namespace HMP::Actions
 					{
 						Dag::Refine& targetRefine{ *new Dag::Refine{} };
 						m_operations.push_back(&targetRefine);
-						targetRefine.scheme() = Refinement::EScheme::Subdivide3x3;
+						targetRefine.scheme() = Meshing::ERefinementScheme::Subdivide3x3;
 						targetRefine.needsTopologyFix() = true;
 						targetElement.attachChild(targetRefine);
-						const Refinement::Scheme& scheme{ Refinement::schemes.at(Refinement::EScheme::Subdivide3x3) };
-						const std::vector<PolyVerts> polys{ scheme.apply(Utils::Collections::toVector(targetElement.vertices())) };
-						const std::vector<Dag::Element*> children{ targetRefine.attachChildren(scheme.polyCount()) };
+						const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(Meshing::ERefinementScheme::Subdivide3x3) };
+						const std::vector<PolyVerts> polys{ refinement.apply(Utils::Collections::toVector(targetElement.vertices())) };
+						const std::vector<Dag::Element*> children{ targetRefine.attachChildren(refinement.polyCount()) };
 						for (const auto& [child, polyVerts] : Utils::Collections::zip(children, polys))
 						{
 							grid.addPoly(polyVerts, *child);
@@ -99,13 +99,13 @@ namespace HMP::Actions
 					Dag::Element& targetElement = *mesh.poly_data(targetPid).element;
 					Dag::Refine& targetRefine{ *new Dag::Refine{} };
 					m_operations.push_back(&targetRefine);
-					targetRefine.scheme() = Refinement::EScheme::InterfaceFace;
+					targetRefine.scheme() = Meshing::ERefinementScheme::InterfaceFace;
 					targetRefine.needsTopologyFix() = false;
 					targetElement.attachChild(targetRefine);
 					const Id faceOffset{ mesh.poly_face_offset(targetElement.pid(), fid) };
-					const Refinement::Scheme& scheme{ Refinement::schemes.at(Refinement::EScheme::InterfaceFace) };
-					const std::vector<PolyVerts> polys{ scheme.apply(Utils::Collections::toVector(grid.polyVertsFromFace(targetElement.pid(), faceOffset))) };
-					const std::vector<Dag::Element*> children{ targetRefine.attachChildren(scheme.polyCount()) };
+					const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(Meshing::ERefinementScheme::InterfaceFace) };
+					const std::vector<PolyVerts> polys{ refinement.apply(Utils::Collections::toVector(grid.polyVertsFromFace(targetElement.pid(), faceOffset))) };
+					const std::vector<Dag::Element*> children{ targetRefine.attachChildren(refinement.polyCount()) };
 					for (const auto& [child, polyVerts] : Utils::Collections::zip(children, polys))
 					{
 						grid.addPoly(polyVerts, *child);
@@ -144,12 +144,12 @@ namespace HMP::Actions
 						Dag::Element& targetElement = *mesh.poly_data(targetPid).element;
 						Dag::Refine& targetRefine{ *new Dag::Refine{} };
 						m_operations.push_back(&targetRefine);
-						targetRefine.scheme() = Refinement::EScheme::InterfaceEdge;
+						targetRefine.scheme() = Meshing::ERefinementScheme::InterfaceEdge;
 						targetRefine.needsTopologyFix() = false;
 						targetElement.attachChild(targetRefine);
-						const Refinement::Scheme& scheme{ Refinement::schemes.at(Refinement::EScheme::InterfaceEdge) };
-						const std::vector<PolyVerts> polys{ scheme.apply(Utils::Collections::toVector(grid.polyVertsFromEdge(targetElement.pid(), targetEid))) };
-						const std::vector<Dag::Element*> children{ targetRefine.attachChildren(scheme.polyCount()) };
+						const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(Meshing::ERefinementScheme::InterfaceEdge) };
+						const std::vector<PolyVerts> polys{ refinement.apply(Utils::Collections::toVector(grid.polyVertsFromEdge(targetElement.pid(), targetEid))) };
+						const std::vector<Dag::Element*> children{ targetRefine.attachChildren(refinement.polyCount()) };
 						for (const auto& [child, polyVerts] : Utils::Collections::zip(children, polys))
 						{
 							grid.addPoly(polyVerts, *child);

@@ -4,7 +4,7 @@
 #include <cinolib/octree.h>
 #include <cmath>
 #include <array>
-#include <HMP/Refinement/schemes.hpp>
+#include <HMP/Meshing/refinementSchemes.hpp>
 #include <HMP/Utils/Geometry.hpp>
 #include <HMP/Utils/Collections.hpp>
 #include <HMP/Dag/Utils.hpp>
@@ -38,12 +38,12 @@ namespace HMP
 
 	void Grid::add_refine(Id pid)
 	{
-		m_commander.apply(*new Actions::Refine(m_mesh.poly_centroid(pid), m_mesh.face_centroid(m_mesh.poly_faces_id(pid)[0]), Refinement::EScheme::Subdivide3x3));
+		m_commander.apply(*new Actions::Refine(m_mesh.poly_centroid(pid), m_mesh.face_centroid(m_mesh.poly_faces_id(pid)[0]), Meshing::ERefinementScheme::Subdivide3x3));
 	}
 
 	void Grid::add_face_refine(Id fid)
 	{
-		m_commander.apply(*new Actions::Refine(m_mesh.poly_centroid(m_mesh.adj_f2p(fid).front()), m_mesh.face_centroid(fid), Refinement::EScheme::Inset));
+		m_commander.apply(*new Actions::Refine(m_mesh.poly_centroid(m_mesh.adj_f2p(fid).front()), m_mesh.face_centroid(fid), Meshing::ERefinementScheme::Inset));
 	}
 
 	void Grid::add_extrude(Id pid, Id face_offset)

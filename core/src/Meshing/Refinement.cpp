@@ -1,19 +1,19 @@
-#include <HMP/Refinement/Scheme.hpp>
+#include <HMP/Meshing/Refinement.hpp>
 
 #include <utility>
 
-namespace HMP::Refinement
+namespace HMP::Meshing
 {
 
-	Scheme::Effect::Effect(std::size_t _index, Real _weight)
+	Refinement::Effect::Effect(std::size_t _index, Real _weight)
 		: index{ _index }, weight{ _weight }
 	{}
 
-	Scheme::Scheme(Scheme::EffectList&& _effects)
-		: m_effects{ std::forward<Scheme::EffectList>(_effects) }
+	Refinement::Refinement(Refinement::EffectList&& _effects)
+		: m_effects{ std::forward<Refinement::EffectList>(_effects) }
 	{}
 
-	std::vector<PolyVerts> Scheme::apply(const std::vector<Vec>& _source) const
+	std::vector<PolyVerts> Refinement::apply(const std::vector<Vec>& _source) const
 	{
 		std::vector<PolyVerts> polys{};
 		polys.reserve(polyCount());
@@ -33,7 +33,7 @@ namespace HMP::Refinement
 		return polys;
 	}
 
-	std::size_t Scheme::polyCount() const
+	std::size_t Refinement::polyCount() const
 	{
 		return m_effects.size();
 	}

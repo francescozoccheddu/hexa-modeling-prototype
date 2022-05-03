@@ -13,12 +13,12 @@ namespace HMP::Dag
 		}
 	}
 
-	Refinement::EScheme& Refine::scheme()
+	Meshing::ERefinementScheme& Refine::scheme()
 	{
 		return m_scheme;
 	}
 
-	Refinement::EScheme Refine::scheme() const
+	Meshing::ERefinementScheme Refine::scheme() const
 	{
 		return m_scheme;
 	}
