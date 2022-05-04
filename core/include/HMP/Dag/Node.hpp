@@ -1,8 +1,8 @@
 #pragma once
 
+#include <cpputils/mixins/ReferenceClass.hpp>
 #include <HMP/Dag/NodeSet.hpp>
 #include <type_traits>
-#include <cpputils/mixins/ReferenceClass.hpp>
 #include <queue>
 
 namespace HMP::Dag
@@ -82,3 +82,6 @@ namespace HMP::Dag
 	};
 
 }
+
+#include <HMP/Dag/Element.hpp>
+#include <HMP/Dag/Operation.hpp>

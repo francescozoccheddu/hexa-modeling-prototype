@@ -19,7 +19,7 @@ namespace HMP::Actions
 		{
 			throw std::logic_error{ "element is root" };
 		}
-		for (Dag::Operation& child : element.children())
+		for (const Dag::Operation& child : element.children())
 		{
 			if (child.primitive() != Dag::Operation::EPrimitive::Extrude)
 			{

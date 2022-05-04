@@ -1,4 +1,5 @@
 #include <HMP/Dag/Refine.hpp>
+
 #include <stdexcept>
 
 namespace HMP::Dag

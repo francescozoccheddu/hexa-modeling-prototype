@@ -12,6 +12,7 @@ add_library (core STATIC
     "src/Dag/Element.cpp"
     "src/Dag/Extrude.cpp"
     "src/Dag/Node.cpp"
+    "src/Dag/NodeSet.cpp"
     "src/Dag/Operation.cpp"
     "src/Dag/Refine.cpp"
     "src/Dag/Utils.cpp"

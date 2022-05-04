@@ -197,7 +197,7 @@ namespace HMP::Dag::Utils
 			{
 				std::size_t parentIndex;
 				_stream >> parentIndex;
-				node->attachParent(*nodes[parentIndex]);
+				node->parents().attach(*nodes[parentIndex]);
 			}
 		}
 		_node = nodes.empty() ? nullptr : nodes[0];

@@ -10,21 +10,22 @@ namespace HMP::Dag
 
 	class Node;
 
+	template<typename>
+	class NodeSet;
+
 	namespace Internal
 	{
 
-		template<typename TNode> concept IsValidNodeSet
-			= std::is_class_v<TNode>
-			&& std::is_base_of_v<Node, TNode>
-			&& (!std::is_const_v<TNode>);
+		template<typename>
+		class NodeSetBase;
 
 		class NodeSetData final : public cpputils::mixins::ReferenceClass
 		{
 
 		private:
 
-			template<typename TNode> requires IsValidNodeSet<TNode>
-			friend class NodeSet;
+			template<typename TNode>
+			friend class NodeSetBase;
 
 			std::unordered_set<Node*> m_set;
 
@@ -41,32 +42,36 @@ namespace HMP::Dag
 
 		private:
 
-			template<typename TNode> requires IsValidNodeSet<TNode>
+			template<typename>
 			friend class NodeSetBase;
 
-			template<typename TNode> requires IsValidNodeSet<TNode>
-			friend class NodeSet;
+			template<typename>
+			friend class Dag::NodeSet;
 
 			const std::function<bool(Node&)> m_onAttach;
 			const std::function<bool(Node&, bool)> m_onDetach;
 			const std::function<bool(bool)> m_onDetachAll;
 			NodeSetData& m_data;
 
+			NodeSetHandle(Internal::NodeSetData& _data, std::function<bool(Node&)> _onAttach, std::function<bool(Node&, bool)> _onDetach, std::function<bool(bool)> _onDetachAll);
+
 		};
 
-		template<typename TNode> requires IsValidNodeSet<TNode>
-		class NodeSetBase : public cpputils::mixins::ReferenceClass, public cpputils::collections::DereferenceIterable<std::unordered_set<Node*>, TNode>
+		template<typename TNode>
+		class NodeSetBase : public cpputils::mixins::ReferenceClass, public cpputils::collections::DereferenceIterable<std::unordered_set<Node*>, TNode&, const TNode&>
 		{
 
 		private:
 
-			template<typename TNode> requires IsValidNodeSet<TNode>
-			friend class NodeSet;
+			template<typename>
+			friend class Dag::NodeSet;
 
 			NodeSetHandle& m_handle;
 			const bool m_owner;
 
 			NodeSetBase(NodeSetHandle& _NodeSetHandle, bool _owner);
+
+			~NodeSetBase();
 
 		public:
 
@@ -84,7 +89,7 @@ namespace HMP::Dag
 
 	}
 
-	template<typename TNode> requires Internal::IsValidNodeSet<TNode>
+	template<typename TNode>
 	class NodeSet final : public Internal::NodeSetBase<TNode>
 	{
 

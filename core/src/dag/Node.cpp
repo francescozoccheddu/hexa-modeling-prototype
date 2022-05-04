@@ -1,7 +1,5 @@
 #include <HMP/Dag/Node.hpp>
 
-#include <HMP/Dag/Element.hpp>
-#include <HMP/Dag/Operation.hpp>
 #include <stdexcept>
 
 namespace HMP::Dag
@@ -47,7 +45,7 @@ namespace HMP::Dag
 					_dangling.push(&next);
 				}
 			}
-			assertSync(node.forward(_descending).data().clear());
+			node.forward(_descending).data().clear();
 			delete& node;
 		}
 	}
@@ -81,7 +79,7 @@ namespace HMP::Dag
 	bool Node::onDetachAll(bool _deleteDangling, bool _descending)
 	{
 		std::queue<Node*> dangling{};
-		bool done{ false };
+		const bool wasEmpty{ forward(_descending).empty() };
 		for (Node& next : forward(_descending))
 		{
 			assertSync(next.back(_descending).data().remove(*this));
@@ -90,9 +88,9 @@ namespace HMP::Dag
 				dangling.push(&next);
 			}
 		}
-		assertSync(done == forward(_descending).data().clear());
+		forward(_descending).data().clear();
 		deleteDangling(dangling, _descending);
-		return done;
+		return !wasEmpty;
 	}
 
 	bool Node::onParentAttach(Node& _parent)
@@ -145,6 +143,11 @@ namespace HMP::Dag
 	{
 		m_parents.detachAll(false);
 		m_children.detachAll(false);
+	}
+
+	Node::EType Node::type() const
+	{
+		return m_type;
 	}
 
 	bool Node::isElement() const

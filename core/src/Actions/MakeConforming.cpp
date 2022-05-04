@@ -54,13 +54,14 @@ namespace HMP::Actions
 						m_operations.push_back(&targetRefine);
 						targetRefine.scheme() = Meshing::ERefinementScheme::Subdivide3x3;
 						targetRefine.needsTopologyFix() = true;
-						targetElement.attachChild(targetRefine);
+						targetElement.children().attach(targetRefine);
 						const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(Meshing::ERefinementScheme::Subdivide3x3) };
 						const std::vector<PolyVerts> polys{ refinement.apply(Utils::Collections::toVector(targetElement.vertices())) };
-						const std::vector<Dag::Element*> children{ targetRefine.attachChildren(refinement.polyCount()) };
-						for (const auto& [child, polyVerts] : Utils::Collections::zip(children, polys))
+						for (std::size_t i{ 0 }; i < refinement.polyCount(); i++)
 						{
-							grid.addPoly(polyVerts, *child);
+							Dag::Element& child{ *new Dag::Element{} };
+							targetRefine.children().attach(child);
+							grid.addPoly(polys[i], child);
 						}
 						removedPids.insert(targetElement.pid());
 						refines.push_back(&targetRefine);
@@ -101,14 +102,15 @@ namespace HMP::Actions
 					m_operations.push_back(&targetRefine);
 					targetRefine.scheme() = Meshing::ERefinementScheme::InterfaceFace;
 					targetRefine.needsTopologyFix() = false;
-					targetElement.attachChild(targetRefine);
+					targetElement.children().attach(targetRefine);
 					const Id faceOffset{ mesh.poly_face_offset(targetElement.pid(), fid) };
 					const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(Meshing::ERefinementScheme::InterfaceFace) };
 					const std::vector<PolyVerts> polys{ refinement.apply(Utils::Collections::toVector(grid.polyVertsFromFace(targetElement.pid(), faceOffset))) };
-					const std::vector<Dag::Element*> children{ targetRefine.attachChildren(refinement.polyCount()) };
-					for (const auto& [child, polyVerts] : Utils::Collections::zip(children, polys))
+					for (std::size_t i{ 0 }; i < refinement.polyCount(); i++)
 					{
-						grid.addPoly(polyVerts, *child);
+						Dag::Element& child{ *new Dag::Element{} };
+						targetRefine.children().attach(child);
+						grid.addPoly(polys[i], child);
 					}
 					removedPids.insert(targetElement.pid());
 					m_fixedRefines.insert(&sourceRefine);
@@ -146,13 +148,14 @@ namespace HMP::Actions
 						m_operations.push_back(&targetRefine);
 						targetRefine.scheme() = Meshing::ERefinementScheme::InterfaceEdge;
 						targetRefine.needsTopologyFix() = false;
-						targetElement.attachChild(targetRefine);
+						targetElement.children().attach(targetRefine);
 						const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(Meshing::ERefinementScheme::InterfaceEdge) };
 						const std::vector<PolyVerts> polys{ refinement.apply(Utils::Collections::toVector(grid.polyVertsFromEdge(targetElement.pid(), targetEid))) };
-						const std::vector<Dag::Element*> children{ targetRefine.attachChildren(refinement.polyCount()) };
-						for (const auto& [child, polyVerts] : Utils::Collections::zip(children, polys))
+						for (std::size_t i{ 0 }; i < refinement.polyCount(); i++)
 						{
-							grid.addPoly(polyVerts, *child);
+							Dag::Element& child{ *new Dag::Element{} };
+							targetRefine.children().attach(child);
+							grid.addPoly(polys[i], child);
 						}
 						removedPids.insert(targetElement.pid());
 						m_fixedRefines.insert(&sourceRefine);
