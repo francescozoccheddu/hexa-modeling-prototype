@@ -3,6 +3,7 @@
 #include <HMP/grid.hpp>
 #include <HMP/Meshing/refinementSchemes.hpp>
 #include <HMP/Utils/Collections.hpp>
+#include <HMP/Meshing/Utils.hpp>
 #include <stdexcept>
 
 namespace HMP::Actions
@@ -18,7 +19,6 @@ namespace HMP::Actions
 		Grid::Mesh& mesh{ grid.mesh() };
 		Dag::Element& element{ grid.element(mesh.pick_poly(m_polyCentroid)) };
 		const Id fid{ grid.closestPolyFid(element.pid(), m_faceCentroid) };
-		const Id faceOffset{ mesh.poly_face_offset(element.pid(), fid) };
 		for (const Dag::Operation& child : element.children())
 		{
 			if (child.primitive() != Dag::Operation::EPrimitive::Extrude)
@@ -32,7 +32,7 @@ namespace HMP::Actions
 		m_operation = &operation;
 		element.children().attach(operation);
 		const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(m_scheme) };
-		const std::vector<PolyVerts> polys{ refinement.apply(Utils::Collections::toVector(grid.polyVertsFromFace(element.pid(), faceOffset))) };
+		const std::vector<PolyVerts> polys{ refinement.apply(Utils::Collections::toVector(Meshing::Utils::polyVertsFromFace(mesh, element.pid(), fid))) };
 		for (std::size_t i{ 0 }; i < refinement.polyCount(); i++)
 		{
 			Dag::Element& child{ *new Dag::Element{} };

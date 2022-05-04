@@ -4,6 +4,7 @@
 #include <HMP/grid.hpp>
 #include <HMP/Dag/Utils.hpp>
 #include <HMP/Utils/Collections.hpp>
+#include <HMP/Meshing/Utils.hpp>
 #include <cinolib/stl_container_utilities.h>
 
 namespace HMP::Actions
@@ -103,9 +104,8 @@ namespace HMP::Actions
 					targetRefine.scheme() = Meshing::ERefinementScheme::InterfaceFace;
 					targetRefine.needsTopologyFix() = false;
 					targetElement.children().attach(targetRefine);
-					const Id faceOffset{ mesh.poly_face_offset(targetElement.pid(), fid) };
 					const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(Meshing::ERefinementScheme::InterfaceFace) };
-					const std::vector<PolyVerts> polys{ refinement.apply(Utils::Collections::toVector(grid.polyVertsFromFace(targetElement.pid(), faceOffset))) };
+					const std::vector<PolyVerts> polys{ refinement.apply(Utils::Collections::toVector(Meshing::Utils::polyVertsFromFace(mesh, targetElement.pid(), fid))) };
 					for (std::size_t i{ 0 }; i < refinement.polyCount(); i++)
 					{
 						Dag::Element& child{ *new Dag::Element{} };
@@ -150,7 +150,7 @@ namespace HMP::Actions
 						targetRefine.needsTopologyFix() = false;
 						targetElement.children().attach(targetRefine);
 						const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(Meshing::ERefinementScheme::InterfaceEdge) };
-						const std::vector<PolyVerts> polys{ refinement.apply(Utils::Collections::toVector(grid.polyVertsFromEdge(targetElement.pid(), targetEid))) };
+						const std::vector<PolyVerts> polys{ refinement.apply(Utils::Collections::toVector(Meshing::Utils::polyVertsFromEdge(mesh,targetElement.pid(), targetEid))) };
 						for (std::size_t i{ 0 }; i < refinement.polyCount(); i++)
 						{
 							Dag::Element& child{ *new Dag::Element{} };

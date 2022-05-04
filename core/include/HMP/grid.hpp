@@ -67,20 +67,18 @@ namespace HMP
 		void element(Id _pid, Dag::Element& _element);
 		const Dag::Element& element(Id _pid) const;
 
-		PolyVerts polyVertsFromFace(Id _pid, Id _faceOffset) const;
-		PolyVerts polyVertsFromEdge(Id _pid, Id _eid) const;
 		PolyVerts polyVerts(Id _pid) const;
 		Id addPoly(Dag::Element& _element);
 		Id addPoly(const PolyIds& _vids, Dag::Element& _element);
 		void removePoly(Id _pid);
 		Id addPoly(const PolyVerts _verts, Dag::Element& _element);
-		Id addOrGetVert(const Vec&  _vert);
-		bool getVert(const Vec&  _vert, Id& _vid) const;
-		Id getVert(const Vec&  _vert) const;
-		bool hasVert(const Vec&  _vert) const;
+		Id addOrGetVert(const Vec& _vert);
+		bool getVert(const Vec& _vert, Id& _vid) const;
+		Id getVert(const Vec& _vert) const;
+		bool hasVert(const Vec& _vert) const;
 		void vert(Id _vid, const Vec& _position);
 		Id closestPolyFid(Id _pid, const Vec& _centroid) const;
-		
+
 		Dag::Element& root() const;
 		void replaceDag(Dag::Element& _root);
 

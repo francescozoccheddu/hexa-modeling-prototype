@@ -1,10 +1,17 @@
 #include <HMP/Meshing/Utils.hpp>
 
+#include <stdexcept>
+
 namespace HMP::Meshing::Utils
 {
 
-	PolyVerts polyVertsFromFace(const Mesher::Mesh& _mesh, Id _pid, Id _fid)
+	PolyVerts polyVertsFromFace(const Grid::Mesh& _mesh, Id _pid, Id _fid)
 	{
+		if (!_mesh.poly_contains_face(_pid, _fid))
+		{
+			throw std::logic_error{ "face not in poly" };
+		}
+
 		const Id frontFid{ _fid };
 		const Id backFid{ _mesh.poly_face_opposite_to(_pid, frontFid) };
 		std::vector<Id> frontFaceVids = _mesh.face_verts_id(frontFid);
@@ -38,8 +45,13 @@ namespace HMP::Meshing::Utils
 		return verts;
 	}
 
-	PolyVerts polyVertsFromEdge(const Mesher::Mesh& _mesh, Id _pid, Id _eid)
+	PolyVerts polyVertsFromEdge(const Grid::Mesh& _mesh, Id _pid, Id _eid)
 	{
+		if (!_mesh.poly_contains_edge(_pid, _eid))
+		{
+			throw std::logic_error{ "edge not in poly" };
+		}
+
 		Id fid = 0;
 		for (Id edgeFid : _mesh.adj_e2f(_eid))
 		{
