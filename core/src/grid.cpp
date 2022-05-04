@@ -6,8 +6,8 @@
 #include <array>
 #include <HMP/Meshing/refinementSchemes.hpp>
 #include <HMP/Utils/Geometry.hpp>
-#include <HMP/Utils/Collections.hpp>
 #include <HMP/Dag/Utils.hpp>
+#include <cpputils/collections/conversions.hpp>
 
 namespace HMP
 {
@@ -228,7 +228,7 @@ namespace HMP
 
 	PolyVerts Grid::polyVerts(Id _pid) const
 	{
-		return Utils::Collections::toArray<8>(m_mesh.poly_verts(_pid));
+		return cpputils::collections::conversions::toArray<8, const std::vector<Vec>>(m_mesh.poly_verts(_pid));
 	}
 
 	Id Grid::addPoly(Dag::Element& _element)

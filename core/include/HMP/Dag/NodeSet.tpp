@@ -52,34 +52,6 @@ namespace HMP::Dag
 			return m_handle.m_data.m_set.contains(_node);
 		}
 
-		template<typename TNode>
-		std::size_t NodeSetBase<TNode>::size() const
-		{
-			return m_handle.m_data.m_set.size();
-		}
-
-		template<typename TNode>
-		bool NodeSetBase<TNode>::empty() const
-		{
-			return m_handle.m_data.m_set.empty();
-		}
-
-		template<typename TNode>
-		TNode& NodeSetBase<TNode>::single()
-		{
-			if (size() != 1)
-			{
-				throw std::logic_error{ "not a singleton" };
-			}
-			return *reinterpret_cast<TNode*>(*m_handle.m_data.m_set.begin());
-		}
-
-		template<typename TNode>
-		const TNode& NodeSetBase<TNode>::single() const
-		{
-			return const_cast<NodeSetBase*>(this)->single();
-		}
-
 	}
 
 	// NodeSet

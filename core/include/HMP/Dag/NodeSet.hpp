@@ -80,10 +80,6 @@ namespace HMP::Dag
 			bool detachAll(bool _deleteDangling = false);
 
 			bool has(const TNode& _node) const;
-			std::size_t size() const;
-			bool empty() const;
-			TNode& single();
-			const TNode& single() const;
 
 		};
 

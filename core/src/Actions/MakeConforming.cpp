@@ -3,7 +3,7 @@
 #include <HMP/Meshing/refinementSchemes.hpp>s
 #include <HMP/grid.hpp>
 #include <HMP/Dag/Utils.hpp>
-#include <HMP/Utils/Collections.hpp>
+#include <cpputils/collections/conversions.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <cinolib/stl_container_utilities.h>
 
@@ -57,7 +57,7 @@ namespace HMP::Actions
 						targetRefine.needsTopologyFix() = true;
 						targetElement.children().attach(targetRefine);
 						const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(Meshing::ERefinementScheme::Subdivide3x3) };
-						const std::vector<PolyVerts> polys{ refinement.apply(Utils::Collections::toVector(targetElement.vertices())) };
+						const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector(targetElement.vertices())) };
 						for (std::size_t i{ 0 }; i < refinement.polyCount(); i++)
 						{
 							Dag::Element& child{ *new Dag::Element{} };
@@ -105,7 +105,7 @@ namespace HMP::Actions
 					targetRefine.needsTopologyFix() = false;
 					targetElement.children().attach(targetRefine);
 					const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(Meshing::ERefinementScheme::InterfaceFace) };
-					const std::vector<PolyVerts> polys{ refinement.apply(Utils::Collections::toVector(Meshing::Utils::polyVertsFromFace(mesh, targetElement.pid(), fid))) };
+					const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector<const std::array<Vec, 8>>(Meshing::Utils::polyVertsFromFace(mesh, targetElement.pid(), fid))) };
 					for (std::size_t i{ 0 }; i < refinement.polyCount(); i++)
 					{
 						Dag::Element& child{ *new Dag::Element{} };
@@ -150,7 +150,7 @@ namespace HMP::Actions
 						targetRefine.needsTopologyFix() = false;
 						targetElement.children().attach(targetRefine);
 						const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(Meshing::ERefinementScheme::InterfaceEdge) };
-						const std::vector<PolyVerts> polys{ refinement.apply(Utils::Collections::toVector(Meshing::Utils::polyVertsFromEdge(mesh,targetElement.pid(), targetEid))) };
+						const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector<const std::array<Vec, 8>>(Meshing::Utils::polyVertsFromEdge(mesh,targetElement.pid(), targetEid))) };
 						for (std::size_t i{ 0 }; i < refinement.polyCount(); i++)
 						{
 							Dag::Element& child{ *new Dag::Element{} };
