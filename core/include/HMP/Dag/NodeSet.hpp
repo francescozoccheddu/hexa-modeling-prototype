@@ -3,7 +3,7 @@
 #include <cpputils/collections/DereferenceIterable.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <unordered_set>
-#include <type_traits>
+#include <functional>
 
 namespace HMP::Dag
 {

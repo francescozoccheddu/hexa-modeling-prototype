@@ -228,7 +228,7 @@ namespace HMP
 
 	PolyVerts Grid::polyVerts(Id _pid) const
 	{
-		return cpputils::collections::conversions::toArray<8, const std::vector<Vec>>(m_mesh.poly_verts(_pid));
+		return cpputils::collections::conversions::toArray<8>(m_mesh.poly_verts(_pid));
 	}
 
 	Id Grid::addPoly(Dag::Element& _element)

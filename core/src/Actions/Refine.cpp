@@ -32,7 +32,7 @@ namespace HMP::Actions
 		m_operation = &operation;
 		element.children().attach(operation);
 		const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(m_scheme) };
-		const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector<const std::array<Vec, 8>>(Meshing::Utils::polyVertsFromFace(mesh, element.pid(), fid))) };
+		const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector(Meshing::Utils::polyVertsFromFace(mesh, element.pid(), fid))) };
 		for (std::size_t i{ 0 }; i < refinement.polyCount(); i++)
 		{
 			Dag::Element& child{ *new Dag::Element{} };

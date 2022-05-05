@@ -105,7 +105,7 @@ namespace HMP::Actions
 					targetRefine.needsTopologyFix() = false;
 					targetElement.children().attach(targetRefine);
 					const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(Meshing::ERefinementScheme::InterfaceFace) };
-					const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector<const std::array<Vec, 8>>(Meshing::Utils::polyVertsFromFace(mesh, targetElement.pid(), fid))) };
+					const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector(Meshing::Utils::polyVertsFromFace(mesh, targetElement.pid(), fid))) };
 					for (std::size_t i{ 0 }; i < refinement.polyCount(); i++)
 					{
 						Dag::Element& child{ *new Dag::Element{} };
@@ -150,7 +150,7 @@ namespace HMP::Actions
 						targetRefine.needsTopologyFix() = false;
 						targetElement.children().attach(targetRefine);
 						const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(Meshing::ERefinementScheme::InterfaceEdge) };
-						const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector<const std::array<Vec, 8>>(Meshing::Utils::polyVertsFromEdge(mesh,targetElement.pid(), targetEid))) };
+						const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector(Meshing::Utils::polyVertsFromEdge(mesh,targetElement.pid(), targetEid))) };
 						for (std::size_t i{ 0 }; i < refinement.polyCount(); i++)
 						{
 							Dag::Element& child{ *new Dag::Element{} };
