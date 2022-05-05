@@ -1,6 +1,6 @@
 #pragma once
 
-#include <HMP/types.hpp>
+#include <HMP/Meshing/types.hpp>
 #include <vector>
 
 namespace HMP::Utils::Geometry

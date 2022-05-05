@@ -1,25 +1,34 @@
 #pragma once
 
 #include <deque>
+#include <HMP/Dag/Element.hpp>
+#include <cpputils/mixins/ReferenceClass.hpp>
+#include <cpputils/collections/DereferenceIterable.hpp>
 
 namespace HMP
 {
 
+	class Project;
 	class Grid;
 
-	class Commander final
+	class Commander final : public cpputils::mixins::ReferenceClass
 	{
 
-	public:
+	private:
 
-		class Action
+		class Action;
+
+		class ActionBase : public cpputils::mixins::ReferenceClass
 		{
 
 		private:
 
-			friend class Commander;
-			Commander* m_commander{};
-			bool m_applied{ false };
+			friend class Action;
+
+			Commander* m_commander;
+			bool m_applied;
+
+			ActionBase();
 
 			void ensureAttached() const;
 			void attach(Commander& _commander);
@@ -29,43 +38,102 @@ namespace HMP
 
 		protected:
 
+			virtual ~ActionBase() = default;
+			
 			Grid& grid();
 			const Grid& grid() const;
 
-			virtual ~Action() = default;
+			const Dag::Element* root() const;
+			Dag::Element*& root();
+
 			virtual void apply() = 0;
 			virtual void unapply() = 0;
 
 		};
 
-	private:
+		class Stack;
 
-		Grid& m_grid;
-		std::deque<Action*> m_applied{};
-		std::deque<Action*> m_unapplied{};
+		class StackBase : public cpputils::mixins::ReferenceClass, public cpputils::collections::DereferenceIterable<std::deque<Action*>, const Action&, const Action&>
+		{
+
+		private:
+
+			friend class Stack;
+
+			std::deque<Action*> m_data;
+			std::size_t m_limit;
+
+			StackBase();
+
+			Action& pop();
+			void push(Action& _action);
+
+		public:
+
+			std::size_t limit() const;
+			void limit(std::size_t _count);
+			void removeOldest(std::size_t _count);
+			void keepLatest(std::size_t _count);
+			void clear();
+
+		};
 
 	public:
 
-		Commander(Grid& _grid);
+		class Action : public ActionBase
+		{
+
+		private:
+
+			friend class Commander;
+
+			using ActionBase::ensureAttached;
+			using ActionBase::attach;
+			using ActionBase::prepareAndApply;
+			using ActionBase::prepareAndUnapply;
+
+		public:
+
+			using ActionBase::ActionBase;
+
+		};
+
+		class Stack final : public StackBase
+		{
+
+		private:
+
+			friend class Commander;
+
+			using StackBase::StackBase;
+			using StackBase::pop;
+			using StackBase::push;
+
+		};
+
+	private:
+
+		Project& m_project;
+		Stack m_unapplied{}, m_applied{};
+
+	public:
+
+		Commander(Project& _grid);
 		~Commander();
 
 		void apply(Action& _action);
+
 		void undo();
 		void redo();
 
-		void clear();
-		void clearUndo();
-		void clearRedo();
-		void limitUndo(std::size_t _count);
-		void limitRedo(std::size_t _count);
-
 		bool canUndo() const;
 		bool canRedo() const;
-		std::size_t undoCount() const;
-		std::size_t redoCount() const;
 
-		bool operator==(const Commander& _other) const;
-		bool operator!=(const Commander& _other) const = default;
+		Stack& unapplied();
+		const Stack& unapplied() const;
+
+		Stack& applied();
+		const Stack& applied() const;
 
 	};
 

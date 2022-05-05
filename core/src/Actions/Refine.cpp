@@ -51,6 +51,7 @@ namespace HMP::Actions
 			grid.removePoly(child.pid());
 		}
 		grid.addPoly(m_operation->parents().single());
+		m_operation->children().detachAll(true);
 		delete m_operation;
 	}
 

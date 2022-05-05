@@ -1,14 +1,19 @@
 #include <HMP/Commander.hpp>
 
+#include <HMP/Project.hpp>
 #include <HMP/grid.hpp>
 #include <stdexcept>
 
 namespace HMP
 {
 
-	// Commander::Action
+	// Commander::ActionBase
 
-	void Commander::Action::ensureAttached() const
+	Commander::ActionBase::ActionBase()
+		: m_commander{}, m_applied{ false }
+	{}
+
+	void Commander::ActionBase::ensureAttached() const
 	{
 		if (!m_commander)
 		{
@@ -16,7 +21,7 @@ namespace HMP
 		}
 	}
 
-	void Commander::Action::attach(Commander& _commander)
+	void Commander::ActionBase::attach(Commander& _commander)
 	{
 		if (m_commander)
 		{
@@ -25,7 +30,7 @@ namespace HMP
 		m_commander = &_commander;
 	}
 
-	void Commander::Action::prepareAndApply()
+	void Commander::ActionBase::prepareAndApply()
 	{
 		ensureAttached();
 		if (m_applied)
@@ -36,7 +41,7 @@ namespace HMP
 		apply();
 	}
 
-	void Commander::Action::prepareAndUnapply()
+	void Commander::ActionBase::prepareAndUnapply()
 	{
 		ensureAttached();
 		if (!m_applied)
@@ -47,33 +52,110 @@ namespace HMP
 		unapply();
 	}
 
-	Grid& Commander::Action::grid()
+	Grid& Commander::ActionBase::grid()
 	{
 		ensureAttached();
-		return m_commander->m_grid;
+		return m_commander->m_project.grid();
 	}
 
-	const Grid& Commander::Action::grid() const
+	const Grid& Commander::ActionBase::grid() const
 	{
 		ensureAttached();
-		return m_commander->m_grid;
+		return m_commander->m_project.grid();
+	}
+
+	Dag::Element*& Commander::ActionBase::root()
+	{
+		ensureAttached();
+		return m_commander->m_project.root();
+	}
+
+	const Dag::Element* Commander::ActionBase::root() const
+	{
+		ensureAttached();
+		return m_commander->m_project.root();
+	}
+
+	// Commander::StackBase
+
+	Commander::StackBase::StackBase()
+		: m_data{}, m_limit{ 1000 }, cpputils::collections::DereferenceIterable<std::deque<Action*>, const Action&, const Action&>{ m_data }
+	{}
+
+	Commander::Action& Commander::StackBase::pop()
+	{
+		if (empty())
+		{
+			throw std::logic_error{ "empty" };
+		}
+		Action& action{ *m_data.front() };
+		m_data.pop_front();
+		return action;
+	}
+
+	void Commander::StackBase::push(Action& _action)
+	{
+		m_data.push_front(&_action);
+		keepLatest(m_limit);
+	}
+
+	std::size_t Commander::StackBase::limit() const
+	{
+		return m_limit;
+	}
+
+	void Commander::StackBase::limit(std::size_t _count)
+	{
+		m_limit = _count;
+		keepLatest(m_limit);
+	}
+
+	void Commander::StackBase::removeOldest(std::size_t _count)
+	{
+		while (!m_data.empty() && _count > 0)
+		{
+			Action* action{ m_data.back() };
+			delete action;
+			m_data.pop_back();
+			_count--;
+		}
+	}
+
+	void Commander::StackBase::keepLatest(std::size_t _count)
+	{
+		while (m_data.size() > _count)
+		{
+			Action* action{ m_data.back() };
+			delete action;
+			m_data.pop_back();
+		}
+	}
+
+	void Commander::StackBase::clear()
+	{
+		for (Action* action : m_data)
+		{
+			delete action;
+		}
+		m_data.clear();
 	}
 
 	// Commander
 
-	Commander::Commander(Grid& _grid)
-		: m_grid{ _grid }
+	Commander::Commander(Project& _project)
+		: m_project{ _project }, m_applied{}, m_unapplied{}
 	{}
 
 	Commander::~Commander()
 	{
-		clear();
+		m_unapplied.clear();
+		m_applied.clear();
 	}
 
 	void Commander::apply(Action& _action)
 	{
 		_action.attach(*this);
-		m_unapplied.push_front(&_action);
+		m_unapplied.push(_action);
 		redo();
 	}
 
@@ -83,10 +165,9 @@ namespace HMP
 		{
 			throw std::logic_error{ "cannot undo" };
 		}
-		Action& action{ *m_applied.front() };
-		m_applied.pop_front();
+		Action& action{ m_applied.pop() };
 		action.unapply();
-		m_unapplied.push_front(&action);
+		m_unapplied.push(action);
 	}
 
 	void Commander::redo()
@@ -95,46 +176,9 @@ namespace HMP
 		{
 			throw std::logic_error{ "cannot redo" };
 		}
-		Action& action{ *m_unapplied.front() };
-		m_unapplied.pop_front();
+		Action& action{ m_unapplied.pop() };
 		action.apply();
-		m_applied.push_front(&action);
-	}
-
-	void Commander::clear()
-	{
-		clearUndo();
-		clearRedo();
-	}
-
-	void Commander::clearUndo()
-	{
-		limitUndo(0);
-	}
-
-	void Commander::clearRedo()
-	{
-		limitRedo(0);
-	}
-
-	void Commander::limitUndo(std::size_t _count)
-	{
-		while (m_applied.size() > _count)
-		{
-			Action* action{ m_applied.back() };
-			delete action;
-			m_applied.pop_back();
-		}
-	}
-
-	void Commander::limitRedo(std::size_t _count)
-	{
-		while (m_unapplied.size() > _count)
-		{
-			Action* action{ m_unapplied.back() };
-			delete action;
-			m_unapplied.pop_back();
-		}
+		m_applied.push(action);
 	}
 
 	bool Commander::canUndo() const
@@ -147,19 +191,25 @@ namespace HMP
 		return !m_unapplied.empty();
 	}
 
-	std::size_t Commander::undoCount() const
+
+	Commander::Stack& Commander::unapplied()
 	{
-		return m_applied.size();
+		return m_unapplied;
 	}
 
-	std::size_t Commander::redoCount() const
+	const Commander::Stack& Commander::unapplied() const
 	{
-		return m_unapplied.size();
+		return m_unapplied;
 	}
 
-	bool Commander::operator==(const Commander& _other) const
+	Commander::Stack& Commander::applied()
 	{
-		return this == &_other;
+		return m_applied;
+	}
+
+	const Commander::Stack& Commander::applied() const
+	{
+		return m_applied;
 	}
 
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <HMP/types.hpp>
+#include <HMP/Meshing/types.hpp>
 #include <HMP/Dag/Node.hpp>
 
 namespace HMP::Dag

@@ -37,6 +37,7 @@ namespace HMP::Actions
 	{
 		grid().addPoly(m_operation->parents().single());
 		grid().mesh().updateGL();
+		m_operation->children().detachAll(true);
 		delete m_operation;
 	}
 

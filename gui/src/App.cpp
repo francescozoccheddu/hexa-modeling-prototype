@@ -21,7 +21,8 @@ namespace HMP::Gui
 
 	void App::updateHighlight()
 	{
-		Grid::Mesh& mesh{ m_grid.mesh() };
+		const Project& project{ m_project };
+		const Grid::Mesh& mesh{ m_project.grid().mesh()};
 		Id pid{};
 		cinolib::vec3d world;
 		m_canvas.pop_all_markers();

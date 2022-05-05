@@ -2,6 +2,8 @@
 
 add_library (core STATIC
     "src/grid.cpp"
+    "src/Project.cpp"
+    "src/Actions/Clear.cpp"
     "src/Actions/MakeConforming.cpp"
     "src/Actions/Refine.cpp"
     "src/Actions/MoveVert.cpp"

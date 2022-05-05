@@ -24,12 +24,12 @@ namespace HMP::Dag
 		return m_scheme;
 	}
 
-	PolyIds& Refine::vertices()
+	PolyVertIds& Refine::vertices()
 	{
 		return m_vertices;
 	}
 
-	const PolyIds& Refine::vertices() const
+	const PolyVertIds& Refine::vertices() const
 	{
 		return m_vertices;
 	}

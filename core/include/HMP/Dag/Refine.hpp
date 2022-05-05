@@ -1,6 +1,6 @@
 #pragma once
 
-#include <HMP/types.hpp>
+#include <HMP/Meshing/types.hpp>
 #include <HMP/Dag/Operation.hpp>
 #include <HMP/Meshing/refinementSchemes.hpp>
 
@@ -14,7 +14,7 @@ namespace HMP::Dag
 
 		Meshing::ERefinementScheme m_scheme{ Meshing::ERefinementScheme::Subdivide3x3 };
 		bool m_needsTopologyFix{ true };
-		PolyIds m_vertices{};
+		PolyVertIds m_vertices{};
 
 	public:
 
@@ -23,8 +23,8 @@ namespace HMP::Dag
 		Meshing::ERefinementScheme& scheme();
 		Meshing::ERefinementScheme scheme() const;
 
-		PolyIds& vertices();
-		const PolyIds& vertices() const;
+		PolyVertIds& vertices();
+		const PolyVertIds& vertices() const;
 
 		bool& needsTopologyFix();
 		bool needsTopologyFix() const;

@@ -22,65 +22,10 @@ namespace HMP
 		clear();
 	}
 
-	Commander& Grid::commander()
-	{
-		return m_commander;
-	}
-
-
-	const Commander& Grid::commander() const
-	{
-		return m_commander;
-	}
-
 	//ADD OPERATIONS############################################################################################################################
 
 
-	void Grid::add_refine(Id pid)
-	{
-		m_commander.apply(*new Actions::Refine(m_mesh.poly_centroid(pid), m_mesh.face_centroid(m_mesh.poly_faces_id(pid)[0]), Meshing::ERefinementScheme::Subdivide3x3));
-	}
-
-	void Grid::add_face_refine(Id fid)
-	{
-		m_commander.apply(*new Actions::Refine(m_mesh.poly_centroid(m_mesh.adj_f2p(fid).front()), m_mesh.face_centroid(fid), Meshing::ERefinementScheme::Inset));
-	}
-
-	void Grid::add_extrude(Id pid, Id face_offset)
-	{
-		m_commander.apply(*new Actions::Extrude(m_mesh.poly_centroid(pid), m_mesh.face_centroid(m_mesh.poly_faces_id(pid)[face_offset])));
-	}
-
-	void Grid::add_move(Id vid, const Vec& displacement)
-	{
-		m_commander.apply(*new Actions::MoveVert(m_mesh.vert(vid), displacement));
-	}
-
-	void Grid::add_remove(Id pid)
-	{
-		m_commander.apply(*new Actions::Delete(m_mesh.poly_centroid(pid)));
-	}
-
 	//REMOVE OPERATIONS############################################################################################################################
-
-	void Grid::undo()
-	{
-		m_commander.undo();
-		m_mesh.updateGL();
-
-	}
-
-	void Grid::redo()
-	{
-		m_commander.redo();
-		m_mesh.updateGL();
-	}
-
-	void Grid::make_conforming()
-	{
-		m_commander.apply(*new Actions::MakeConforming());
-		m_mesh.updateGL();
-	}
 
 	void Grid::project_on_target(cinolib::Trimesh<>& target)
 	{
@@ -110,7 +55,8 @@ namespace HMP
 			if (!(m_mesh.vert(v_map[vid]) == peel.vert(vid)))
 			{
 				auto displacement = peel.vert(vid) - m_mesh.vert(v_map[vid]);
-				add_move(v_map[vid], displacement);
+				//moveVert(v_map[vid], displacement);
+				throw std::logic_error{ "^^^" };
 				count++;
 			}
 		}
@@ -130,12 +76,7 @@ namespace HMP
 
 	void Grid::clear()
 	{
-		Dag::Element& root{ *new Dag::Element{} };
-		root.vertices() = {
-			Vec(-cubeSize,-cubeSize,-cubeSize), Vec(-cubeSize,-cubeSize, cubeSize), Vec(cubeSize,-cubeSize,cubeSize), Vec(cubeSize,-cubeSize,-cubeSize),
-			Vec(-cubeSize,cubeSize,-cubeSize), Vec(-cubeSize,cubeSize, cubeSize), Vec(cubeSize,cubeSize,cubeSize), Vec(cubeSize,cubeSize,-cubeSize)
-		};
-		replaceDag(root);
+		m_mesh.clear();
 	}
 
 	void Grid::save_as_mesh(std::string filename)
@@ -166,7 +107,7 @@ namespace HMP
 
 	Id Grid::addPoly(const PolyVerts _vertices, Dag::Element& _element)
 	{
-		PolyIds vids;
+		PolyVertIds vids;
 		for (size_t i{ 0 }; i < 8; i++)
 		{
 			vids[i] = addOrGetVert(_vertices[i]);
@@ -236,7 +177,7 @@ namespace HMP
 		return addPoly(_element.vertices(), _element);
 	}
 
-	Id Grid::addPoly(const PolyIds& _vids, Dag::Element& _element)
+	Id Grid::addPoly(const PolyVertIds& _vids, Dag::Element& _element)
 	{
 		const Id pid{ m_mesh.poly_add(std::vector<Id>{_vids.begin(), _vids.end()}) };
 		element(pid, _element);
@@ -275,22 +216,10 @@ namespace HMP
 		return closestFid;
 	}
 
-	Dag::Element& Grid::root() const
-	{
-		return *m_root;
-	}
-
 	void Grid::replaceDag(Dag::Element& _root)
 	{
-		if (m_root)
-		{
-			m_root->children().detachAll(true);
-			delete m_root;
-		}
 		m_mesh.clear();
-		m_commander.clear();
 
-		m_root = &_root;
 		for (Dag::Node* node : Dag::Utils::descendants(_root))
 		{
 			if (node->isElement())

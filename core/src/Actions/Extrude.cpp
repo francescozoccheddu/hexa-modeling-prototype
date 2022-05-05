@@ -64,6 +64,7 @@ namespace HMP::Actions
 	void Extrude::unapply()
 	{
 		grid().removePoly(m_operation->children().single().pid());
+		m_operation->children().detachAll(true);
 		delete m_operation;
 	}
 

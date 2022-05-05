@@ -1,6 +1,6 @@
 #pragma once
 
-#include <HMP/types.hpp>
+#include <HMP/Meshing/types.hpp>
 #include <cinolib/meshes/drawable_hexmesh.h>
 #include <unordered_map>
 #include <HMP/Dag/Element.hpp>

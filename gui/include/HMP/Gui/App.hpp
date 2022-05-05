@@ -1,6 +1,6 @@
 #pragma once
 
-#include <HMP/grid.hpp>
+#include <HMP/Project.hpp>
 #include <HMP/Gui/Dag/Viewer.hpp>
 #include <cinolib/gl/glcanvas.h>
 #include <cinolib/meshes/drawable_trimesh.h>
@@ -50,7 +50,7 @@ namespace HMP::Gui
 			std::string filename{};
 		} m_target;
 
-		HMP::Grid m_grid{};
+		HMP::Project m_project{};
 		cinolib::GLcanvas m_canvas{};
 		Dag::Viewer m_dagViewer{};
 

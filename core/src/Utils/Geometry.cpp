@@ -53,7 +53,7 @@ namespace HMP::Utils::Geometry
 
 	Id rotateVid(EAxis _axis, Id _vid, int _times)
 	{
-		static const std::unordered_map<EAxis, PolyIds> map{
+		static const std::unordered_map<EAxis, PolyVertIds> map{
 			{EAxis::X, {3,2,6,7,0,1,5,4}},
 			{EAxis::Y, {3,0,1,2,7,4,5,6}},
 			{EAxis::Z, {4,0,3,7,5,1,2,6}},

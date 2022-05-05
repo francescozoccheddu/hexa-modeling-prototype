@@ -21,7 +21,7 @@ namespace HMP::Actions
 		std::vector<Dag::Refine*> refines{};
 		std::unordered_set<Id> removedPids{};
 
-		for (Dag::Node* node : Dag::Utils::descendants(grid.root()))
+		for (Dag::Node* node : Dag::Utils::descendants(*root()))
 		{
 			if (node->isOperation() && node->operation().primitive() == Dag::Operation::EPrimitive::Refine)
 			{
@@ -187,6 +187,7 @@ namespace HMP::Actions
 				grid.removePoly(child.pid());
 			}
 			grid.addPoly(operation->parents().single());
+			operation->children().detachAll(true);
 			delete operation;
 		}
 		for (Dag::Refine* fixedRefine : m_fixedRefines)

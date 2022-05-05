@@ -1,6 +1,6 @@
 #pragma once
 
-#include <HMP/types.hpp>
+#include <HMP/Meshing/types.hpp>
 #include <memory>
 #include <vector>
 #include <map>
@@ -41,17 +41,6 @@ namespace HMP
 
 		Grid();
 
-		void add_refine(Id pid);
-		void add_face_refine(Id fid);
-		void add_extrude(Id pid, Id face_offset);
-		void add_move(Id vid, const Vec& displacement);
-		void add_remove(Id pid);
-
-		void undo();
-		void redo();
-
-		void make_conforming();
-
 		void project_on_target(cinolib::Trimesh<>& target);
 
 		bool merge(Id pid_source, Id pid_dest);
@@ -60,16 +49,13 @@ namespace HMP
 
 		void save_as_mesh(std::string filename);
 
-		Commander& commander();
-		const Commander& commander() const;
-
 		Dag::Element& element(Id _pid);
 		void element(Id _pid, Dag::Element& _element);
 		const Dag::Element& element(Id _pid) const;
 
 		PolyVerts polyVerts(Id _pid) const;
 		Id addPoly(Dag::Element& _element);
-		Id addPoly(const PolyIds& _vids, Dag::Element& _element);
+		Id addPoly(const PolyVertIds& _vids, Dag::Element& _element);
 		void removePoly(Id _pid);
 		Id addPoly(const PolyVerts _verts, Dag::Element& _element);
 		Id addOrGetVert(const Vec& _vert);
@@ -79,7 +65,6 @@ namespace HMP
 		void vert(Id _vid, const Vec& _position);
 		Id closestPolyFid(Id _pid, const Vec& _centroid) const;
 
-		Dag::Element& root() const;
 		void replaceDag(Dag::Element& _root);
 
 		Mesh& mesh();
@@ -87,8 +72,6 @@ namespace HMP
 
 	private:
 
-		Commander m_commander{ *this };
-		Dag::Element* m_root{};
 		Mesh m_mesh;
 
 		void init();
