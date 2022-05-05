@@ -20,16 +20,16 @@ namespace HMP
 			return m_commander;
 		}
 
-		const Grid& ProjectBase::grid() const
-		{
-			return m_grid;
-		}
+	}
 
-		const Dag::Element* ProjectBase::root() const
-		{
-			return m_root;
-		}
+	const Grid& Project::grid() const
+	{
+		return m_grid;
+	}
 
+	const Dag::Element* Project::root() const
+	{
+		return m_root;
 	}
 
 	Dag::Element*& Project::root()

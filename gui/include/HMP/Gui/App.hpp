@@ -54,6 +54,11 @@ namespace HMP::Gui
 		cinolib::GLcanvas m_canvas{};
 		Dag::Viewer m_dagViewer{};
 
+		const Grid& grid() const;
+		Commander& commander();
+		const Commander& commander() const;
+		const HMP::Dag::Element& root() const;
+
 		void updateHighlight();
 		void updateDagViewer();
 

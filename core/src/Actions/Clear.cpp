@@ -13,11 +13,6 @@ namespace HMP::Actions
 	{
 		constexpr double cubeSize{ 1 };
 		m_root = root();
-		if (root())
-		{
-			root()->children().detachAll(true);
-			delete root();
-		}
 		root() = new Dag::Element{};
 		root()->vertices() = {
 			Vec(-cubeSize,-cubeSize,-cubeSize), Vec(-cubeSize,-cubeSize, cubeSize), Vec(cubeSize,-cubeSize,cubeSize), Vec(cubeSize,-cubeSize,-cubeSize),
