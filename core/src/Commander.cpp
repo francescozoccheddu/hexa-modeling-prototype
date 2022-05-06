@@ -1,7 +1,7 @@
 #include <HMP/Commander.hpp>
 
 #include <HMP/Project.hpp>
-#include <HMP/grid.hpp>
+#include <HMP/Meshing/Mesher.hpp>
 #include <stdexcept>
 
 namespace HMP
@@ -52,16 +52,16 @@ namespace HMP
 		unapply();
 	}
 
-	Grid& Commander::ActionBase::grid()
+	Meshing::Mesher& Commander::ActionBase::mesher()
 	{
 		ensureAttached();
-		return m_commander->m_project.grid();
+		return m_commander->m_project.mesher();
 	}
 
-	const Grid& Commander::ActionBase::grid() const
+	const Meshing::Mesher& Commander::ActionBase::mesher() const
 	{
 		ensureAttached();
-		return m_commander->m_project.grid();
+		return m_commander->m_project.mesher();
 	}
 
 	Dag::Element*& Commander::ActionBase::root()
@@ -155,6 +155,7 @@ namespace HMP
 	void Commander::apply(Action& _action)
 	{
 		_action.attach(*this);
+		m_unapplied.clear();
 		m_unapplied.push(_action);
 		redo();
 	}

@@ -26,6 +26,11 @@ namespace HMP::Dag
 
 		Set m_parents, m_children;
 
+		using Node::isElement;
+		using Node::isOperation;
+		using Node::element;
+		using Node::operation;
+
 	protected:
 
 		explicit Operation(EPrimitive _primitive);

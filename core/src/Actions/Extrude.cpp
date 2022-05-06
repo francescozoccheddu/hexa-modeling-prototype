@@ -1,6 +1,7 @@
 #include <HMP/Actions/Extrude.hpp>
 
-#include <HMP/grid.hpp>
+#include <HMP/Meshing/Mesher.hpp>
+#include <HMP/Meshing/Utils.hpp>
 #include <array>
 #include <stdexcept>
 #include <algorithm>
@@ -14,11 +15,11 @@ namespace HMP::Actions
 
 	void Extrude::apply()
 	{
-		Grid& grid{ this->grid() };
-		Grid::Mesh& mesh{ grid.mesh() };
-		Dag::Element& element{ grid.element(mesh.pick_poly(m_polyCentroid)) };
-		const Id fid{ grid.closestPolyFid(element.pid(), m_faceCentroid) };
-		const Id faceOffset{ mesh.poly_face_offset(element.pid(), fid) };
+		Meshing::Mesher& mesher{ this->mesher() };
+		const Meshing::Mesher::Mesh& mesh{ mesher.mesh() };
+		Dag::Element& element{ mesher.pidToElement(mesh.pick_poly(m_polyCentroid)) };
+		const Id fid{ Meshing::Utils::closestFaceInPoly(mesh, mesher.elementToPid(element), m_faceCentroid) };
+		const Id faceOffset{ mesh.poly_face_offset(mesher.elementToPid(element), fid) };
 		for (const Dag::Operation& child : element.children())
 		{
 			if (child.primitive() != Dag::Operation::EPrimitive::Extrude)
@@ -47,7 +48,7 @@ namespace HMP::Actions
 				avgFaceEdgeLength /= faceEids.size();
 			}
 
-			PolyVerts verts;
+			PolyVerts& verts{ child.vertices() };
 			const std::vector<Vec> faceVerts = mesh.face_verts(fid);
 			std::copy(faceVerts.begin(), faceVerts.end(), verts.begin());
 			const Vec faceNormal = mesh.face_data(fid).normal;
@@ -56,14 +57,13 @@ namespace HMP::Actions
 			{
 				verts[i++] = faceVert + faceNormal * avgFaceEdgeLength;
 			}
-			grid.addPoly(verts, child);
-			mesh.updateGL();
+			mesher.add(child);
 		}
 	}
 
 	void Extrude::unapply()
 	{
-		grid().removePoly(m_operation->children().single().pid());
+		mesher().remove(m_operation->children().single());
 		m_operation->children().detachAll(true);
 		delete m_operation;
 	}

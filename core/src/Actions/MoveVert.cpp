@@ -1,6 +1,6 @@
 #include <HMP/Actions/MoveVert.hpp>
 
-#include <HMP/grid.hpp>
+#include <HMP/Meshing/Mesher.hpp>
 
 namespace HMP::Actions
 {
@@ -11,16 +11,14 @@ namespace HMP::Actions
 
     void MoveVert::apply()
     {
-        Grid& grid{ this->grid() };
-        grid.vert(grid.getVert(m_oldPosition), m_newPosition);
-        grid.mesh().updateGL();
+        Meshing::Mesher& mesher{ this->mesher() };
+        mesher.moveVert(mesher.getVert(m_oldPosition), m_newPosition);
     }
 
     void MoveVert::unapply()
     {
-        Grid& grid{ this->grid() };
-        grid.vert(grid.getVert(m_newPosition), m_oldPosition);
-        grid.mesh().updateGL();
+        Meshing::Mesher& mesher{ this->mesher() };
+        mesher.moveVert(mesher.getVert(m_newPosition), m_oldPosition);
     }
 
 }

@@ -1,7 +1,7 @@
 #include <HMP/Actions/MakeConforming.hpp>
 
 #include <HMP/Meshing/refinementSchemes.hpp>s
-#include <HMP/grid.hpp>
+#include <HMP/Meshing/Mesher.hpp>
 #include <HMP/Dag/Utils.hpp>
 #include <cpputils/collections/conversions.hpp>
 #include <HMP/Meshing/Utils.hpp>
@@ -15,8 +15,8 @@ namespace HMP::Actions
 
 	void MakeConforming::apply()
 	{
-		Grid& grid{ this->grid() };
-		Grid::Mesh& mesh{ grid.mesh() };
+		Meshing::Mesher& mesher{ this->mesher() };
+		const Meshing::Mesher::Mesh& mesh{ mesher.mesh() };
 
 		std::vector<Dag::Refine*> refines{};
 		std::unordered_set<Id> removedPids{};
@@ -44,11 +44,11 @@ namespace HMP::Actions
 				sources.pop_front();
 
 				Dag::Element& sourceElement = sourceRefine.parents().single();
-				grid.addPoly(sourceElement);
+				mesher.add(sourceElement);
 
-				for (Id targetPid : mesh.adj_p2p(sourceElement.pid()))
+				for (Id targetPid : mesh.adj_p2p(mesher.elementToPid(sourceElement)))
 				{
-					Dag::Element& targetElement = *mesh.poly_data(targetPid).element;
+					Dag::Element& targetElement = mesher.pidToElement(targetPid);
 					if (!targetCandidates.insert(&targetElement).second)
 					{
 						Dag::Refine& targetRefine{ *new Dag::Refine{} };
@@ -58,20 +58,21 @@ namespace HMP::Actions
 						targetElement.children().attach(targetRefine);
 						const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(Meshing::ERefinementScheme::Subdivide3x3) };
 						const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector(targetElement.vertices())) };
-						for (std::size_t i{ 0 }; i < refinement.polyCount(); i++)
+						for (const PolyVerts& verts : polys)
 						{
 							Dag::Element& child{ *new Dag::Element{} };
+							child.vertices() = verts;
 							targetRefine.children().attach(child);
-							grid.addPoly(polys[i], child);
+							mesher.add(child);
 						}
-						removedPids.insert(targetElement.pid());
+						removedPids.insert(mesher.elementToPid(targetElement));
 						refines.push_back(&targetRefine);
 						sources.push_back(&targetRefine);
 						m_fixedRefines.insert(&sourceRefine);
 						sourceRefine.needsTopologyFix() = false;
 					}
 				}
-				removedPids.insert(sourceElement.pid());
+				removedPids.insert(mesher.elementToPid(sourceElement));
 			}
 
 		}
@@ -85,38 +86,39 @@ namespace HMP::Actions
 				sources.pop_front();
 
 				Dag::Element& sourceElement = sourceRefine.parents().single();
-				grid.addPoly(sourceElement);
+				mesher.add(sourceElement);
 
-				for (Id targetPid : mesh.adj_p2p(sourceElement.pid()))
+				for (Id targetPid : mesh.adj_p2p(mesher.elementToPid(sourceElement)))
 				{
 					if (removedPids.contains(targetPid))
 					{
 						continue;
 					}
-					const Id fid = mesh.poly_shared_face(sourceElement.pid(), targetPid);
-					if (targetPid == sourceElement.pid() || fid == -1)
+					const Id fid = mesh.poly_shared_face(mesher.elementToPid(sourceElement), targetPid);
+					if (targetPid == mesher.elementToPid(sourceElement) || fid == -1)
 					{
 						continue;
 					}
-					Dag::Element& targetElement = *mesh.poly_data(targetPid).element;
+					Dag::Element& targetElement = mesher.pidToElement(targetPid);
 					Dag::Refine& targetRefine{ *new Dag::Refine{} };
 					m_operations.push_back(&targetRefine);
 					targetRefine.scheme() = Meshing::ERefinementScheme::InterfaceFace;
 					targetRefine.needsTopologyFix() = false;
 					targetElement.children().attach(targetRefine);
 					const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(Meshing::ERefinementScheme::InterfaceFace) };
-					const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector(Meshing::Utils::polyVertsFromFace(mesh, targetElement.pid(), fid))) };
-					for (std::size_t i{ 0 }; i < refinement.polyCount(); i++)
+					const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector(Meshing::Utils::polyVertsFromFace(mesh, mesher.elementToPid(targetElement), fid))) };
+					for (const PolyVerts& verts : polys)
 					{
 						Dag::Element& child{ *new Dag::Element{} };
+						child.vertices() = verts;
 						targetRefine.children().attach(child);
-						grid.addPoly(polys[i], child);
+						mesher.add(child);
 					}
-					removedPids.insert(targetElement.pid());
+					removedPids.insert(mesher.elementToPid(targetElement));
 					m_fixedRefines.insert(&sourceRefine);
 					sourceRefine.needsTopologyFix() = false;
 				}
-				removedPids.insert(sourceElement.pid());
+				removedPids.insert(mesher.elementToPid(sourceElement));
 			}
 		}
 
@@ -129,9 +131,9 @@ namespace HMP::Actions
 				sources.pop_front();
 
 				Dag::Element& sourceElement = sourceRefine.parents().single();
-				grid.addPoly(sourceElement);
+				mesher.add(sourceElement);
 
-				for (Id targetEid : mesh.adj_p2e(sourceElement.pid()))
+				for (Id targetEid : mesh.adj_p2e(mesher.elementToPid(sourceElement)))
 				{
 					for (Id targetPid : mesh.adj_e2p(targetEid))
 					{
@@ -139,30 +141,31 @@ namespace HMP::Actions
 						{
 							continue;
 						}
-						if (targetPid == sourceElement.pid() || mesh.poly_shared_face(targetPid, sourceElement.pid()) != -1)
+						if (targetPid == mesher.elementToPid(sourceElement) || mesh.poly_shared_face(targetPid, mesher.elementToPid(sourceElement)) != -1)
 						{
 							continue;
 						}
-						Dag::Element& targetElement = *mesh.poly_data(targetPid).element;
+						Dag::Element& targetElement = mesher.pidToElement(targetPid);
 						Dag::Refine& targetRefine{ *new Dag::Refine{} };
 						m_operations.push_back(&targetRefine);
 						targetRefine.scheme() = Meshing::ERefinementScheme::InterfaceEdge;
 						targetRefine.needsTopologyFix() = false;
 						targetElement.children().attach(targetRefine);
 						const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(Meshing::ERefinementScheme::InterfaceEdge) };
-						const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector(Meshing::Utils::polyVertsFromEdge(mesh,targetElement.pid(), targetEid))) };
-						for (std::size_t i{ 0 }; i < refinement.polyCount(); i++)
+						const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector(Meshing::Utils::polyVertsFromEdge(mesh,mesher.elementToPid(targetElement), targetEid))) };
+						for (const PolyVerts& verts : polys)
 						{
 							Dag::Element& child{ *new Dag::Element{} };
+							child.vertices() = verts;
 							targetRefine.children().attach(child);
-							grid.addPoly(polys[i], child);
+							mesher.add(child);
 						}
-						removedPids.insert(targetElement.pid());
+						removedPids.insert(mesher.elementToPid(targetElement));
 						m_fixedRefines.insert(&sourceRefine);
 						sourceRefine.needsTopologyFix() = false;
 					}
 				}
-				removedPids.insert(sourceElement.pid());
+				removedPids.insert(mesher.elementToPid(sourceElement));
 			}
 		}
 
@@ -171,7 +174,7 @@ namespace HMP::Actions
 			std::sort(pids.begin(), pids.end(), std::greater<Id>{});
 			for (Id pid : pids)
 			{
-				grid.removePoly(pid);
+				mesher.remove(mesher.pidToElement(pid));
 			}
 		}
 
@@ -179,14 +182,14 @@ namespace HMP::Actions
 
 	void MakeConforming::unapply()
 	{
-		Grid& grid{ this->grid() };
+		Meshing::Mesher& mesher{ this->mesher() };
 		for (Dag::Refine* operation : m_operations)
 		{
 			for (Dag::Element& child : operation->children())
 			{
-				grid.removePoly(child.pid());
+				mesher.remove(child);
 			}
-			grid.addPoly(operation->parents().single());
+			mesher.add(operation->parents().single());
 			operation->children().detachAll(true);
 			delete operation;
 		}

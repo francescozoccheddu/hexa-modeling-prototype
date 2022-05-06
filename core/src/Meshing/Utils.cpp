@@ -1,11 +1,12 @@
 #include <HMP/Meshing/Utils.hpp>
 
+#include <HMP/Dag/Utils.hpp>
 #include <stdexcept>
 
 namespace HMP::Meshing::Utils
 {
 
-	PolyVerts polyVertsFromFace(const Grid::Mesh& _mesh, Id _pid, Id _fid)
+	PolyVerts polyVertsFromFace(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid)
 	{
 		if (!_mesh.poly_contains_face(_pid, _fid))
 		{
@@ -45,7 +46,7 @@ namespace HMP::Meshing::Utils
 		return verts;
 	}
 
-	PolyVerts polyVertsFromEdge(const Grid::Mesh& _mesh, Id _pid, Id _eid)
+	PolyVerts polyVertsFromEdge(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _eid)
 	{
 		if (!_mesh.poly_contains_edge(_pid, _eid))
 		{
@@ -97,6 +98,50 @@ namespace HMP::Meshing::Utils
 		}
 
 		return verts;
+	}
+
+	Id closestFaceInPoly(const Meshing::Mesher::Mesh& _mesh, Id _pid, const Vec& _centroid)
+	{
+		Real closestDist{ cinolib::inf_double };
+		Id closestFid{};
+		for (Id fid : _mesh.poly_faces_id(_pid))
+		{
+			const Real dist{ _centroid.dist(_mesh.face_centroid(fid)) };
+			if (dist < closestDist)
+			{
+				closestDist = dist;
+				closestFid = fid;
+			}
+		}
+		return closestFid;
+	}
+
+	void addLeafs(Mesher& _mesher, Dag::Element& _root, bool _clear)
+	{
+		if (_clear)
+		{
+			_mesher.clear();
+		}
+
+		for (Dag::Node* node : Dag::Utils::descendants(_root))
+		{
+			if (node->isElement())
+			{
+				Dag::Element& element{ node->element() };
+				bool active{ true };
+				for (const Dag::Operation& child : element.children())
+				{
+					if (child.primitive() != Dag::Operation::EPrimitive::Extrude)
+					{
+						active = false;
+					}
+				}
+				if (active)
+				{
+					_mesher.add(element);
+				}
+			}
+		}
 	}
 
 }

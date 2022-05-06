@@ -1,6 +1,6 @@
 #include <HMP/Actions/Delete.hpp>
 
-#include <HMP/grid.hpp>
+#include <HMP/Meshing/Mesher.hpp>
 #include <stdexcept>
 
 namespace HMP::Actions
@@ -12,9 +12,9 @@ namespace HMP::Actions
 
 	void Delete::apply()
 	{
-		Grid& grid{ this->grid() };
-		Grid::Mesh& mesh{ grid.mesh() };
-		Dag::Element& element{ grid.element(mesh.pick_poly(m_polyCentroid)) };
+		Meshing::Mesher& mesher{ this->mesher() };
+		const Meshing::Mesher::Mesh& mesh{ mesher.mesh() };
+		Dag::Element& element{ mesher.pidToElement(mesh.pick_poly(m_polyCentroid)) };
 		if (element.isRoot())
 		{
 			throw std::logic_error{ "element is root" };
@@ -29,14 +29,12 @@ namespace HMP::Actions
 		Dag::Delete& operation{ *new Dag::Delete{} };
 		m_operation = &operation;
 		element.children().attach(operation);
-		grid.removePoly(element.pid());
-		grid.mesh().updateGL();
+		mesher.remove(element);
 	}
 
 	void Delete::unapply()
 	{
-		grid().addPoly(m_operation->parents().single());
-		grid().mesh().updateGL();
+		mesher().add(m_operation->parents().single());
 		m_operation->children().detachAll(true);
 		delete m_operation;
 	}

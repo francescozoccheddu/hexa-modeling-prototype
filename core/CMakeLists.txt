@@ -1,7 +1,6 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 
 add_library (core STATIC
-    "src/grid.cpp"
     "src/Project.cpp"
     "src/Actions/Clear.cpp"
     "src/Actions/MakeConforming.cpp"
@@ -18,6 +17,7 @@ add_library (core STATIC
     "src/Dag/Operation.cpp"
     "src/Dag/Refine.cpp"
     "src/Dag/Utils.cpp"
+    "src/Meshing/Mesher.cpp"
     "src/Meshing/Refinement.cpp"
     "src/Meshing/refinementSchemes.cpp"
     "src/Meshing/Utils.cpp"

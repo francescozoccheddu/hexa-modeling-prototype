@@ -4,12 +4,12 @@
 #include <HMP/Dag/Element.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <cpputils/collections/DereferenceIterable.hpp>
+#include <HMP/Meshing/Mesher.hpp>
 
 namespace HMP
 {
 
 	class Project;
-	class Grid;
 
 	class Commander final : public cpputils::mixins::ReferenceClass
 	{
@@ -40,8 +40,8 @@ namespace HMP
 
 			virtual ~ActionBase() = default;
 			
-			Grid& grid();
-			const Grid& grid() const;
+			Meshing::Mesher& mesher();
+			const Meshing::Mesher& mesher() const;
 
 			const Dag::Element* root() const;
 			Dag::Element*& root();
@@ -118,7 +118,7 @@ namespace HMP
 
 	public:
 
-		Commander(Project& _grid);
+		Commander(Project& _project);
 		~Commander();
 
 		void apply(Action& _action);

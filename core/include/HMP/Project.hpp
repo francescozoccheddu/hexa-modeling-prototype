@@ -1,7 +1,7 @@
 #pragma once
 
 #include <HMP/Commander.hpp>
-#include <HMP/grid.hpp>
+#include <HMP/Meshing/Mesher.hpp>
 #include <HMP/Dag/Element.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
 
@@ -21,7 +21,7 @@ namespace HMP
 			friend class Project;
 
 			Dag::Element* m_root;
-			Grid m_grid;
+			Meshing::Mesher m_mesher;
 			Commander m_commander;
 
 			ProjectBase();
@@ -43,14 +43,14 @@ namespace HMP
 		friend class Commander;
 
 		Dag::Element*& root();
-		Grid& grid();
+		Meshing::Mesher& mesher();
 
 	public:
 
 		Project() = default;
 		
 		const Dag::Element* root() const;
-		const Grid& grid() const;
+		const Meshing::Mesher& mesher() const;
 
 	};
 

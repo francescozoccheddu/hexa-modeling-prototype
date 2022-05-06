@@ -1,6 +1,6 @@
 #include <HMP/Actions/Refine.hpp>
 
-#include <HMP/grid.hpp>
+#include <HMP/Meshing/Mesher.hpp>
 #include <HMP/Meshing/refinementSchemes.hpp>
 #include <cpputils/collections/conversions.hpp>
 #include <HMP/Meshing/Utils.hpp>
@@ -15,10 +15,10 @@ namespace HMP::Actions
 
 	void Refine::apply()
 	{
-		Grid& grid{ this->grid() };
-		Grid::Mesh& mesh{ grid.mesh() };
-		Dag::Element& element{ grid.element(mesh.pick_poly(m_polyCentroid)) };
-		const Id fid{ grid.closestPolyFid(element.pid(), m_faceCentroid) };
+		Meshing::Mesher& mesher{ this->mesher() };
+		const Meshing::Mesher::Mesh& mesh{ mesher.mesh() };
+		Dag::Element& element{ mesher.pidToElement(mesh.pick_poly(m_polyCentroid)) };
+		const Id fid{ Meshing::Utils::closestFaceInPoly(mesh, mesher.elementToPid(element), m_faceCentroid) };
 		for (const Dag::Operation& child : element.children())
 		{
 			if (child.primitive() != Dag::Operation::EPrimitive::Extrude)
@@ -32,25 +32,25 @@ namespace HMP::Actions
 		m_operation = &operation;
 		element.children().attach(operation);
 		const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(m_scheme) };
-		const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector(Meshing::Utils::polyVertsFromFace(mesh, element.pid(), fid))) };
-		for (std::size_t i{ 0 }; i < refinement.polyCount(); i++)
+		const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector(Meshing::Utils::polyVertsFromFace(mesh, mesher.elementToPid(element), fid)))};
+		for (const PolyVerts& verts : polys)
 		{
 			Dag::Element& child{ *new Dag::Element{} };
+			child.vertices() = verts;
 			operation.children().attach(child);
-			grid.addPoly(polys[i], child);
+			mesher.add(child);
 		}
-		grid.removePoly(element.pid());
-		mesh.updateGL();
+		mesher.remove(element);
 	}
 
 	void Refine::unapply()
 	{
-		Grid& grid{ this->grid() };
-		for (const Dag::Element& child : m_operation->children())
+		Meshing::Mesher& mesher{ this->mesher() };
+		for (Dag::Element& child : m_operation->children())
 		{
-			grid.removePoly(child.pid());
+			mesher.remove(child);
 		}
-		grid.addPoly(m_operation->parents().single());
+		mesher.add(m_operation->parents().single());
 		m_operation->children().detachAll(true);
 		delete m_operation;
 	}

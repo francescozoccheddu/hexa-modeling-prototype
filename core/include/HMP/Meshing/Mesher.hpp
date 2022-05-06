@@ -4,52 +4,47 @@
 #include <cinolib/meshes/drawable_hexmesh.h>
 #include <unordered_map>
 #include <HMP/Dag/Element.hpp>
-#include <HMP/Dag/Operation.hpp>
-#include <HMP/Utils/Event.hpp>
-#include <HMP/Utils/Mixins.hpp>
-
-namespace HMP
-{
-	class Project;
-}
+#include <cpputils/mixins/ReferenceClass.hpp>
+#include <cpputils/collections/Iterable.hpp>
+#include <cpputils/collections/DereferenceIterable.hpp>
+#include <utility>
 
 namespace HMP::Meshing
 {
 
-	class Mesher final : public Utils::Mixins::ReferenceClass
+	namespace Internal
+	{
+
+		using ElementToPidIterable = cpputils::collections::Iterable <
+			std::unordered_map<Dag::Element*, Id>,
+			std::pair<Dag::Element&, Id>,
+			std::pair<const Dag::Element&, Id>,
+			[](std::unordered_map<Dag::Element*, Id>::value_type& _entry) { return std::pair<Dag::Element&, Id>{*_entry.first, _entry.second}; },
+			[](const std::unordered_map<Dag::Element*, Id>::value_type& _entry) { return std::pair<const Dag::Element&, Id>{*_entry.first, _entry.second}; }
+		> ;
+
+	}
+
+	class Mesher final : public cpputils::mixins::ReferenceClass, public Internal::ElementToPidIterable
 	{
 
 	public:
 
-		class PolyAttributes final : cinolib::Polyhedron_std_attributes
+		void add(Dag::Element& _element);
+
+		class PolyAttributes final : public cinolib::Polyhedron_std_attributes
 		{
 
 		private:
 
-			friend class Mesher;
+			friend void Mesher::add(Dag::Element& _element);
 
 			Dag::Element* m_element;
 
 		public:
 
+			Dag::Element& element();
 			const Dag::Element& element() const;
-
-		};
-
-		class ProjectClient final
-		{
-
-		private:
-
-			friend class HMP::Project;
-
-			ProjectClient() = delete;
-
-		public:
-
-			static void apply(Mesher& _mesher, Dag::Operation& _operation);
-			static void unapply(Mesher& _mesher, Dag::Operation& _operation);
-			static void clear(Mesher& _mesher);
 
 		};
 
@@ -58,42 +53,28 @@ namespace HMP::Meshing
 	private:
 
 		Mesh m_mesh;
-		std::unordered_map<const Dag::Element*, Id> m_elementToPid;
+		std::unordered_map<Dag::Element*, Id> m_elementToPid;
 
-		bool getVert(const Vec& _vert, Id& _vid) const;
-		Id getVert(const Vec& _vert) const;
 		Id getOrAddVert(const Vec& _vert);
-		bool hasVert(const Vec& _vert) const;
-
-		void addPoly(Dag::Element& _element);
-		void removePoly(Dag::Element& _element);
-		void apply(Dag::Operation& _operation);
-		void unapply(Dag::Operation& _operation);
-		void clear();
 
 	public:
 
-		struct
-		{
-			Utils::Event<Mesher, Id> polyAdding{};
-			Utils::Event<Mesher, Id> polyAdded{};
-			Utils::Event<Mesher, Id> polyRemoving{};
-			Utils::Event<Mesher, Id> polyRemoved{};
-			Utils::Event<Mesher> clearing{};
-			Utils::Event<Mesher> cleared{};
-			Utils::Event<Mesher, Id, Id> polyIdChanging{};
-			Utils::Event<Mesher, Id, Id> polyIdChanged{};
-		} events{};
+		Mesher();
 
 		const Mesh& mesh() const;
 
-		bool& pidMarked(Id _pid);
-		bool pidMarked(Id _pid) const;
-		bool& fidMarked(Id _fid);
-		bool fidMarked(Id _fid) const;
+		bool getVert(const Vec& _vert, Id& _vid) const;
+		Id getVert(const Vec& _vert) const;
+		bool hasVert(const Vec& _vert) const;
 
-		bool isElementActive(const Dag::Element& _element) const;
+		bool has(const Dag::Element& _element) const;
 		Id elementToPid(const Dag::Element& _element) const;
+		Dag::Element& pidToElement(Id _pid);
+		const Dag::Element& pidToElement(Id _pid) const;
+		//void add(Dag::Element& _element);
+		void remove(Dag::Element& _element);
+		void moveVert(Id _vid, const Vec& _position);
+		void clear();
 
 	};
 

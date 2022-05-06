@@ -15,17 +15,18 @@ namespace HMP::Dag
 
 	private:
 
-		Id m_pid{};
 		PolyVerts m_vertices;
 
 		Set m_parents, m_children;
 
+		using Node::isElement;
+		using Node::isOperation;
+		using Node::element;
+		using Node::operation;
+
 	public:
 
 		Element();
-
-		Id& pid();
-		Id pid() const;
 
 		PolyVerts& vertices();
 		const PolyVerts& vertices() const;

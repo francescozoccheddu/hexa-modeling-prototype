@@ -17,6 +17,15 @@ namespace HMP::Gui::Dag
 
 	using namespace HMP::Dag;
 
+	Viewer::Viewer(const Meshing::Mesher& _mesher)
+		: m_center_nl{ 0.5, 0.5 }, m_windowHeight_n{ 1.0 }, m_mesher{ _mesher }
+	{}
+
+	const Meshing::Mesher& Viewer::mesher() const
+	{
+		return m_mesher;
+	}
+
 	void Viewer::resetView()
 	{
 		m_center_nl = cinolib::vec2d{ layout.aspectRatio(), 1.0 } / 2;
@@ -199,7 +208,8 @@ namespace HMP::Gui::Dag
 							const ImU32 color{ highlight == &node.node() ? highlightedElementColor : elementColor };
 							drawList->AddRectFilled(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), color);
 							drawList->AddRect(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), strokeColor);
-							text = std::to_string(node.node().element().pid());
+							const Dag::Element& element{ node.node().element() };
+							text = m_mesher.has(element) ? std::to_string(m_mesher.elementToPid(element)) : "";
 						}
 						break;
 						case Dag::Node::EType::Operation:

@@ -12,16 +12,6 @@ namespace HMP::Dag
 		m_vertices.fill(Vec{ 0,0,0 });
 	}
 
-	Id& Element::pid()
-	{
-		return m_pid;
-	}
-
-	Id Element::pid() const
-	{
-		return m_pid;
-	}
-
 	PolyVerts& Element::vertices()
 	{
 		return m_vertices;

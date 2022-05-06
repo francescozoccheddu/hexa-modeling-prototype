@@ -1,6 +1,7 @@
 #include <HMP/Actions/Clear.hpp>
 
-#include <HMP/grid.hpp>
+#include <HMP/Meshing/Mesher.hpp>
+#include <HMP/Meshing/Utils.hpp>
 #include <stdexcept>
 
 namespace HMP::Actions
@@ -18,7 +19,8 @@ namespace HMP::Actions
 			Vec(-cubeSize,-cubeSize,-cubeSize), Vec(-cubeSize,-cubeSize, cubeSize), Vec(cubeSize,-cubeSize,cubeSize), Vec(cubeSize,-cubeSize,-cubeSize),
 			Vec(-cubeSize,cubeSize,-cubeSize), Vec(-cubeSize,cubeSize, cubeSize), Vec(cubeSize,cubeSize,cubeSize), Vec(cubeSize,cubeSize,-cubeSize)
 		};
-		grid().replaceDag(*root());
+		mesher().clear();
+		mesher().add(*root());
 	}
 
 	void Clear::unapply()
@@ -29,7 +31,7 @@ namespace HMP::Actions
 			delete root();
 		}
 		root() = m_root;
-		grid().replaceDag(*root());
+		Meshing::Utils::addLeafs(mesher(), *root(), true);
 	}
 
 }

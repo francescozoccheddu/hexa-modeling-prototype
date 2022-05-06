@@ -50,11 +50,11 @@ namespace HMP::Gui
 			std::string filename{};
 		} m_target;
 
-		HMP::Project m_project{};
-		cinolib::GLcanvas m_canvas{};
-		Dag::Viewer m_dagViewer{};
+		HMP::Project m_project;
+		cinolib::GLcanvas m_canvas;
+		Dag::Viewer m_dagViewer;
 
-		const Grid& grid() const;
+		const Meshing::Mesher& mesher() const;
 		Commander& commander();
 		const Commander& commander() const;
 		const HMP::Dag::Element& root() const;
@@ -85,6 +85,8 @@ namespace HMP::Gui
 		void onClear();
 
 	public:
+
+		App();
 
 		int launch();
 
