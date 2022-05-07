@@ -15,6 +15,7 @@
 #include <utility>
 #include <HMP/Actions/MoveVert.hpp>
 #include <HMP/Actions/Clear.hpp>
+#include <HMP/Actions/Load.hpp>
 #include <HMP/Actions/Delete.hpp>
 #include <HMP/Actions/Extrude.hpp>
 #include <HMP/Actions/MakeConforming.hpp>
@@ -404,7 +405,7 @@ namespace HMP::Gui
 		{
 			const Id fid{ mesher().mesh().pick_face(world_mouse_pos) };
 			const Id pid{ mesher().mesh().adj_f2p(fid).front() };
-			commander().apply(*new Actions::Refine{ mesher().pidToElement(pid), mesher().mesh().poly_face_offset(pid, fid), Meshing::ERefinementScheme::Inset});
+			commander().apply(*new Actions::Refine{ mesher().pidToElement(pid), mesher().mesh().poly_face_offset(pid, fid), Meshing::ERefinementScheme::Inset });
 			updateDagViewer();
 			updateHighlight();
 		}
@@ -435,7 +436,8 @@ namespace HMP::Gui
 			using HMP::Dag::Utils::operator<<;
 			std::ofstream file;
 			file.open(filename);
-			file << root();
+			Utils::Serialization::Serializer serializer{ file };
+			serializer << root();
 			file.close();
 		}
 	}
@@ -449,10 +451,10 @@ namespace HMP::Gui
 			std::ifstream file;
 			file.open(filename);
 			HMP::Dag::Node* root;
-			file >> root;
+			Utils::Serialization::Deserializer deserializer{ file };
+			deserializer >> root;
 			file.close();
-			//mesher().replaceDag(root->element()); 
-			throw std::runtime_error{ "^^^" };
+			commander().apply(*new Actions::Load{ root->element() });
 			updateDagViewer();
 			m_canvas.refit_scene();
 		}

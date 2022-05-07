@@ -1,14 +1,13 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 
 add_library (core STATIC
-    "src/Project.cpp"
     "src/Actions/Clear.cpp"
-    "src/Actions/MakeConforming.cpp"
-    "src/Actions/Refine.cpp"
-    "src/Actions/MoveVert.cpp"
     "src/Actions/Delete.cpp"
     "src/Actions/Extrude.cpp"
-    "src/Commander.cpp"
+    "src/Actions/Load.cpp"
+    "src/Actions/MakeConforming.cpp"
+    "src/Actions/MoveVert.cpp"
+    "src/Actions/Refine.cpp"
     "src/Dag/Delete.cpp"
     "src/Dag/Element.cpp"
     "src/Dag/Extrude.cpp"
@@ -22,6 +21,9 @@ add_library (core STATIC
     "src/Meshing/refinementSchemes.cpp"
     "src/Meshing/Utils.cpp"
     "src/Utils/Geometry.cpp"
+    "src/Utils/Serialization.cpp"
+    "src/Commander.cpp"
+    "src/Project.cpp"
 )
 
 set_target_properties (core PROPERTIES

@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <HMP/Utils/Serialization.hpp>
 
 namespace HMP::Dag::Utils
 {
@@ -14,7 +15,7 @@ namespace HMP::Dag::Utils
 	std::vector<Node*> descendants(Node& _node, std::function<bool(const Node&)> _branchSelector = [](const Node&) { return true; });
 	std::vector<const Node*> descendants(const Node& _node, std::function<bool(const Node&)> _branchSelector = [](const Node&) { return true; });
 
-	std::ostream& operator<<(std::ostream& _stream, const Node& _node);
-	std::istream& operator>>(std::istream& _stream, Node*& _node);
+	HMP::Utils::Serialization::Serializer& operator<<(HMP::Utils::Serialization::Serializer& _serializer, const Node& _node);
+	HMP::Utils::Serialization::Deserializer& operator>>(HMP::Utils::Serialization::Deserializer& _deserializer, Node*& _node);
 
 }
