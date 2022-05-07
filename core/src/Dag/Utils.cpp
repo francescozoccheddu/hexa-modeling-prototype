@@ -46,12 +46,11 @@ namespace HMP::Dag::Utils
 
 	HMP::Utils::Serialization::Serializer& operator<<(HMP::Utils::Serialization::Serializer& _serializer, const Node& _node)
 	{
-		constexpr char sep = ' ';
 		const std::vector<const Node*> nodes{ descendants(_node) };
-		_serializer << nodes.size() << sep;
+		_serializer << nodes.size();
 		for (const Node* node : nodes)
 		{
-			_serializer << node->type() << sep;
+			_serializer << node->type();
 			switch (node->type())
 			{
 				case Node::EType::Element:
@@ -60,14 +59,14 @@ namespace HMP::Dag::Utils
 					// TODO pid
 					for (const Vec& vertex : element.vertices())
 					{
-						_serializer << vertex << sep;
+						_serializer << vertex;
 					}
 				}
 				break;
 				case Node::EType::Operation:
 				{
 					const Operation& operation{ node->operation() };
-					_serializer << operation.primitive() << sep;
+					_serializer << operation.primitive();
 					// TODO dependencies
 					switch (operation.primitive())
 					{
@@ -79,15 +78,15 @@ namespace HMP::Dag::Utils
 						case Operation::EPrimitive::Extrude:
 						{
 							const Extrude& extrudeOperation{ static_cast<const Extrude&>(operation) };
-							_serializer << extrudeOperation.faceOffset() << sep;
+							_serializer << extrudeOperation.faceOffset();
 						}
 						break;
 						case Operation::EPrimitive::Refine:
 						{
 							const Refine& refineOperation{ static_cast<const Refine&>(operation) };
 							_serializer
-								<< refineOperation.faceOffset() << sep
-								<< refineOperation.scheme() << sep;
+								<< refineOperation.faceOffset()
+								<< refineOperation.scheme();
 						}
 						break;
 					}
@@ -107,10 +106,10 @@ namespace HMP::Dag::Utils
 			}
 			for (const Node* node : nodes)
 			{
-				_serializer << node->parents().size() << sep;
+				_serializer << node->parents().size();
 				for (const Node& parent : node->parents())
 				{
-					_serializer << nodeMap.at(&parent) << sep;
+					_serializer << nodeMap.at(&parent);
 				}
 			}
 		}
