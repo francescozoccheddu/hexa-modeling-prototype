@@ -22,7 +22,6 @@ namespace HMP::Dag
 	private:
 
 		const EPrimitive m_primitive;
-		bool m_userDefined{ true };
 
 		Set m_parents, m_children;
 
@@ -39,9 +38,6 @@ namespace HMP::Dag
 
 		EPrimitive primitive() const;
 
-		bool& userDefined();
-		bool userDefined() const;
-		
 		Set& forward(bool _descending);
 		const Set& forward(bool _descending) const;
 		Set& back(bool _descending);

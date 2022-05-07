@@ -15,7 +15,7 @@ namespace HMP
 
 	void Commander::ActionBase::ensureAttached() const
 	{
-		if (!m_commander)
+		if (!attached())
 		{
 			throw std::logic_error{ "not attached" };
 		}
@@ -23,7 +23,7 @@ namespace HMP
 
 	void Commander::ActionBase::attach(Commander& _commander)
 	{
-		if (m_commander)
+		if (attached())
 		{
 			throw std::logic_error{ "already attached" };
 		}
@@ -74,6 +74,16 @@ namespace HMP
 	{
 		ensureAttached();
 		return m_commander->m_project.root();
+	}
+
+	bool Commander::ActionBase::attached() const
+	{
+		return m_commander;
+	}
+
+	bool Commander::ActionBase::applied() const
+	{
+		return m_applied;
 	}
 
 	// Commander::StackBase

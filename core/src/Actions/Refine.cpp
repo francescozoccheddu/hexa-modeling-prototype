@@ -3,56 +3,85 @@
 #include <HMP/Meshing/Mesher.hpp>
 #include <HMP/Meshing/refinementSchemes.hpp>
 #include <cpputils/collections/conversions.hpp>
+#include <cpputils/collections/zip.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <stdexcept>
 
 namespace HMP::Actions
 {
 
-	Refine::Refine(const Vec& _polyCentroid, const Vec& _faceCentroid, Meshing::ERefinementScheme _scheme)
-		: m_polyCentroid(_polyCentroid), m_faceCentroid(_faceCentroid), m_scheme{ _scheme }
-	{}
+	Refine::~Refine()
+	{
+		if (!applied())
+		{
+			m_operation.children().detachAll(true);
+			delete& m_operation;
+		}
+	}
 
 	void Refine::apply()
 	{
-		Meshing::Mesher& mesher{ this->mesher() };
-		const Meshing::Mesher::Mesh& mesh{ mesher.mesh() };
-		Dag::Element& element{ mesher.pidToElement(mesh.pick_poly(m_polyCentroid)) };
-		const Id fid{ Meshing::Utils::closestFaceInPoly(mesh, mesher.elementToPid(element), m_faceCentroid) };
-		for (const Dag::Operation& child : element.children())
-		{
-			if (child.primitive() != Dag::Operation::EPrimitive::Extrude)
-			{
-				throw std::logic_error{ "element has non-extrude child" };
-			}
-		}
-		Dag::Refine& operation{ *new Dag::Refine{} };
-		operation.scheme() = m_scheme;
-		operation.needsTopologyFix() = true;
-		m_operation = &operation;
-		element.children().attach(operation);
-		const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(m_scheme) };
-		const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector(Meshing::Utils::polyVertsFromFace(mesh, mesher.elementToPid(element), fid)))};
-		for (const PolyVerts& verts : polys)
-		{
-			Dag::Element& child{ *new Dag::Element{} };
-			child.vertices() = verts;
-			operation.children().attach(child);
-			mesher.add(child);
-		}
-		mesher.remove(element);
+		applyRefine(mesher(), m_element, m_operation);
 	}
 
 	void Refine::unapply()
 	{
-		Meshing::Mesher& mesher{ this->mesher() };
-		for (Dag::Element& child : m_operation->children())
-		{
-			mesher.remove(child);
-		}
-		mesher.add(m_operation->parents().single());
-		m_operation->children().detachAll(true);
-		delete m_operation;
+		unapplyRefine(mesher(), m_operation);
 	}
+
+	Dag::Refine& Refine::prepareRefine(Id _faceOffset, Meshing::ERefinementScheme _scheme)
+	{
+		Dag::Refine& refine{ *new Dag::Refine{} };
+		refine.scheme() = _scheme;
+		refine.faceOffset() = _faceOffset;
+		const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(_scheme) };
+		for (std::size_t i{ 0 }; i < refinement.polyCount(); i++)
+		{
+			refine.children().attach(*new Dag::Element{});
+		}
+		return refine;
+	}
+
+	void Refine::applyRefine(Meshing::Mesher& _mesher, Dag::Element& _element, Dag::Refine& _refine)
+	{
+		if (_element.children().cany([](const Dag::Operation& _child) {return _child.primitive() != Dag::Operation::EPrimitive::Extrude; }))
+		{
+			throw std::logic_error{ "element has non-extrude child" };
+		}
+		if (!_refine.isRoot())
+		{
+			throw std::logic_error{ "operation is not root" };
+		}
+		const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(_refine.scheme()) };
+		if (refinement.polyCount() != _refine.children().size())
+		{
+			throw std::logic_error{ "wrong number of children" };
+		}
+		_element.children().attach(_refine);
+		const Id pid{ _mesher.elementToPid(_element) };
+		const Id fid{ _mesher.mesh().poly_face_id(pid, _refine.faceOffset()) };
+		const PolyVerts source{ Meshing::Utils::polyVertsFromFace(_mesher.mesh(), pid, fid) };
+		const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector(source)) };
+		for (const auto& [child, verts] : cpputils::collections::zip(_refine.children(), polys))
+		{
+			child.vertices() = verts;
+			_mesher.add(child);
+		}
+		_mesher.remove(_element);
+	}
+
+	void Refine::unapplyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine)
+	{
+		for (Dag::Element& child : _refine.children())
+		{
+			_mesher.remove(child);
+		}
+		_mesher.add(_refine.parents().single());
+		_refine.parents().detachAll(false);
+	}
+
+	Refine::Refine(Dag::Element& _element, Id _faceOffset, Meshing::ERefinementScheme _scheme)
+		: m_element{ _element }, m_operation{ prepareRefine(_faceOffset, _scheme) }
+	{}
 
 }

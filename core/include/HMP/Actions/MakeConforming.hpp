@@ -9,20 +9,21 @@
 namespace HMP::Actions
 {
 
-	class MakeConforming : public Commander::Action
+	class MakeConforming final : public Commander::Action
 	{
-
-	public:
-
-		MakeConforming();
-
-		void apply() override;
-		void unapply() override;
 
 	private:
 
 		std::vector<Dag::Refine*> m_operations{};
-		std::unordered_set<Dag::Refine*> m_fixedRefines{};
+
+		~MakeConforming() override;
+
+		void apply() override;
+		void unapply() override;
+
+	public:
+
+		MakeConforming();
 
 	};
 

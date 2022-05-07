@@ -1,8 +1,7 @@
 #pragma once
 
-#include <HMP/Meshing/types.hpp>
-#include <HMP/Dag/Extrude.hpp>
 #include <HMP/Commander.hpp>
+#include <HMP/Dag/Extrude.hpp>
 
 namespace HMP::Actions
 {
@@ -10,17 +9,19 @@ namespace HMP::Actions
 	class Extrude final : public Commander::Action
 	{
 
-	public:
+	private:
 
-		Extrude(const Vec& _polyCentroid, const Vec& _faceCentroid);
+		Dag::Element& m_element;
+		Dag::Extrude& m_operation;
+
+		~Extrude() override;
 
 		void apply() override;
 		void unapply() override;
 
-	private:
+	public:
 
-		const Vec m_polyCentroid, m_faceCentroid;
-		Dag::Extrude* m_operation{};
+		Extrude(Dag::Element& _element, Id _faceOffset);
 
 	};
 

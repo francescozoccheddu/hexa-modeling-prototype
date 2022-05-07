@@ -9,63 +9,64 @@
 namespace HMP::Actions
 {
 
-	Extrude::Extrude(const Vec& _polyCentroid, const Vec& _faceCentroid)
-		: m_polyCentroid(_polyCentroid), m_faceCentroid(_faceCentroid)
-	{}
+	Extrude::~Extrude()
+	{
+		if (!applied())
+		{
+			m_operation.children().detachAll(true);
+			delete& m_operation;
+		}
+	}
 
 	void Extrude::apply()
 	{
-		Meshing::Mesher& mesher{ this->mesher() };
-		const Meshing::Mesher::Mesh& mesh{ mesher.mesh() };
-		Dag::Element& element{ mesher.pidToElement(mesh.pick_poly(m_polyCentroid)) };
-		const Id fid{ Meshing::Utils::closestFaceInPoly(mesh, mesher.elementToPid(element), m_faceCentroid) };
-		const Id faceOffset{ mesh.poly_face_offset(mesher.elementToPid(element), fid) };
-		for (const Dag::Operation& child : element.children())
+		for (const Dag::Operation& child : m_element.children())
 		{
 			if (child.primitive() != Dag::Operation::EPrimitive::Extrude)
 			{
 				throw std::logic_error{ "element has non-extrude child" };
 			}
-			if (static_cast<const Dag::Extrude&>(child).faceOffset() == faceOffset)
+			if (static_cast<const Dag::Extrude&>(child).faceOffset() == m_operation.faceOffset())
 			{
 				throw std::logic_error{ "element already has equivalent child" };
 			}
 		}
-		Dag::Extrude& operation{ *new Dag::Extrude{} };
-		m_operation = &operation;
-		operation.faceOffset() = faceOffset;
-		Dag::Element& child{ *new Dag::Element{} };
-		operation.children().attach(child);
-		element.children().attach(operation);
+		Meshing::Mesher& mesher{ this->mesher() };
+		const Meshing::Mesher::Mesh& mesh{ mesher.mesh() };
+		const Id fid{ mesh.poly_face_id(mesher.elementToPid(m_element), m_operation.faceOffset()) };
+		Real avgFaceEdgeLength{};
 		{
-			Real avgFaceEdgeLength{};
+			const std::vector<Id> faceEids{ mesh.adj_f2e(fid) };
+			for (const Id eid : faceEids)
 			{
-				const std::vector<Id> faceEids{ mesh.adj_f2e(fid) };
-				for (const Id eid : faceEids)
-				{
-					avgFaceEdgeLength += mesh.edge_length(eid);
-				}
-				avgFaceEdgeLength /= faceEids.size();
+				avgFaceEdgeLength += mesh.edge_length(eid);
 			}
-
-			PolyVerts& verts{ child.vertices() };
-			const std::vector<Vec> faceVerts = mesh.face_verts(fid);
-			std::copy(faceVerts.begin(), faceVerts.end(), verts.begin());
-			const Vec faceNormal = mesh.face_data(fid).normal;
-			int i{ 4 };
-			for (const Vec& faceVert : faceVerts)
-			{
-				verts[i++] = faceVert + faceNormal * avgFaceEdgeLength;
-			}
-			mesher.add(child);
+			avgFaceEdgeLength /= faceEids.size();
 		}
+		PolyVerts& verts{ m_operation.children().single().vertices() };
+		const std::vector<Vec> faceVerts = mesh.face_verts(fid);
+		std::copy(faceVerts.begin(), faceVerts.end(), verts.begin());
+		const Vec faceNormal = mesh.face_data(fid).normal;
+		int i{ 4 };
+		for (const Vec& faceVert : faceVerts)
+		{
+			verts[i++] = faceVert + faceNormal * avgFaceEdgeLength;
+		}
+		mesher.add(m_operation.children().single());
+		m_element.children().attach(m_operation);
 	}
 
 	void Extrude::unapply()
 	{
-		mesher().remove(m_operation->children().single());
-		m_operation->children().detachAll(true);
-		delete m_operation;
+		m_operation.parents().detachAll(false);
+		mesher().remove(m_operation.children().single());
+	}
+
+	Extrude::Extrude(Dag::Element& _element, Id _faceOffset)
+		: m_element{ _element }, m_operation{ *new Dag::Extrude{} }
+	{
+		m_operation.faceOffset() = _faceOffset;
+		m_operation.children().attach(*new Dag::Element{});
 	}
 
 }

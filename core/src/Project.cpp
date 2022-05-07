@@ -3,33 +3,18 @@
 namespace HMP
 {
 
-	namespace Internal
+	Project::Project()
+		: m_mesher{}, m_commander{ *reinterpret_cast<Project*>(this) }, m_root{}
+	{}
+
+	Commander& Project::commander()
 	{
-
-		ProjectBase::ProjectBase()
-			: m_mesher{}, m_commander{ *reinterpret_cast<Project*>(this) }, m_root{}
-		{}
-
-		const Commander& ProjectBase::commander() const
-		{
-			return m_commander;
-		}
-
-		Commander& ProjectBase::commander()
-		{
-			return m_commander;
-		}
-
+		return m_commander;
 	}
 
-	const Meshing::Mesher& Project::mesher() const
+	const Commander& Project::commander() const
 	{
-		return m_mesher;
-	}
-
-	const Dag::Element* Project::root() const
-	{
-		return m_root;
+		return m_commander;
 	}
 
 	Dag::Element*& Project::root()
@@ -37,7 +22,17 @@ namespace HMP
 		return m_root;
 	}
 
+	const Dag::Element* Project::root() const
+	{
+		return m_root;
+	}
+
 	Meshing::Mesher& Project::mesher()
+	{
+		return m_mesher;
+	}
+
+	const Meshing::Mesher& Project::mesher() const
 	{
 		return m_mesher;
 	}

@@ -6,15 +6,12 @@
 namespace HMP::Dag
 {
 
-	class Extrude : public Operation
+	class Extrude final : public Operation
 	{
 
 	private:
 
-		Id m_offset{};
-
-	protected:
-
+		Id m_faceOffset;
 
 	public:
 

@@ -1,17 +1,20 @@
 #include <HMP/Dag/Refine.hpp>
 
-#include <stdexcept>
-
 namespace HMP::Dag
 {
 
 	Refine::Refine()
-		: Operation{ EPrimitive::Refine }
+		: Operation{ EPrimitive::Refine }, m_faceOffset{}, m_scheme{ Meshing::ERefinementScheme::Subdivide3x3 }, m_needsTopologyFix{ true }
+	{}
+
+	Id& Refine::faceOffset()
 	{
-		for (Id i{ 0 }; i < m_vertices.size(); i++)
-		{
-			m_vertices[i] = i;
-		}
+		return m_faceOffset;
+	}
+
+	Id Refine::faceOffset() const
+	{
+		return m_faceOffset;
 	}
 
 	Meshing::ERefinementScheme& Refine::scheme()
@@ -22,16 +25,6 @@ namespace HMP::Dag
 	Meshing::ERefinementScheme Refine::scheme() const
 	{
 		return m_scheme;
-	}
-
-	PolyVertIds& Refine::vertices()
-	{
-		return m_vertices;
-	}
-
-	const PolyVertIds& Refine::vertices() const
-	{
-		return m_vertices;
 	}
 
 	bool& Refine::needsTopologyFix()

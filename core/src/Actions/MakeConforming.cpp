@@ -10,12 +10,14 @@
 namespace HMP::Actions
 {
 
-	MakeConforming::MakeConforming() {}
+	MakeConforming::~MakeConforming()
+	{
 
+	}
 
 	void MakeConforming::apply()
 	{
-		Meshing::Mesher& mesher{ this->mesher() };
+		/*Meshing::Mesher& mesher{this->mesher()};
 		const Meshing::Mesher::Mesh& mesh{ mesher.mesh() };
 
 		std::vector<Dag::Refine*> refines{};
@@ -177,12 +179,12 @@ namespace HMP::Actions
 				mesher.remove(mesher.pidToElement(pid));
 			}
 		}
-
+		*/
 	}
 
 	void MakeConforming::unapply()
 	{
-		Meshing::Mesher& mesher{ this->mesher() };
+		/*Meshing::Mesher& mesher{this->mesher()};
 		for (Dag::Refine* operation : m_operations)
 		{
 			for (Dag::Element& child : operation->children())
@@ -197,7 +199,11 @@ namespace HMP::Actions
 		{
 			fixedRefine->needsTopologyFix() = true;
 		}
-		m_operations.clear();
+		m_operations.clear();*/
 	}
+
+	MakeConforming::MakeConforming() 
+		: m_operations{}
+	{}
 
 }

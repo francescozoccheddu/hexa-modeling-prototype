@@ -1,7 +1,7 @@
 #pragma once
 
-#include <HMP/Meshing/types.hpp>
 #include <HMP/Commander.hpp>
+#include <HMP/Meshing/types.hpp>
 #include <HMP/Dag/Refine.hpp>
 
 namespace HMP::Actions
@@ -10,18 +10,23 @@ namespace HMP::Actions
 	class Refine final : public Commander::Action
 	{
 
-	public:
+	private:
 
-		Refine(const Vec& _polyCentroid, const Vec& _faceCentroid, Meshing::ERefinementScheme _scheme);
+		Dag::Element& m_element;
+		Dag::Refine& m_operation;
+
+		~Refine() override;
 
 		void apply() override;
 		void unapply() override;
 
-	private:
+	public:
 
-		const Vec m_polyCentroid, m_faceCentroid;
-		const Meshing::ERefinementScheme m_scheme;
-		Dag::Refine* m_operation{};
+		static Dag::Refine& prepareRefine(Id _faceOffset, Meshing::ERefinementScheme _scheme);
+		static void applyRefine(Meshing::Mesher& _mesher, Dag::Element& _element, Dag::Refine& _refine);
+		static void unapplyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine);
+
+		Refine(Dag::Element& _element, Id _faceOffset, Meshing::ERefinementScheme _scheme);
 
 	};
 

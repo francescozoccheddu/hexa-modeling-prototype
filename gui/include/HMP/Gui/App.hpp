@@ -54,7 +54,7 @@ namespace HMP::Gui
 		cinolib::GLcanvas m_canvas;
 		Dag::Viewer m_dagViewer;
 
-		const Meshing::Mesher& mesher() const;
+		Meshing::Mesher& mesher();
 		Commander& commander();
 		const Commander& commander() const;
 		const HMP::Dag::Element& root() const;

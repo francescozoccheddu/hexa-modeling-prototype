@@ -1,7 +1,7 @@
 #pragma once
 
-#include <HMP/Dag/Element.hpp>
 #include <HMP/Commander.hpp>
+#include <HMP/Dag/Element.hpp>
 
 namespace HMP::Actions
 {
@@ -9,16 +9,18 @@ namespace HMP::Actions
 	class Clear final : public Commander::Action
 	{
 
-	public:
-		
-		Clear();
+	private:
+
+		Dag::Element* m_otherRoot;
+
+		~Clear() override;
 
 		void apply() override;
 		void unapply() override;
 
-	private:
-
-		Dag::Element* m_root{};
+	public:
+		
+		Clear();
 
 	};
 

@@ -1,5 +1,4 @@
 #include <HMP/Dag/Operation.hpp>
-#include <HMP/Dag/Element.hpp>
 
 namespace HMP::Dag
 {
@@ -11,16 +10,6 @@ namespace HMP::Dag
 	Operation::EPrimitive Operation::primitive() const
 	{
 		return m_primitive;
-	}
-
-	bool& Operation::userDefined()
-	{
-		return m_userDefined;
-	}
-
-	bool Operation::userDefined() const
-	{
-		return m_userDefined;
 	}
 
 	Operation::Set& Operation::forward(bool _descending)

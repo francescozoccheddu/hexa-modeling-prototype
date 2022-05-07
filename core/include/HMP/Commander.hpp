@@ -14,7 +14,7 @@ namespace HMP
 	class Commander final : public cpputils::mixins::ReferenceClass
 	{
 
-	private:
+	public:
 
 		class Action;
 
@@ -49,6 +49,11 @@ namespace HMP
 			virtual void apply() = 0;
 			virtual void unapply() = 0;
 
+		public:
+
+			bool attached() const;
+			bool applied() const;
+
 		};
 
 		class Stack;
@@ -77,8 +82,6 @@ namespace HMP
 			void clear();
 
 		};
-
-	public:
 
 		class Action : public ActionBase
 		{

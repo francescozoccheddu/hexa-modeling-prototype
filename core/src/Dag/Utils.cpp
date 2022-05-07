@@ -88,16 +88,12 @@ namespace HMP::Dag::Utils
 						{
 							const Refine& refineOperation{ static_cast<const Refine&>(operation) };
 							_stream
-								<< refineOperation.needsTopologyFix() << sep
-								<< refineOperation.scheme() << sep;
-							for (Id vid : refineOperation.vertices())
-							{
-								_stream << vid << sep;
-							}
+								<< refineOperation.faceOffset() << sep
+								<< refineOperation.scheme() << sep
+								<< refineOperation.needsTopologyFix() << sep;
 						}
 						break;
 					}
-					_stream << operation.userDefined() << sep;
 				}
 				break;
 			}
@@ -173,17 +169,13 @@ namespace HMP::Dag::Utils
 						{
 							Refine& refineOperation{ *new Refine{} };
 							_stream
-								>> refineOperation.needsTopologyFix()
-								>> refineOperation.scheme();
-							for (Id& vid : refineOperation.vertices())
-							{
-								_stream >> vid;
-							}
+								>> refineOperation.faceOffset()
+								>> refineOperation.scheme()
+								>> refineOperation.needsTopologyFix();
 							operation = &refineOperation;
 						}
 						break;
 					}
-					_stream >> operation->userDefined();
 					nodes.push_back(operation);
 				}
 				break;

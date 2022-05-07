@@ -6,7 +6,7 @@
 namespace HMP::Dag
 {
 
-	class Element : public Node
+	class Element final : public Node
 	{
 
 	public:

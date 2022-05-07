@@ -9,16 +9,18 @@ namespace HMP::Actions
 	class MoveVert final : public Commander::Action
 	{
 
-	public:
+	private:
 
-		MoveVert(const Vec& _oldPosition, const Vec& _newPosition);
+		Dag::Element& m_element;
+		const Id m_vertOffset;
+		Vec m_otherPosition;
 
 		void apply() override;
 		void unapply() override;
 
-	private:
+	public:
 
-		const Vec m_oldPosition, m_newPosition;
+		MoveVert(Dag::Element& _element, Id _vertOffset, const Vec& _position);
 
 	};
 

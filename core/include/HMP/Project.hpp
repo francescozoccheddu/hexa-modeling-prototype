@@ -8,48 +8,26 @@
 namespace HMP
 {
 
-	class Project;
-
-	namespace Internal
-	{
-
-		class ProjectBase : public cpputils::mixins::ReferenceClass
-		{
-
-		private:
-
-			friend class Project;
-
-			Dag::Element* m_root;
-			Meshing::Mesher m_mesher;
-			Commander m_commander;
-
-			ProjectBase();
-
-		public:
-
-			Commander& commander();
-			const Commander& commander() const;
-
-		};
-
-	}
-
-	class Project : public Internal::ProjectBase
+	class Project : public cpputils::mixins::ReferenceClass
 	{
 
 	private:
 
-		friend class Commander;
-
-		Dag::Element*& root();
-		Meshing::Mesher& mesher();
+		Dag::Element* m_root;
+		Meshing::Mesher m_mesher;
+		Commander m_commander;
 
 	public:
 
-		Project() = default;
-		
+		Project();
+
+		Commander& commander();
+		const Commander& commander() const;
+
+		Dag::Element*& root();
 		const Dag::Element* root() const;
+
+		Meshing::Mesher& mesher();
 		const Meshing::Mesher& mesher() const;
 
 	};

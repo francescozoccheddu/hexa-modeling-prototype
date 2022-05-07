@@ -115,6 +115,10 @@ namespace HMP::Meshing
 	void Mesher::moveVert(Id _vid, const Vec& _position)
 	{
 		m_mesh.vert(_vid) = _position;
+		for (const Id pid : m_mesh.adj_v2p(_vid))
+		{
+			pidToElement(pid).vertices()[m_mesh.poly_vert_offset(pid, _vid)] = _position;
+		}
 		m_mesh.updateGL();
 	}
 

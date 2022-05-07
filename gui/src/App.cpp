@@ -23,7 +23,7 @@
 namespace HMP::Gui
 {
 
-	const Meshing::Mesher& App::mesher() const
+	Meshing::Mesher& App::mesher()
 	{
 		return m_project.mesher();
 	}
@@ -294,7 +294,8 @@ namespace HMP::Gui
 			if (m_move.pending)
 			{
 				// FIXME move in plane instead of using world_mouse_pos
-				commander().apply(*new Actions::MoveVert{ mesher().mesh().vert(m_move.vid), world_mouse_pos });
+				const Id pid{ mesher().mesh().adj_v2p(m_move.vid).front() };
+				commander().apply(*new Actions::MoveVert{ mesher().pidToElement(pid), mesher().mesh().poly_vert_offset(pid, m_move.vid), world_mouse_pos });
 				m_move.pending = false;
 				m_canvas.refit_scene();
 			}
@@ -329,7 +330,7 @@ namespace HMP::Gui
 					}
 				}
 			};
-			commander().apply(*new Actions::Extrude{ mesher().mesh().poly_centroid(pid), mesher().mesh().face_centroid(closest_fid) });
+			commander().apply(*new Actions::Extrude{ mesher().pidToElement(pid), mesher().mesh().poly_face_offset(pid, closest_fid) });
 			updateDagViewer();
 			m_canvas.refit_scene();
 		}
@@ -378,7 +379,7 @@ namespace HMP::Gui
 		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 		{
 			const Id pid{ mesher().mesh().pick_poly(world_mouse_pos) };
-			commander().apply(*new Actions::Refine{ mesher().mesh().poly_centroid(pid), mesher().mesh().face_centroid(mesher().mesh().poly_face_id(pid, 0)), Meshing::ERefinementScheme::Subdivide3x3 });
+			commander().apply(*new Actions::Refine{ mesher().pidToElement(pid), 0, Meshing::ERefinementScheme::Subdivide3x3 });
 			updateDagViewer();
 			updateHighlight();
 		}
@@ -390,7 +391,7 @@ namespace HMP::Gui
 		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 		{
 			const Id pid{ mesher().mesh().pick_poly(world_mouse_pos) };
-			commander().apply(*new Actions::Delete{ mesher().mesh().poly_centroid(pid) });
+			commander().apply(*new Actions::Delete{ mesher().pidToElement(pid) });
 			updateDagViewer();
 			m_canvas.refit_scene();
 		}
@@ -402,7 +403,8 @@ namespace HMP::Gui
 		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 		{
 			const Id fid{ mesher().mesh().pick_face(world_mouse_pos) };
-			commander().apply(*new Actions::Refine{ mesher().mesh().poly_centroid(mesher().mesh().adj_f2p(fid).front()), mesher().mesh().face_centroid(fid), Meshing::ERefinementScheme::Inset });
+			const Id pid{ mesher().mesh().adj_f2p(fid).front() };
+			commander().apply(*new Actions::Refine{ mesher().pidToElement(pid), mesher().mesh().poly_face_offset(pid, fid), Meshing::ERefinementScheme::Inset});
 			updateDagViewer();
 			updateHighlight();
 		}
@@ -487,16 +489,22 @@ namespace HMP::Gui
 
 	void App::onUndo()
 	{
-		commander().undo();
-		updateDagViewer();
-		m_canvas.refit_scene();
+		if (commander().canUndo())
+		{
+			commander().undo();
+			updateDagViewer();
+			m_canvas.refit_scene();
+		}
 	}
 
 	void App::onRedo()
 	{
-		commander().redo();
-		updateDagViewer();
-		m_canvas.refit_scene();
+		if (commander().canRedo())
+		{
+			commander().redo();
+			updateDagViewer();
+			m_canvas.refit_scene();
+		}
 	}
 
 	void App::onClear()
