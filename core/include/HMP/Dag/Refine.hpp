@@ -14,7 +14,6 @@ namespace HMP::Dag
 
 		Id m_faceOffset;
 		Meshing::ERefinementScheme m_scheme;
-		bool m_needsTopologyFix;
 
 	public:
 
@@ -25,9 +24,6 @@ namespace HMP::Dag
 
 		Meshing::ERefinementScheme& scheme();
 		Meshing::ERefinementScheme scheme() const;
-
-		bool& needsTopologyFix();
-		bool needsTopologyFix() const;
 
 	};
 

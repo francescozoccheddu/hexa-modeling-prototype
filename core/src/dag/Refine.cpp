@@ -4,7 +4,7 @@ namespace HMP::Dag
 {
 
 	Refine::Refine()
-		: Operation{ EPrimitive::Refine }, m_faceOffset{}, m_scheme{ Meshing::ERefinementScheme::Subdivide3x3 }, m_needsTopologyFix{ true }
+		: Operation{ EPrimitive::Refine }, m_faceOffset{}, m_scheme{ Meshing::ERefinementScheme::Subdivide3x3 }
 	{}
 
 	Id& Refine::faceOffset()
@@ -25,16 +25,6 @@ namespace HMP::Dag
 	Meshing::ERefinementScheme Refine::scheme() const
 	{
 		return m_scheme;
-	}
-
-	bool& Refine::needsTopologyFix()
-	{
-		return m_needsTopologyFix;
-	}
-
-	bool Refine::needsTopologyFix() const
-	{
-		return m_needsTopologyFix;
 	}
 
 }

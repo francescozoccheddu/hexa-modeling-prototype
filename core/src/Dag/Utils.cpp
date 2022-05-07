@@ -89,8 +89,7 @@ namespace HMP::Dag::Utils
 							const Refine& refineOperation{ static_cast<const Refine&>(operation) };
 							_stream
 								<< refineOperation.faceOffset() << sep
-								<< refineOperation.scheme() << sep
-								<< refineOperation.needsTopologyFix() << sep;
+								<< refineOperation.scheme() << sep;
 						}
 						break;
 					}
@@ -170,8 +169,7 @@ namespace HMP::Dag::Utils
 							Refine& refineOperation{ *new Refine{} };
 							_stream
 								>> refineOperation.faceOffset()
-								>> refineOperation.scheme()
-								>> refineOperation.needsTopologyFix();
+								>> refineOperation.scheme();
 							operation = &refineOperation;
 						}
 						break;

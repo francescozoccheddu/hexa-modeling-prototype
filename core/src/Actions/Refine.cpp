@@ -1,6 +1,5 @@
 #include <HMP/Actions/Refine.hpp>
 
-#include <HMP/Meshing/Mesher.hpp>
 #include <HMP/Meshing/refinementSchemes.hpp>
 #include <cpputils/collections/conversions.hpp>
 #include <cpputils/collections/zip.hpp>
