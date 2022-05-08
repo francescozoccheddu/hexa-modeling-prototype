@@ -63,9 +63,7 @@ namespace HMP::Meshing
 
 		const Mesh& mesh() const;
 
-		bool getVert(const Vec& _vert, Id& _vid) const;
 		Id getVert(const Vec& _vert) const;
-		bool hasVert(const Vec& _vert) const;
 
 		bool has(const Dag::Element& _element) const;
 		Id elementToPid(const Dag::Element& _element) const;

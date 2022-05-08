@@ -52,8 +52,8 @@ namespace HMP::Actions
 						{
 							for (const Vec& vert : verts)
 							{
-								Id vid;
-								if (!mesher.getVert(vert, vid))
+								const Id vid{ mesher.getVert(vert) };
+								if (vid == noId)
 								{
 									goto nextRefine;
 								}

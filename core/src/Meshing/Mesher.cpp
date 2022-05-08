@@ -21,10 +21,10 @@ namespace HMP::Meshing
 
 	Id Mesher::getOrAddVert(const Vec& _vert)
 	{
-		Id vid;
-		if (!getVert(_vert, vid))
+		const Id vid{ getVert(_vert) };
+		if (vid == noId)
 		{
-			vid = m_mesh.vert_add(_vert);
+			return m_mesh.vert_add(_vert);
 		}
 		return vid;
 	}
@@ -39,31 +39,15 @@ namespace HMP::Meshing
 		return m_mesh;
 	}
 
-	bool Mesher::getVert(const Vec& _vert, Id& _vid) const
+	Id Mesher::getVert(const Vec& _vert) const
 	{
 		constexpr Real c_maxVertDistance{ 1e-6 };
 		if (!m_mesh.num_verts())
 		{
-			return false;
+			return noId;
 		}
-		_vid = m_mesh.pick_vert(_vert);
-		return m_mesh.vert(_vid).dist(_vert) <= c_maxVertDistance;
-	}
-
-	Id Mesher::getVert(const Vec& _vert) const
-	{
-		Id vid;
-		if (!getVert(_vert, vid))
-		{
-			throw std::logic_error{ "not found" };
-		}
-		return vid;
-	}
-
-	bool Mesher::hasVert(const Vec& _vert) const
-	{
-		Id vid;
-		return getVert(_vert, vid);
+		const Id vid{ m_mesh.pick_vert(_vert) };
+		return m_mesh.vert(vid).dist(_vert) <= c_maxVertDistance ? vid : noId;
 	}
 
 	bool Mesher::has(const Dag::Element& _element) const
@@ -114,6 +98,11 @@ namespace HMP::Meshing
 
 	void Mesher::moveVert(Id _vid, const Vec& _position)
 	{
+		const Id oldVid{ getVert(_position) };
+		if (oldVid != noId && oldVid != _vid)
+		{
+			throw std::logic_error{ "move will result in merge" };
+		}
 		m_mesh.vert(_vid) = _position;
 		for (const Id pid : m_mesh.adj_v2p(_vid))
 		{
