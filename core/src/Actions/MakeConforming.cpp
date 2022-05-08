@@ -100,6 +100,7 @@ namespace HMP::Actions
 							Dag::Refine& targetRefine{ Refine::prepareRefine(0, Meshing::ERefinementScheme::Subdivide3x3) };
 							Refine::applyRefine(mesher, targetElement, targetRefine);
 							m_operations.push_back({ &targetRefine, &targetElement });
+							standardRefines.push_back(&targetRefine);
 						}
 					}
 					mesher.remove(sourceElement);

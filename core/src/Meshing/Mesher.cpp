@@ -167,7 +167,7 @@ namespace HMP::Meshing
 
 	Id Mesher::getVert(const Vec& _vert) const
 	{
-		constexpr Real c_maxVertDistance{ 1e-6 };
+		constexpr Real c_maxVertDistance{ 1e-3 };
 		if (!m_mesh.num_verts())
 		{
 			return noId;
