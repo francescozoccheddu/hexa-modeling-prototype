@@ -15,11 +15,7 @@ namespace HMP::Gui
 
 	private:
 
-		inline static const unsigned int c_highlightFaceRadius{ 10u };
 		inline static const unsigned int c_highlightVertexRadius{ 10u };
-		inline static const cinolib::Color c_highlightPolyColor{ cinolib::Color::YELLOW() };
-		inline static const cinolib::Color c_highlightFaceColor{ cinolib::Color::PASTEL_VIOLET() };
-		inline static const cinolib::Color c_highlightVertexColor{ cinolib::Color::BLUE() };
 
 		struct
 		{
@@ -46,10 +42,10 @@ namespace HMP::Gui
 
 		HMP::Project m_project;
 		cinolib::GLcanvas m_canvas;
-		Dag::Viewer m_dagViewer;
 		Meshing::Mesher& m_mesher;
 		const Meshing::Mesher::Mesh& m_mesh;
 		Commander& m_commander;
+		Dag::Viewer m_dagViewer;
 
 		void updateHighlight();
 		void updateDagViewer();

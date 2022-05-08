@@ -39,11 +39,11 @@ namespace HMP::Gui::Dag
 
 		using vec = cinolib::vec2d;
 
-		const auto toVec{ [&](const ImVec2& _vec) {
+		constexpr auto toVec{ [](const ImVec2& _vec) {
 			return vec{_vec.x, _vec.y};
 		} };
 
-		const auto toImVec{ [&](const vec& _vec) {
+		constexpr auto toImVec{ [](const vec& _vec) {
 			return ImVec2{static_cast<float>(_vec.x()), static_cast<float>(_vec.y())};
 		} };
 
@@ -146,6 +146,10 @@ namespace HMP::Gui::Dag
 
 		// drawing
 
+		constexpr auto toImCol{ [](const cinolib::Color& _color) {
+			return IM_COL32(_color.r_uchar(), _color.g_uchar(), _color.b_uchar(), _color.a_uchar());
+		} };
+
 		{
 			ImDrawList* drawList = ImGui::GetWindowDrawList();
 
@@ -203,8 +207,8 @@ namespace HMP::Gui::Dag
 					{
 						case Dag::Node::EType::Element:
 						{
-							constexpr ImU32 elementColor{ IM_COL32(128, 128, 128, 255) };
-							constexpr ImU32 highlightedElementColor{ IM_COL32(255, 255, 0, 255) };
+							static const ImU32 elementColor{ toImCol(Meshing::Mesher::polyColor) };
+							static const ImU32 highlightedElementColor{ toImCol(Meshing::Mesher::markedFaceColor) };
 							const ImU32 color{ highlight == &node.node() ? highlightedElementColor : elementColor };
 							drawList->AddRectFilled(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), color);
 							drawList->AddRect(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), strokeColor);
@@ -220,15 +224,15 @@ namespace HMP::Gui::Dag
 							{
 								case Dag::Operation::EPrimitive::Extrude:
 									text = "E";
-									operationColor = IM_COL32(214, 0, 114, 255);
+									operationColor = IM_COL32(252, 109, 171, 255);
 									break;
 								case Dag::Operation::EPrimitive::Refine:
-									text = "S";
-									operationColor = IM_COL32(0, 209, 91, 255);
+									text = "R";
+									operationColor = IM_COL32(192, 76, 253, 255);
 									break;
 								case Dag::Operation::EPrimitive::Delete:
 									text = "D";
-									operationColor = IM_COL32(214, 107, 0, 255);
+									operationColor = IM_COL32(94, 43, 255, 255);
 									break;
 							}
 							drawList->AddCircleFilled(toImVec(center), nodeRadius_s, operationColor, circleSegments);

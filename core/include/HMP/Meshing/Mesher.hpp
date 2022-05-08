@@ -53,6 +53,8 @@ namespace HMP::Meshing
 
 	public:
 
+		static const cinolib::Color polyColor, markedPolyColor, markedFaceColor, suggestedBackgroundColor, suggestedOverlayColor;
+
 		void add(Dag::Element& _element);
 
 		class PolyAttributes final : public cinolib::Polyhedron_std_attributes

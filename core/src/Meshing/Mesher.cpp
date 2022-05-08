@@ -27,7 +27,7 @@ namespace HMP::Meshing
 	void Mesher::PolyMarkerSet::mark(const Dag::Element& _element, bool _marked)
 	{
 		const Id pid{ m_mesher.elementToPid(_element) };
-		m_mesher.m_mesh.poly_data(pid).flags[cinolib::MARKED] = _marked;
+		m_mesher.m_mesh.poly_data(pid).color = _marked ? markedPolyColor : polyColor;
 	}
 
 	bool Mesher::PolyMarkerSet::has(const Dag::Element& _element) const
@@ -115,6 +115,12 @@ namespace HMP::Meshing
 
 	// Mesher
 
+	const cinolib::Color Mesher::polyColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.35f) };
+	const cinolib::Color Mesher::markedPolyColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 0.5f) };
+	const cinolib::Color Mesher::markedFaceColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 0.7f) };
+	const cinolib::Color Mesher::suggestedBackgroundColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.1f) };
+	const cinolib::Color Mesher::suggestedOverlayColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 0.9f) };
+
 	Id Mesher::getOrAddVert(const Vec& _vert)
 	{
 		const Id vid{ getVert(_vert) };
@@ -129,10 +135,8 @@ namespace HMP::Meshing
 		: m_mesh(), m_elementToPid{}, Internal::ElementToPidIterable{ m_elementToPid }, m_polyMarkerSet{ *this }, m_faceMarkerSet{ *this }
 	{
 		m_mesh.show_mesh_flat();
-		m_mesh.show_out_poly_color();
-		m_mesh.poly_set_color(cinolib::Color::CYAN());
 		m_mesh.show_marked_face_transparency(1.0f);
-		m_mesh.show_marked_face_color(cinolib::Color::RED());
+		m_mesh.show_marked_face_color(markedFaceColor);
 		m_mesh.show_marked_face(true);
 	}
 
@@ -181,6 +185,7 @@ namespace HMP::Meshing
 		}
 		const Id pid{ m_mesh.poly_add(cpputils::collections::conversions::toVector(vids)) };
 		m_mesh.poly_data(pid).m_element = &_element;
+		m_mesh.poly_data(pid).color = polyColor;
 		m_elementToPid[&_element] = pid;
 	}
 

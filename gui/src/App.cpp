@@ -34,8 +34,9 @@ namespace HMP::Gui
 
 		cinolib::VolumeMeshControls<Meshing::Mesher::Mesh> menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh" };
 		m_canvas.push(&m_mesh);
-		m_canvas.push(&menu);
+		//m_canvas.push(&menu);
 
+		m_canvas.background = m_mesher.suggestedBackgroundColor;
 		m_canvas.depth_cull_markers = false;
 		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMove(_args...); };
 		m_canvas.callback_key_pressed = [this](auto && ..._args) { return onKeyPress(_args...); };
@@ -63,12 +64,12 @@ namespace HMP::Gui
 			{
 				const Id fid{ m_mesh.pick_face(world) };
 				const Id facePid{ m_mesh.adj_f2p(fid).front() };
-				m_mesher.faceMarkerSet().add(m_mesher.pidToElement(pid), m_mesh.poly_face_offset(pid, fid));
+				m_mesher.faceMarkerSet().add(m_mesher.pidToElement(facePid), m_mesh.poly_face_offset(facePid, fid));
 			}
 			// vert
 			{
 				const Id vid{ m_mesh.pick_vert(world) };
-				m_canvas.push_marker(m_mesh.vert(vid), "", c_highlightVertexColor, c_highlightVertexRadius);
+				m_canvas.push_marker(m_mesh.vert(vid), "", m_mesher.suggestedOverlayColor, c_highlightVertexRadius);
 			}
 		}
 		m_dagViewer.highlight = pid != noId ? &m_mesher.pidToElement(pid) : nullptr;
