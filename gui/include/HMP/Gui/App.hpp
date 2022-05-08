@@ -2,6 +2,7 @@
 
 #include <HMP/Project.hpp>
 #include <HMP/Gui/Dag/Viewer.hpp>
+#include <HMP/Dag/Element.hpp>
 #include <cinolib/gl/glcanvas.h>
 #include <cinolib/meshes/drawable_trimesh.h>
 #include <cinolib/color.h>
@@ -20,17 +21,21 @@ namespace HMP::Gui
 		struct
 		{
 			cinolib::vec2d position{};
+			Vec worldPosition{};
+			HMP::Dag::Element* element{};
+			Id faceOffset{}, vertOffset{};
 		} m_mouse;
 
 		struct
 		{
-			Id vid{};
+			HMP::Dag::Element* element{};
+			Id vertOffset{};
 			bool pending{ false };
 		} m_move;
 
 		struct
 		{
-			Id pid{};
+			HMP::Dag::Element* element{};
 			bool pending{ false };
 		} m_copy;
 
@@ -47,7 +52,7 @@ namespace HMP::Gui
 		Commander& m_commander;
 		Dag::Viewer m_dagViewer;
 
-		void updateHighlight();
+		void updateMouse();
 		void updateDagViewer();
 
 		void onCameraChange();
@@ -59,8 +64,8 @@ namespace HMP::Gui
 		void onExtrude();
 		void onCopy();
 		void onPaste();
-		void onRefineHexahedron();
-		void onDeleteHexahedron();
+		void onRefineElement();
+		void onDelete();
 		void onRefineFace();
 		void onMakeConformant();
 		void onSaveMesh();

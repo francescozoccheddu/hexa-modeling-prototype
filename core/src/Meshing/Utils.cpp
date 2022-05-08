@@ -100,20 +100,36 @@ namespace HMP::Meshing::Utils
 		return verts;
 	}
 
-	Id closestFaceInPoly(const Meshing::Mesher::Mesh& _mesh, Id _pid, const Vec& _centroid)
+	Id closestFaceOffsetInPoly(const Meshing::Mesher::Mesh& _mesh, Id _pid, const Vec& _centroid)
 	{
 		Real closestDist{ cinolib::inf_double };
-		Id closestFid{};
-		for (Id fid : _mesh.poly_faces_id(_pid))
+		Id closestOffset{};
+		for (Id faceOffset{0}; faceOffset < 6; faceOffset++)
 		{
-			const Real dist{ _centroid.dist(_mesh.face_centroid(fid)) };
+			const Real dist{ _centroid.dist(_mesh.face_centroid(_mesh.poly_face_id(_pid, faceOffset))) };
 			if (dist < closestDist)
 			{
 				closestDist = dist;
-				closestFid = fid;
+				closestOffset = faceOffset;
 			}
 		}
-		return closestFid;
+		return closestOffset;
+	}
+
+	Id closestVertOffsetInPoly(const Meshing::Mesher::Mesh& _mesh, Id _pid, const Vec& _position)
+	{
+		Real closestDist{ cinolib::inf_double };
+		Id closestOffset{};
+		for (Id vertOffset{0}; vertOffset < 8; vertOffset++)
+		{
+			const Real dist{ _position.dist(_mesh.vert(_mesh.poly_vert_id(_pid, vertOffset))) };
+			if (dist < closestDist)
+			{
+				closestDist = dist;
+				closestOffset = vertOffset;
+			}
+		}
+		return closestOffset;
 	}
 
 	void addLeafs(Mesher& _mesher, Dag::Element& _root, bool _clear)

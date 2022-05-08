@@ -16,9 +16,9 @@ namespace HMP::Actions
 
 	void Delete::apply()
 	{
-		if (m_element.isRoot())
+		if (mesher().mesh().num_polys() == 1)
 		{
-			throw std::logic_error{ "element is root" };
+			throw std::logic_error{ "cannot delete the only active element" };
 		}
 		for (const Dag::Operation& child : m_element.children())
 		{

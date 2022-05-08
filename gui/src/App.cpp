@@ -21,6 +21,7 @@
 #include <HMP/Actions/MakeConforming.hpp>
 #include <HMP/Actions/Project.hpp>
 #include <HMP/Actions/Refine.hpp>
+#include <HMP/Meshing/Utils.hpp>
 
 namespace HMP::Gui
 {
@@ -47,33 +48,27 @@ namespace HMP::Gui
 		updateDagViewer();
 	}
 
-	void App::updateHighlight()
+	void App::updateMouse()
 	{
-		Id pid{ noId };
-		cinolib::vec3d world;
 		m_canvas.pop_all_markers();
 		m_mesher.faceMarkerSet().clear();
 		m_mesher.polyMarkerSet().clear();
-		if (m_canvas.unproject(m_mouse.position, world))
+		m_mouse.element = nullptr;
+		m_mouse.faceOffset = m_mouse.vertOffset = noId;
+		if (m_canvas.unproject(m_mouse.position, m_mouse.worldPosition))
 		{
 			// poly
-			{
-				pid = m_mesh.pick_poly(world);
-				m_mesher.polyMarkerSet().add(m_mesher.pidToElement(pid));
-			}
+			const Id pid = m_mesh.pick_poly(m_mouse.worldPosition);
+			m_mouse.element = &m_mesher.pidToElement(pid);
+			m_mesher.polyMarkerSet().add(*m_mouse.element);
 			// face
-			{
-				const Id fid{ m_mesh.pick_face(world) };
-				const Id facePid{ m_mesh.adj_f2p(fid).front() };
-				m_mesher.faceMarkerSet().add(m_mesher.pidToElement(facePid), m_mesh.poly_face_offset(facePid, fid));
-			}
+			m_mouse.faceOffset = Meshing::Utils::closestFaceOffsetInPoly(m_mesh, pid, m_mouse.worldPosition);
+			m_mesher.faceMarkerSet().add(*m_mouse.element, m_mouse.faceOffset);
 			// vert
-			{
-				const Id vid{ m_mesh.pick_vert(world) };
-				m_canvas.push_marker(m_mesh.vert(vid), "", m_mesher.suggestedOverlayColor, c_highlightVertexRadius);
-			}
+			m_mouse.vertOffset = Meshing::Utils::closestVertOffsetInPoly(m_mesh, pid, m_mouse.worldPosition);
+			m_canvas.push_marker(m_mesh.vert(m_mesh.poly_vert_id(pid, m_mouse.vertOffset)), "", m_mesher.suggestedOverlayColor, c_highlightVertexRadius);
 		}
-		m_dagViewer.highlight = pid != noId ? &m_mesher.pidToElement(pid) : nullptr;
+		m_dagViewer.highlight = m_mouse.element;
 		m_mesher.updateMesh();
 	}
 
@@ -90,13 +85,13 @@ namespace HMP::Gui
 
 	void App::onCameraChange()
 	{
-		updateHighlight();
+		updateMouse();
 	}
 
 	bool App::onMouseMove(double _x, double _y)
 	{
 		m_mouse.position = cinolib::vec2d{ _x, _y };
-		updateHighlight();
+		updateMouse();
 		return false;
 	}
 
@@ -145,7 +140,7 @@ namespace HMP::Gui
 			{
 				if (!_modifiers)
 				{
-					onRefineHexahedron();
+					onRefineElement();
 				}
 			}
 			break;
@@ -163,7 +158,7 @@ namespace HMP::Gui
 			{
 				if (!_modifiers)
 				{
-					onDeleteHexahedron();
+					onDelete();
 				}
 			}
 			break;
@@ -249,39 +244,25 @@ namespace HMP::Gui
 	void App::onDrawControls()
 	{
 		m_dagViewer.draw();
-		if (m_move.pending)
-		{
-			ImGui::Text("Moving vertex #%u", m_move.vid);
-		}
-		if (m_copy.pending)
-		{
-			ImGui::Text("Copying hexahedron #%u", m_copy.pid);
-		}
-		if (m_target.mesh)
-		{
-			ImGui::Text("Showing target '%s'", m_target.filename.c_str());
-		}
 	}
 
 	// Commands
 
 	void App::onMove()
 	{
-		const Project& project{ m_project };
-		cinolib::vec3d world_mouse_pos;
-		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
+		if (m_mouse.element)
 		{
 			if (m_move.pending)
 			{
 				// FIXME move in plane instead of using world_mouse_pos
-				const Id pid{ m_mesh.adj_v2p(m_move.vid).front() };
-				m_commander.apply(*new Actions::MoveVert{ m_mesher.pidToElement(pid), m_mesh.poly_vert_offset(pid, m_move.vid), world_mouse_pos });
+				m_commander.apply(*new Actions::MoveVert{ *m_move.element, m_move.vertOffset, m_mouse.worldPosition });
 				m_move.pending = false;
 				m_canvas.refit_scene();
 			}
 			else
 			{
-				m_move.vid = m_mesh.pick_vert(world_mouse_pos);
+				m_move.element = m_mouse.element;
+				m_move.vertOffset = m_mouse.vertOffset;
 				m_move.pending = true;
 			}
 		}
@@ -293,24 +274,9 @@ namespace HMP::Gui
 
 	void App::onExtrude()
 	{
-		cinolib::vec3d world_mouse_pos;
-		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
+		if (m_mouse.element)
 		{
-			const Id pid{ m_mesh.pick_poly(world_mouse_pos) };
-			Id closest_fid{};
-			{
-				double closest_dist{ std::numeric_limits<double>::infinity() };
-				for (const Id fid : m_mesh.poly_faces_id(pid))
-				{
-					const double dist{ world_mouse_pos.dist_sqrd(m_mesh.face_centroid(fid)) };
-					if (dist < closest_dist)
-					{
-						closest_dist = dist;
-						closest_fid = fid;
-					}
-				}
-			};
-			m_commander.apply(*new Actions::Extrude{ m_mesher.pidToElement(pid), m_mesh.poly_face_offset(pid, closest_fid) });
+			m_commander.apply(*new Actions::Extrude{ *m_mouse.element, m_mouse.faceOffset });
 			updateDagViewer();
 			m_canvas.refit_scene();
 		}
@@ -318,11 +284,9 @@ namespace HMP::Gui
 
 	void App::onCopy()
 	{
-		cinolib::vec3d world_mouse_pos;
-		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
+		if (m_mouse.element)
 		{
-			const Id pid{ m_mesh.pick_poly(world_mouse_pos) };
-			m_copy.pid = pid;
+			m_copy.element = m_mouse.element;
 			m_copy.pending = true;
 		}
 		else
@@ -335,48 +299,33 @@ namespace HMP::Gui
 	{
 		if (m_copy.pending)
 		{
-			cinolib::vec3d world_mouse_pos;
-			if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
+			if (m_mouse.element)
 			{
-				const Id pid{ m_mesh.pick_poly(world_mouse_pos) };
 				throw std::logic_error{ "not implemented yet" };
-				if (/*m_mesher.merge(m_copy.pid, pid)*/ false)
-				{
-					m_copy.pending = false;
-					updateDagViewer();
-					m_canvas.refit_scene();
-				}
-				else
-				{
-					std::cout << "Merge failed" << std::endl;
-				}
 			}
 		}
 	}
 
-	void App::onRefineHexahedron()
+	void App::onRefineElement()
 	{
-		cinolib::vec3d world_mouse_pos;
-		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
+		if (m_mouse.element)
 		{
-			const Id pid{ m_mesh.pick_poly(world_mouse_pos) };
-			m_commander.apply(*new Actions::Refine{ m_mesher.pidToElement(pid), 0, Meshing::ERefinementScheme::Subdivide3x3 });
+			m_commander.apply(*new Actions::Refine{ *m_mouse.element, m_mouse.faceOffset, Meshing::ERefinementScheme::Subdivide3x3 });
 			updateDagViewer();
-			updateHighlight();
+			updateMouse();
 		}
 	}
 
-	void App::onDeleteHexahedron()
+	void App::onDelete()
 	{
 		if (m_mesh.num_polys() <= 1)
 		{
+			std::cout << "cannot delete the only element" << std::endl;
 			return;
 		}
-		cinolib::vec3d world_mouse_pos;
-		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
+		if (m_mouse.element)
 		{
-			const Id pid{ m_mesh.pick_poly(world_mouse_pos) };
-			m_commander.apply(*new Actions::Delete{ m_mesher.pidToElement(pid) });
+			m_commander.apply(*new Actions::Delete{ *m_mouse.element });
 			updateDagViewer();
 			m_canvas.refit_scene();
 		}
@@ -384,14 +333,11 @@ namespace HMP::Gui
 
 	void App::onRefineFace()
 	{
-		cinolib::vec3d world_mouse_pos;
-		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
+		if (m_mouse.element)
 		{
-			const Id fid{ m_mesh.pick_face(world_mouse_pos) };
-			const Id pid{ m_mesh.adj_f2p(fid).front() };
-			m_commander.apply(*new Actions::Refine{ m_mesher.pidToElement(pid), m_mesh.poly_face_offset(pid, fid), Meshing::ERefinementScheme::Inset });
+			m_commander.apply(*new Actions::Refine{ *m_mouse.element, m_mouse.faceOffset, Meshing::ERefinementScheme::Inset });
 			updateDagViewer();
-			updateHighlight();
+			updateMouse();
 		}
 	}
 
@@ -399,7 +345,7 @@ namespace HMP::Gui
 	{
 		m_commander.apply(*new Actions::MakeConforming());
 		updateDagViewer();
-		updateHighlight();
+		updateMouse();
 	}
 
 	void App::onSaveMesh()
@@ -482,6 +428,10 @@ namespace HMP::Gui
 			updateDagViewer();
 			m_canvas.refit_scene();
 		}
+		else
+		{
+			std::cout << "cannot undo" << std::endl;
+		}
 	}
 
 	void App::onRedo()
@@ -491,6 +441,9 @@ namespace HMP::Gui
 			m_commander.redo();
 			updateDagViewer();
 			m_canvas.refit_scene();
+		}
+		{
+			std::cout << "cannot redo" << std::endl;
 		}
 	}
 
