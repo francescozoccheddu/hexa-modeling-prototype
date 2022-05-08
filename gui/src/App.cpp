@@ -21,6 +21,7 @@
 #include <HMP/Actions/MakeConforming.hpp>
 #include <HMP/Actions/Project.hpp>
 #include <HMP/Actions/Refine.hpp>
+#include <HMP/Utils/Serialization.hpp>
 #include <HMP/Meshing/Utils.hpp>
 
 namespace HMP::Gui
@@ -364,11 +365,10 @@ namespace HMP::Gui
 		const std::string filename{ cinolib::file_dialog_save() };
 		if (!filename.empty())
 		{
-			using HMP::Dag::Utils::operator<<;
 			std::ofstream file;
 			file.open(filename);
 			Utils::Serialization::Serializer serializer{ file };
-			serializer << *m_project.root();
+			HMP::Dag::Utils::serialize(serializer, *m_project.root());
 			file.close();
 		}
 	}
@@ -378,14 +378,12 @@ namespace HMP::Gui
 		const std::string filename{ cinolib::file_dialog_open() };
 		if (!filename.empty())
 		{
-			using HMP::Dag::Utils::operator>>;
 			std::ifstream file;
 			file.open(filename);
-			HMP::Dag::Node* root;
 			Utils::Serialization::Deserializer deserializer{ file };
-			deserializer >> root;
+			HMP::Dag::Element& root = HMP::Dag::Utils::deserialize(deserializer).element();
 			file.close();
-			m_commander.apply(*new Actions::Load{ root->element() });
+			m_commander.apply(*new Actions::Load{ root });
 			updateDagViewer();
 			m_canvas.refit_scene();
 		}

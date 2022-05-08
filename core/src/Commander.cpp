@@ -143,9 +143,12 @@ namespace HMP
 
 	void Commander::StackBase::clear()
 	{
-		for (Action* action : m_data)
+		auto it{ m_data.rbegin() };
+		const auto end{ m_data.rend() };
+		while (it != end)
 		{
-			delete action;
+			delete *it;
+			it++;
 		}
 		m_data.clear();
 	}

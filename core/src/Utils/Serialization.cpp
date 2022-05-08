@@ -3,30 +3,27 @@
 namespace HMP::Utils::Serialization
 {
 
-	// Serializer
-
-	Serializer& Serializer::operator<<(const std::string& _data)
+	namespace Internal
 	{
-		cpputils::serialization::Serializer::operator<<(_data);
-		return *this;
-	}
 
-	Serializer& Serializer::operator<<(const Vec& _data)
-	{
-		return *this << _data.x() << _data.y() << _data.z();
-	}
+		// SerializerWorker
 
-	// Deserializer
+		void SerializerWorker::operator<<(const Vec& _data)
+		{
+			cpputils::serialization::SerializerWorker::operator<<(_data.x());
+			cpputils::serialization::SerializerWorker::operator<<(_data.y());
+			cpputils::serialization::SerializerWorker::operator<<(_data.z());
+		}
 
-	Deserializer& Deserializer::operator>>(Vec& _data)
-	{
-		return *this >> _data.x() >> _data.y() >> _data.z();
-	}
+		// DeserializerWorker
 
-	Deserializer& Deserializer::operator>>(std::string& _data)
-	{
-		cpputils::serialization::Deserializer::operator>>(_data);
-		return *this;
+		void DeserializerWorker::operator>>(Vec& _data)
+		{
+			cpputils::serialization::DeserializerWorker::operator>>(_data.x());
+			cpputils::serialization::DeserializerWorker::operator>>(_data.y());
+			cpputils::serialization::DeserializerWorker::operator>>(_data.z());
+		}
+
 	}
 
 }

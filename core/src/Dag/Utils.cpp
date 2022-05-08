@@ -1,4 +1,5 @@
 #include <HMP/Dag/Utils.hpp>
+
 #include <HMP/Dag/Delete.hpp>
 #include <HMP/Dag/Refine.hpp>
 #include <HMP/Dag/Extrude.hpp>
@@ -44,7 +45,7 @@ namespace HMP::Dag::Utils
 		return std::vector<const Node*>{&result[0], (&result[0]) + result.size()};
 	}
 
-	HMP::Utils::Serialization::Serializer& operator<<(HMP::Utils::Serialization::Serializer& _serializer, const Node& _node)
+	void serialize(HMP::Utils::Serialization::Serializer& _serializer, const Node& _node)
 	{
 		const std::vector<const Node*> nodes{ descendants(_node) };
 		_serializer << nodes.size();
@@ -112,10 +113,9 @@ namespace HMP::Dag::Utils
 				}
 			}
 		}
-		return _serializer;
 	}
 
-	HMP::Utils::Serialization::Deserializer& operator>>(HMP::Utils::Serialization::Deserializer& _deserializer, Node*& _node)
+	Node& deserialize(HMP::Utils::Serialization::Deserializer& _deserializer)
 	{
 		std::vector<Node*> nodes{};
 		std::size_t nodesCount{};
@@ -184,8 +184,11 @@ namespace HMP::Dag::Utils
 				node->parents().attach(*nodes[parentIndex]);
 			}
 		}
-		_node = nodes.empty() ? nullptr : nodes[0];
-		return _deserializer;
+		if (nodes.empty())
+		{
+			throw std::logic_error{ "empty" };
+		}
+		return *nodes[0];
 	}
 
 }
