@@ -107,7 +107,7 @@ namespace HMP::Actions
 				}
 
 			}
-			// InterfaceFace
+			// AdapterFaceSubdivide3x3
 			{
 				for (Dag::Refine* standardRefine : standardRefines)
 				{
@@ -131,7 +131,7 @@ namespace HMP::Actions
 							continue;
 						}
 						Dag::Element& targetElement = mesher.pidToElement(targetPid);
-						Dag::Refine& targetRefine{ Refine::prepareRefine(mesh.poly_face_offset(targetPid, sharedFid), Meshing::ERefinementScheme::InterfaceFace)};
+						Dag::Refine& targetRefine{ Refine::prepareRefine(mesh.poly_face_offset(targetPid, sharedFid), Meshing::ERefinementScheme::AdapterFaceSubdivide3x3)};
 						Refine::applyRefine(mesher, targetElement, targetRefine);
 						m_operations.push_back({ &targetRefine, &targetElement });
 					}
@@ -140,7 +140,7 @@ namespace HMP::Actions
 			}
 
 			/*
-			// InterfaceEdge
+			// AdapterEdgeSubdivide3x3
 			{
 				std::deque<Dag::Refine*> sources(refines.begin(), refines.end());
 				while (!sources.empty())

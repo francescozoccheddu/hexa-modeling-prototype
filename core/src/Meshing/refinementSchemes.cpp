@@ -342,7 +342,7 @@ namespace HMP::Meshing
 			}},
 		} };
 
-		const Refinement interfaceEdge{ {
+		const Refinement adapterEdgeSubdivide3x3{ {
 			{{
 				{{1, 0.333333}, {3, -0}, {0, 0.666667}, {7, -0}, },
 				{{1, 0.333333}, {3, 0.666667}, {0, -0}, {7, -0}, },
@@ -395,7 +395,7 @@ namespace HMP::Meshing
 			}},
 		} };
 
-		const Refinement interfaceFace{ {
+		const Refinement adapterFaceSubdivide3x3{ {
 			{{
 				{{1, 0.333333}, {3, 0.333333}, {0, 0.333333}, {7, -0}, },
 				{{1, 0.333333}, {3, 0.666667}, {0, -0}, {7, -0}, },
@@ -532,8 +532,8 @@ namespace HMP::Meshing
 
 	const std::unordered_map<ERefinementScheme, const Refinement&> refinementSchemes{
 		{ERefinementScheme::Subdivide3x3, RefinementSchemes::subdivide3x3},
-		{ERefinementScheme::InterfaceEdge, RefinementSchemes::interfaceEdge},
-		{ERefinementScheme::InterfaceFace, RefinementSchemes::interfaceFace},
+		{ERefinementScheme::AdapterFaceSubdivide3x3, RefinementSchemes::adapterFaceSubdivide3x3},
+		{ERefinementScheme::AdapterEdgeSubdivide3x3, RefinementSchemes::adapterEdgeSubdivide3x3},
 		{ERefinementScheme::Inset, RefinementSchemes::inset}
 	};
 
