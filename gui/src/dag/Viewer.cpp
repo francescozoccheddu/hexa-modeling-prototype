@@ -213,7 +213,8 @@ namespace HMP::Gui::Dag
 							drawList->AddRectFilled(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), color);
 							drawList->AddRect(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), strokeColor);
 							const Dag::Element& element{ node.node().element() };
-							text = m_mesher.has(element) ? std::to_string(m_mesher.elementToPid(element)) : "";
+							const Id pid{ m_mesher.elementToPid(element) };
+							text = pid != noId ? std::to_string(m_mesher.elementToPid(element)) : "";
 						}
 						break;
 						case Dag::Node::EType::Operation:

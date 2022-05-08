@@ -19,6 +19,7 @@
 #include <HMP/Actions/Delete.hpp>
 #include <HMP/Actions/Extrude.hpp>
 #include <HMP/Actions/MakeConforming.hpp>
+#include <HMP/Actions/Project.hpp>
 #include <HMP/Actions/Refine.hpp>
 
 namespace HMP::Gui
@@ -256,7 +257,7 @@ namespace HMP::Gui
 		{
 			ImGui::Text("Copying hexahedron #%u", m_copy.pid);
 		}
-		if (m_target.p_mesh)
+		if (m_target.mesh)
 		{
 			ImGui::Text("Showing target '%s'", m_target.filename.c_str());
 		}
@@ -338,6 +339,7 @@ namespace HMP::Gui
 			if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 			{
 				const Id pid{ m_mesh.pick_poly(world_mouse_pos) };
+				throw std::logic_error{ "not implemented yet" };
 				if (/*m_mesher.merge(m_copy.pid, pid)*/ false)
 				{
 					m_copy.pending = false;
@@ -366,6 +368,10 @@ namespace HMP::Gui
 
 	void App::onDeleteHexahedron()
 	{
+		if (m_mesh.num_polys() <= 1)
+		{
+			return;
+		}
 		cinolib::vec3d world_mouse_pos;
 		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 		{
@@ -401,8 +407,7 @@ namespace HMP::Gui
 		const std::string filename{ cinolib::file_dialog_save() };
 		if (!filename.empty())
 		{
-			//m_mesher.save_as_mesh(filename);
-			throw std::runtime_error{ "^^^" };
+			m_mesh.save(filename.c_str());
 		}
 	}
 
@@ -440,31 +445,33 @@ namespace HMP::Gui
 
 	void App::onToggleTargetVisibility()
 	{
-		if (!m_target.p_mesh)
+		if (!m_target.mesh)
 		{
 			m_target.filename = cinolib::file_dialog_open();
 			if (!m_target.filename.empty())
 			{
-				m_target.p_mesh = new cinolib::DrawableTrimesh<>(m_target.filename.c_str());
-				m_canvas.push(m_target.p_mesh);
+				m_target.mesh = new cinolib::DrawableTrimesh<>(m_target.filename.c_str());
+				m_canvas.push(m_target.mesh);
 			}
 		}
 		else
 		{
-			m_canvas.pop(m_target.p_mesh);
+			m_canvas.pop(m_target.mesh);
 			m_target.filename = "";
-			delete m_target.p_mesh;
-			m_target.p_mesh = nullptr;
+			delete m_target.mesh;
+			m_target.mesh = nullptr;
 		}
 		m_canvas.refit_scene();
 	}
 
 	void App::onProjectToTarget()
 	{
-		///m_mesher.project_on_target(*m_target.p_mesh);
-		throw std::runtime_error{ "^^^" };
-		updateDagViewer();
-		m_canvas.refit_scene();
+		if (m_target.mesh)
+		{
+			m_commander.apply(*new Actions::Project{ *m_target.mesh });
+			updateDagViewer();
+			m_canvas.refit_scene();
+		}
 	}
 
 	void App::onUndo()

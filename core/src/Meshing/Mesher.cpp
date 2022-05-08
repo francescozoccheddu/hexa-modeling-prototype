@@ -82,6 +82,16 @@ namespace HMP::Meshing
 		return m_data.contains({ &_element, _faceOffset });
 	}
 
+	bool Mesher::FaceMarkerSet::addAll(const Dag::Element& _element)
+	{
+		bool added{ false };
+		for (Id o{ 0 }; o < 6; o++)
+		{
+			added |= add(_element, o);
+		}
+		return added;
+	}
+
 	bool Mesher::FaceMarkerSet::add(const Dag::Element& _element, Id _faceOffset)
 	{
 		if (m_data.insert({ &_element, _faceOffset }).second)
@@ -90,6 +100,16 @@ namespace HMP::Meshing
 			return true;
 		}
 		return false;
+	}
+
+	bool Mesher::FaceMarkerSet::removeAll(const Dag::Element& _element)
+	{
+		bool removed{ false };
+		for (Id o{ 0 }; o < 6; o++)
+		{
+			removed |= remove(_element, o);
+		}
+		return removed;
 	}
 
 	bool Mesher::FaceMarkerSet::remove(const Dag::Element& _element, Id _faceOffset)
@@ -163,7 +183,8 @@ namespace HMP::Meshing
 
 	Id Mesher::elementToPid(const Dag::Element& _element) const
 	{
-		return m_elementToPid.at(const_cast<Dag::Element*>(&_element));
+		auto it{ m_elementToPid.find(const_cast<Dag::Element*>(&_element)) };
+		return (it != m_elementToPid.end()) ? it->second : noId;
 	}
 
 	Dag::Element& Mesher::pidToElement(Id _pid)

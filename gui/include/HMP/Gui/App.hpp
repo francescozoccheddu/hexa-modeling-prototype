@@ -36,7 +36,7 @@ namespace HMP::Gui
 
 		struct
 		{
-			cinolib::DrawableTrimesh<>* p_mesh{ nullptr };
+			cinolib::DrawableTrimesh<>* mesh{ nullptr };
 			std::string filename{};
 		} m_target;
 
