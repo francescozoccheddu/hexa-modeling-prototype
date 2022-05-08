@@ -12,7 +12,6 @@ namespace HMP::Actions
 		{
 			m_otherRoot->children().detachAll(true);
 			delete m_otherRoot;
-			m_otherRoot = nullptr;
 		}
 	}
 
