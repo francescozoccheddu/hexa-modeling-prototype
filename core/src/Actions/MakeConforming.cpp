@@ -107,52 +107,39 @@ namespace HMP::Actions
 				}
 
 			}
-			/*
 			// InterfaceFace
 			{
-				std::deque<Dag::Refine*> sources(refines.begin(), refines.end());
-				while (!sources.empty())
+				for (Dag::Refine* standardRefine : standardRefines)
 				{
-					Dag::Refine& sourceRefine = *sources.front();
-					sources.pop_front();
-
+					if (standardRefine->scheme() != Meshing::ERefinementScheme::Subdivide3x3)
+					{
+						continue;
+					}
+					Dag::Refine& sourceRefine = *standardRefine;
 					Dag::Element& sourceElement = sourceRefine.parents().single();
 					mesher.add(sourceElement);
-
+					const Id sourcePid{ mesher.elementToPid(sourceElement) };
 					for (Id targetPid : mesh.adj_p2p(mesher.elementToPid(sourceElement)))
 					{
-						if (removedPids.contains(targetPid))
+						if (targetPid == sourcePid)
 						{
 							continue;
 						}
-						const Id fid = mesh.poly_shared_face(mesher.elementToPid(sourceElement), targetPid);
-						if (targetPid == mesher.elementToPid(sourceElement) || fid == -1)
+						const Id sharedFid = mesh.poly_shared_face(sourcePid, targetPid);
+						if (sharedFid == noId)
 						{
 							continue;
 						}
 						Dag::Element& targetElement = mesher.pidToElement(targetPid);
-						Dag::Refine& targetRefine{ *new Dag::Refine{} };
-						m_operations.push_back(&targetRefine);
-						targetRefine.scheme() = Meshing::ERefinementScheme::InterfaceFace;
-						targetRefine.needsTopologyFix() = false;
-						targetElement.children().attach(targetRefine);
-						const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(Meshing::ERefinementScheme::InterfaceFace) };
-						const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector(Meshing::Utils::polyVertsFromFace(mesh, mesher.elementToPid(targetElement), fid))) };
-						for (const PolyVerts& verts : polys)
-						{
-							Dag::Element& child{ *new Dag::Element{} };
-							child.vertices() = verts;
-							targetRefine.children().attach(child);
-							mesher.add(child);
-						}
-						removedPids.insert(mesher.elementToPid(targetElement));
-						m_fixedRefines.insert(&sourceRefine);
-						sourceRefine.needsTopologyFix() = false;
+						Dag::Refine& targetRefine{ Refine::prepareRefine(mesh.poly_face_offset(targetPid, sharedFid), Meshing::ERefinementScheme::InterfaceFace)};
+						Refine::applyRefine(mesher, targetElement, targetRefine);
+						m_operations.push_back({ &targetRefine, &targetElement });
 					}
-					removedPids.insert(mesher.elementToPid(sourceElement));
+					mesher.remove(sourceElement);
 				}
 			}
 
+			/*
 			// InterfaceEdge
 			{
 				std::deque<Dag::Refine*> sources(refines.begin(), refines.end());
