@@ -21,11 +21,13 @@ namespace HMP::Actions
 	void Refine::apply()
 	{
 		applyRefine(mesher(), m_element, m_operation);
+		mesher().updateMesh();
 	}
 
 	void Refine::unapply()
 	{
 		unapplyRefine(mesher(), m_operation);
+		mesher().updateMesh();
 	}
 
 	Dag::Refine& Refine::prepareRefine(Id _faceOffset, Meshing::ERefinementScheme _scheme)

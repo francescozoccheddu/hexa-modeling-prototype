@@ -20,6 +20,7 @@ namespace HMP::Actions
 	{
 		std::swap(m_otherRoot, root());
 		Meshing::Utils::addLeafs(mesher(), *root(), true);
+		mesher().updateMesh();
 	}
 
 	void Load::unapply()

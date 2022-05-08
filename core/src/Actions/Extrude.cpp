@@ -54,12 +54,14 @@ namespace HMP::Actions
 		}
 		mesher.add(m_operation.children().single());
 		m_element.children().attach(m_operation);
+		mesher.updateMesh();
 	}
 
 	void Extrude::unapply()
 	{
 		m_operation.parents().detachAll(false);
 		mesher().remove(m_operation.children().single());
+		mesher().updateMesh();
 	}
 
 	Extrude::Extrude(Dag::Element& _element, Id _faceOffset)

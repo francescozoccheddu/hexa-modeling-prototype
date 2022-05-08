@@ -17,6 +17,102 @@ namespace HMP::Meshing
 		return *m_element;
 	}
 
+	// Mesher::PolyMarkerSet
+
+
+	Mesher::PolyMarkerSet::PolyMarkerSet(Mesher& _mesher)
+		: m_mesher{ _mesher }, m_data{}, Internal::PolyMarkerIterable{ m_data }
+	{}
+
+	void Mesher::PolyMarkerSet::mark(const Dag::Element& _element, bool _marked)
+	{
+		const Id pid{ m_mesher.elementToPid(_element) };
+		m_mesher.m_mesh.poly_data(pid).flags[cinolib::MARKED] = _marked;
+	}
+
+	bool Mesher::PolyMarkerSet::has(const Dag::Element& _element) const
+	{
+		return m_data.contains(&_element);
+	}
+
+	bool Mesher::PolyMarkerSet::add(const Dag::Element& _element)
+	{
+		if (m_data.insert(&_element).second)
+		{
+			mark(_element, true);
+			return true;
+		}
+		return false;
+	}
+
+	bool Mesher::PolyMarkerSet::remove(const Dag::Element& _element)
+	{
+		if (m_data.erase(&_element))
+		{
+			mark(_element, false);
+			return true;
+		}
+		return false;
+	}
+
+	bool Mesher::PolyMarkerSet::clear()
+	{
+		const bool wasEmpty{ empty() };
+		for (const Dag::Element& element : *this)
+		{
+			mark(element, false);
+		}
+		m_data.clear();
+		return !wasEmpty;
+	}
+
+	Mesher::FaceMarkerSet::FaceMarkerSet(Mesher& _mesher)
+		: m_mesher{ _mesher }, m_data{}, Internal::FaceMarkerIterable{ m_data }
+	{}
+
+	void Mesher::FaceMarkerSet::mark(const Dag::Element& _element, Id _faceOffset, bool _marked)
+	{
+		const Id pid{ m_mesher.elementToPid(_element) };
+		const Id fid{ m_mesher.m_mesh.poly_face_id(pid, _faceOffset) };
+		m_mesher.m_mesh.face_data(fid).flags[cinolib::MARKED] = _marked;
+	}
+
+	bool Mesher::FaceMarkerSet::has(const Dag::Element& _element, Id _faceOffset) const
+	{
+		return m_data.contains({ &_element, _faceOffset });
+	}
+
+	bool Mesher::FaceMarkerSet::add(const Dag::Element& _element, Id _faceOffset)
+	{
+		if (m_data.insert({ &_element, _faceOffset }).second)
+		{
+			mark(_element, _faceOffset, true);
+			return true;
+		}
+		return false;
+	}
+
+	bool Mesher::FaceMarkerSet::remove(const Dag::Element& _element, Id _faceOffset)
+	{
+		if (m_data.erase({ &_element, _faceOffset }))
+		{
+			mark(_element, _faceOffset, false);
+			return true;
+		}
+		return false;
+	}
+
+	bool Mesher::FaceMarkerSet::clear()
+	{
+		const bool wasEmpty{ empty() };
+		for (const auto& [element, faceOffset] : *this)
+		{
+			mark(element, faceOffset, false);
+		}
+		m_data.clear();
+		return !wasEmpty;
+	}
+
 	// Mesher
 
 	Id Mesher::getOrAddVert(const Vec& _vert)
@@ -30,8 +126,14 @@ namespace HMP::Meshing
 	}
 
 	Mesher::Mesher()
-		: m_mesh(), m_elementToPid{}, Internal::ElementToPidIterable{ m_elementToPid }
+		: m_mesh(), m_elementToPid{}, Internal::ElementToPidIterable{ m_elementToPid }, m_polyMarkerSet{ *this }, m_faceMarkerSet{ *this }
 	{
+		m_mesh.show_mesh_flat();
+		m_mesh.show_out_poly_color();
+		m_mesh.poly_set_color(cinolib::Color::CYAN());
+		m_mesh.show_marked_face_transparency(1.0f);
+		m_mesh.show_marked_face_color(cinolib::Color::RED());
+		m_mesh.show_marked_face(true);
 	}
 
 	const Mesher::Mesh& Mesher::mesh() const
@@ -80,7 +182,6 @@ namespace HMP::Meshing
 		const Id pid{ m_mesh.poly_add(cpputils::collections::conversions::toVector(vids)) };
 		m_mesh.poly_data(pid).m_element = &_element;
 		m_elementToPid[&_element] = pid;
-		m_mesh.updateGL();
 	}
 
 	void Mesher::remove(Dag::Element& _element)
@@ -93,7 +194,11 @@ namespace HMP::Meshing
 			m_elementToPid[&m_mesh.poly_data(lastPid).element()] = pid;
 		}
 		m_mesh.poly_remove(pid, true);
-		m_mesh.updateGL();
+		m_polyMarkerSet.m_data.erase(&_element);
+		for (Id o{ 0 }; o < 6; o++)
+		{
+			m_faceMarkerSet.m_data.erase({ &_element, o });
+		}
 	}
 
 	void Mesher::moveVert(Id _vid, const Vec& _position)
@@ -108,14 +213,40 @@ namespace HMP::Meshing
 		{
 			pidToElement(pid).vertices()[m_mesh.poly_vert_offset(pid, _vid)] = _position;
 		}
-		m_mesh.updateGL();
 	}
 
 	void Mesher::clear()
 	{
 		m_mesh.clear();
-		m_mesh.updateGL();
 		m_elementToPid.clear();
+		m_polyMarkerSet.m_data.clear();
+		m_faceMarkerSet.m_data.clear();
 	}
+
+	Mesher::PolyMarkerSet& Mesher::polyMarkerSet()
+	{
+		return m_polyMarkerSet;
+	}
+
+	const Mesher::PolyMarkerSet& Mesher::polyMarkerSet() const
+	{
+		return m_polyMarkerSet;
+	}
+
+	Mesher::FaceMarkerSet& Mesher::faceMarkerSet()
+	{
+		return m_faceMarkerSet;
+	}
+
+	const Mesher::FaceMarkerSet& Mesher::faceMarkerSet() const
+	{
+		return m_faceMarkerSet;
+	}
+
+	void Mesher::updateMesh()
+	{
+		m_mesh.updateGL();
+	}
+
 
 }

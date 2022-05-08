@@ -29,12 +29,14 @@ namespace HMP::Actions
 		}
 		m_element.children().attach(m_operation);
 		mesher().remove(m_element);
+		mesher().updateMesh();
 	}
 
 	void Delete::unapply()
 	{
 		m_operation.parents().detachAll(false);
 		mesher().add(m_element);
+		mesher().updateMesh();
 	}
 
 	Delete::Delete(Dag::Element& _element)

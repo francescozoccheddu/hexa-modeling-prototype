@@ -24,36 +24,16 @@
 namespace HMP::Gui
 {
 
-	Meshing::Mesher& App::mesher()
-	{
-		return m_project.mesher();
-	}
-
-	Commander& App::commander()
-	{
-		return m_project.commander();
-	}
-
-	const Commander& App::commander() const
-	{
-		return m_project.commander();
-	}
-
-	const HMP::Dag::Element& App::root() const
-	{
-		return *m_project.root();
-	}
-
 	// Actions
 
 	App::App()
-		: m_project{}, m_canvas{}, m_dagViewer{ mesher() }
+		: m_project{}, m_canvas{}, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() }, m_dagViewer{ m_mesher }
 	{
-		commander().apply(*new Actions::Clear());
-		commander().applied().clear();
+		m_commander.apply(*new Actions::Clear());
+		m_commander.applied().clear();
 
-		cinolib::VolumeMeshControls<Meshing::Mesher::Mesh> menu{ const_cast<Meshing::Mesher::Mesh*>(&mesher().mesh()), &m_canvas, "Mesh" };
-		m_canvas.push(&mesher().mesh());
+		cinolib::VolumeMeshControls<Meshing::Mesher::Mesh> menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh" };
+		m_canvas.push(&m_mesh);
 		m_canvas.push(&menu);
 
 		m_canvas.depth_cull_markers = false;
@@ -67,42 +47,39 @@ namespace HMP::Gui
 
 	void App::updateHighlight()
 	{
-		/*
-		Id pid{};
+		Id pid{ noId };
 		cinolib::vec3d world;
 		m_canvas.pop_all_markers();
-		const bool pending{ m_canvas.unproject(m_mouse.position, world) };
-		if (pending)
+		m_mesher.faceMarkerSet().clear();
+		m_mesher.polyMarkerSet().clear();
+		if (m_canvas.unproject(m_mouse.position, world))
 		{
-			pid = mesh.pick_poly(world);
-			const Id fid{ mesh.pick_face(world) };
-			const Id vid{ mesh.pick_vert(world) };
-			m_canvas.push_marker(mesh.face_centroid(fid), "", c_highlightFaceColor, c_highlightFaceRadius);
-			m_canvas.push_marker(mesh.vert(vid), "", c_highlightVertexColor, c_highlightVertexRadius);
-		}
-		if (pending != m_highlight.pending || (pending && pid != m_highlight.pid))
-		{
-			if (m_highlight.pending && m_highlight.pid < mesh.num_polys())
+			// poly
 			{
-				mesh.poly_data(m_highlight.pid).color = cinolib::Color::WHITE();
+				pid = m_mesh.pick_poly(world);
+				m_mesher.polyMarkerSet().add(m_mesher.pidToElement(pid));
 			}
-			if (pending)
+			// face
 			{
-				mesh.poly_data(pid).color = c_highlightPolyColor;
+				const Id fid{ m_mesh.pick_face(world) };
+				const Id facePid{ m_mesh.adj_f2p(fid).front() };
+				m_mesher.faceMarkerSet().add(m_mesher.pidToElement(pid), m_mesh.poly_face_offset(pid, fid));
 			}
-			mesh.updateGL();
+			// vert
+			{
+				const Id vid{ m_mesh.pick_vert(world) };
+				m_canvas.push_marker(m_mesh.vert(vid), "", c_highlightVertexColor, c_highlightVertexRadius);
+			}
 		}
-		m_highlight.pid = pid;
-		m_highlight.pending = pending;
-		m_dagViewer.highlight = pending ? mesh.poly_data(pid).element : nullptr;
-		*/
+		m_dagViewer.highlight = pid != noId ? &m_mesher.pidToElement(pid) : nullptr;
+		m_mesher.updateMesh();
 	}
 
 	void App::updateDagViewer()
 	{
-		if (std::as_const(m_project).root())
+		if (m_project.root())
 		{
-			m_dagViewer.layout = Dag::createLayout(root());
+			m_dagViewer.layout = Dag::createLayout(*m_project.root());
 		}
 		m_dagViewer.resetView();
 	}
@@ -295,14 +272,14 @@ namespace HMP::Gui
 			if (m_move.pending)
 			{
 				// FIXME move in plane instead of using world_mouse_pos
-				const Id pid{ mesher().mesh().adj_v2p(m_move.vid).front() };
-				commander().apply(*new Actions::MoveVert{ mesher().pidToElement(pid), mesher().mesh().poly_vert_offset(pid, m_move.vid), world_mouse_pos });
+				const Id pid{ m_mesh.adj_v2p(m_move.vid).front() };
+				m_commander.apply(*new Actions::MoveVert{ m_mesher.pidToElement(pid), m_mesh.poly_vert_offset(pid, m_move.vid), world_mouse_pos });
 				m_move.pending = false;
 				m_canvas.refit_scene();
 			}
 			else
 			{
-				m_move.vid = mesher().mesh().pick_vert(world_mouse_pos);
+				m_move.vid = m_mesh.pick_vert(world_mouse_pos);
 				m_move.pending = true;
 			}
 		}
@@ -317,13 +294,13 @@ namespace HMP::Gui
 		cinolib::vec3d world_mouse_pos;
 		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 		{
-			const Id pid{ mesher().mesh().pick_poly(world_mouse_pos) };
+			const Id pid{ m_mesh.pick_poly(world_mouse_pos) };
 			Id closest_fid{};
 			{
 				double closest_dist{ std::numeric_limits<double>::infinity() };
-				for (const Id fid : mesher().mesh().poly_faces_id(pid))
+				for (const Id fid : m_mesh.poly_faces_id(pid))
 				{
-					const double dist{ world_mouse_pos.dist_sqrd(mesher().mesh().face_centroid(fid)) };
+					const double dist{ world_mouse_pos.dist_sqrd(m_mesh.face_centroid(fid)) };
 					if (dist < closest_dist)
 					{
 						closest_dist = dist;
@@ -331,7 +308,7 @@ namespace HMP::Gui
 					}
 				}
 			};
-			commander().apply(*new Actions::Extrude{ mesher().pidToElement(pid), mesher().mesh().poly_face_offset(pid, closest_fid) });
+			m_commander.apply(*new Actions::Extrude{ m_mesher.pidToElement(pid), m_mesh.poly_face_offset(pid, closest_fid) });
 			updateDagViewer();
 			m_canvas.refit_scene();
 		}
@@ -342,7 +319,7 @@ namespace HMP::Gui
 		cinolib::vec3d world_mouse_pos;
 		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 		{
-			const Id pid{ mesher().mesh().pick_poly(world_mouse_pos) };
+			const Id pid{ m_mesh.pick_poly(world_mouse_pos) };
 			m_copy.pid = pid;
 			m_copy.pending = true;
 		}
@@ -359,8 +336,8 @@ namespace HMP::Gui
 			cinolib::vec3d world_mouse_pos;
 			if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 			{
-				const Id pid{ mesher().mesh().pick_poly(world_mouse_pos) };
-				if (/*mesher().merge(m_copy.pid, pid)*/ false)
+				const Id pid{ m_mesh.pick_poly(world_mouse_pos) };
+				if (/*m_mesher.merge(m_copy.pid, pid)*/ false)
 				{
 					m_copy.pending = false;
 					updateDagViewer();
@@ -379,8 +356,8 @@ namespace HMP::Gui
 		cinolib::vec3d world_mouse_pos;
 		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 		{
-			const Id pid{ mesher().mesh().pick_poly(world_mouse_pos) };
-			commander().apply(*new Actions::Refine{ mesher().pidToElement(pid), 0, Meshing::ERefinementScheme::Subdivide3x3 });
+			const Id pid{ m_mesh.pick_poly(world_mouse_pos) };
+			m_commander.apply(*new Actions::Refine{ m_mesher.pidToElement(pid), 0, Meshing::ERefinementScheme::Subdivide3x3 });
 			updateDagViewer();
 			updateHighlight();
 		}
@@ -391,8 +368,8 @@ namespace HMP::Gui
 		cinolib::vec3d world_mouse_pos;
 		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 		{
-			const Id pid{ mesher().mesh().pick_poly(world_mouse_pos) };
-			commander().apply(*new Actions::Delete{ mesher().pidToElement(pid) });
+			const Id pid{ m_mesh.pick_poly(world_mouse_pos) };
+			m_commander.apply(*new Actions::Delete{ m_mesher.pidToElement(pid) });
 			updateDagViewer();
 			m_canvas.refit_scene();
 		}
@@ -403,9 +380,9 @@ namespace HMP::Gui
 		cinolib::vec3d world_mouse_pos;
 		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
 		{
-			const Id fid{ mesher().mesh().pick_face(world_mouse_pos) };
-			const Id pid{ mesher().mesh().adj_f2p(fid).front() };
-			commander().apply(*new Actions::Refine{ mesher().pidToElement(pid), mesher().mesh().poly_face_offset(pid, fid), Meshing::ERefinementScheme::Inset });
+			const Id fid{ m_mesh.pick_face(world_mouse_pos) };
+			const Id pid{ m_mesh.adj_f2p(fid).front() };
+			m_commander.apply(*new Actions::Refine{ m_mesher.pidToElement(pid), m_mesh.poly_face_offset(pid, fid), Meshing::ERefinementScheme::Inset });
 			updateDagViewer();
 			updateHighlight();
 		}
@@ -413,7 +390,7 @@ namespace HMP::Gui
 
 	void App::onMakeConformant()
 	{
-		commander().apply(*new Actions::MakeConforming());
+		m_commander.apply(*new Actions::MakeConforming());
 		updateDagViewer();
 		updateHighlight();
 	}
@@ -423,7 +400,7 @@ namespace HMP::Gui
 		const std::string filename{ cinolib::file_dialog_save() };
 		if (!filename.empty())
 		{
-			//mesher().save_as_mesh(filename);
+			//m_mesher.save_as_mesh(filename);
 			throw std::runtime_error{ "^^^" };
 		}
 	}
@@ -437,7 +414,7 @@ namespace HMP::Gui
 			std::ofstream file;
 			file.open(filename);
 			Utils::Serialization::Serializer serializer{ file };
-			serializer << root();
+			serializer << *m_project.root();
 			file.close();
 		}
 	}
@@ -454,7 +431,7 @@ namespace HMP::Gui
 			Utils::Serialization::Deserializer deserializer{ file };
 			deserializer >> root;
 			file.close();
-			commander().apply(*new Actions::Load{ root->element() });
+			m_commander.apply(*new Actions::Load{ root->element() });
 			updateDagViewer();
 			m_canvas.refit_scene();
 		}
@@ -483,7 +460,7 @@ namespace HMP::Gui
 
 	void App::onProjectToTarget()
 	{
-		///mesher().project_on_target(*m_target.p_mesh);
+		///m_mesher.project_on_target(*m_target.p_mesh);
 		throw std::runtime_error{ "^^^" };
 		updateDagViewer();
 		m_canvas.refit_scene();
@@ -491,9 +468,9 @@ namespace HMP::Gui
 
 	void App::onUndo()
 	{
-		if (commander().canUndo())
+		if (m_commander.canUndo())
 		{
-			commander().undo();
+			m_commander.undo();
 			updateDagViewer();
 			m_canvas.refit_scene();
 		}
@@ -501,9 +478,9 @@ namespace HMP::Gui
 
 	void App::onRedo()
 	{
-		if (commander().canRedo())
+		if (m_commander.canRedo())
 		{
-			commander().redo();
+			m_commander.redo();
 			updateDagViewer();
 			m_canvas.refit_scene();
 		}
@@ -511,7 +488,7 @@ namespace HMP::Gui
 
 	void App::onClear()
 	{
-		commander().apply(*new Actions::Clear());
+		m_commander.apply(*new Actions::Clear());
 		m_move.pending = m_copy.pending = false;
 		updateDagViewer();
 		m_canvas.refit_scene();

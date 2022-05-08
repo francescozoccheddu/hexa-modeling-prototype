@@ -209,6 +209,7 @@ namespace HMP::Actions
 			}
 		*/
 		}
+		mesher().updateMesh();
 	}
 
 	void MakeConforming::unapply()
@@ -217,6 +218,7 @@ namespace HMP::Actions
 		{
 			Refine::unapplyRefine(mesher(), *operation);
 		}
+		mesher().updateMesh();
 	}
 
 	MakeConforming::MakeConforming()

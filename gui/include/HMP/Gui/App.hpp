@@ -28,12 +28,6 @@ namespace HMP::Gui
 
 		struct
 		{
-			Id pid{ 0 };
-			bool pending{ false };
-		} m_highlight;
-
-		struct
-		{
 			Id vid{};
 			bool pending{ false };
 		} m_move;
@@ -53,11 +47,9 @@ namespace HMP::Gui
 		HMP::Project m_project;
 		cinolib::GLcanvas m_canvas;
 		Dag::Viewer m_dagViewer;
-
-		Meshing::Mesher& mesher();
-		Commander& commander();
-		const Commander& commander() const;
-		const HMP::Dag::Element& root() const;
+		Meshing::Mesher& m_mesher;
+		const Meshing::Mesher::Mesh& m_mesh;
+		Commander& m_commander;
 
 		void updateHighlight();
 		void updateDagViewer();

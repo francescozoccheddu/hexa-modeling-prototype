@@ -13,6 +13,7 @@ namespace HMP::Actions
 		const Vec oldPosition( mesh.vert(vid) );
 		mesher.moveVert(vid, m_otherPosition);
 		m_otherPosition = oldPosition;
+		mesher.updateMesh();
 	}
 
 	void MoveVert::unapply()
