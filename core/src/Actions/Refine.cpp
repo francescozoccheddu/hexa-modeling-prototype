@@ -30,11 +30,12 @@ namespace HMP::Actions
 		mesher().updateMesh();
 	}
 
-	Dag::Refine& Refine::prepareRefine(Id _faceOffset, Meshing::ERefinementScheme _scheme)
+	Dag::Refine& Refine::prepareRefine(Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme)
 	{
 		Dag::Refine& refine{ *new Dag::Refine{} };
 		refine.scheme() = _scheme;
-		refine.faceOffset() = _faceOffset;
+		refine.forwardFaceOffset() = _forwardFaceOffset;
+		refine.upFaceOffset() = _upFaceOffset;
 		const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(_scheme) };
 		for (std::size_t i{ 0 }; i < refinement.polyCount(); i++)
 		{
@@ -60,8 +61,7 @@ namespace HMP::Actions
 		}
 		_element.children().attach(_refine);
 		const Id pid{ _mesher.elementToPid(_element) };
-		const Id fid{ _mesher.mesh().poly_face_id(pid, _refine.faceOffset()) };
-		const PolyVerts source{ Meshing::Utils::polyVertsFromFace(_mesher.mesh(), pid, fid) };
+		const PolyVerts source{ Meshing::Utils::polyVertsFromFaceOffsets(_mesher.mesh(), pid, _refine.forwardFaceOffset(), _refine.upFaceOffset()) };
 		const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector(source)) };
 		for (const auto& [child, verts] : cpputils::collections::zip(_refine.children(), polys))
 		{
@@ -81,8 +81,8 @@ namespace HMP::Actions
 		_refine.parents().detachAll(false);
 	}
 
-	Refine::Refine(Dag::Element& _element, Id _faceOffset, Meshing::ERefinementScheme _scheme)
-		: m_element{ _element }, m_operation{ prepareRefine(_faceOffset, _scheme) }
+	Refine::Refine(Dag::Element& _element, Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme)
+		: m_element{ _element }, m_operation{ prepareRefine(_forwardFaceOffset, _upFaceOffset, _scheme) }
 	{}
 
 }

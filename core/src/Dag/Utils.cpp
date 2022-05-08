@@ -56,7 +56,6 @@ namespace HMP::Dag::Utils
 				case Node::EType::Element:
 				{
 					const Element& element{ node->element() };
-					// TODO pid
 					for (const Vec& vertex : element.vertices())
 					{
 						_serializer << vertex;
@@ -67,7 +66,6 @@ namespace HMP::Dag::Utils
 				{
 					const Operation& operation{ node->operation() };
 					_serializer << operation.primitive();
-					// TODO dependencies
 					switch (operation.primitive())
 					{
 						case Operation::EPrimitive::Delete:
@@ -85,7 +83,8 @@ namespace HMP::Dag::Utils
 						{
 							const Refine& refineOperation{ static_cast<const Refine&>(operation) };
 							_serializer
-								<< refineOperation.faceOffset()
+								<< refineOperation.forwardFaceOffset()
+								<< refineOperation.upFaceOffset()
 								<< refineOperation.scheme();
 						}
 						break;
@@ -131,7 +130,6 @@ namespace HMP::Dag::Utils
 				case Node::EType::Element:
 				{
 					Element& element{ *new Element{} };
-					// TODO pid
 					for (Vec& vertex : element.vertices())
 					{
 						_deserializer >> vertex;
@@ -144,7 +142,6 @@ namespace HMP::Dag::Utils
 					Operation::EPrimitive primitive;
 					Operation* operation{};
 					_deserializer >> primitive;
-					// TODO dependencies
 					switch (primitive)
 					{
 						case Operation::EPrimitive::Delete:
@@ -164,7 +161,8 @@ namespace HMP::Dag::Utils
 						{
 							Refine& refineOperation{ *new Refine{} };
 							_deserializer
-								>> refineOperation.faceOffset()
+								>> refineOperation.forwardFaceOffset()
+								>> refineOperation.upFaceOffset()
 								>> refineOperation.scheme();
 							operation = &refineOperation;
 						}

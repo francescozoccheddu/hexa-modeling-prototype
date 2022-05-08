@@ -12,15 +12,18 @@ namespace HMP::Dag
 
 	private:
 
-		Id m_faceOffset;
+		Id m_forwardFaceOffset, m_upFaceOffset;
 		Meshing::ERefinementScheme m_scheme;
 
 	public:
 
 		Refine();
 
-		Id& faceOffset();
-		Id faceOffset() const;
+		Id& forwardFaceOffset();
+		Id forwardFaceOffset() const;
+
+		Id& upFaceOffset();
+		Id upFaceOffset() const;
 
 		Meshing::ERefinementScheme& scheme();
 		Meshing::ERefinementScheme scheme() const;

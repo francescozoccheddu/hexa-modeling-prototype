@@ -310,7 +310,8 @@ namespace HMP::Gui
 	{
 		if (m_mouse.element)
 		{
-			m_commander.apply(*new Actions::Refine{ *m_mouse.element, m_mouse.faceOffset, Meshing::ERefinementScheme::Subdivide3x3 });
+			const Id upFaceOffset{ Meshing::Utils::anyAdjacentFaceOffsetFromFaceOffset(m_mesh, m_mesher.elementToPid(*m_mouse.element), m_mouse.faceOffset) };
+			m_commander.apply(*new Actions::Refine{ *m_mouse.element, m_mouse.faceOffset, upFaceOffset, Meshing::ERefinementScheme::Subdivide3x3 });
 			updateDagViewer();
 			updateMouse();
 		}
@@ -335,7 +336,8 @@ namespace HMP::Gui
 	{
 		if (m_mouse.element)
 		{
-			m_commander.apply(*new Actions::Refine{ *m_mouse.element, m_mouse.faceOffset, Meshing::ERefinementScheme::Inset });
+			const Id upFaceOffset{ Meshing::Utils::anyAdjacentFaceOffsetFromFaceOffset(m_mesh, m_mesher.elementToPid(*m_mouse.element), m_mouse.faceOffset) };
+			m_commander.apply(*new Actions::Refine{ *m_mouse.element, m_mouse.faceOffset, upFaceOffset, Meshing::ERefinementScheme::Inset });
 			updateDagViewer();
 			updateMouse();
 		}
