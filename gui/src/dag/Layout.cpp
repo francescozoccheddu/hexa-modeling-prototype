@@ -9,7 +9,7 @@ namespace HMP::Gui::Dag
 
 	// Layout::Node
 
-	Layout::Node::Node(const Point& _center, const HMP::Dag::Node& _node)
+	Layout::Node::Node(const Vec2& _center, const HMP::Dag::Node& _node)
 		: m_center(_center), m_node{ &_node }
 	{}
 
@@ -18,7 +18,7 @@ namespace HMP::Gui::Dag
 		return *m_node;
 	}
 
-	const Layout::Point& Layout::Node::center() const
+	const Vec2& Layout::Node::center() const
 	{
 		return m_center;
 	}
@@ -41,7 +41,7 @@ namespace HMP::Gui::Dag
 	{
 		if (m_lines.empty() && m_nodes.empty())
 		{
-			m_topRight = m_bottomLeft = Point{ 0,0 };
+			m_topRight = m_bottomLeft = Vec2{ 0,0 };
 		}
 		else
 		{
@@ -54,7 +54,7 @@ namespace HMP::Gui::Dag
 				m_topRight = m_bottomLeft = m_nodes[0].center();
 			}
 			const Real halfLineThickness = m_lineThickness / 2;
-			for (const Line& line : m_lines)
+			for (const std::pair<Vec2, Vec2>& line : m_lines)
 			{
 				expandBoundingBox(line.first, halfLineThickness);
 				expandBoundingBox(line.second, halfLineThickness);
@@ -68,7 +68,7 @@ namespace HMP::Gui::Dag
 		m_aspectRatio = m_size.y() ? m_size.x() / m_size.y() : 1;
 	}
 
-	void Layout::expandBoundingBox(const Point& _center, Real _extent)
+	void Layout::expandBoundingBox(const Vec2& _center, Real _extent)
 	{
 		m_bottomLeft.x() = std::min(m_bottomLeft.x(), _center.x() - _extent);
 		m_bottomLeft.y() = std::min(m_bottomLeft.y(), _center.y() - _extent);
@@ -82,21 +82,21 @@ namespace HMP::Gui::Dag
 		calculateBoundingBox();
 	}
 
-	Layout::Layout(const std::vector<Node>& _nodes, const std::vector<Line>& _lines, Real _nodeRadius, Real _lineThickness)
+	Layout::Layout(const std::vector<Node>& _nodes, const std::vector<std::pair<Vec2, Vec2>>& _lines, Real _nodeRadius, Real _lineThickness)
 		: m_nodes{ _nodes }, m_lines{ _lines }, m_nodeRadius{ _nodeRadius }, m_lineThickness{ _lineThickness }
 	{
 		validate();
 		calculateBoundingBox();
 	}
 
-	Layout::Layout(std::vector<Node>&& _nodes, std::vector<Line>&& _lines, Real _nodeRadius, Real _lineThickness)
+	Layout::Layout(std::vector<Node>&& _nodes, std::vector<std::pair<Vec2, Vec2>>&& _lines, Real _nodeRadius, Real _lineThickness)
 		: m_nodes{ std::move(_nodes) }, m_lines{ std::move(_lines) }, m_nodeRadius{ _nodeRadius }, m_lineThickness{ _lineThickness }
 	{
 		validate();
 		calculateBoundingBox();
 	}
 
-	const std::vector<Layout::Line>& Layout::lines() const
+	const std::vector<std::pair<Vec2, Vec2>>& Layout::lines() const
 	{
 		return m_lines;
 	}
@@ -106,32 +106,32 @@ namespace HMP::Gui::Dag
 		return m_nodes;
 	}
 
-	const Layout::Point& Layout::bottomLeft() const
+	const Vec2& Layout::bottomLeft() const
 	{
 		return m_bottomLeft;
 	}
 
-	const Layout::Point& Layout::topRight() const
+	const Vec2& Layout::topRight() const
 	{
 		return m_topRight;
 	}
 
-	const Layout::Point& Layout::size() const
+	const Vec2& Layout::size() const
 	{
 		return m_size;
 	}
 
-	Layout::Real Layout::aspectRatio() const
+	Real Layout::aspectRatio() const
 	{
 		return m_aspectRatio;
 	}
 
-	Layout::Real Layout::lineThickness() const
+	Real Layout::lineThickness() const
 	{
 		return m_lineThickness;
 	}
 
-	Layout::Real Layout::nodeRadius() const
+	Real Layout::nodeRadius() const
 	{
 		return m_nodeRadius;
 	}

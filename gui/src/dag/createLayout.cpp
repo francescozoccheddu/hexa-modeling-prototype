@@ -12,15 +12,16 @@
 #include <utility>
 #include <stdexcept>
 #include <HMP/Dag/Utils.hpp>
+#include <HMP/Meshing/types.hpp>
 
 namespace HMP::Gui::Dag
 {
 
 	using namespace HMP::Dag;
 
-	constexpr double c_nodeRadius{ 1.0 };
-	constexpr double c_lineThickness{ c_nodeRadius / 20.0 };
-	constexpr double c_nodeDistance{ c_nodeRadius + 0.25 };
+	constexpr Real c_nodeRadius{ 1.0 };
+	constexpr Real c_lineThickness{ c_nodeRadius / 20.0 };
+	constexpr Real c_nodeDistance{ c_nodeRadius + 0.25 };
 
 	std::unordered_map<const Dag::Node*, ogdf::node> populateGraph(const Dag::Node& _dag, ogdf::Graph& _graph)
 	{
@@ -79,15 +80,15 @@ namespace HMP::Gui::Dag
 		nodes.reserve(static_cast<size_t>(_graphAttributes.constGraph().numberOfNodes()));
 		for (auto const& [dagNode, graphNode] : _dagToGraphNodeMap)
 		{
-			const Layout::Point center{ _graphAttributes.x(graphNode), -_graphAttributes.y(graphNode) };
+			const Vec2 center{ _graphAttributes.x(graphNode), -_graphAttributes.y(graphNode) };
 			nodes.push_back(Layout::Node{ center, *dagNode });
 		}
 		return nodes;
 	}
 
-	std::vector<Layout::Line> createLayoutLines(const ogdf::GraphAttributes& _graphAttributes)
+	std::vector<std::pair<Vec2, Vec2>> createLayoutLines(const ogdf::GraphAttributes& _graphAttributes)
 	{
-		std::vector<Layout::Line> lines{};
+		std::vector<std::pair<Vec2, Vec2>> lines{};
 		{
 			size_t count{ 0 };
 			for (const ogdf::edge edge : _graphAttributes.constGraph().edges)
@@ -102,11 +103,11 @@ namespace HMP::Gui::Dag
 			ogdf::DPoint lastPoint{ _graphAttributes.x(edge->source()), _graphAttributes.y(edge->source()) };
 			for (const ogdf::DPoint point : polyline)
 			{
-				lines.push_back({ Layout::Point{lastPoint.m_x, -lastPoint.m_y}, Layout::Point{point.m_x, -point.m_y} });
+				lines.push_back({ Vec2{lastPoint.m_x, -lastPoint.m_y}, Vec2{point.m_x, -point.m_y} });
 				lastPoint = point;
 			}
 			const ogdf::DPoint endPoint{ _graphAttributes.x(edge->target()), _graphAttributes.y(edge->target()) };
-			lines.push_back({ Layout::Point{lastPoint.m_x, -lastPoint.m_y}, Layout::Point{endPoint.m_x, -endPoint.m_y} });
+			lines.push_back({ Vec2{lastPoint.m_x, -lastPoint.m_y}, Vec2{endPoint.m_x, -endPoint.m_y} });
 		}
 		return lines;
 	}
@@ -118,7 +119,7 @@ namespace HMP::Gui::Dag
 		const std::unordered_map<const Dag::Node*, ogdf::node> dagToGraphNodeMap{ populateGraph(_dag, graph) };
 		const ogdf::GraphAttributes graphAttributes{ layoutGraph(graph) };
 		std::vector<Layout::Node> nodes{ createLayoutNodes(dagToGraphNodeMap, graphAttributes) };
-		std::vector<Layout::Line> lines{ createLayoutLines(graphAttributes) };
+		std::vector<std::pair<Vec2, Vec2>> lines{ createLayoutLines(graphAttributes) };
 		return Layout{ std::move(nodes), std::move(lines),  c_nodeRadius, c_lineThickness };
 	}
 

@@ -30,7 +30,7 @@ namespace HMP::Gui
 	// Actions
 
 	App::App()
-		: m_project{}, m_canvas{}, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() }, m_dagViewer{ m_mesher }, m_menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh" }
+		: m_project{}, m_canvas{}, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() }, m_dagViewer{ m_mesher }, m_menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh controls" }
 	{
 		m_commander.apply(*new Actions::Clear());
 		m_commander.applied().clear();
@@ -51,6 +51,7 @@ namespace HMP::Gui
 
 	void App::updateMouse()
 	{
+		constexpr float highlightVertexRadius{ 10.0f };
 		m_canvas.pop_all_markers();
 		m_mesher.faceMarkerSet().clear();
 		m_mesher.polyMarkerSet().clear();
@@ -67,7 +68,7 @@ namespace HMP::Gui
 			m_mesher.faceMarkerSet().add(*m_mouse.element, m_mouse.faceOffset);
 			// vert
 			m_mouse.vertOffset = Meshing::Utils::closestVertOffsetInPoly(m_mesh, pid, m_mouse.worldPosition);
-			m_canvas.push_marker(m_mesh.vert(m_mesh.poly_vert_id(pid, m_mouse.vertOffset)), "", m_mesher.suggestedOverlayColor, c_highlightVertexRadius);
+			m_canvas.push_marker(m_mesh.vert(m_mesh.poly_vert_id(pid, m_mouse.vertOffset)), "", m_mesher.suggestedOverlayColor, highlightVertexRadius);
 		}
 		m_dagViewer.highlight = m_mouse.element;
 		m_mesher.updateMesh();

@@ -3,7 +3,7 @@
 #include <HMP/Gui/Dag/Layout.hpp>
 #include <HMP/Dag/Element.hpp>
 #include <HMP/Meshing/Mesher.hpp>
-#include <cinolib/geometry/vec_mat.h>
+#include <HMP/Meshing/types.hpp>
 #include <cinolib/gl/side_bar_item.h>
 
 namespace HMP::Gui::Dag
@@ -16,10 +16,10 @@ namespace HMP::Gui::Dag
 
 		const Meshing::Mesher& m_mesher;
 
-		cinolib::vec2d m_center_nl{ 0.5, 0.5 };
-		double m_windowHeight_n{ 1.0 };
+		Vec2 m_center_nl{ 0.5, 0.5 };
+		Real m_windowHeight_n{ 1.0 };
 
-		void zoom(double _amount);
+		void zoom(Real _amount);
 		void pan(const cinolib::vec2d& _amount);
 		void clampView();
 

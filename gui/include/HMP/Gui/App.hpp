@@ -17,8 +17,6 @@ namespace HMP::Gui
 
 	private:
 
-		inline static const unsigned int c_highlightVertexRadius{ 10u };
-
 		struct
 		{
 			cinolib::vec2d position{};

@@ -158,6 +158,8 @@ namespace HMP::Meshing
 		m_mesh.show_marked_face_transparency(1.0f);
 		m_mesh.show_marked_face_color(markedFaceColor);
 		m_mesh.show_marked_face(true);
+		m_mesh.show_in_wireframe_width(2.0f);
+		m_mesh.show_out_wireframe_width(2.0f);
 	}
 
 	const Mesher::Mesh& Mesher::mesh() const

@@ -30,7 +30,7 @@ namespace HMP::Actions
 	Clear::Clear()
 		: m_otherRoot{ new Dag::Element{} }
 	{
-		constexpr double cubeSize{ 1 };
+		constexpr Real cubeSize{ 1 };
 		m_otherRoot->vertices() = {
 			Vec(-cubeSize,-cubeSize,-cubeSize), Vec(-cubeSize,-cubeSize, cubeSize), Vec(cubeSize,-cubeSize,cubeSize), Vec(cubeSize,-cubeSize,-cubeSize),
 			Vec(-cubeSize,cubeSize,-cubeSize), Vec(-cubeSize,cubeSize, cubeSize), Vec(cubeSize,cubeSize,cubeSize), Vec(cubeSize,cubeSize,-cubeSize)

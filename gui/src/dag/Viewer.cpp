@@ -28,8 +28,8 @@ namespace HMP::Gui::Dag
 
 	void Viewer::resetView()
 	{
-		m_center_nl = cinolib::vec2d{ layout.aspectRatio(), 1.0 } / 2;
-		m_windowHeight_n = std::numeric_limits<double>::infinity();
+		m_center_nl = Vec2{ layout.aspectRatio(), 1.0 } / 2;
+		m_windowHeight_n = std::numeric_limits<Real>::infinity();
 	}
 
 	void Viewer::draw()
@@ -37,26 +37,24 @@ namespace HMP::Gui::Dag
 
 		// types
 
-		using vec = cinolib::vec2d;
-
 		constexpr auto toVec{ [](const ImVec2& _vec) {
-			return vec{_vec.x, _vec.y};
+			return Vec2{_vec.x, _vec.y};
 		} };
 
-		constexpr auto toImVec{ [](const vec& _vec) {
+		constexpr auto toImVec{ [](const Vec2& _vec) {
 			return ImVec2{static_cast<float>(_vec.x()), static_cast<float>(_vec.y())};
 		} };
 
 		// window
 
-		const vec windowSize_s{ toVec(ImGui::GetContentRegionAvail()) };
+		const Vec2 windowSize_s{ toVec(ImGui::GetContentRegionAvail()) };
 		if (windowSize_s.x() <= 0.0 || windowSize_s.y() <= 0.0)
 		{
 			return;
 		}
-		const vec topLeft_sw{ toVec(ImGui::GetCursorScreenPos()) };
-		const vec bottomRight_sw{ topLeft_sw + windowSize_s };
-		const double windowAspectRatio{ windowSize_s.x() / windowSize_s.y() };
+		const Vec2 topLeft_sw{ toVec(ImGui::GetCursorScreenPos()) };
+		const Vec2 bottomRight_sw{ topLeft_sw + windowSize_s };
+		const Real windowAspectRatio{ windowSize_s.x() / windowSize_s.y() };
 
 		if (layout.size().x() <= 0.0 || layout.size().y() <= 0.0)
 		{
@@ -65,40 +63,40 @@ namespace HMP::Gui::Dag
 
 		// trasformations
 
-		const double s2n{ 1.0 / windowSize_s.y() };
-		const double n2s{ 1.0 / s2n };
-		const double n2l{ layout.size().y() };
-		const double l2n{ 1.0 / n2l };
+		const Real s2n{ 1.0 / windowSize_s.y() };
+		const Real n2s{ 1.0 / s2n };
+		const Real n2l{ layout.size().y() };
+		const Real l2n{ 1.0 / n2l };
 
-		const auto ss2sw{ [&](const vec& _point_ss) {
+		const auto ss2sw{ [&](const Vec2& _point_ss) {
 			return _point_ss - topLeft_sw;
 		} };
 
-		const auto sw2ss{ [&](const vec& _point_sw) {
+		const auto sw2ss{ [&](const Vec2& _point_sw) {
 			return _point_sw + topLeft_sw;
 		} };
 
-		const auto sw2nw{ [&](const vec& _point_sw) {
-			return vec{ _point_sw.x() * s2n, 1.0 - _point_sw.y() * s2n };
+		const auto sw2nw{ [&](const Vec2& _point_sw) {
+			return Vec2{ _point_sw.x() * s2n, 1.0 - _point_sw.y() * s2n };
 		} };
 
-		const auto nw2sw{ [&](const vec& _point_nw) {
-			return vec{ _point_nw.x(), 1.0 - _point_nw.y() } *n2s;
+		const auto nw2sw{ [&](const Vec2& _point_nw) {
+			return Vec2{ _point_nw.x(), 1.0 - _point_nw.y() } *n2s;
 		} };
 
-		const auto nw2nl{ [&](const vec& _point_nw) {
-			return (_point_nw - vec{windowAspectRatio, 1} / 2) * m_windowHeight_n + m_center_nl;
+		const auto nw2nl{ [&](const Vec2& _point_nw) {
+			return (_point_nw - Vec2{windowAspectRatio, 1} / 2) * m_windowHeight_n + m_center_nl;
 		} };
 
-		const auto nl2nw{ [&](const vec& _point_nl) {
-			return (_point_nl - m_center_nl) / m_windowHeight_n + vec{windowAspectRatio, 1} / 2;
+		const auto nl2nw{ [&](const Vec2& _point_nl) {
+			return (_point_nl - m_center_nl) / m_windowHeight_n + Vec2{windowAspectRatio, 1} / 2;
 		} };
 
-		const auto nl2ll{ [&](const vec& _point_nl) {
+		const auto nl2ll{ [&](const Vec2& _point_nl) {
 			return _point_nl * n2l + layout.bottomLeft();
 		} };
 
-		const auto ll2nl{ [&](const vec& _point_ll) {
+		const auto ll2nl{ [&](const Vec2& _point_ll) {
 			return (_point_ll - layout.bottomLeft()) * l2n;
 		} };
 
@@ -113,10 +111,10 @@ namespace HMP::Gui::Dag
 		} };
 
 		const auto clampHeight{ [&]() {
-			double min{ 0.1 }, max{ 2.0 };
+			Real min{ 0.1 }, max{ 2.0 };
 			if (windowAspectRatio < layout.aspectRatio())
 			{
-				const double factor{ layout.aspectRatio() / windowAspectRatio };
+				const Real factor{ layout.aspectRatio() / windowAspectRatio };
 				min *= factor;
 				max *= factor;
 			}
@@ -127,19 +125,19 @@ namespace HMP::Gui::Dag
 
 		if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Right, 0.0f))
 		{
-			m_center_nl -= vec{ io.MouseDelta.x, -io.MouseDelta.y } *s2n * m_windowHeight_n;
+			m_center_nl -= Vec2{ io.MouseDelta.x, -io.MouseDelta.y } *s2n * m_windowHeight_n;
 		}
 
 		clampCenter();
 
 		if (ImGui::IsItemActive() && ImGui::IsMouseDragging(ImGuiMouseButton_Middle, 0.0f))
 		{
-			constexpr double speed{ 2 };
-			const vec mouse_ss{ toVec(io.MouseClickedPos[ImGuiMouseButton_Middle]) };
-			const vec oldMouse_nl{ nw2nl(sw2nw(ss2sw(mouse_ss))) };
+			constexpr Real speed{ 2 };
+			const Vec2 mouse_ss{ toVec(io.MouseClickedPos[ImGuiMouseButton_Middle]) };
+			const Vec2 oldMouse_nl{ nw2nl(sw2nw(ss2sw(mouse_ss))) };
 			m_windowHeight_n += io.MouseDelta.y * s2n * m_windowHeight_n * speed;
 			clampHeight();
-			const vec newMouse_nl{ nw2nl(sw2nw(ss2sw(mouse_ss))) };
+			const Vec2 newMouse_nl{ nw2nl(sw2nw(ss2sw(mouse_ss))) };
 			m_center_nl += oldMouse_nl - newMouse_nl;
 			clampCenter();
 		}
@@ -159,28 +157,28 @@ namespace HMP::Gui::Dag
 			drawList->AddRectFilled(toImVec(topLeft_sw), toImVec(bottomRight_sw), backgroundColor);
 			drawList->AddRect(toImVec(topLeft_sw), toImVec(bottomRight_sw), borderColor);
 
-			drawList->PushClipRect(toImVec(topLeft_sw + vec{ 1,1 }), toImVec(bottomRight_sw - vec{ 1,1 }), true);
+			drawList->PushClipRect(toImVec(topLeft_sw + Vec2{ 1,1 }), toImVec(bottomRight_sw - Vec2{ 1,1 }), true);
 			{
-				const auto ll2ss{ [&](const vec& _point_ll) {
+				const auto ll2ss{ [&](const Vec2& _point_ll) {
 					return sw2ss(nw2sw(nl2nw(ll2nl(_point_ll))));
 				} };
 
-				const double l2s{ l2n / m_windowHeight_n * n2s };
+				const Real l2s{ l2n / m_windowHeight_n * n2s };
 
 				// grid
 
 				{
 					constexpr ImU32 gridColor{ IM_COL32(60, 60, 60, 255) };
 					const int gridLevel{ std::max(0, static_cast<int>(-std::log2(m_windowHeight_n / 2.0))) };
-					const double gridStep_s{ n2s / ((1 << gridLevel) * 10) / m_windowHeight_n };
-					const vec origin_ss{ sw2ss(nw2sw(nl2nw(vec{0,1}))) };
-					for (double x_s{ std::fmod(origin_ss.x(), gridStep_s) }; x_s <= bottomRight_sw.x(); x_s += gridStep_s)
+					const Real gridStep_s{ n2s / ((1 << gridLevel) * 10) / m_windowHeight_n };
+					const Vec2 origin_ss{ sw2ss(nw2sw(nl2nw(Vec2{0,1}))) };
+					for (Real x_s{ std::fmod(origin_ss.x(), gridStep_s) }; x_s <= bottomRight_sw.x(); x_s += gridStep_s)
 					{
-						drawList->AddLine(toImVec(vec{ x_s, topLeft_sw.y() }), toImVec(vec{ x_s, bottomRight_sw.y() }), gridColor);
+						drawList->AddLine(toImVec(Vec2{ x_s, topLeft_sw.y() }), toImVec(Vec2{ x_s, bottomRight_sw.y() }), gridColor);
 					}
-					for (double y_s{ std::fmod(origin_ss.y(), gridStep_s) }; y_s <= bottomRight_sw.y(); y_s += gridStep_s)
+					for (Real y_s{ std::fmod(origin_ss.y(), gridStep_s) }; y_s <= bottomRight_sw.y(); y_s += gridStep_s)
 					{
-						drawList->AddLine(toImVec(vec{ topLeft_sw.x(), y_s }), toImVec(vec{ bottomRight_sw.x(), y_s }), gridColor);
+						drawList->AddLine(toImVec(Vec2{ topLeft_sw.x(), y_s }), toImVec(Vec2{ bottomRight_sw.x(), y_s }), gridColor);
 					}
 				}
 
@@ -188,20 +186,20 @@ namespace HMP::Gui::Dag
 
 				constexpr ImU32 strokeColor{ IM_COL32(220, 220, 220, 255) };
 
-				for (const Layout::Line& line : layout.lines())
+				for (const auto& [lineA, lineB] : layout.lines())
 				{
-					drawList->AddLine(toImVec(ll2ss(line.first)), toImVec(ll2ss(line.second)), strokeColor);
+					drawList->AddLine(toImVec(ll2ss(lineA)), toImVec(ll2ss(lineB)), strokeColor);
 				}
 
 				// nodes
 
 				const float nodeRadius_s{ static_cast<float>(layout.nodeRadius() * l2s) };
-				const vec nodeHalfDiag_s{ nodeRadius_s, nodeRadius_s };
+				const Vec2 nodeHalfDiag_s{ nodeRadius_s, nodeRadius_s };
 
 				for (const Layout::Node& node : layout.nodes())
 				{
 					constexpr ImU32 textColor{ backgroundColor };
-					const vec center{ ll2ss(node.center()) };
+					const Vec2 center{ ll2ss(node.center()) };
 					std::string text{};
 					switch (node.node().type())
 					{
@@ -241,7 +239,7 @@ namespace HMP::Gui::Dag
 						}
 						break;
 					}
-					const vec textSize{ toVec(ImGui::CalcTextSize(text.c_str())) / ImGui::GetFontSize() * nodeRadius_s };
+					const Vec2 textSize{ toVec(ImGui::CalcTextSize(text.c_str())) / ImGui::GetFontSize() * nodeRadius_s };
 					drawList->AddText(
 						ImGui::GetFont(),
 						nodeRadius_s,
