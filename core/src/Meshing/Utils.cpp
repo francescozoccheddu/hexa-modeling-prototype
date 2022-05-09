@@ -74,8 +74,8 @@ namespace HMP::Meshing::Utils
 			throw std::logic_error{ "faces are not adjacent" };
 		}
 		const Id backFid{ _mesh.poly_face_opposite_to(_pid, _forwardFid) };
-		FaceVertIds forwardFaceVids = faceVidsFromFid(_mesh, _pid, _forwardFid, true);
-		FaceVertIds backFaceVids = faceVidsFromFid(_mesh, _pid, backFid, false);
+		FaceVertIds forwardFaceVids = faceVidsFromFid(_mesh, _pid, _forwardFid, false);
+		FaceVertIds backFaceVids = faceVidsFromFid(_mesh, _pid, backFid, true);
 		while (_mesh.edge_id(forwardFaceVids[0], forwardFaceVids[1]) != sharedEid)
 		{
 			std::rotate(forwardFaceVids.begin(), forwardFaceVids.begin() + 1, forwardFaceVids.end());
