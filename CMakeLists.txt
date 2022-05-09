@@ -11,6 +11,9 @@ find_package (cinolib REQUIRED)
 # ogdf
 add_subdirectory ("external/ogdf")
 
+# cpputils
+add_subdirectory ("external/cpputils")
+
 # hexa-modeling-prototype
 add_subdirectory ("core")
 add_subdirectory ("gui")

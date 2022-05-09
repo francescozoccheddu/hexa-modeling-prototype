@@ -1,26 +1,24 @@
 #pragma once
 
+#include <HMP/Meshing/types.hpp>
 #include <HMP/Dag/Operation.hpp>
 
 namespace HMP::Dag
 {
 
-	class Extrude : public Operation
+	class Extrude final : public Operation
 	{
 
 	private:
 
-		unsigned int m_offset{};
-
-	protected:
-
+		Id m_faceOffset;
 
 	public:
 
 		Extrude();
 
-		unsigned int& offset();
-		unsigned int offset() const;
+		Id& faceOffset();
+		Id faceOffset() const;
 
 	};
 

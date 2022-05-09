@@ -1,33 +1,32 @@
 #pragma once
 
 #include <HMP/Dag/Operation.hpp>
-#include <HMP/Refinement/schemes.hpp>
-#include <array>
+#include <HMP/Meshing/types.hpp>
+#include <HMP/Meshing/refinementSchemes.hpp>
 
 namespace HMP::Dag
 {
 
-	class Refine : public Operation
+	class Refine final : public Operation
 	{
 
 	private:
 
-		Refinement::EScheme m_scheme{ Refinement::EScheme::StandardRefinement };
-		bool m_needsTopologyFix{ false };
-		std::array<unsigned int, 8> m_vertices{};
+		Id m_forwardFaceOffset, m_upFaceOffset;
+		Meshing::ERefinementScheme m_scheme;
 
 	public:
 
 		Refine();
 
-		Refinement::EScheme& scheme();
-		Refinement::EScheme scheme() const;
+		Id& forwardFaceOffset();
+		Id forwardFaceOffset() const;
 
-		std::array<unsigned int, 8>& vertices();
-		const std::array<unsigned int, 8>& vertices() const;
+		Id& upFaceOffset();
+		Id upFaceOffset() const;
 
-		bool& needsTopologyFix();
-		bool needsTopologyFix() const;
+		Meshing::ERefinementScheme& scheme();
+		Meshing::ERefinementScheme scheme() const;
 
 	};
 

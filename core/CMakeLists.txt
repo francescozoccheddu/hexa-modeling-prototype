@@ -1,25 +1,29 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 
 add_library (core STATIC
-    "src/grid.cpp"
-    "src/operationstree.cpp"
-    "src/undoredo.cpp"
-    "src/utils.cpp"
-    "src/actions/extrudeaction.cpp"
-    "src/actions/facerefineaction.cpp"
-    "src/actions/makeconformingaction.cpp"
-    "src/actions/moveaction.cpp"
-    "src/actions/refineaction.cpp"
-    "src/actions/removeaction.cpp"
+    "src/Actions/Clear.cpp"
+    "src/Actions/Delete.cpp"
+    "src/Actions/Extrude.cpp"
+    "src/Actions/Load.cpp"
+    "src/Actions/MakeConforming.cpp"
+    "src/Actions/MoveVert.cpp"
+    "src/Actions/Refine.cpp"
     "src/Dag/Delete.cpp"
     "src/Dag/Element.cpp"
     "src/Dag/Extrude.cpp"
     "src/Dag/Node.cpp"
+    "src/Dag/NodeSet.cpp"
     "src/Dag/Operation.cpp"
     "src/Dag/Refine.cpp"
     "src/Dag/Utils.cpp"
-    "src/Refinement/schemes.cpp"
-    "src/Utils/transform.cpp"
+    "src/Meshing/Mesher.cpp"
+    "src/Meshing/Refinement.cpp"
+    "src/Meshing/refinementSchemes.cpp"
+    "src/Meshing/Utils.cpp"
+    "src/Utils/Geometry.cpp"
+    "src/Utils/Serialization.cpp"
+    "src/Commander.cpp"
+    "src/Project.cpp"
 )
 
 set_target_properties (core PROPERTIES
@@ -38,4 +42,5 @@ target_include_directories (core
 
 target_link_libraries (core 
     PUBLIC cinolib
+    PUBLIC cpputils
 )

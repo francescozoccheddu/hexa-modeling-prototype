@@ -1,44 +1,45 @@
 #pragma once
 
+#include <HMP/Meshing/types.hpp>
 #include <HMP/Dag/Node.hpp>
-#include <HMP/Utils/SetView.hpp>
-#include <array>
-#include <cinolib/geometry/vec_mat.h>
 
 namespace HMP::Dag
 {
 
-	class Element : public Node
+	class Element final : public Node
 	{
 
 	public:
 
-		using DagSetView = HMP::Utils::SetView<Node, Operation>;
+		using Set = NodeSet<Operation>;
 
 	private:
 
-		unsigned int m_pid{};
-		std::array<cinolib::vec3d, 8> m_vertices;
+		PolyVerts m_vertices;
 
-		DagSetView m_parents{ Node::parents().view<Operation>() };
-		DagSetView m_children{ Node::children().view<Operation>() };
+		Set m_parents, m_children;
+
+		using Node::isElement;
+		using Node::isOperation;
+		using Node::element;
+		using Node::operation;
 
 	public:
 
 		Element();
 
-		unsigned int& pid();
-		unsigned int pid() const;
+		PolyVerts& vertices();
+		const PolyVerts& vertices() const;
 
-		std::array<cinolib::vec3d, 8>& vertices();
-		const std::array<cinolib::vec3d, 8>& vertices() const;
+		Set& forward(bool _descending);
+		const Set& forward(bool _descending) const;
+		Set& back(bool _descending);
+		const Set& back(bool _descending) const;
 
-		const Operation& parent() const;
-
-		DagSetView& parents();
-		const DagSetView& parents() const;
-		DagSetView& children();
-		const DagSetView& children() const;
+		Set& parents();
+		const Set& parents() const;
+		Set& children();
+		const Set& children() const;
 
 	};
 
