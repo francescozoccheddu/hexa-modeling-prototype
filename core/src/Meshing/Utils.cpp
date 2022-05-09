@@ -30,7 +30,7 @@ namespace HMP::Meshing::Utils
 		}
 		for (const Id otherFid : _mesh.poly_faces_id(_pid))
 		{
-			if (_mesh.faces_are_adjacent(_fid, otherFid))
+			if (otherFid != _fid && _mesh.faces_are_adjacent(_fid, otherFid))
 			{
 				return otherFid;
 			}
