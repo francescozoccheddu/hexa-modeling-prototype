@@ -37,6 +37,7 @@ namespace HMP::Gui
 
 		m_canvas.push(&m_mesh);
 		m_canvas.push(&m_menu);
+		m_canvas.push(&m_dagViewer);
 
 		m_canvas.background = m_mesher.suggestedBackgroundColor;
 		m_canvas.depth_cull_markers = false;
@@ -243,7 +244,6 @@ namespace HMP::Gui
 
 	void App::onDrawControls()
 	{
-		m_dagViewer.draw();
 	}
 
 	// Commands

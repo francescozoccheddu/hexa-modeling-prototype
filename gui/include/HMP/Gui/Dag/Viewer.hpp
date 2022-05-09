@@ -4,11 +4,12 @@
 #include <HMP/Dag/Element.hpp>
 #include <HMP/Meshing/Mesher.hpp>
 #include <cinolib/geometry/vec_mat.h>
+#include <cinolib/gl/side_bar_item.h>
 
 namespace HMP::Gui::Dag
 {
 
-	class Viewer final
+	class Viewer final : public cinolib::SideBarItem
 	{
 
 	private:
@@ -34,7 +35,7 @@ namespace HMP::Gui::Dag
 
 		void resetView();
 
-		void draw();
+		void draw() override;
 
 	};
 

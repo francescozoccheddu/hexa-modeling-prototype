@@ -18,7 +18,7 @@ namespace HMP::Gui::Dag
 	using namespace HMP::Dag;
 
 	Viewer::Viewer(const Meshing::Mesher& _mesher)
-		: m_center_nl{ 0.5, 0.5 }, m_windowHeight_n{ 1.0 }, m_mesher{ _mesher }
+		: m_center_nl{ 0.5, 0.5 }, m_windowHeight_n{ 1.0 }, m_mesher{ _mesher }, cinolib::SideBarItem{ "HMP Dag Viewer" }
 	{}
 
 	const Meshing::Mesher& Viewer::mesher() const
