@@ -1,11 +1,13 @@
 #pragma once
 
+#include <HMP/Meshing/types.hpp>
 #include <HMP/Dag/Node.hpp>
 #include <istream>
 #include <ostream>
 #include <string>
 #include <vector>
 #include <functional>
+#include <HMP/Utils/Serialization.hpp>
 
 namespace HMP::Dag::Utils
 {
@@ -13,7 +15,7 @@ namespace HMP::Dag::Utils
 	std::vector<Node*> descendants(Node& _node, std::function<bool(const Node&)> _branchSelector = [](const Node&) { return true; });
 	std::vector<const Node*> descendants(const Node& _node, std::function<bool(const Node&)> _branchSelector = [](const Node&) { return true; });
 
-	std::ostream& operator<<(std::ostream& _stream, const Node& _node);
-	std::istream& operator>>(std::istream& _stream, Node*& _node);
+	void serialize(HMP::Utils::Serialization::Serializer& _serializer, const Node& _node);
+	Node& deserialize(HMP::Utils::Serialization::Deserializer& _deserializer);
 
 }

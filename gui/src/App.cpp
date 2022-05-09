@@ -5,51 +5,81 @@
 #include <cinolib/gl/glcanvas.h>
 #include <cstdlib>
 #include <iostream>
+#include <fstream>
+#include <HMP/Dag/Utils.hpp>
 #include <imgui.h>
 #include <GLFW/glfw3.h>
 #include <cinolib/gl/file_dialog_open.h>
 #include <cinolib/gl/file_dialog_save.h>
 #include <HMP/Gui/Dag/createLayout.hpp>
 #include <utility>
+#include <HMP/Actions/MoveVert.hpp>
+#include <HMP/Actions/Clear.hpp>
+#include <HMP/Actions/Load.hpp>
+#include <HMP/Actions/Delete.hpp>
+#include <HMP/Actions/Extrude.hpp>
+#include <HMP/Actions/MakeConforming.hpp>
+#include <HMP/Actions/Project.hpp>
+#include <HMP/Actions/Refine.hpp>
+#include <HMP/Utils/Serialization.hpp>
+#include <HMP/Meshing/Utils.hpp>
 
 namespace HMP::Gui
 {
 
 	// Actions
 
-	void App::updateHighlight()
+	App::App()
+		: m_project{}, m_canvas{}, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() }, m_dagViewer{ m_mesher }, m_menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh controls" }
 	{
-		unsigned int pid{};
-		cinolib::vec3d world;
+		m_commander.apply(*new Actions::Clear());
+		m_commander.applied().clear();
+
+		m_canvas.push(&m_mesh);
+		m_canvas.push(&m_menu);
+		m_canvas.push(&m_dagViewer);
+
+		m_canvas.background = m_mesher.suggestedBackgroundColor;
+		m_canvas.depth_cull_markers = false;
+		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMove(_args...); };
+		m_canvas.callback_key_pressed = [this](auto && ..._args) { return onKeyPress(_args...); };
+		m_canvas.callback_app_controls = [this](auto && ..._args) { return onDrawControls(_args ...); };
+		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChange(_args...); };
+
+		updateDagViewer();
+	}
+
+	void App::updateMouse()
+	{
+		constexpr float highlightVertexRadius{ 10.0f };
 		m_canvas.pop_all_markers();
-		const bool pending{ m_canvas.unproject(m_mouse.position, world) };
-		if (pending)
+		m_mesher.faceMarkerSet().clear();
+		m_mesher.polyMarkerSet().clear();
+		m_mouse.element = nullptr;
+		m_mouse.faceOffset = m_mouse.vertOffset = noId;
+		if (m_canvas.unproject(m_mouse.position, m_mouse.worldPosition))
 		{
-			pid = m_grid.mesh.pick_poly(world);
-			const unsigned int fid{ m_grid.mesh.pick_face(world) };
-			const unsigned int vid{ m_grid.mesh.pick_vert(world) };
-			m_canvas.push_marker(m_grid.mesh.face_centroid(fid), "", c_highlightFaceColor, c_highlightFaceRadius);
-			m_canvas.push_marker(m_grid.mesh.vert(vid), "", c_highlightVertexColor, c_highlightVertexRadius);
+			// poly
+			const Id pid = m_mesh.pick_poly(m_mouse.worldPosition);
+			m_mouse.element = &m_mesher.pidToElement(pid);
+			m_mesher.polyMarkerSet().add(*m_mouse.element);
+			// face
+			m_mouse.faceOffset = Meshing::Utils::closestFaceOffsetInPoly(m_mesh, pid, m_mouse.worldPosition);
+			m_mesher.faceMarkerSet().add(*m_mouse.element, m_mouse.faceOffset);
+			// vert
+			m_mouse.vertOffset = Meshing::Utils::closestVertOffsetInPoly(m_mesh, pid, m_mouse.worldPosition);
+			m_canvas.push_marker(m_mesh.vert(m_mesh.poly_vert_id(pid, m_mouse.vertOffset)), "", m_mesher.suggestedOverlayColor, highlightVertexRadius);
 		}
-		if (pending != m_highlight.pending || (pending && pid != m_highlight.pid))
-		{
-			if (m_highlight.pending && m_highlight.pid < m_grid.mesh.num_polys())
-			{
-				m_grid.mesh.poly_data(m_highlight.pid).color = cinolib::Color::WHITE();
-			}
-			if (pending)
-			{
-				m_grid.mesh.poly_data(pid).color = c_highlightPolyColor;
-			}
-			m_grid.mesh.updateGL();
-		}
-		m_dagViewer.highlightedElementId = m_highlight.pid = pid;
-		m_dagViewer.highlight = m_highlight.pending = pending;
+		m_dagViewer.highlight = m_mouse.element;
+		m_mesher.updateMesh();
 	}
 
 	void App::updateDagViewer()
 	{
-		m_dagViewer.layout = Dag::createLayout(m_grid);
+		if (m_project.root())
+		{
+			m_dagViewer.layout = Dag::createLayout(*m_project.root());
+		}
 		m_dagViewer.resetView();
 	}
 
@@ -57,13 +87,13 @@ namespace HMP::Gui
 
 	void App::onCameraChange()
 	{
-		updateHighlight();
+		updateMouse();
 	}
 
 	bool App::onMouseMove(double _x, double _y)
 	{
 		m_mouse.position = cinolib::vec2d{ _x, _y };
-		updateHighlight();
+		updateMouse();
 		return false;
 	}
 
@@ -112,7 +142,7 @@ namespace HMP::Gui
 			{
 				if (!_modifiers)
 				{
-					onRefineHexahedron();
+					onRefineElement();
 				}
 			}
 			break;
@@ -130,7 +160,7 @@ namespace HMP::Gui
 			{
 				if (!_modifiers)
 				{
-					onDeleteHexahedron();
+					onDelete();
 				}
 			}
 			break;
@@ -215,39 +245,25 @@ namespace HMP::Gui
 
 	void App::onDrawControls()
 	{
-		m_dagViewer.draw();
-		if (m_move.pending)
-		{
-			ImGui::Text("Moving vertex #%u", m_move.vid);
-		}
-		if (m_copy.pending)
-		{
-			ImGui::Text("Copying hexahedron #%u", m_copy.pid);
-		}
-		if (m_target.p_mesh)
-		{
-			ImGui::Text("Showing target '%s'", m_target.filename.c_str());
-		}
 	}
 
 	// Commands
 
 	void App::onMove()
 	{
-		cinolib::vec3d world_mouse_pos;
-		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
+		if (m_mouse.element)
 		{
 			if (m_move.pending)
 			{
 				// FIXME move in plane instead of using world_mouse_pos
-				const cinolib::vec3d offset{ world_mouse_pos - m_grid.mesh.vert(m_move.vid) };
-				m_grid.move_vert(m_move.vid, offset);
+				m_commander.apply(*new Actions::MoveVert{ *m_move.element, m_move.vertOffset, m_mouse.worldPosition });
 				m_move.pending = false;
 				m_canvas.refit_scene();
 			}
 			else
 			{
-				m_move.vid = m_grid.mesh.pick_vert(world_mouse_pos);
+				m_move.element = m_mouse.element;
+				m_move.vertOffset = m_mouse.vertOffset;
 				m_move.pending = true;
 			}
 		}
@@ -259,25 +275,9 @@ namespace HMP::Gui
 
 	void App::onExtrude()
 	{
-		cinolib::vec3d world_mouse_pos;
-		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
+		if (m_mouse.element)
 		{
-			const unsigned int pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
-			unsigned int closest_fid{};
-			{
-				double closest_dist{ std::numeric_limits<double>::infinity() };
-				for (const unsigned int fid : m_grid.mesh.poly_faces_id(pid))
-				{
-					const double dist{ world_mouse_pos.dist_sqrd(m_grid.mesh.face_centroid(fid)) };
-					if (dist < closest_dist)
-					{
-						closest_dist = dist;
-						closest_fid = fid;
-					}
-				}
-			};
-			const unsigned int offset{ m_grid.mesh.poly_face_offset(pid, closest_fid) };
-			m_grid.add_extrude(pid, offset);
+			m_commander.apply(*new Actions::Extrude{ *m_mouse.element, m_mouse.faceOffset });
 			updateDagViewer();
 			m_canvas.refit_scene();
 		}
@@ -285,11 +285,9 @@ namespace HMP::Gui
 
 	void App::onCopy()
 	{
-		cinolib::vec3d world_mouse_pos;
-		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
+		if (m_mouse.element)
 		{
-			const unsigned int pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
-			m_copy.pid = pid;
+			m_copy.element = m_mouse.element;
 			m_copy.pending = true;
 		}
 		else
@@ -302,43 +300,34 @@ namespace HMP::Gui
 	{
 		if (m_copy.pending)
 		{
-			cinolib::vec3d world_mouse_pos;
-			if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
+			if (m_mouse.element)
 			{
-				const unsigned int pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
-				if (m_grid.merge(m_copy.pid, pid))
-				{
-					m_copy.pending = false;
-					updateDagViewer();
-					m_canvas.refit_scene();
-				}
-				else
-				{
-					std::cout << "Merge failed" << std::endl;
-				}
+				throw std::logic_error{ "not implemented yet" };
 			}
 		}
 	}
 
-	void App::onRefineHexahedron()
+	void App::onRefineElement()
 	{
-		cinolib::vec3d world_mouse_pos;
-		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
+		if (m_mouse.element)
 		{
-			const unsigned int pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
-			m_grid.add_refine(pid);
+			const Id upFaceOffset{ Meshing::Utils::anyAdjacentFaceOffsetFromFaceOffset(m_mesh, m_mesher.elementToPid(*m_mouse.element), m_mouse.faceOffset) };
+			m_commander.apply(*new Actions::Refine{ *m_mouse.element, m_mouse.faceOffset, upFaceOffset, Meshing::ERefinementScheme::Subdivide3x3 });
 			updateDagViewer();
-			updateHighlight();
+			updateMouse();
 		}
 	}
 
-	void App::onDeleteHexahedron()
+	void App::onDelete()
 	{
-		cinolib::vec3d world_mouse_pos;
-		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
+		if (m_mesh.num_polys() <= 1)
 		{
-			const unsigned int pid{ m_grid.mesh.pick_poly(world_mouse_pos) };
-			m_grid.add_remove(pid);
+			std::cout << "cannot delete the only element" << std::endl;
+			return;
+		}
+		if (m_mouse.element)
+		{
+			m_commander.apply(*new Actions::Delete{ *m_mouse.element });
 			updateDagViewer();
 			m_canvas.refit_scene();
 		}
@@ -346,29 +335,20 @@ namespace HMP::Gui
 
 	void App::onRefineFace()
 	{
-		cinolib::vec3d world_mouse_pos;
-		if (m_canvas.unproject(m_mouse.position, world_mouse_pos))
+		if (m_mouse.element)
 		{
-			for (unsigned int fid_plus_one{ m_grid.mesh.num_faces() }; fid_plus_one > 0; fid_plus_one--)
-			{
-				const unsigned int fid{ fid_plus_one - 1 };
-				if (!m_grid.mesh.adj_f2p(fid).size())
-				{
-					m_grid.mesh.face_remove_unreferenced(fid);
-				}
-			}
-			const unsigned int fid{ m_grid.mesh.pick_face(world_mouse_pos) };
-			m_grid.add_face_refine(fid);
+			const Id upFaceOffset{ Meshing::Utils::anyAdjacentFaceOffsetFromFaceOffset(m_mesh, m_mesher.elementToPid(*m_mouse.element), m_mouse.faceOffset) };
+			m_commander.apply(*new Actions::Refine{ *m_mouse.element, m_mouse.faceOffset, upFaceOffset, Meshing::ERefinementScheme::Inset });
 			updateDagViewer();
-			updateHighlight();
+			updateMouse();
 		}
 	}
 
 	void App::onMakeConformant()
 	{
-		m_grid.make_conforming();
+		m_commander.apply(*new Actions::MakeConforming());
 		updateDagViewer();
-		updateHighlight();
+		updateMouse();
 	}
 
 	void App::onSaveMesh()
@@ -376,7 +356,7 @@ namespace HMP::Gui
 		const std::string filename{ cinolib::file_dialog_save() };
 		if (!filename.empty())
 		{
-			m_grid.save_as_mesh(filename);
+			m_mesh.save(filename.c_str());
 		}
 	}
 
@@ -385,7 +365,11 @@ namespace HMP::Gui
 		const std::string filename{ cinolib::file_dialog_save() };
 		if (!filename.empty())
 		{
-			m_grid.op_tree.serialize(filename);
+			std::ofstream file;
+			file.open(filename);
+			Utils::Serialization::Serializer serializer{ file };
+			HMP::Dag::Utils::serialize(serializer, *m_project.root());
+			file.close();
 		}
 	}
 
@@ -394,10 +378,12 @@ namespace HMP::Gui
 		const std::string filename{ cinolib::file_dialog_open() };
 		if (!filename.empty())
 		{
-			m_grid.clear();
-			m_move.pending = m_copy.pending = false;
-			m_grid.op_tree.deserialize(filename);
-			m_grid.apply_tree(m_grid.op_tree.root->operations, 0);
+			std::ifstream file;
+			file.open(filename);
+			Utils::Serialization::Deserializer deserializer{ file };
+			HMP::Dag::Element& root = HMP::Dag::Utils::deserialize(deserializer).element();
+			file.close();
+			m_commander.apply(*new Actions::Load{ root });
 			updateDagViewer();
 			m_canvas.refit_scene();
 		}
@@ -405,49 +391,65 @@ namespace HMP::Gui
 
 	void App::onToggleTargetVisibility()
 	{
-		if (!m_target.p_mesh)
+		if (!m_target.mesh)
 		{
 			m_target.filename = cinolib::file_dialog_open();
 			if (!m_target.filename.empty())
 			{
-				m_target.p_mesh = new cinolib::DrawableTrimesh<>(m_target.filename.c_str());
-				m_canvas.push(m_target.p_mesh);
+				m_target.mesh = new cinolib::DrawableTrimesh<>(m_target.filename.c_str());
+				m_canvas.push(m_target.mesh);
 			}
 		}
 		else
 		{
-			m_canvas.pop(m_target.p_mesh);
+			m_canvas.pop(m_target.mesh);
 			m_target.filename = "";
-			delete m_target.p_mesh;
-			m_target.p_mesh = nullptr;
+			delete m_target.mesh;
+			m_target.mesh = nullptr;
 		}
 		m_canvas.refit_scene();
 	}
 
 	void App::onProjectToTarget()
 	{
-		m_grid.project_on_target(*m_target.p_mesh);
-		updateDagViewer();
-		m_canvas.refit_scene();
+		if (m_target.mesh)
+		{
+			m_commander.apply(*new Actions::Project{ *m_target.mesh });
+			updateDagViewer();
+			m_canvas.refit_scene();
+		}
 	}
 
 	void App::onUndo()
 	{
-		m_grid.undo();
-		updateDagViewer();
-		m_canvas.refit_scene();
+		if (m_commander.canUndo())
+		{
+			m_commander.undo();
+			updateDagViewer();
+			m_canvas.refit_scene();
+		}
+		else
+		{
+			std::cout << "cannot undo" << std::endl;
+		}
 	}
 
 	void App::onRedo()
 	{
-		m_grid.redo();
-		updateDagViewer();
-		m_canvas.refit_scene();
+		if (m_commander.canRedo())
+		{
+			m_commander.redo();
+			updateDagViewer();
+			m_canvas.refit_scene();
+		}
+		{
+			std::cout << "cannot redo" << std::endl;
+		}
 	}
 
 	void App::onClear()
 	{
-		m_grid.clear();
+		m_commander.apply(*new Actions::Clear());
 		m_move.pending = m_copy.pending = false;
 		updateDagViewer();
 		m_canvas.refit_scene();
@@ -457,19 +459,7 @@ namespace HMP::Gui
 
 	int App::launch()
 	{
-		cinolib::VolumeMeshControls<HMP::MeshGrid> menu{ &m_grid.mesh, &m_canvas, "Grid mesh" };
-		m_canvas.push(&m_grid.mesh);
-		m_canvas.push(&menu);
-		m_grid.mesh.show_mesh_flat();
-
-		m_canvas.depth_cull_markers = false;
-		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMove(_args...); };
-		m_canvas.callback_key_pressed = [this](auto && ..._args) { return onKeyPress(_args...); };
-		m_canvas.callback_app_controls = [this](auto && ..._args) { return onDrawControls(_args ...); };
-		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChange(_args...); };
-
 		updateDagViewer();
-
 		return m_canvas.launch();
 	}
 

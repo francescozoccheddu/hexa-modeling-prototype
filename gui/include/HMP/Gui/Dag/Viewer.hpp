@@ -1,33 +1,41 @@
 #pragma once
 
 #include <HMP/Gui/Dag/Layout.hpp>
-#include <cinolib/geometry/vec_mat.h>
+#include <HMP/Dag/Element.hpp>
+#include <HMP/Meshing/Mesher.hpp>
+#include <HMP/Meshing/types.hpp>
+#include <cinolib/gl/side_bar_item.h>
 
 namespace HMP::Gui::Dag
 {
 
-	class Viewer final
+	class Viewer final : public cinolib::SideBarItem
 	{
 
 	private:
 
-		cinolib::vec2d m_center_nl{ 0.5, 0.5 };
-		double m_windowHeight_n{ 1.0 };
+		const Meshing::Mesher& m_mesher;
 
-		void zoom(double _amount);
+		Vec2 m_center_nl{ 0.5, 0.5 };
+		Real m_windowHeight_n{ 1.0 };
+
+		void zoom(Real _amount);
 		void pan(const cinolib::vec2d& _amount);
 		void clampView();
 
 	public:
 
-		int highlightedElementId{};
-		bool highlight{ false };
+		Viewer(const Meshing::Mesher& _mesher);
+
+		const HMP::Dag::Element* highlight{};
+
+		const Meshing::Mesher& mesher() const;
 
 		Layout layout{};
 
 		void resetView();
 
-		void draw();
+		void draw() override;
 
 	};
 

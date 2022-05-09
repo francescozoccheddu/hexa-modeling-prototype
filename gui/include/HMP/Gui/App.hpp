@@ -1,8 +1,10 @@
 #pragma once
 
-#include <HMP/grid.hpp>
+#include <HMP/Project.hpp>
 #include <HMP/Gui/Dag/Viewer.hpp>
+#include <HMP/Dag/Element.hpp>
 #include <cinolib/gl/glcanvas.h>
+#include <cinolib/gl/volume_mesh_controls.h>
 #include <cinolib/meshes/drawable_trimesh.h>
 #include <cinolib/color.h>
 #include <string>
@@ -15,46 +17,42 @@ namespace HMP::Gui
 
 	private:
 
-		inline static const unsigned int c_highlightFaceRadius{ 10u };
-		inline static const unsigned int c_highlightVertexRadius{ 10u };
-		inline static const cinolib::Color c_highlightPolyColor{ cinolib::Color::YELLOW() };
-		inline static const cinolib::Color c_highlightFaceColor{ cinolib::Color::PASTEL_VIOLET() };
-		inline static const cinolib::Color c_highlightVertexColor{ cinolib::Color::BLUE() };
-
 		struct
 		{
 			cinolib::vec2d position{};
+			Vec worldPosition{};
+			HMP::Dag::Element* element{};
+			Id faceOffset{}, vertOffset{};
 		} m_mouse;
 
 		struct
 		{
-			unsigned int pid{ 0 };
-			bool pending{ false };
-		} m_highlight;
-
-		struct
-		{
-			unsigned int vid{};
+			HMP::Dag::Element* element{};
+			Id vertOffset{};
 			bool pending{ false };
 		} m_move;
 
 		struct
 		{
-			unsigned int pid{};
+			HMP::Dag::Element* element{};
 			bool pending{ false };
 		} m_copy;
 
 		struct
 		{
-			cinolib::DrawableTrimesh<>* p_mesh{ nullptr };
+			cinolib::DrawableTrimesh<>* mesh{ nullptr };
 			std::string filename{};
 		} m_target;
 
-		HMP::Grid m_grid{};
-		cinolib::GLcanvas m_canvas{};
-		Dag::Viewer m_dagViewer{};
+		HMP::Project m_project;
+		cinolib::GLcanvas m_canvas;
+		Meshing::Mesher& m_mesher;
+		const Meshing::Mesher::Mesh& m_mesh;
+		Commander& m_commander;
+		Dag::Viewer m_dagViewer; 
+		cinolib::VolumeMeshControls<Meshing::Mesher::Mesh> m_menu;
 
-		void updateHighlight();
+		void updateMouse();
 		void updateDagViewer();
 
 		void onCameraChange();
@@ -66,8 +64,8 @@ namespace HMP::Gui
 		void onExtrude();
 		void onCopy();
 		void onPaste();
-		void onRefineHexahedron();
-		void onDeleteHexahedron();
+		void onRefineElement();
+		void onDelete();
 		void onRefineFace();
 		void onMakeConformant();
 		void onSaveMesh();
@@ -80,6 +78,8 @@ namespace HMP::Gui
 		void onClear();
 
 	public:
+
+		App();
 
 		int launch();
 

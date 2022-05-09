@@ -1,7 +1,8 @@
 #pragma once
 
+#include <HMP/Meshing/types.hpp>
 #include <HMP/Dag/Node.hpp>
-#include <HMP/Utils/SetView.hpp>
+#include <vector>
 
 namespace HMP::Dag
 {
@@ -11,8 +12,7 @@ namespace HMP::Dag
 
 	public:
 
-		using DependencySetView = HMP::Utils::SetView<Operation>;
-		using DagSetView = HMP::Utils::SetView<Node, Element>;
+		using Set = NodeSet<Element>;
 
 		enum class EPrimitive
 		{
@@ -22,12 +22,13 @@ namespace HMP::Dag
 	private:
 
 		const EPrimitive m_primitive;
-		DependencySetView m_dependencies{};
-		DependencySetView m_dependents{};
-		bool m_userDefined{ true };
 
-		DagSetView m_parents{ Node::parents().view<Element>() };
-		DagSetView m_children{ Node::children().view<Element>() };
+		Set m_parents, m_children;
+
+		using Node::isElement;
+		using Node::isOperation;
+		using Node::element;
+		using Node::operation;
 
 	protected:
 
@@ -37,18 +38,15 @@ namespace HMP::Dag
 
 		EPrimitive primitive() const;
 
-		DependencySetView& dependencies();
-		const DependencySetView& dependencies() const;
-		DependencySetView& dependents();
-		const DependencySetView& dependents() const;
+		Set& forward(bool _descending);
+		const Set& forward(bool _descending) const;
+		Set& back(bool _descending);
+		const Set& back(bool _descending) const;
 
-		bool& userDefined();
-		bool userDefined() const;
-
-		DagSetView& parents();
-		const DagSetView& parents() const;
-		DagSetView& children();
-		const DagSetView& children() const;
+		Set& parents();
+		const Set& parents() const;
+		Set& children();
+		const Set& children() const;
 
 	};
 

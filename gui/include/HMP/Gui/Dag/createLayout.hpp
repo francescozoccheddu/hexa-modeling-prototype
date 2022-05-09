@@ -1,11 +1,11 @@
 #pragma once
 
 #include <HMP/Gui/Dag/Layout.hpp>
-#include <HMP/grid.hpp>
+#include <HMP/Dag/Node.hpp>
 
 namespace HMP::Gui::Dag
 {
 
-	Layout createLayout(const HMP::Grid& _grid);
+	Layout createLayout(const HMP::Dag::Node& _dag);
 
 }
