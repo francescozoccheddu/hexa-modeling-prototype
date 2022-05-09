@@ -30,7 +30,7 @@ namespace HMP::Meshing::Utils
 		}
 		for (const Id otherFid : _mesh.poly_faces_id(_pid))
 		{
-			if (otherFid != _fid && _mesh.face_shared_edge(_fid, otherFid) != noId)
+			if (_mesh.faces_are_adjacent(_fid, otherFid))
 			{
 				return otherFid;
 			}

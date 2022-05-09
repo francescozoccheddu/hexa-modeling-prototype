@@ -30,14 +30,13 @@ namespace HMP::Gui
 	// Actions
 
 	App::App()
-		: m_project{}, m_canvas{}, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() }, m_dagViewer{ m_mesher }
+		: m_project{}, m_canvas{}, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() }, m_dagViewer{ m_mesher }, m_menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh" }
 	{
 		m_commander.apply(*new Actions::Clear());
 		m_commander.applied().clear();
 
-		cinolib::VolumeMeshControls<Meshing::Mesher::Mesh> menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh" };
 		m_canvas.push(&m_mesh);
-		//m_canvas.push(&menu);
+		m_canvas.push(&m_menu);
 
 		m_canvas.background = m_mesher.suggestedBackgroundColor;
 		m_canvas.depth_cull_markers = false;

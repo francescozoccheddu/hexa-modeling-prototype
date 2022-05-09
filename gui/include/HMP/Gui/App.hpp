@@ -4,6 +4,7 @@
 #include <HMP/Gui/Dag/Viewer.hpp>
 #include <HMP/Dag/Element.hpp>
 #include <cinolib/gl/glcanvas.h>
+#include <cinolib/gl/volume_mesh_controls.h>
 #include <cinolib/meshes/drawable_trimesh.h>
 #include <cinolib/color.h>
 #include <string>
@@ -50,7 +51,8 @@ namespace HMP::Gui
 		Meshing::Mesher& m_mesher;
 		const Meshing::Mesher::Mesh& m_mesh;
 		Commander& m_commander;
-		Dag::Viewer m_dagViewer;
+		Dag::Viewer m_dagViewer; 
+		cinolib::VolumeMeshControls<Meshing::Mesher::Mesh> m_menu;
 
 		void updateMouse();
 		void updateDagViewer();
