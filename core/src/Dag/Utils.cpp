@@ -191,4 +191,64 @@ namespace HMP::Dag::Utils
 		return *nodes[0];
 	}
 
+	Node& cloneNode(const Node& _node)
+	{
+		switch (_node.type())
+		{
+			case Node::EType::Element:
+			{
+				Element& clone{ *new Element{} };
+				clone.vertices() = _node.element().vertices();
+				return clone;
+			}
+			case Node::EType::Operation:
+			{
+				switch (_node.operation().primitive())
+				{
+					case Operation::EPrimitive::Delete:
+					{
+						Delete& clone{ *new Delete{} };
+						return clone;
+					}
+					case Operation::EPrimitive::Extrude:
+					{
+						const Extrude& source{ static_cast<const Extrude&>(_node) };
+						Extrude& clone{ *new Extrude{} };
+						clone.faceOffset() = source.faceOffset();
+						return clone;
+					}
+					case Operation::EPrimitive::Refine:
+					{
+						const Refine& source{ static_cast<const Refine&>(_node) };
+						Refine& clone{ *new Refine{} };
+						clone.forwardFaceOffset() = source.forwardFaceOffset();
+						clone.upFaceOffset() = source.upFaceOffset();
+						return clone;
+					}
+				}
+			}
+		}
+		throw std::domain_error{ "unknown node" };
+	}
+	
+	Node& cloneDag(const Node& _node)
+	{
+		std::vector<const Node*> sources{ descendants(_node) };
+		std::unordered_map<const Node*, Node*> cloneMap{};
+		cloneMap.reserve(sources.size());
+		for (const Node* source : sources)
+		{
+			cloneMap.insert({ source, &cloneNode(*source) });
+		}
+		for (const Node* source : sources)
+		{
+			Node& clone{ *cloneMap.at(source) };
+			for (const Node& sourceChild : source->children())
+			{
+				clone.children().attach(*cloneMap.at(&sourceChild));
+			}
+		}
+		return *cloneMap.at(&_node);
+	}
+
 }
