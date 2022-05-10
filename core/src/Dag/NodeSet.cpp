@@ -10,18 +10,39 @@ namespace HMP::Dag
 
 		bool NodeSetData::add(Node& _node)
 		{
-			return m_set.insert(&_node).second;
+			const auto it{ m_map.find(&_node) };
+			if (it != m_map.end())
+			{
+				return false;
+			}
+			else
+			{
+				m_list.push_back(&_node);
+				m_map.insert(it, { &_node, --m_list.end()});
+				return true;
+			}
 		}
 
 		bool NodeSetData::remove(Node& _node)
 		{
-			return m_set.erase(&_node);
+			const auto it{ m_map.find(&_node) };
+			if (it != m_map.end())
+			{
+				m_list.erase(it->second);
+				m_map.erase(it);
+				return true;
+			}
+			else
+			{
+				return false;
+			}
 		}
 
 		bool NodeSetData::clear()
 		{
-			const bool wasEmpty{ m_set.empty() };
-			m_set.clear();
+			const bool wasEmpty{ m_map.empty() };
+			m_map.clear();
+			m_list.clear();
 			return !wasEmpty;
 		}
 

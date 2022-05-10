@@ -16,6 +16,17 @@ namespace HMP::Actions
 
 	void Extrude::apply()
 	{
+		for (const Dag::Operation& child : m_element.children())
+		{
+			if (child.primitive() != Dag::Operation::EPrimitive::Extrude)
+			{
+				throw std::logic_error{ "element has non-extrude child" };
+			}
+			if (static_cast<const Dag::Extrude&>(child).forwardFaceOffset() == m_operation.forwardFaceOffset())
+			{
+				throw std::logic_error{ "element already has equivalent child" };
+			}
+		}
 		m_operation.parents().attach(m_element);
 		Utils::applyExtrude(mesher(), m_operation);
 		mesher().updateMesh();

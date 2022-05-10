@@ -243,6 +243,7 @@ namespace HMP::Dag::Utils
 					{
 						const Refine& source{ static_cast<const Refine&>(_node) };
 						Refine& clone{ *new Refine{} };
+						clone.scheme() = source.scheme();
 						clone.forwardFaceOffset() = source.forwardFaceOffset();
 						clone.upFaceOffset() = source.upFaceOffset();
 						return clone;
