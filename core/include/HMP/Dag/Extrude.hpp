@@ -11,14 +11,17 @@ namespace HMP::Dag
 
 	private:
 
-		Id m_faceOffset;
+		Id m_forwardFaceOffset, m_upFaceOffset;
 
 	public:
 
 		Extrude();
 
-		Id& faceOffset();
-		Id faceOffset() const;
+		Id& forwardFaceOffset();
+		Id forwardFaceOffset() const;
+
+		Id& upFaceOffset();
+		Id upFaceOffset() const;
 
 	};
 

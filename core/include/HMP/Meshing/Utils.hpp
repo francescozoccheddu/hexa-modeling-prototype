@@ -8,16 +8,20 @@
 namespace HMP::Meshing::Utils
 {
 
-	std::pair<Id, Id> adjacentFidsFromEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _eid);
-	Id anyAdjacentFidFromFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid);
-	Id anyAdjacentFaceOffsetFromFaceOffset(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _faceOffset);
-	FaceVertIds faceVidsFromFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, bool _winding = false);
-	FaceVertIds faceVidsFromFaceOffset(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _faceOffset, bool _winding = false);
-	PolyVerts polyVertsFromFids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFaceOffset, Id _upFaceOffset);
-	PolyVerts polyVertsFromFaceOffsets(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _upFid);
+	Id anyFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _eid);
+	Id adjacentFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _eid);
+	
+	FaceVertIds faceVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, bool _winding = false);
+	FaceVertIds faceVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _upEid, bool _winding = false);
+	PolyVertIds polyVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _forwardUpEid);
 
-	Id closestFaceOffsetInPoly(const Meshing::Mesher::Mesh& _mesh, Id _pid, const Vec& _centroid);
-	Id closestVertOffsetInPoly(const Meshing::Mesher::Mesh& _mesh, Id _pid, const Vec& _position);
+	FaceVerts verts(const Meshing::Mesher::Mesh& _mesh, const FaceVertIds& _vids);
+	PolyVerts verts(const Meshing::Mesher::Mesh& _mesh, const PolyVertIds& _vids);
+	Vec midpoint(const Meshing::Mesher::Mesh& _mesh, Id _eid);
+
+	Id closestPolyFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, const Vec& _centroid);
+	Id closestFaceEid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _midpoint);
+	Id closestFaceVid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _position);
 
 	void addLeafs(Mesher& _mesher, Dag::Element& _root, bool _clear = true);
 

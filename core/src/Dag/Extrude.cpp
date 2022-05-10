@@ -4,17 +4,27 @@ namespace HMP::Dag
 {
 
 	Extrude::Extrude()
-		: Operation{ EPrimitive::Extrude }, m_faceOffset{}
+		: Operation{ EPrimitive::Extrude }, m_forwardFaceOffset{}, m_upFaceOffset{}
 	{}
 
-	Id& Extrude::faceOffset()
+	Id& Extrude::forwardFaceOffset()
 	{
-		return m_faceOffset;
+		return m_forwardFaceOffset;
 	}
 
-	Id Extrude::faceOffset() const
+	Id Extrude::forwardFaceOffset() const
 	{
-		return m_faceOffset;
+		return m_forwardFaceOffset;
+	}
+
+	Id& Extrude::upFaceOffset()
+	{
+		return m_upFaceOffset;
+	}
+
+	Id Extrude::upFaceOffset() const
+	{
+		return m_upFaceOffset;
 	}
 
 }
