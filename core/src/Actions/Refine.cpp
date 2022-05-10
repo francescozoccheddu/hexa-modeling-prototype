@@ -16,6 +16,13 @@ namespace HMP::Actions
 
 	void Refine::apply()
 	{
+		for (const Dag::Operation& child : m_element.children())
+		{
+			if (child.primitive() != Dag::Operation::EPrimitive::Extrude)
+			{
+				throw std::logic_error{ "element has non-extrude child" };
+			}
+		}
 		m_operation.parents().attach(m_element);
 		Utils::applyRefine(mesher(), m_operation);
 		mesher().updateMesh();

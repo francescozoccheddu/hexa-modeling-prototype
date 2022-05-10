@@ -2,8 +2,9 @@
 
 #include <cpputils/collections/DereferenceIterable.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
-#include <unordered_set>
+#include <unordered_map>
 #include <functional>
+#include <list>
 
 namespace HMP::Dag
 {
@@ -27,7 +28,8 @@ namespace HMP::Dag
 			template<typename TNode>
 			friend class NodeSetBase;
 
-			std::unordered_set<Node*> m_set;
+			std::unordered_map<Node*, std::list<Node*>::iterator> m_map{};
+			std::list<Node*> m_list{};
 
 		public:
 
@@ -58,7 +60,7 @@ namespace HMP::Dag
 		};
 
 		template<typename TNode>
-		class NodeSetBase : public cpputils::mixins::ReferenceClass, public cpputils::collections::DereferenceIterable<std::unordered_set<Node*>, TNode&, const TNode&>
+		class NodeSetBase : public cpputils::mixins::ReferenceClass, public cpputils::collections::DereferenceIterable<std::list<Node*>, TNode&, const TNode&>
 		{
 
 		private:

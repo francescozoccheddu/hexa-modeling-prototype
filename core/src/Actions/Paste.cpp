@@ -25,12 +25,14 @@ namespace HMP::Actions
 			Utils::applyTree(mesher(), m_operation);
 		}
 		Meshing::Utils::addLeafs(mesher(), m_operation, false);
+		mesher().updateMesh();
 	}
 
 	void Paste::unapply()
 	{
 		Meshing::Utils::removeLeafs(mesher(), m_operation);
 		m_operation.parents().detachAll(false);
+		mesher().updateMesh();
 	}
 
 	Paste::Paste(Dag::Element& _target, Id _targetForwardFaceOffset, Id _targetUpFaceOffset, Dag::Extrude& _source)

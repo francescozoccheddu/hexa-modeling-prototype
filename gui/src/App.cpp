@@ -131,7 +131,7 @@ namespace HMP::Gui
 			// copy
 			case GLFW_KEY_C:
 			{
-				if (!_modifiers)
+				if (_modifiers == GLFW_MOD_CONTROL)
 				{
 					onCopy();
 				}
@@ -140,7 +140,7 @@ namespace HMP::Gui
 			// paste
 			case GLFW_KEY_V:
 			{
-				if (!_modifiers)
+				if (_modifiers == GLFW_MOD_CONTROL)
 				{
 					onPaste();
 				}
@@ -309,6 +309,7 @@ namespace HMP::Gui
 			if (m_copy.element->parents().size() == 1 && m_copy.element->parents().single().primitive() == HMP::Dag::Operation::EPrimitive::Extrude)
 			{
 				m_commander.apply(*new Actions::Paste{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset, static_cast<HMP::Dag::Extrude&>(m_copy.element->parents().single())});
+				m_canvas.refit_scene();
 			}
 		}
 	}

@@ -16,7 +16,7 @@ namespace HMP::Dag
 
 		template<typename TNode>
 		NodeSetBase<TNode>::NodeSetBase(NodeSetHandle& _handle, bool _owner)
-			: m_handle{ _handle }, m_owner{ _owner }, cpputils::collections::DereferenceIterable<std::unordered_set<Node*>, TNode&, const TNode&>{ _handle.m_data.m_set }
+			: m_handle{ _handle }, m_owner{ _owner }, cpputils::collections::DereferenceIterable<std::list<Node*>, TNode&, const TNode&>{ _handle.m_data.m_list }
 		{}
 
 		template<typename TNode>
@@ -49,7 +49,7 @@ namespace HMP::Dag
 		template<typename TNode>
 		bool NodeSetBase<TNode>::has(const TNode& _node) const
 		{
-			return m_handle.m_data.m_set.contains(_node);
+			return m_handle.m_data.m_map.contains(_node);
 		}
 
 	}
