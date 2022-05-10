@@ -13,6 +13,7 @@
 #include <cinolib/gl/file_dialog_save.h>
 #include <HMP/Gui/Dag/createLayout.hpp>
 #include <utility>
+#include <HMP/Dag/Operation.hpp>
 #include <HMP/Actions/MoveVert.hpp>
 #include <HMP/Actions/Clear.hpp>
 #include <HMP/Actions/Load.hpp>
@@ -21,6 +22,7 @@
 #include <HMP/Actions/MakeConforming.hpp>
 #include <HMP/Actions/Project.hpp>
 #include <HMP/Actions/Refine.hpp>
+#include <HMP/Actions/Paste.hpp>
 #include <HMP/Utils/Serialization.hpp>
 #include <HMP/Meshing/Utils.hpp>
 
@@ -259,23 +261,22 @@ namespace HMP::Gui
 	{
 		if (m_mouse.element)
 		{
-			if (m_move.pending)
+			if (m_move.element && m_mesher.has(*m_move.element))
 			{
 				// FIXME move in plane instead of using world_mouse_pos
 				m_commander.apply(*new Actions::MoveVert{ *m_move.element, m_move.vertOffset, m_mouse.worldPosition });
-				m_move.pending = false;
+				m_move.element = nullptr;
 				m_canvas.refit_scene();
 			}
 			else
 			{
 				m_move.element = m_mouse.element;
 				m_move.vertOffset = m_mouse.vertOffset;
-				m_move.pending = true;
 			}
 		}
 		else
 		{
-			m_move.pending = false;
+			m_move.element = nullptr;
 		}
 	}
 
@@ -294,21 +295,20 @@ namespace HMP::Gui
 		if (m_mouse.element)
 		{
 			m_copy.element = m_mouse.element;
-			m_copy.pending = true;
 		}
 		else
 		{
-			m_copy.pending = false;
+			m_copy.element = nullptr;
 		}
 	}
 
 	void App::onPaste()
 	{
-		if (m_copy.pending)
+		if (m_mouse.element && m_copy.element && m_mesher.has(*m_copy.element))
 		{
-			if (m_mouse.element)
+			if (m_copy.element->parents().size() == 1 && m_copy.element->parents().single().primitive() == HMP::Dag::Operation::EPrimitive::Extrude)
 			{
-				throw std::logic_error{ "not implemented yet" };
+				m_commander.apply(*new Actions::Paste{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset, static_cast<HMP::Dag::Extrude&>(m_copy.element->parents().single())});
 			}
 		}
 	}
@@ -454,7 +454,8 @@ namespace HMP::Gui
 	void App::onClear()
 	{
 		m_commander.apply(*new Actions::Clear());
-		m_move.pending = m_copy.pending = false;
+		m_move.element = nullptr;
+		m_copy.element = nullptr;
 		updateDagViewer();
 		m_canvas.refit_scene();
 	}

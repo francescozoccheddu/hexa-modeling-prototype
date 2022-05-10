@@ -16,7 +16,8 @@ namespace HMP::Actions
 
 	void Refine::apply()
 	{
-		Utils::applyRefine(mesher(), m_element, m_operation);
+		m_operation.parents().attach(m_element);
+		Utils::applyRefine(mesher(), m_operation);
 		mesher().updateMesh();
 	}
 

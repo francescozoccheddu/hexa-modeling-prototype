@@ -11,15 +11,17 @@ namespace HMP::Actions::Utils
 {
 
 	Dag::Refine& prepareRefine(Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme);
-	void applyRefine(Meshing::Mesher& _mesher, Dag::Element& _element, Dag::Refine& _refine);
-	void unapplyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine);
-	
+	void applyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine);
+	void unapplyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach = true);
+
 	Dag::Delete& prepareDelete();
-	void applyDelete(Meshing::Mesher& _mesher, Dag::Element& _element, Dag::Delete& _delete);
-	void unapplyDelete(Meshing::Mesher& _mesher, Dag::Delete& _delete);
+	void applyDelete(Meshing::Mesher& _mesher, Dag::Delete& _delete);
+	void unapplyDelete(Meshing::Mesher& _mesher, Dag::Delete& _delete, bool _detach = true);
 
 	Dag::Extrude& prepareExtrude(Id _forwardFaceOffset, Id _upFaceOffset);
-	void applyExtrude(Meshing::Mesher& _mesher, Dag::Element& _element, Dag::Extrude& _refine);
-	void unapplyExtrude(Meshing::Mesher& _mesher, Dag::Extrude& _refine);
+	void applyExtrude(Meshing::Mesher& _mesher, Dag::Extrude& _refine);
+	void unapplyExtrude(Meshing::Mesher& _mesher, Dag::Extrude& _refine, bool _detach = true);
+
+	void applyTree(Meshing::Mesher& _mesher, Dag::Node& _node);
 
 }

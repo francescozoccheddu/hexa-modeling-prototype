@@ -16,7 +16,8 @@ namespace HMP::Actions
 
 	void Delete::apply()
 	{
-		Utils::applyDelete(mesher(), m_element, m_operation);
+		m_operation.parents().attach(m_element);
+		Utils::applyDelete(mesher(), m_operation);
 		mesher().updateMesh();
 	}
 

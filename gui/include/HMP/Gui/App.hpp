@@ -3,6 +3,7 @@
 #include <HMP/Project.hpp>
 #include <HMP/Gui/Dag/Viewer.hpp>
 #include <HMP/Dag/Element.hpp>
+#include <HMP/Dag/Extrude.hpp>
 #include <cinolib/gl/glcanvas.h>
 #include <cinolib/gl/volume_mesh_controls.h>
 #include <cinolib/meshes/drawable_trimesh.h>
@@ -29,13 +30,11 @@ namespace HMP::Gui
 		{
 			HMP::Dag::Element* element{};
 			Id vertOffset{};
-			bool pending{ false };
 		} m_move;
 
 		struct
 		{
 			HMP::Dag::Element* element{};
-			bool pending{ false };
 		} m_copy;
 
 		struct

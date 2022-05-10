@@ -16,7 +16,8 @@ namespace HMP::Actions
 
 	void Extrude::apply()
 	{
-		Utils::applyExtrude(mesher(), m_element, m_operation);
+		m_operation.parents().attach(m_element);
+		Utils::applyExtrude(mesher(), m_operation);
 		mesher().updateMesh();
 	}
 
