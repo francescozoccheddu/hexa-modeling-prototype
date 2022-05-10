@@ -271,9 +271,16 @@ namespace HMP::Meshing
 		return m_faceMarkerSet;
 	}
 
-	void Mesher::updateMesh()
+	void Mesher::updateMesh(bool _markersOnly)
 	{
-		m_mesh.updateGL();
+		if (_markersOnly)
+		{
+			m_mesh.updateGL_marked();
+		}
+		else
+		{
+			m_mesh.updateGL();
+		}
 	}
 
 

@@ -54,6 +54,8 @@ namespace HMP::Gui
 	void App::updateMouse()
 	{
 		constexpr float highlightVertexRadius{ 4.0f };
+		HMP::Dag::Element* const lastElement{ m_mouse.element };
+		const Id lastFaceOffset{ m_mouse.faceOffset };
 		m_canvas.pop_all_markers();
 		m_mesher.faceMarkerSet().clear();
 		m_mesher.polyMarkerSet().clear();
@@ -80,7 +82,14 @@ namespace HMP::Gui
 			m_canvas.push_marker(m_mesh.vert(m_mesh.poly_vert_id(pid, m_mouse.vertOffset)), "", m_mesher.suggestedOverlayColor, highlightVertexRadius);
 		}
 		m_dagViewer.highlight = m_mouse.element;
-		m_mesher.updateMesh();
+		if (m_mouse.element != lastElement)
+		{
+			m_mesher.updateMesh();
+		}
+		else
+		{
+			m_mesher.updateMesh(true);
+		}
 	}
 
 	void App::updateDagViewer()
@@ -308,7 +317,7 @@ namespace HMP::Gui
 		{
 			if (m_copy.element->parents().size() == 1 && m_copy.element->parents().single().primitive() == HMP::Dag::Operation::EPrimitive::Extrude)
 			{
-				m_commander.apply(*new Actions::Paste{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset, static_cast<HMP::Dag::Extrude&>(m_copy.element->parents().single())});
+				m_commander.apply(*new Actions::Paste{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset, static_cast<HMP::Dag::Extrude&>(m_copy.element->parents().single()) });
 				m_canvas.refit_scene();
 			}
 		}
