@@ -45,9 +45,9 @@ namespace HMP::Dag::Utils
 		return std::vector<const Node*>{&result[0], (&result[0]) + result.size()};
 	}
 
-	void serialize(HMP::Utils::Serialization::Serializer& _serializer, const Node& _node)
+	void serialize(HMP::Utils::Serialization::Serializer& _serializer, const Node& _root)
 	{
-		const std::vector<const Node*> nodes{ descendants(_node) };
+		const std::vector<const Node*> nodes{ descendants(_root) };
 		_serializer << nodes.size();
 		for (const Node* node : nodes)
 		{
@@ -77,7 +77,9 @@ namespace HMP::Dag::Utils
 						case Operation::EPrimitive::Extrude:
 						{
 							const Extrude& extrudeOperation{ static_cast<const Extrude&>(operation) };
-							_serializer << extrudeOperation.faceOffset();
+							_serializer
+								<< extrudeOperation.forwardFaceOffset()
+								<< extrudeOperation.upFaceOffset();
 						}
 						break;
 						case Operation::EPrimitive::Refine:
@@ -153,7 +155,9 @@ namespace HMP::Dag::Utils
 						case Operation::EPrimitive::Extrude:
 						{
 							Extrude& extrudeOperation{ *new Extrude{} };
-							_deserializer >> extrudeOperation.faceOffset();
+							_deserializer
+								>> extrudeOperation.forwardFaceOffset()
+								>> extrudeOperation.upFaceOffset();
 							operation = &extrudeOperation;
 						}
 						break;
@@ -191,6 +195,23 @@ namespace HMP::Dag::Utils
 		return *nodes[0];
 	}
 
+	void transform(Node& _root, const Mat4& _transform)
+	{
+		for (Node* node : descendants(_root))
+		{
+			if (node->isElement())
+			{
+				for (Vec& vert : node->element().vertices())
+				{
+					Vec4 homoVert{ vert.x(),vert.y(), vert.z(), 1.0 };
+					homoVert = _transform * homoVert;
+					homoVert /= homoVert.w();
+					vert = homoVert.rem_coord();
+				}
+			}
+		}
+	}
+
 	Node& cloneNode(const Node& _node)
 	{
 		switch (_node.type())
@@ -214,7 +235,8 @@ namespace HMP::Dag::Utils
 					{
 						const Extrude& source{ static_cast<const Extrude&>(_node) };
 						Extrude& clone{ *new Extrude{} };
-						clone.faceOffset() = source.faceOffset();
+						clone.forwardFaceOffset() = source.forwardFaceOffset();
+						clone.upFaceOffset() = source.upFaceOffset();
 						return clone;
 					}
 					case Operation::EPrimitive::Refine:
@@ -231,9 +253,9 @@ namespace HMP::Dag::Utils
 		throw std::domain_error{ "unknown node" };
 	}
 	
-	Node& cloneDag(const Node& _node)
+	Node& clone(const Node& _root)
 	{
-		std::vector<const Node*> sources{ descendants(_node) };
+		std::vector<const Node*> sources{ descendants(_root) };
 		std::unordered_map<const Node*, Node*> cloneMap{};
 		cloneMap.reserve(sources.size());
 		for (const Node* source : sources)
@@ -248,7 +270,7 @@ namespace HMP::Dag::Utils
 				clone.children().attach(*cloneMap.at(&sourceChild));
 			}
 		}
-		return *cloneMap.at(&_node);
+		return *cloneMap.at(&_root);
 	}
 
 }

@@ -7,49 +7,49 @@
 namespace HMP::Meshing::Utils
 {
 
-	std::pair<Id, Id> adjacentFidsFromEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _eid)
+	Id anyFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _eid)
 	{
-		bool foundFirst{ false };
-		std::pair<Id, Id> fids;
-		for (const Id fid : _mesh.poly_faces_id(_pid))
+		if (!_mesh.poly_contains_edge(_pid, _eid))
 		{
-			if (_mesh.face_contains_edge(fid, _eid))
-			{
-				(foundFirst ? fids.first : fids.second) = fid;
-				foundFirst = true;
-			}
+			throw std::logic_error{ "edge not in poly" };
 		}
-		return fids;
-	}
-
-	Id anyAdjacentFidFromFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid)
-	{
-		if (!_mesh.poly_contains_face(_pid, _fid))
+		for (const Id fid : _mesh.adj_e2f(_eid))
 		{
-			throw std::logic_error{ "face not in poly" };
-		}
-		for (const Id otherFid : _mesh.poly_faces_id(_pid))
-		{
-			if (otherFid != _fid && _mesh.faces_are_adjacent(_fid, otherFid))
+			if (_mesh.poly_contains_face(_pid, fid))
 			{
-				return otherFid;
+				return fid;
 			}
 		}
 		throw std::runtime_error{ "unexpected" };
 	}
 
-	Id anyAdjacentFaceOffsetFromFaceOffset(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _faceOffset)
-	{
-		return _mesh.poly_face_offset(_pid, anyAdjacentFidFromFid(_mesh, _pid, _mesh.poly_face_id(_pid, _faceOffset)));
-	}
-
-	FaceVertIds faceVidsFromFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, bool _winding)
+	Id adjacentFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _eid)
 	{
 		if (!_mesh.poly_contains_face(_pid, _fid))
 		{
 			throw std::logic_error{ "face not in poly" };
 		}
-		std::vector<Id> vids = _mesh.face_verts_id(_fid);
+		if (!_mesh.face_contains_edge(_fid, _eid))
+		{
+			throw std::logic_error{ "edge not in face" };
+		}
+		for (const Id fid : _mesh.poly_faces_id(_pid))
+		{
+			if (fid != _fid && _mesh.face_shared_edge(fid, _fid) == _eid)
+			{
+				return fid;
+			}
+		}
+		throw std::runtime_error{ "unexpected" };
+	}
+
+	FaceVertIds faceVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, bool _winding)
+	{
+		if (!_mesh.poly_contains_face(_pid, _fid))
+		{
+			throw std::logic_error{ "face not in poly" };
+		}
+		std::vector<Id> vids{ _mesh.face_verts_id(_fid) };
 		if (_winding != _mesh.poly_face_winding(_pid, _fid))
 		{
 			std::reverse(vids.begin(), vids.end());
@@ -57,82 +57,108 @@ namespace HMP::Meshing::Utils
 		return cpputils::collections::conversions::toArray<4>(vids);
 	}
 
-	FaceVertIds faceVidsFromFaceOffset(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _faceOffset, bool _winding)
+	FaceVertIds faceVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _upEid, bool _winding)
 	{
-		return faceVidsFromFid(_mesh, _pid, _mesh.poly_face_id(_pid, _faceOffset), _winding);
+		if (!_mesh.face_contains_edge(_fid, _upEid))
+		{
+			throw std::logic_error{ "edge not in face" };
+		}
+		FaceVertIds vids{ faceVids(_mesh, _pid, _fid, _winding) };
+		while (_mesh.edge_id(vids[0], vids[1]) != _upEid)
+		{
+			std::rotate(vids.begin(), vids.begin() + 1, vids.end());
+		}
+		return cpputils::collections::conversions::toArray<4>(vids);
 	}
 
-	PolyVerts polyVertsFromFids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _upFid)
+	PolyVertIds polyVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _forwardUpEid)
 	{
-		if (!(_mesh.poly_contains_face(_pid, _forwardFid) && _mesh.poly_contains_face(_pid, _upFid)))
-		{
-			throw std::logic_error{ "face not in poly" };
-		}
-		const Id sharedEid{ _mesh.face_shared_edge(_forwardFid, _upFid) };
-		if (sharedEid == noId)
-		{
-			throw std::logic_error{ "faces are not adjacent" };
-		}
-		const Id backFid{ _mesh.poly_face_opposite_to(_pid, _forwardFid) };
-		FaceVertIds forwardFaceVids = faceVidsFromFid(_mesh, _pid, _forwardFid, false);
-		FaceVertIds backFaceVids = faceVidsFromFid(_mesh, _pid, backFid, true);
-		while (_mesh.edge_id(forwardFaceVids[0], forwardFaceVids[1]) != sharedEid)
-		{
-			std::rotate(forwardFaceVids.begin(), forwardFaceVids.begin() + 1, forwardFaceVids.end());
-		}
+		const FaceVertIds forwardFaceVids{ faceVids(_mesh, _pid, _forwardFid, _forwardUpEid, false) };
+		FaceVertIds backFaceVids{ faceVids(_mesh, _pid, _mesh.poly_face_opposite_to(_pid, _forwardFid), true) };
 		while (_mesh.edge_id(forwardFaceVids[0], backFaceVids[0]) == noId)
 		{
 			std::rotate(backFaceVids.begin(), backFaceVids.begin() + 1, backFaceVids.end());
 		}
-		PolyVerts verts;
-		size_t i{ 0 };
-		for (const Id vid : forwardFaceVids)
-		{
-			verts[i++] = _mesh.vert(vid);
-		}
-		for (const Id vid : backFaceVids)
-		{
-			verts[i++] = _mesh.vert(vid);
-		}
+		PolyVertIds vids;
+		std::copy(forwardFaceVids.begin(), forwardFaceVids.end(), vids.begin());
+		std::copy(backFaceVids.begin(), backFaceVids.end(), vids.begin() + 4);
+		return vids;
+	}
 
+	FaceVerts verts(const Meshing::Mesher::Mesh& _mesh, const FaceVertIds& _vids)
+	{
+		FaceVerts verts;
+		for (std::size_t i{}; i < 4; i++)
+		{
+			verts[i] = _mesh.vert(_vids[i]);
+		}
 		return verts;
 	}
 
-	PolyVerts polyVertsFromFaceOffsets(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFaceOffset, Id _upFaceOffset)
+	PolyVerts verts(const Meshing::Mesher::Mesh& _mesh, const PolyVertIds& _vids)
 	{
-		return polyVertsFromFids(_mesh, _pid, _mesh.poly_face_id(_pid, _forwardFaceOffset), _mesh.poly_face_id(_pid, _upFaceOffset));
+		PolyVerts verts;
+		for (std::size_t i{}; i < 8; i++)
+		{
+			verts[i] = _mesh.vert(_vids[i]);
+		}
+		return verts;
 	}
 
-	Id closestFaceOffsetInPoly(const Meshing::Mesher::Mesh& _mesh, Id _pid, const Vec& _centroid)
+	Vec midpoint(const Meshing::Mesher::Mesh& _mesh, Id _eid)
+	{
+		const std::vector<Vec> verts{ _mesh.edge_verts(_eid) };
+		return (verts[0] + verts[1]) / 2;
+	}
+
+	Id closestPolyFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, const Vec& _centroid)
 	{
 		Real closestDist{ cinolib::inf_double };
-		Id closestOffset{};
-		for (Id faceOffset{ 0 }; faceOffset < 6; faceOffset++)
+		Id closestFid{};
+		for (const Id fid : _mesh.poly_faces_id(_pid))
 		{
-			const Real dist{ _centroid.dist(_mesh.face_centroid(_mesh.poly_face_id(_pid, faceOffset))) };
+			const Real dist{ _centroid.dist(_mesh.face_centroid(fid)) };
 			if (dist < closestDist)
 			{
 				closestDist = dist;
-				closestOffset = faceOffset;
+				closestFid = fid;
 			}
 		}
-		return closestOffset;
+		return closestFid;
 	}
 
-	Id closestVertOffsetInPoly(const Meshing::Mesher::Mesh& _mesh, Id _pid, const Vec& _position)
+	Id closestFaceVid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _position)
 	{
 		Real closestDist{ cinolib::inf_double };
-		Id closestOffset{};
-		for (Id vertOffset{ 0 }; vertOffset < 8; vertOffset++)
+		Id closestVid{};
+		for (const Id vid : _mesh.face_verts_id(_fid))
 		{
-			const Real dist{ _position.dist(_mesh.vert(_mesh.poly_vert_id(_pid, vertOffset))) };
+			const Real dist{ _position.dist(_mesh.vert(vid)) };
 			if (dist < closestDist)
 			{
 				closestDist = dist;
-				closestOffset = vertOffset;
+				closestVid = vid;
 			}
 		}
-		return closestOffset;
+		return closestVid;
+	}
+
+	Id closestFaceEid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _midpoint)
+	{
+		Real closestDist{ cinolib::inf_double };
+		Id closestEid{};
+		for (Id edgeOffset{ 0 }; edgeOffset < 4; edgeOffset++)
+		{
+			const Id eid{ _mesh.face_edge_id(_fid, edgeOffset) };
+			const Vec midpoint{ Utils::midpoint(_mesh, eid) };
+			const Real dist{ _midpoint.dist(midpoint) };
+			if (dist < closestDist)
+			{
+				closestDist = dist;
+				closestEid = eid;
+			}
+		}
+		return closestEid;
 	}
 
 	void addLeafs(Mesher& _mesher, Dag::Element& _root, bool _clear)

@@ -6,7 +6,7 @@
 #include <unordered_set>
 #include <list>
 #include <HMP/Meshing/Utils.hpp>
-#include <HMP/Actions/Refine.hpp>
+#include <HMP/Actions/Utils.hpp>
 
 namespace HMP::Actions
 {
@@ -30,7 +30,7 @@ namespace HMP::Actions
 		{
 			for (const auto [operation, element] : m_operations)
 			{
-				Refine::applyRefine(mesher, *element, *operation);
+				Utils::applyRefine(mesher, *element, *operation);
 			}
 		}
 		else
@@ -117,9 +117,11 @@ namespace HMP::Actions
 							if (!targetCandidates.insert(&targetElement).second)
 							{
 								const Id targetForwardFaceOffset{ 0 };
-								const Id targetUpFaceOffset{ Meshing::Utils::anyAdjacentFaceOffsetFromFaceOffset(mesh, targetPid, targetForwardFaceOffset) };
-								Dag::Refine& targetRefine{ Refine::prepareRefine(targetForwardFaceOffset, targetUpFaceOffset, Meshing::ERefinementScheme::Subdivide3x3) };
-								Refine::applyRefine(mesher, targetElement, targetRefine);
+								const Id targetForwardFid{ mesh.poly_face_id(targetPid, targetForwardFaceOffset) };
+								const Id targetUpFid{ Meshing::Utils::adjacentFid(mesh, targetPid, targetForwardFid, mesh.face_edge_id(targetForwardFid, 0)) };
+								const Id targetUpFaceOffset{ mesh.poly_face_offset(targetPid, targetUpFid) };
+								Dag::Refine& targetRefine{ Utils::prepareRefine(targetForwardFaceOffset, targetUpFaceOffset, Meshing::ERefinementScheme::Subdivide3x3) };
+								Utils::applyRefine(mesher, targetElement, targetRefine);
 								m_operations.push_back({ &targetRefine, &targetElement });
 								standardRefines.push_back(&targetRefine);
 								didSomething = true;
@@ -153,11 +155,12 @@ namespace HMP::Actions
 								continue;
 							}
 							Dag::Element& targetElement = mesher.pidToElement(targetPid);
-							Id targetUpFid;
-							const Id targetForwardFaceOffset{ mesh.poly_face_offset(targetPid, sharedFid) };
-							const Id targetUpFaceOffset{ Meshing::Utils::anyAdjacentFaceOffsetFromFaceOffset(mesh, targetPid, targetForwardFaceOffset) };
-							Dag::Refine& targetRefine{ Refine::prepareRefine(targetForwardFaceOffset, targetUpFaceOffset, Meshing::ERefinementScheme::AdapterFaceSubdivide3x3) };
-							Refine::applyRefine(mesher, targetElement, targetRefine);
+							const Id targetForwardFid{ sharedFid };
+							const Id targetForwardFaceOffset{ mesh.poly_face_offset(targetPid, targetForwardFid) };
+							const Id targetUpFid{ Meshing::Utils::adjacentFid(mesh, targetPid, targetForwardFid, mesh.face_edge_id(targetForwardFid, 0)) };
+							const Id targetUpFaceOffset{ mesh.poly_face_offset(targetPid, targetUpFid) };
+							Dag::Refine& targetRefine{ Utils::prepareRefine(targetForwardFaceOffset, targetUpFaceOffset, Meshing::ERefinementScheme::AdapterFaceSubdivide3x3) };
+							Utils::applyRefine(mesher, targetElement, targetRefine);
 							m_operations.push_back({ &targetRefine, &targetElement });
 							didSomething = true;
 						}
@@ -185,12 +188,12 @@ namespace HMP::Actions
 									continue;
 								}
 								Dag::Element& targetElement = mesher.pidToElement(targetPid);
-								Id targetUpFid;
-								const std::pair<Id, Id> targetFids{ Meshing::Utils::adjacentFidsFromEid(mesh, targetPid, sharedEid) };
-								const Id targetForwardFaceOffset{ mesh.poly_face_offset(targetPid, targetFids.first) };
-								const Id targetUpFaceOffset{ mesh.poly_face_offset(targetPid, targetFids.second) };
-								Dag::Refine& targetRefine{ Refine::prepareRefine(targetForwardFaceOffset, targetUpFaceOffset, Meshing::ERefinementScheme::AdapterEdgeSubdivide3x3) };
-								Refine::applyRefine(mesher, targetElement, targetRefine);
+								const Id targetForwardFid{ Meshing::Utils::anyFid(mesh, targetPid, sharedEid)};
+								const Id targetForwardFaceOffset{ mesh.poly_face_offset(targetPid, targetForwardFid) };
+								const Id targetUpFid{ Meshing::Utils::adjacentFid(mesh, targetPid, targetForwardFid, sharedEid) };
+								const Id targetUpFaceOffset{ mesh.poly_face_offset(targetPid, targetUpFid) };
+								Dag::Refine& targetRefine{ Utils::prepareRefine(targetForwardFaceOffset, targetUpFaceOffset, Meshing::ERefinementScheme::AdapterEdgeSubdivide3x3) };
+								Utils::applyRefine(mesher, targetElement, targetRefine);
 								m_operations.push_back({ &targetRefine, &targetElement });
 								didSomething = true;
 							}
@@ -208,7 +211,7 @@ namespace HMP::Actions
 	{
 		for (const auto [operation, element] : m_operations)
 		{
-			Refine::unapplyRefine(mesher(), *operation);
+			Utils::unapplyRefine(mesher(), *operation);
 		}
 		mesher().updateMesh();
 	}

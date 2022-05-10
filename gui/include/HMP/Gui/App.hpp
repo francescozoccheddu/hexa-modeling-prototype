@@ -22,7 +22,7 @@ namespace HMP::Gui
 			cinolib::vec2d position{};
 			Vec worldPosition{};
 			HMP::Dag::Element* element{};
-			Id faceOffset{}, vertOffset{};
+			Id faceOffset{}, upFaceOffset{}, vertOffset{};
 		} m_mouse;
 
 		struct

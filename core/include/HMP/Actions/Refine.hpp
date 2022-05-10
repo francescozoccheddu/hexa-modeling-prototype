@@ -22,11 +22,6 @@ namespace HMP::Actions
 
 	public:
 
-		static Dag::Refine& prepareRefine(Id _forwardFaceOffset, Meshing::ERefinementScheme _scheme);
-		static Dag::Refine& prepareRefine(Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme);
-		static void applyRefine(Meshing::Mesher& _mesher, Dag::Element& _element, Dag::Refine& _refine);
-		static void unapplyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine);
-
 		Refine(Dag::Element& _element, Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme);
 
 	};

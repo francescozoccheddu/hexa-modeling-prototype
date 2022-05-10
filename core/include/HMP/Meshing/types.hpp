@@ -10,6 +10,9 @@ namespace HMP
 	using Real = double;
 	using Vec = cinolib::vec<3, Real>;
 	using Vec2 = cinolib::vec<2, Real>;
+	using Vec4 = cinolib::vec<4, Real>;
+	using Mat4 = cinolib::mat4d;
+	using Mat3 = cinolib::mat3d;
 
 	using Id = unsigned int;
 	constexpr Id noId{ static_cast<Id>(-1) };

@@ -21,7 +21,7 @@ namespace HMP::Actions
 
 	public:
 
-		Extrude(Dag::Element& _element, Id _faceOffset);
+		Extrude(Dag::Element& _element, Id _forwardFaceOffset, Id _upFaceOffset);
 
 	};
 

@@ -51,7 +51,7 @@ namespace HMP::Gui
 
 	void App::updateMouse()
 	{
-		constexpr float highlightVertexRadius{ 10.0f };
+		constexpr float highlightVertexRadius{ 4.0f };
 		m_canvas.pop_all_markers();
 		m_mesher.faceMarkerSet().clear();
 		m_mesher.polyMarkerSet().clear();
@@ -60,14 +60,21 @@ namespace HMP::Gui
 		if (m_canvas.unproject(m_mouse.position, m_mouse.worldPosition))
 		{
 			// poly
-			const Id pid = m_mesh.pick_poly(m_mouse.worldPosition);
+			const Id pid{ m_mesh.pick_poly(m_mouse.worldPosition) };
 			m_mouse.element = &m_mesher.pidToElement(pid);
 			m_mesher.polyMarkerSet().add(*m_mouse.element);
 			// face
-			m_mouse.faceOffset = Meshing::Utils::closestFaceOffsetInPoly(m_mesh, pid, m_mouse.worldPosition);
+			const Id fid{ Meshing::Utils::closestPolyFid(m_mesh, pid, m_mouse.worldPosition) };
+			m_mouse.faceOffset = m_mesh.poly_face_offset(pid, fid);
 			m_mesher.faceMarkerSet().add(*m_mouse.element, m_mouse.faceOffset);
+			// up face
+			const Id eid{ Meshing::Utils::closestFaceEid(m_mesh, fid, m_mouse.worldPosition) };
+			const Id upFid{ Meshing::Utils::adjacentFid(m_mesh, pid, fid, eid) };
+			m_mouse.upFaceOffset = m_mesh.poly_face_offset(pid, upFid);
+			m_canvas.push_marker(Meshing::Utils::midpoint(m_mesh, eid), "", m_mesher.suggestedOverlayColor, highlightVertexRadius);
 			// vert
-			m_mouse.vertOffset = Meshing::Utils::closestVertOffsetInPoly(m_mesh, pid, m_mouse.worldPosition);
+			const Id vid{ Meshing::Utils::closestFaceVid(m_mesh, fid, m_mouse.worldPosition) };
+			m_mouse.vertOffset = m_mesh.poly_vert_offset(pid, vid);
 			m_canvas.push_marker(m_mesh.vert(m_mesh.poly_vert_id(pid, m_mouse.vertOffset)), "", m_mesher.suggestedOverlayColor, highlightVertexRadius);
 		}
 		m_dagViewer.highlight = m_mouse.element;
@@ -244,8 +251,7 @@ namespace HMP::Gui
 	}
 
 	void App::onDrawControls()
-	{
-	}
+	{}
 
 	// Commands
 
@@ -277,7 +283,7 @@ namespace HMP::Gui
 	{
 		if (m_mouse.element)
 		{
-			m_commander.apply(*new Actions::Extrude{ *m_mouse.element, m_mouse.faceOffset });
+			m_commander.apply(*new Actions::Extrude{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset });
 			updateDagViewer();
 			m_canvas.refit_scene();
 		}
@@ -311,8 +317,7 @@ namespace HMP::Gui
 	{
 		if (m_mouse.element)
 		{
-			const Id upFaceOffset{ Meshing::Utils::anyAdjacentFaceOffsetFromFaceOffset(m_mesh, m_mesher.elementToPid(*m_mouse.element), m_mouse.faceOffset) };
-			m_commander.apply(*new Actions::Refine{ *m_mouse.element, m_mouse.faceOffset, upFaceOffset, Meshing::ERefinementScheme::Subdivide3x3 });
+			m_commander.apply(*new Actions::Refine{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset, Meshing::ERefinementScheme::Subdivide3x3 });
 			updateDagViewer();
 			updateMouse();
 		}
@@ -337,8 +342,7 @@ namespace HMP::Gui
 	{
 		if (m_mouse.element)
 		{
-			const Id upFaceOffset{ Meshing::Utils::anyAdjacentFaceOffsetFromFaceOffset(m_mesh, m_mesher.elementToPid(*m_mouse.element), m_mouse.faceOffset) };
-			m_commander.apply(*new Actions::Refine{ *m_mouse.element, m_mouse.faceOffset, upFaceOffset, Meshing::ERefinementScheme::Inset });
+			m_commander.apply(*new Actions::Refine{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset, Meshing::ERefinementScheme::Inset });
 			updateDagViewer();
 			updateMouse();
 		}

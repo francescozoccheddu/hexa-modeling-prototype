@@ -1,6 +1,6 @@
 #include <HMP/Actions/Delete.hpp>
 
-#include <stdexcept>
+#include <HMP/Actions/Utils.hpp>
 
 namespace HMP::Actions
 {
@@ -10,37 +10,24 @@ namespace HMP::Actions
 		if (!applied())
 		{
 			m_operation.children().detachAll(true);
-			delete &m_operation;
+			delete& m_operation;
 		}
 	}
 
 	void Delete::apply()
 	{
-		if (mesher().mesh().num_polys() == 1)
-		{
-			throw std::logic_error{ "cannot delete the only active element" };
-		}
-		for (const Dag::Operation& child : m_element.children())
-		{
-			if (child.primitive() != Dag::Operation::EPrimitive::Extrude)
-			{
-				throw std::logic_error{ "element has non-extrude child" };
-			}
-		}
-		m_element.children().attach(m_operation);
-		mesher().remove(m_element);
+		Utils::applyDelete(mesher(), m_element, m_operation);
 		mesher().updateMesh();
 	}
 
 	void Delete::unapply()
 	{
-		m_operation.parents().detachAll(false);
-		mesher().add(m_element);
+		Utils::unapplyDelete(mesher(), m_operation);
 		mesher().updateMesh();
 	}
 
 	Delete::Delete(Dag::Element& _element)
-		: m_element{ _element }, m_operation{ *new Dag::Delete{} }
+		: m_element{ _element }, m_operation{ Utils::prepareDelete() }
 	{}
 
 }
