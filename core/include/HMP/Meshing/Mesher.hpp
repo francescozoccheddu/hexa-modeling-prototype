@@ -154,7 +154,7 @@ namespace HMP::Meshing
 		FaceMarkerSet& faceMarkerSet();
 		const FaceMarkerSet& faceMarkerSet() const;
 
-		void updateMesh();
+		void updateMesh(bool _markersOnly=false);
 
 	};
 
