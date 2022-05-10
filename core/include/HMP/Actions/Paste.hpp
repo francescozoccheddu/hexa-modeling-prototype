@@ -12,7 +12,9 @@ namespace HMP::Actions
 
 	private:
 
+		Dag::Element& m_element;
 		Dag::Extrude& m_operation;
+		bool m_prepared;
 
 		~Paste() override;
 
@@ -21,7 +23,7 @@ namespace HMP::Actions
 
 	public:
 		
-		Paste(Dag::Element& _target, Id _targetForwardFaceOffset, Id _targetUpFaceOffset, Dag::Extrude& _source, Id _sourceUpFaceOffset);
+		Paste(Dag::Element& _target, Id _targetForwardFaceOffset, Id _targetUpFaceOffset, Dag::Extrude& _source);
 
 	};
 

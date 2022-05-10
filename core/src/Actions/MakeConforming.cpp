@@ -30,7 +30,8 @@ namespace HMP::Actions
 		{
 			for (const auto [operation, element] : m_operations)
 			{
-				Utils::applyRefine(mesher, *element, *operation);
+				operation->parents().attach(*element);
+				Utils::applyRefine(mesher, *operation);
 			}
 		}
 		else
@@ -121,7 +122,8 @@ namespace HMP::Actions
 								const Id targetUpFid{ Meshing::Utils::adjacentFid(mesh, targetPid, targetForwardFid, mesh.face_edge_id(targetForwardFid, 0)) };
 								const Id targetUpFaceOffset{ mesh.poly_face_offset(targetPid, targetUpFid) };
 								Dag::Refine& targetRefine{ Utils::prepareRefine(targetForwardFaceOffset, targetUpFaceOffset, Meshing::ERefinementScheme::Subdivide3x3) };
-								Utils::applyRefine(mesher, targetElement, targetRefine);
+								targetRefine.parents().attach(targetElement);
+								Utils::applyRefine(mesher, targetRefine);
 								m_operations.push_back({ &targetRefine, &targetElement });
 								standardRefines.push_back(&targetRefine);
 								didSomething = true;
@@ -160,7 +162,8 @@ namespace HMP::Actions
 							const Id targetUpFid{ Meshing::Utils::adjacentFid(mesh, targetPid, targetForwardFid, mesh.face_edge_id(targetForwardFid, 0)) };
 							const Id targetUpFaceOffset{ mesh.poly_face_offset(targetPid, targetUpFid) };
 							Dag::Refine& targetRefine{ Utils::prepareRefine(targetForwardFaceOffset, targetUpFaceOffset, Meshing::ERefinementScheme::AdapterFaceSubdivide3x3) };
-							Utils::applyRefine(mesher, targetElement, targetRefine);
+							targetRefine.parents().attach(targetElement);
+							Utils::applyRefine(mesher, targetRefine);
 							m_operations.push_back({ &targetRefine, &targetElement });
 							didSomething = true;
 						}
@@ -193,7 +196,8 @@ namespace HMP::Actions
 								const Id targetUpFid{ Meshing::Utils::adjacentFid(mesh, targetPid, targetForwardFid, sharedEid) };
 								const Id targetUpFaceOffset{ mesh.poly_face_offset(targetPid, targetUpFid) };
 								Dag::Refine& targetRefine{ Utils::prepareRefine(targetForwardFaceOffset, targetUpFaceOffset, Meshing::ERefinementScheme::AdapterEdgeSubdivide3x3) };
-								Utils::applyRefine(mesher, targetElement, targetRefine);
+								targetRefine.parents().attach(targetElement);
+								Utils::applyRefine(mesher, targetRefine);
 								m_operations.push_back({ &targetRefine, &targetElement });
 								didSomething = true;
 							}

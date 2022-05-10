@@ -161,7 +161,7 @@ namespace HMP::Meshing::Utils
 		return closestEid;
 	}
 
-	void addLeafs(Mesher& _mesher, Dag::Element& _root, bool _clear)
+	void addLeafs(Mesher& _mesher, Dag::Node& _root, bool _clear)
 	{
 		if (_clear)
 		{
@@ -184,6 +184,29 @@ namespace HMP::Meshing::Utils
 				if (active)
 				{
 					_mesher.add(element);
+				}
+			}
+		}
+	}
+
+	void removeLeafs(Mesher& _mesher, Dag::Node& _root)
+	{
+		for (Dag::Node* node : Dag::Utils::descendants(_root))
+		{
+			if (node->isElement())
+			{
+				Dag::Element& element{ node->element() };
+				bool active{ true };
+				for (const Dag::Operation& child : element.children())
+				{
+					if (child.primitive() != Dag::Operation::EPrimitive::Extrude)
+					{
+						active = false;
+					}
+				}
+				if (active)
+				{
+					_mesher.remove(element);
 				}
 			}
 		}

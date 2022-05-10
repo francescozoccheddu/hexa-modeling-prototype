@@ -1,5 +1,6 @@
 #include <HMP/Actions/Utils.hpp>
 
+#include <HMP/Dag/Utils.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <cpputils/collections/conversions.hpp>
 #include <cpputils/collections/zip.hpp>
@@ -25,15 +26,15 @@ namespace HMP::Actions::Utils
 		return refine;
 	}
 
-	void applyRefine(Meshing::Mesher& _mesher, Dag::Element& _element, Dag::Refine& _refine)
+	void applyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine)
 	{
-		if (_element.children().cany([](const Dag::Operation& _child) {return _child.primitive() != Dag::Operation::EPrimitive::Extrude; }))
+		Dag::Element& element{ _refine.parents().single() };
+		for (const Dag::Operation& child : element.children())
 		{
-			throw std::logic_error{ "element has non-extrude child" };
-		}
-		if (!_refine.isRoot())
-		{
-			throw std::logic_error{ "operation is not root" };
+			if (child != _refine && child.primitive() != Dag::Operation::EPrimitive::Extrude)
+			{
+				throw std::logic_error{ "element has non-extrude child" };
+			}
 		}
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
 		const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(_refine.scheme()) };
@@ -41,8 +42,7 @@ namespace HMP::Actions::Utils
 		{
 			throw std::logic_error{ "wrong number of children" };
 		}
-		_element.children().attach(_refine);
-		const Id pid{ _mesher.elementToPid(_element) };
+		const Id pid{ _mesher.elementToPid(element) };
 		const Id forwardFid{ mesh.poly_face_id(pid, _refine.forwardFaceOffset()) };
 		const Id upFid{ mesh.poly_face_id(pid, _refine.upFaceOffset()) };
 		const Id upEid{ mesh.face_shared_edge(forwardFid, upFid) };
@@ -54,10 +54,10 @@ namespace HMP::Actions::Utils
 			child.vertices() = verts;
 			_mesher.add(child);
 		}
-		_mesher.remove(_element);
+		_mesher.remove(element);
 	}
 
-	void unapplyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine)
+	void unapplyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach)
 	{
 		for (Dag::Element& child : _refine.children())
 		{
@@ -72,24 +72,24 @@ namespace HMP::Actions::Utils
 		return *new Dag::Delete{};
 	}
 
-	void applyDelete(Meshing::Mesher& _mesher, Dag::Element& _element, Dag::Delete& _delete)
+	void applyDelete(Meshing::Mesher& _mesher, Dag::Delete& _delete)
 	{
+		Dag::Element& element{ _delete.parents().single() };
 		if (_mesher.mesh().num_polys() == 1)
 		{
 			throw std::logic_error{ "cannot delete the only active element" };
 		}
-		for (const Dag::Operation& child : _element.children())
+		for (const Dag::Operation& child : element.children())
 		{
-			if (child.primitive() != Dag::Operation::EPrimitive::Extrude)
+			if (child != _delete && child.primitive() != Dag::Operation::EPrimitive::Extrude)
 			{
 				throw std::logic_error{ "element has non-extrude child" };
 			}
 		}
-		_element.children().attach(_delete);
-		_mesher.remove(_element);
+		_mesher.remove(element);
 	}
 
-	void unapplyDelete(Meshing::Mesher& _mesher, Dag::Delete& _delete)
+	void unapplyDelete(Meshing::Mesher& _mesher, Dag::Delete& _delete, bool _detach)
 	{
 		_mesher.add(_delete.parents().single());
 		_delete.parents().detachAll(false);
@@ -104,21 +104,22 @@ namespace HMP::Actions::Utils
 		return extrude;
 	}
 
-	void applyExtrude(Meshing::Mesher& _mesher, Dag::Element& _element, Dag::Extrude& _extrude)
+	void applyExtrude(Meshing::Mesher& _mesher, Dag::Extrude& _extrude)
 	{
-		for (const Dag::Operation& child : _element.children())
+		Dag::Element& element{ _extrude.parents().single() };
+		for (const Dag::Operation& child : element.children())
 		{
 			if (child.primitive() != Dag::Operation::EPrimitive::Extrude)
 			{
 				throw std::logic_error{ "element has non-extrude child" };
 			}
-			if (static_cast<const Dag::Extrude&>(child).forwardFaceOffset() == _extrude.forwardFaceOffset())
+			if (child != _extrude && static_cast<const Dag::Extrude&>(child).forwardFaceOffset() == _extrude.forwardFaceOffset())
 			{
 				throw std::logic_error{ "element already has equivalent child" };
 			}
 		}
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
-		const Id pid{ _mesher.elementToPid(_element) };
+		const Id pid{ _mesher.elementToPid(element) };
 		const Id forwardFid{ mesh.poly_face_id(pid, _extrude.forwardFaceOffset()) };
 		const Id upFid{ mesh.poly_face_id(pid, _extrude.upFaceOffset()) };
 		const Id upEid{ mesh.face_shared_edge(forwardFid, upFid) };
@@ -142,13 +143,39 @@ namespace HMP::Actions::Utils
 			verts[i++] = faceVert + faceNormal * avgFaceEdgeLength;
 		}
 		_mesher.add(_extrude.children().single());
-		_element.children().attach(_extrude);
 	}
 
-	void unapplyExtrude(Meshing::Mesher& _mesher, Dag::Extrude& _extrude)
+	void unapplyExtrude(Meshing::Mesher& _mesher, Dag::Extrude& _extrude, bool _detach)
 	{
-		_extrude.parents().detachAll(false);
+		if (_detach)
+		{
+			_extrude.parents().detachAll(false);
+		}
 		_mesher.remove(_extrude.children().single());
+	}
+
+	void applyTree(Meshing::Mesher& _mesher, Dag::Node& _node)
+	{
+		for (Dag::Node* node : Dag::Utils::descendants(_node))
+		{
+			if (node->isOperation())
+			{
+				switch (node->operation().primitive())
+				{
+					case Dag::Operation::EPrimitive::Delete:
+						applyDelete(_mesher, static_cast<Dag::Delete&>(*node));
+						break;
+					case Dag::Operation::EPrimitive::Extrude:
+						applyExtrude(_mesher, static_cast<Dag::Extrude&>(*node));
+						break;
+					case Dag::Operation::EPrimitive::Refine:
+						applyRefine(_mesher, static_cast<Dag::Refine&>(*node));
+						break;
+					default:
+						throw std::domain_error{ "unexpected primitive" };
+				}
+			}
+		}
 	}
 
 }
