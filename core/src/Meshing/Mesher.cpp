@@ -154,7 +154,7 @@ namespace HMP::Meshing
 		const Id vid{ getVert(_vert) };
 		if (vid == noId)
 		{
-			m_dirty = true;
+			m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
 			return m_mesh.vert_add(_vert);
 		}
 		return vid;
@@ -219,7 +219,7 @@ namespace HMP::Meshing
 		m_mesh.poly_data(pid).m_element = &_element;
 		m_mesh.poly_data(pid).color = polyColor;
 		m_elementToPid[&_element] = pid;
-		m_dirty = true;
+		m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
 	}
 
 	void Mesher::remove(Dag::Element& _element)
@@ -237,7 +237,7 @@ namespace HMP::Meshing
 		{
 			m_faceMarkerSet.m_data.erase({ &_element, o });
 		}
-		m_dirty = true;
+		m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
 	}
 
 	void Mesher::moveVert(Id _vid, const Vec& _position)
@@ -254,13 +254,13 @@ namespace HMP::Meshing
 			{
 				pidToElement(pid).vertices()[m_mesh.poly_vert_offset(pid, _vid)] = _position;
 			}
-			m_dirty = true;
+			m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
 		}
 	}
 
 	void Mesher::clear()
 	{
-		m_dirty = m_mesh.num_polys();
+		m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = m_mesh.num_polys();
 		m_mesh.clear();
 		m_elementToPid.clear();
 		m_polyMarkerSet.m_data.clear();
@@ -300,7 +300,7 @@ namespace HMP::Meshing
 
 	void Mesher::updateMeshMarkers()
 	{
-		if (m_dirty || m_polyMarkerSet.m_dirty || m_faceMarkerSet.m_dirty)
+		if (m_polyMarkerSet.m_dirty || m_faceMarkerSet.m_dirty)
 		{
 			m_mesh.updateGL_marked();
 			m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = false;
