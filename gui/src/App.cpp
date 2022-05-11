@@ -57,8 +57,6 @@ namespace HMP::Gui
 		HMP::Dag::Element* const lastElement{ m_mouse.element };
 		const Id lastFaceOffset{ m_mouse.faceOffset };
 		m_canvas.pop_all_markers();
-		m_mesher.faceMarkerSet().clear();
-		m_mesher.polyMarkerSet().clear();
 		m_mouse.element = nullptr;
 		m_mouse.faceOffset = m_mouse.vertOffset = noId;
 		if (m_canvas.unproject(m_mouse.position, m_mouse.worldPosition))
@@ -66,11 +64,9 @@ namespace HMP::Gui
 			// poly
 			const Id pid{ m_mesh.pick_poly(m_mouse.worldPosition) };
 			m_mouse.element = &m_mesher.pidToElement(pid);
-			m_mesher.polyMarkerSet().add(*m_mouse.element);
 			// face
 			const Id fid{ Meshing::Utils::closestPolyFid(m_mesh, pid, m_mouse.worldPosition) };
 			m_mouse.faceOffset = m_mesh.poly_face_offset(pid, fid);
-			m_mesher.faceMarkerSet().add(*m_mouse.element, m_mouse.faceOffset);
 			// up face
 			const Id eid{ Meshing::Utils::closestFaceEid(m_mesh, fid, m_mouse.worldPosition) };
 			const Id upFid{ Meshing::Utils::adjacentFid(m_mesh, pid, fid, eid) };
@@ -84,10 +80,19 @@ namespace HMP::Gui
 		m_dagViewer.highlight = m_mouse.element;
 		if (m_mouse.element != lastElement)
 		{
-			m_mesher.updateMesh();
+			m_mesher.polyMarkerSet().clear();
+			m_mesher.faceMarkerSet().clear();
+			if (m_mouse.element)
+			{
+				m_mesher.polyMarkerSet().add(*m_mouse.element);
+			}
 		}
-		else
+		if (m_mouse.element != lastElement || m_mouse.faceOffset != lastFaceOffset)
 		{
+			if (m_mouse.element)
+			{
+				m_mesher.faceMarkerSet().add(*m_mouse.element, m_mouse.faceOffset);
+			}
 			m_mesher.updateMesh(true);
 		}
 	}

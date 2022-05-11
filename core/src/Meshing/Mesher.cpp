@@ -27,7 +27,7 @@ namespace HMP::Meshing
 	void Mesher::PolyMarkerSet::mark(const Dag::Element& _element, bool _marked)
 	{
 		const Id pid{ m_mesher.elementToPid(_element) };
-		m_mesher.m_mesh.poly_data(pid).color = _marked ? markedPolyColor : polyColor;
+		m_mesher.m_mesh.poly_data(pid).flags[cinolib::MARKED] = _marked;
 	}
 
 	bool Mesher::PolyMarkerSet::has(const Dag::Element& _element) const
@@ -155,8 +155,8 @@ namespace HMP::Meshing
 		: m_mesh(), m_elementToPid{}, Internal::ElementToPidIterable{ m_elementToPid }, m_polyMarkerSet{ *this }, m_faceMarkerSet{ *this }
 	{
 		m_mesh.show_mesh_flat();
-		m_mesh.show_marked_face_transparency(1.0f);
-		m_mesh.show_marked_face_color(markedFaceColor);
+		m_mesh.marked_face_color = markedFaceColor;
+		m_mesh.marked_poly_color = markedPolyColor;
 		m_mesh.show_marked_face(true);
 		m_mesh.show_in_wireframe_width(2.0f);
 		m_mesh.show_out_wireframe_width(2.0f);
