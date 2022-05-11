@@ -68,7 +68,7 @@ namespace HMP::Gui::HrDescriptions
 	{
 		std::ostringstream stream{};
 		stream
-			<< "Delete "
+			<< "Delete"
 			<< " " << name(_element, _dagNamer)
 			<< " (" << name(_operation, _dagNamer) << ")";
 		return stream.str();
@@ -147,15 +147,22 @@ namespace HMP::Gui::HrDescriptions
 		{
 			stream << "no operations";
 		}
-		bool first{ true };
-		for (const auto& [operation, element] : operations)
+		if (operations.size() > 5)
 		{
-			if (!first)
+			stream << operations.size() << " operations";
+		}
+		else
+		{
+			bool first{ true };
+			for (const auto& [operation, element] : operations)
 			{
-				stream << ", ";
+				if (!first)
+				{
+					stream << ", ";
+				}
+				first = false;
+				stream << name(*operation, _dagNamer) << " of " << name(*element, _dagNamer);
 			}
-			first = false;
-			stream << name(*operation, _dagNamer) << " of " << name(*element, _dagNamer);
 		}
 		stream << ")";
 		return stream.str();
@@ -165,8 +172,8 @@ namespace HMP::Gui::HrDescriptions
 	{
 		std::ostringstream stream{};
 		stream
-			<< "Move vertex "
-			<< _action.vertOffset()
+			<< "Move vertex"
+			<< " " << _action.vertOffset()
 			<< " of " << name(_action.element(), _dagNamer)
 			<< " to " << describe(_action.position());
 		return stream.str();
@@ -176,9 +183,13 @@ namespace HMP::Gui::HrDescriptions
 	{
 		std::ostringstream stream{};
 		stream
-			<< "Paste "
-			<< " " << name(_action.element(), _dagNamer)
-			<< " (" << describe(_action.operation(), _dagNamer) << ")";
+			<< "Paste"
+			<< " at " << name(_action.element(), _dagNamer)
+			<< " ("
+			<< name(_action.operation(), _dagNamer)
+			<< " towards " << describeFaces(_action.operation().forwardFaceOffset(), _action.operation().upFaceOffset())
+			<< " into " << name(_action.operation().children().single(), _dagNamer)
+			<< ")";
 		return stream.str();
 	}
 
@@ -186,14 +197,24 @@ namespace HMP::Gui::HrDescriptions
 	{
 		std::ostringstream stream{};
 		stream
-			<< "Project to target "
-			<< &_action.target();
+			<< "Project to target"
+			<< " " << &_action.target();
 		return stream.str();
 	}
 
 	std::string describe(const Actions::Refine& _action, DagNamer& _dagNamer)
 	{
 		return describe(_action.operation(), _action.element(), _dagNamer);
+	}
+
+	std::string describe(const Actions::Rotate& _action, DagNamer& _dagNamer)
+	{
+		std::ostringstream stream{};
+		stream
+			<< "Rotate"
+			<< " " << name(_action.operation().children().single(), _dagNamer)
+			<< " (" << name(_action.operation(), _dagNamer) << ")";
+		return stream.str();
 	}
 
 	std::string describe(const Commander::Action& _action, DagNamer& _dagNamer)
@@ -231,6 +252,10 @@ namespace HMP::Gui::HrDescriptions
 			return describe(*action, _dagNamer);
 		}
 		if (const Actions::Refine* action{ dynamic_cast<const Actions::Refine*>(&_action) }; action)
+		{
+			return describe(*action, _dagNamer);
+		}
+		if (const Actions::Rotate* action{ dynamic_cast<const Actions::Rotate*>(&_action) }; action)
 		{
 			return describe(*action, _dagNamer);
 		}

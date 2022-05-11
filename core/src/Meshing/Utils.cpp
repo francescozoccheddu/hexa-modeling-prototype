@@ -7,6 +7,26 @@
 namespace HMP::Meshing::Utils
 {
 
+	Id rotateEid(const Meshing::Mesher::Mesh& _mesh, Id _fid, Id _eid, int _rotation)
+	{
+		if (!_mesh.face_contains_edge(_fid, _eid))
+		{
+			throw std::logic_error{ "edge not in face" };
+		}
+		const std::vector<Id> vids{ _mesh.edge_vert_ids(_eid) };
+		Id edgeOffset{};
+		while (_mesh.face_edge_id(_fid, edgeOffset) != _eid)
+		{
+			edgeOffset++;
+		}
+		if (_rotation < 0)
+		{
+			_rotation = 4 - ((-_rotation) % 4);
+		}
+		edgeOffset = (edgeOffset + _rotation) % 4;
+		return _mesh.face_edge_id(_fid, edgeOffset);
+	}
+
 	Id anyFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _eid)
 	{
 		if (!_mesh.poly_contains_edge(_pid, _eid))

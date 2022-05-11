@@ -77,6 +77,7 @@ namespace HMP::Gui
 		void onPaste();
 		void onRefineElement();
 		void onDelete();
+		void onRotate();
 		void onRefineFace();
 		void onMakeConformant();
 		void onSaveMesh();

@@ -22,6 +22,7 @@
 #include <HMP/Actions/MakeConforming.hpp>
 #include <HMP/Actions/Project.hpp>
 #include <HMP/Actions/Refine.hpp>
+#include <HMP/Actions/Rotate.hpp>
 #include <HMP/Actions/Paste.hpp>
 #include <HMP/Utils/Serialization.hpp>
 #include <HMP/Meshing/Utils.hpp>
@@ -248,6 +249,14 @@ namespace HMP::Gui
 					onDelete();
 				}
 			}
+			// rotate
+			case GLFW_KEY_Y:
+			{
+				if (!_modifiers)
+				{
+					onRotate();
+				}
+			}
 			break;
 			// make conformant
 			case GLFW_KEY_Q:
@@ -349,45 +358,46 @@ namespace HMP::Gui
 				updateMarkers();
 			}
 		}
+		ImGui::Spacing();
+		// undo/redo count
+		constexpr auto actionsControl{ [](Commander::Stack& _stack, const std::string& _name) {
+			int limit{ static_cast<int>(_stack.limit()) };
+			ImGui::SliderInt((_name + " limit").c_str(), &limit, 0, 100, "Max %d actions", ImGuiSliderFlags_AlwaysClamp);
+			_stack.limit(limit);
+			if (!_stack.empty())
+			{
+				ImGui::SameLine();
+				if (ImGui::Button((std::string{ "Clear " } + std::to_string(_stack.size()) + " actions").c_str()))
+				{
+					_stack.clear();
+				}
+			}
+		} };
+		actionsControl(m_commander.applied(), "Undo");
+		actionsControl(m_commander.unapplied(), "Redo");
+		ImGui::Spacing();
 		// history
 		if (ImGui::TreeNode("History"))
 		{
-			// undo count
+
+			if (m_commander.applied().empty() && m_commander.unapplied().empty())
 			{
-				int limit{ static_cast<int>(m_commander.applied().limit()) };
-				ImGui::SliderInt("Undo count", &limit, 0, 100, "%d actions", ImGuiSliderFlags_AlwaysClamp);
-				m_commander.unapplied().limit(limit);
+				ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "empty");
 			}
-			// redo count
+
+			auto it{ m_commander.unapplied().rbegin() };
+			const auto end{ m_commander.unapplied().rend() };
+			while (it != end)
 			{
-				int limit{ static_cast<int>(m_commander.applied().limit()) };
-				ImGui::SliderInt("Redo count", &limit, 0, 100, "%d actions", ImGuiSliderFlags_AlwaysClamp);
-				m_commander.unapplied().limit(limit);
+				ImGui::TextColored(ImVec4(0.75f, 0.2f, 0.2f, 1.0f), HrDescriptions::describe(*it, m_dagNamer).c_str());
+				++it;
 			}
-			// action list
+
+			for (const Commander::Action& action : m_commander.applied())
 			{
-
-				ImGui::Text("Actions list:");
-
-				if (m_commander.applied().empty() && m_commander.unapplied().empty())
-				{
-					ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "empty");
-				}
-
-				auto it{ m_commander.unapplied().rbegin() };
-				const auto end{ m_commander.unapplied().rend() };
-				while (it != end)
-				{
-					ImGui::TextColored(ImVec4(0.75f, 0.2f, 0.2f, 1.0f), HrDescriptions::describe(*it, m_dagNamer).c_str());
-					++it;
-				}
-				
-				for (const Commander::Action& action : m_commander.applied())
-				{
-					ImGui::TextColored(ImVec4(0.2f, 0.75f, 0.2f, 1.0f), HrDescriptions::describe(action, m_dagNamer).c_str());
-				}
-
+				ImGui::TextColored(ImVec4(0.2f, 0.75f, 0.2f, 1.0f), HrDescriptions::describe(action, m_dagNamer).c_str());
 			}
+
 			ImGui::TreePop();
 		}
 	}
@@ -482,6 +492,15 @@ namespace HMP::Gui
 		{
 			m_commander.apply(*new Actions::Delete{ *m_mouse.element });
 			updateDagViewer();
+			m_canvas.refit_scene();
+		}
+	}
+
+	void App::onRotate()
+	{
+		if (m_mouse.element && m_mouse.element->parents().size() == 1 && m_mouse.element->parents().single().primitive() == HMP::Dag::Operation::EPrimitive::Extrude)
+		{
+			m_commander.apply(*new Actions::Rotate{ static_cast<HMP::Dag::Extrude&>(m_mouse.element->parents().single()) });
 			m_canvas.refit_scene();
 		}
 	}
