@@ -33,4 +33,14 @@ namespace HMP::Actions
 		m_operation->upFaceOffset() = _targetUpFaceOffset;
 	}
 
+	const Dag::Element& Paste::element() const
+	{
+		return m_element;
+	}
+
+	const Dag::Extrude& Paste::operation() const
+	{
+		return *m_operation;
+	}
+
 }

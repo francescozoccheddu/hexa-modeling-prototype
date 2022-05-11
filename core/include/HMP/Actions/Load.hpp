@@ -13,6 +13,7 @@ namespace HMP::Actions
 	private:
 
 		Dag::NodeHandle<Dag::Element> m_otherRoot;
+		Dag::Element& m_newRoot;
 
 		void apply() override;
 		void unapply() override;
@@ -20,6 +21,8 @@ namespace HMP::Actions
 	public:
 		
 		Load(Dag::Element& _root);
+
+		const Dag::Element& newRoot() const;
 
 	};
 

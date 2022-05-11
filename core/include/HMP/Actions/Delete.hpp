@@ -23,6 +23,9 @@ namespace HMP::Actions
 		
 		Delete(Dag::Element& _element);
 
+		const Dag::Element& element() const;
+		const Dag::Delete& operation() const;
+
 	};
 
 }

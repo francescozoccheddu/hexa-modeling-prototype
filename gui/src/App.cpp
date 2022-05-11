@@ -25,6 +25,8 @@
 #include <HMP/Actions/Paste.hpp>
 #include <HMP/Utils/Serialization.hpp>
 #include <HMP/Meshing/Utils.hpp>
+#include <HMP/Gui/HrDescriptions.hpp>
+#include <sstream>
 
 namespace HMP::Gui
 {
@@ -161,6 +163,7 @@ namespace HMP::Gui
 			{
 				m_mesher.moveVert(vid, m_mouse.worldPosition);
 			}
+			updateMarkers();
 			m_mesher.updateMesh();
 		}
 	}
@@ -363,9 +366,6 @@ namespace HMP::Gui
 			}
 			// action list
 			{
-				constexpr auto getActionText{ [](const Commander::Action& _action) {
-					return "action";
-				} };
 
 				ImGui::Text("Actions list:");
 
@@ -374,15 +374,19 @@ namespace HMP::Gui
 					ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "empty");
 				}
 
-				for (const Commander::Action& action : m_commander.unapplied())
+				auto it{ m_commander.unapplied().rbegin() };
+				const auto end{ m_commander.unapplied().rend() };
+				while (it != end)
 				{
-					ImGui::TextColored(ImVec4(0.75f, 0.2f, 0.2f, 1.0f), getActionText(action));
+					ImGui::TextColored(ImVec4(0.75f, 0.2f, 0.2f, 1.0f), HrDescriptions::describe(*it, m_dagNamer).c_str());
+					++it;
 				}
-
+				
 				for (const Commander::Action& action : m_commander.applied())
 				{
-					ImGui::TextColored(ImVec4(0.2f, 0.75f, 0.2f, 1.0f), getActionText(action));
+					ImGui::TextColored(ImVec4(0.2f, 0.75f, 0.2f, 1.0f), HrDescriptions::describe(action, m_dagNamer).c_str());
 				}
+
 			}
 			ImGui::TreePop();
 		}
@@ -396,6 +400,9 @@ namespace HMP::Gui
 		{
 			if (m_move.element && m_mesher.has(*m_move.element))
 			{
+				const Id pid{ m_mesher.elementToPid(*m_move.element) };
+				const Id vid{ m_mesh.poly_vert_id(pid, m_move.vertOffset) };
+				m_mesher.moveVert(vid, m_move.startPosition);
 				m_commander.apply(*new Actions::MoveVert{ *m_move.element, m_move.vertOffset, m_mouse.worldPosition });
 				m_move.element = nullptr;
 				m_canvas.refit_scene();

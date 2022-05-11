@@ -33,4 +33,14 @@ namespace HMP::Actions
 		: m_element{ _element }, m_operation{ Utils::prepareDelete() }
 	{}
 
+	const Dag::Element& Delete::element() const
+	{
+		return m_element;
+	}
+
+	const Dag::Delete& Delete::operation() const
+	{
+		return *m_operation;
+	}
+
 }

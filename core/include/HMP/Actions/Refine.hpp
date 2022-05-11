@@ -23,6 +23,9 @@ namespace HMP::Actions
 
 		Refine(Dag::Element& _element, Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme);
 
+		const Dag::Element& element() const;
+		const Dag::Refine& operation() const;
+
 	};
 
 }
