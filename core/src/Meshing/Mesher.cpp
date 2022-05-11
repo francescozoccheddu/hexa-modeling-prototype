@@ -148,8 +148,6 @@ namespace HMP::Meshing
 	const cinolib::Color Mesher::polyColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.35f) };
 	const cinolib::Color Mesher::markedPolyColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 0.5f) };
 	const cinolib::Color Mesher::markedFaceColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 0.7f) };
-	const cinolib::Color Mesher::suggestedBackgroundColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.1f) };
-	const cinolib::Color Mesher::suggestedOverlayColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 0.9f) };
 
 	Id Mesher::getOrAddVert(const Vec& _vert)
 	{
