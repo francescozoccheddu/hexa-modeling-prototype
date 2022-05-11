@@ -53,7 +53,7 @@ namespace HMP::Meshing
 
 	public:
 
-		static const cinolib::Color polyColor, markedPolyColor, markedFaceColor, suggestedBackgroundColor, suggestedOverlayColor;
+		static const cinolib::Color polyColor, markedPolyColor, markedFaceColor;
 
 		void add(Dag::Element& _element);
 

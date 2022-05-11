@@ -17,8 +17,8 @@ namespace HMP::Gui::Dag
 
 	using namespace HMP::Dag;
 
-	Viewer::Viewer(const Meshing::Mesher& _mesher)
-		: m_center_nl{ 0.5, 0.5 }, m_windowHeight_n{ 1.0 }, m_mesher{ _mesher }, cinolib::SideBarItem{ "HMP Dag Viewer" }
+	Viewer::Viewer(const Meshing::Mesher& _mesher, cpputils::collections::Namer<const HMP::Dag::Node*>& _namer)
+		: m_center_nl{ 0.5, 0.5 }, m_windowHeight_n{ 1.0 }, m_mesher{ _mesher }, m_namer{ _namer }, cinolib::SideBarItem{ "HMP Dag Viewer" }
 	{}
 
 	const Meshing::Mesher& Viewer::mesher() const
@@ -26,9 +26,24 @@ namespace HMP::Gui::Dag
 		return m_mesher;
 	}
 
+	const cpputils::collections::Namer<const HMP::Dag::Node*>& Viewer::namer() const
+	{
+		return m_namer;
+	}
+
+	Layout& Viewer::layout()
+	{
+		return m_layout;
+	}
+
+	const Layout& Viewer::layout() const
+	{
+		return m_layout;
+	}
+
 	void Viewer::resetView()
 	{
-		m_center_nl = Vec2{ layout.aspectRatio(), 1.0 } / 2;
+		m_center_nl = Vec2{ m_layout.aspectRatio(), 1.0 } / 2;
 		m_windowHeight_n = std::numeric_limits<Real>::infinity();
 	}
 
@@ -56,7 +71,7 @@ namespace HMP::Gui::Dag
 		const Vec2 bottomRight_sw{ topLeft_sw + windowSize_s };
 		const Real windowAspectRatio{ windowSize_s.x() / windowSize_s.y() };
 
-		if (layout.size().x() <= 0.0 || layout.size().y() <= 0.0)
+		if (m_layout.size().x() <= 0.0 || m_layout.size().y() <= 0.0)
 		{
 			return;
 		}
@@ -65,7 +80,7 @@ namespace HMP::Gui::Dag
 
 		const Real s2n{ 1.0 / windowSize_s.y() };
 		const Real n2s{ 1.0 / s2n };
-		const Real n2l{ layout.size().y() };
+		const Real n2l{ m_layout.size().y() };
 		const Real l2n{ 1.0 / n2l };
 
 		const auto ss2sw{ [&](const Vec2& _point_ss) {
@@ -93,11 +108,11 @@ namespace HMP::Gui::Dag
 		} };
 
 		const auto nl2ll{ [&](const Vec2& _point_nl) {
-			return _point_nl * n2l + layout.bottomLeft();
+			return _point_nl * n2l + m_layout.bottomLeft();
 		} };
 
 		const auto ll2nl{ [&](const Vec2& _point_ll) {
-			return (_point_ll - layout.bottomLeft()) * l2n;
+			return (_point_ll - m_layout.bottomLeft()) * l2n;
 		} };
 
 		// input
@@ -106,18 +121,14 @@ namespace HMP::Gui::Dag
 		ImGui::InvisibleButton("canvas", toImVec(windowSize_s), ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle);
 
 		const auto clampCenter{ [&]() {
-			m_center_nl.x() = cinolib::clamp(m_center_nl.x(), 0.0, layout.aspectRatio());
+			m_center_nl.x() = cinolib::clamp(m_center_nl.x(), 0.0, m_layout.aspectRatio());
 			m_center_nl.y() = cinolib::clamp(m_center_nl.y(), 0.0, 1.0);
 		} };
 
 		const auto clampHeight{ [&]() {
-			Real min{ 0.1 }, max{ 2.0 };
-			if (windowAspectRatio < layout.aspectRatio())
-			{
-				const Real factor{ layout.aspectRatio() / windowAspectRatio };
-				min *= factor;
-				max *= factor;
-			}
+			const Real fullHeight_n {(windowAspectRatio < m_layout.aspectRatio()) ? m_layout.aspectRatio() / windowAspectRatio : 1};
+			const Real min{ m_layout.nodeRadius() * l2n * 3 };
+			const Real max{ fullHeight_n * 1.1 + m_layout.nodeRadius() * l2n };
 			m_windowHeight_n = cinolib::clamp(m_windowHeight_n, min, max);
 		} };
 
@@ -170,7 +181,7 @@ namespace HMP::Gui::Dag
 				{
 					constexpr ImU32 gridColor{ IM_COL32(60, 60, 60, 255) };
 					const int gridLevel{ static_cast<int>(-std::log2(m_windowHeight_n / 2.0)) };
-					const Real gridStep_s{ n2s / (std::pow(2, gridLevel) * 10) / m_windowHeight_n};
+					const Real gridStep_s{ n2s / (std::pow(2, gridLevel) * 10) / m_windowHeight_n };
 					const Vec2 origin_ss{ sw2ss(nw2sw(nl2nw(Vec2{0,1}))) };
 					for (Real x_s{ std::fmod(origin_ss.x(), gridStep_s) }; x_s <= bottomRight_sw.x(); x_s += gridStep_s)
 					{
@@ -186,17 +197,17 @@ namespace HMP::Gui::Dag
 
 				constexpr ImU32 strokeColor{ IM_COL32(220, 220, 220, 255) };
 
-				for (const auto& [lineA, lineB] : layout.lines())
+				for (const auto& [lineA, lineB] : m_layout.lines())
 				{
 					drawList->AddLine(toImVec(ll2ss(lineA)), toImVec(ll2ss(lineB)), strokeColor);
 				}
 
 				// nodes
 
-				const float nodeRadius_s{ static_cast<float>(layout.nodeRadius() * l2s) };
+				const float nodeRadius_s{ static_cast<float>(m_layout.nodeRadius() * l2s) };
 				const Vec2 nodeHalfDiag_s{ nodeRadius_s, nodeRadius_s };
 
-				for (const Layout::Node& node : layout.nodes())
+				for (const Layout::Node& node : m_layout.nodes())
 				{
 					constexpr ImU32 textColor{ backgroundColor };
 					const Vec2 center{ ll2ss(node.center()) };
@@ -206,13 +217,16 @@ namespace HMP::Gui::Dag
 						case Dag::Node::EType::Element:
 						{
 							static const ImU32 elementColor{ toImCol(Meshing::Mesher::polyColor) };
+							static const ImU32 inactiveElementColor{ toImCol(cinolib::Color(Meshing::Mesher::polyColor.r * 0.75f, Meshing::Mesher::polyColor.g * 0.75f,Meshing::Mesher::polyColor.b * 0.75f, Meshing::Mesher::polyColor.a)) };
 							static const ImU32 highlightedElementColor{ toImCol(Meshing::Mesher::markedFaceColor) };
-							const ImU32 color{ highlight == &node.node() ? highlightedElementColor : elementColor };
+							const Dag::Element& element{ node.node().element() };
+							const ImU32 color{ highlight == &node.node()
+								? highlightedElementColor
+								: m_mesher.has(element) ? elementColor : inactiveElementColor };
 							drawList->AddRectFilled(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), color);
 							drawList->AddRect(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), strokeColor);
-							const Dag::Element& element{ node.node().element() };
-							const Id pid{ m_mesher.elementToPid(element) };
-							text = pid != noId ? std::to_string(m_mesher.elementToPid(element)) : "";
+							//const Id pid{ m_mesher.elementToPid(element) };
+							//text = pid != noId ? std::to_string(m_mesher.elementToPid(element)) : "";
 						}
 						break;
 						case Dag::Node::EType::Operation:
@@ -236,14 +250,18 @@ namespace HMP::Gui::Dag
 							}
 							drawList->AddCircleFilled(toImVec(center), nodeRadius_s, operationColor, circleSegments);
 							drawList->AddCircle(toImVec(center), nodeRadius_s, strokeColor, circleSegments);
+							text += "-";
 						}
 						break;
 					}
-					const Vec2 textSize{ toVec(ImGui::CalcTextSize(text.c_str())) / ImGui::GetFontSize() * nodeRadius_s };
+					text += m_namer(&(node.node()));
+					const Vec2 textSize{ toVec(ImGui::CalcTextSize(text.c_str())) / ImGui::GetFontSize() };
+					const Real maxTextSize{ std::max(textSize.x(), textSize.y()) };
+					const Real fontSize{ nodeRadius_s * 1.5 / maxTextSize };
 					drawList->AddText(
 						ImGui::GetFont(),
-						nodeRadius_s,
-						toImVec(center - textSize / 2),
+						static_cast<float>(fontSize),
+						toImVec(center - textSize * fontSize / 2),
 						textColor,
 						text.c_str());
 				}

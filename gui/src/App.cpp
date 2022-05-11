@@ -29,10 +29,13 @@
 namespace HMP::Gui
 {
 
+	const cinolib::Color backgroundColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.1f) };
+
 	// Actions
 
-	App::App()
-		: m_project{}, m_canvas{}, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() }, m_dagViewer{ m_mesher }, m_menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh controls" }
+	App::App() :
+		m_project{}, m_canvas{}, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() },
+		m_dagNamer{}, m_dagViewer{ m_mesher, m_dagNamer }, m_menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh controls" }
 	{
 		m_commander.apply(*new Actions::Clear());
 		m_commander.applied().clear();
@@ -41,7 +44,7 @@ namespace HMP::Gui
 		m_canvas.push(&m_menu);
 		m_canvas.push(&m_dagViewer);
 
-		m_canvas.background = m_mesher.suggestedBackgroundColor;
+		m_canvas.background = backgroundColor;
 		m_canvas.depth_cull_markers = false;
 		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMove(_args...); };
 		m_canvas.callback_key_pressed = [this](auto && ..._args) { return onKeyPress(_args...); };
@@ -51,12 +54,48 @@ namespace HMP::Gui
 		updateDagViewer();
 	}
 
+	void App::updateMarkers()
+	{
+		static const cinolib::Color overlayColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 0.9f) };
+		static const cinolib::Color mutedOverlayColor{ cinolib::Color::hsv2rgb(0.1f, 0.0f, 1.0f, 0.3f) };
+		constexpr float highlightRadius{ 4.0f };
+		constexpr float nameFontSize{ 20.0f };
+		m_canvas.pop_all_markers();
+		if (m_mouse.element)
+		{
+			const Id pid{ m_mesher.elementToPid(*m_mouse.element) };
+			const Id vid{ m_mesh.poly_vert_id(pid, m_mouse.vertOffset) };
+			const Id forwardFid{ m_mesh.poly_face_id(pid, m_mouse.faceOffset) };
+			const Id upFid{ m_mesh.poly_face_id(pid, m_mouse.upFaceOffset) };
+			const Id eid{ m_mesh.face_shared_edge(forwardFid, upFid) };
+			m_canvas.push_marker(Meshing::Utils::midpoint(m_mesh, eid), "", overlayColor, highlightRadius);
+			m_canvas.push_marker(m_mesh.vert(m_mesh.poly_vert_id(pid, m_mouse.vertOffset)), "", overlayColor, highlightRadius);
+		}
+		if (m_options.showNames)
+		{
+			for (const HMP::Dag::Node* node : HMP::Dag::Utils::descendants(*m_project.root()))
+			{
+				if (node->isElement())
+				{
+					const Id pid{ m_mesher.elementToPid(node->element()) };
+					if (pid != noId)
+					{
+						cinolib::Color color{ m_mouse.element == node ? overlayColor : mutedOverlayColor };
+						if (m_mouse.element && m_mouse.element != node)
+						{
+							color.a /= 5;
+						}
+						m_canvas.push_marker(m_mesh.poly_centroid(pid), m_dagNamer(node), color, 0, nameFontSize);
+					}
+				}
+			}
+		}
+	}
+
 	void App::updateMouse()
 	{
-		constexpr float highlightVertexRadius{ 4.0f };
 		HMP::Dag::Element* const lastElement{ m_mouse.element };
-		const Id lastFaceOffset{ m_mouse.faceOffset };
-		m_canvas.pop_all_markers();
+		const Id lastFaceOffset{ m_mouse.faceOffset }, lastUpFaceOffset{ m_mouse.upFaceOffset };
 		m_mouse.element = nullptr;
 		m_mouse.faceOffset = m_mouse.vertOffset = noId;
 		if (m_canvas.unproject(m_mouse.position, m_mouse.worldPosition))
@@ -71,17 +110,14 @@ namespace HMP::Gui
 			const Id eid{ Meshing::Utils::closestFaceEid(m_mesh, fid, m_mouse.worldPosition) };
 			const Id upFid{ Meshing::Utils::adjacentFid(m_mesh, pid, fid, eid) };
 			m_mouse.upFaceOffset = m_mesh.poly_face_offset(pid, upFid);
-			m_canvas.push_marker(Meshing::Utils::midpoint(m_mesh, eid), "", m_mesher.suggestedOverlayColor, highlightVertexRadius);
 			// vert
 			const Id vid{ Meshing::Utils::closestFaceVid(m_mesh, fid, m_mouse.worldPosition) };
 			m_mouse.vertOffset = m_mesh.poly_vert_offset(pid, vid);
-			m_canvas.push_marker(m_mesh.vert(m_mesh.poly_vert_id(pid, m_mouse.vertOffset)), "", m_mesher.suggestedOverlayColor, highlightVertexRadius);
 		}
 		m_dagViewer.highlight = m_mouse.element;
 		if (m_mouse.element != lastElement)
 		{
 			m_mesher.polyMarkerSet().clear();
-			m_mesher.faceMarkerSet().clear();
 			if (m_mouse.element)
 			{
 				m_mesher.polyMarkerSet().add(*m_mouse.element);
@@ -89,11 +125,16 @@ namespace HMP::Gui
 		}
 		if (m_mouse.element != lastElement || m_mouse.faceOffset != lastFaceOffset)
 		{
+			m_mesher.faceMarkerSet().clear();
 			if (m_mouse.element)
 			{
 				m_mesher.faceMarkerSet().add(*m_mouse.element, m_mouse.faceOffset);
 			}
 			m_mesher.updateMeshMarkers();
+		}
+		if (m_mouse.element != lastElement || m_mouse.faceOffset != lastFaceOffset || m_mouse.upFaceOffset != lastUpFaceOffset)
+		{
+			updateMarkers();
 		}
 		updateMove();
 	}
@@ -102,7 +143,7 @@ namespace HMP::Gui
 	{
 		if (m_project.root())
 		{
-			m_dagViewer.layout = Dag::createLayout(*m_project.root());
+			m_dagViewer.layout() = Dag::createLayout(*m_project.root());
 		}
 		m_dagViewer.resetView();
 	}
@@ -282,7 +323,41 @@ namespace HMP::Gui
 	}
 
 	void App::onDrawControls()
-	{}
+	{
+		{
+			bool showNames{ m_options.showNames };
+			ImGui::Checkbox("Show element names", &showNames);
+			if (showNames != m_options.showNames)
+			{
+				m_options.showNames = showNames;
+				updateMarkers();
+			}
+		}
+		{
+			int historyLimit{ static_cast<int>(m_commander.applied().limit()) };
+			ImGui::SliderInt("History limit", &historyLimit, 3, 100, "%d actions", ImGuiSliderFlags_AlwaysClamp);
+			m_commander.applied().limit(historyLimit);
+			m_commander.unapplied().limit(historyLimit);
+		}
+		{
+			if (ImGui::TreeNode("History"))
+			{
+				constexpr auto getActionText{ [](const Commander::Action& _action) {
+					return "action";
+				} };
+
+				for (const Commander::Action& action : m_commander.unapplied())
+				{
+					ImGui::TextColored(ImVec4(0.75f, 0.2f, 0.2f, 1.0f), getActionText(action));
+				}
+				for (const Commander::Action& action : m_commander.applied())
+				{
+					ImGui::TextColored(ImVec4(0.2f, 0.75f, 0.2f, 1.0f), getActionText(action));
+				}
+				ImGui::TreePop();
+			}
+		}
+	}
 
 	// Commands
 
