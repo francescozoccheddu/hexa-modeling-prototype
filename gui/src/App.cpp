@@ -113,8 +113,10 @@ namespace HMP::Gui
 		{
 			const Id pid{ m_mesher.elementToPid(*m_move.element) };
 			const Id vid{ m_mesh.poly_vert_id(pid, m_move.vertOffset) };
-			m_mesher.moveVert(vid, m_mouse.worldPosition);
-			m_canvas.refit_scene();
+			if (m_mesher.getVert(m_mouse.worldPosition) == noId)
+			{
+				m_mesher.moveVert(vid, m_mouse.worldPosition);
+			}
 			m_mesher.updateMesh();
 		}
 	}
