@@ -5,15 +5,6 @@
 namespace HMP::Actions
 {
 
-	Delete::~Delete()
-	{
-		if (!applied())
-		{
-			m_operation.children().detachAll(true);
-			delete& m_operation;
-		}
-	}
-
 	void Delete::apply()
 	{
 		if (mesher().mesh().num_polys() == 1)
@@ -27,14 +18,14 @@ namespace HMP::Actions
 				throw std::logic_error{ "element has non-extrude child" };
 			}
 		}
-		m_operation.parents().attach(m_element);
-		Utils::applyDelete(mesher(), m_operation);
+		m_operation->parents().attach(m_element);
+		Utils::applyDelete(mesher(), *m_operation);
 		mesher().updateMesh();
 	}
 
 	void Delete::unapply()
 	{
-		Utils::unapplyDelete(mesher(), m_operation);
+		Utils::unapplyDelete(mesher(), *m_operation);
 		mesher().updateMesh();
 	}
 

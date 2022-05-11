@@ -1,12 +1,16 @@
 #pragma once
 
 #include <cpputils/mixins/ReferenceClass.hpp>
+#include <cpputils/concepts.hpp>
 #include <HMP/Dag/NodeSet.hpp>
 #include <type_traits>
 #include <queue>
 
 namespace HMP::Dag
 {
+
+	template <cpputils::concepts::DerivedSimpleClass<Node>, bool TDescending = true>
+	class NodeHandle;
 
 	class Element;
 	class Operation;
@@ -25,10 +29,15 @@ namespace HMP::Dag
 
 	private:
 
+		template <cpputils::concepts::DerivedSimpleClass<Node>, bool>
+		friend class NodeHandle;
+
 		const EType m_type;
 
 		Internal::NodeSetData m_parentsImpl, m_childrenImpl;
 		Set m_parents, m_children;
+
+		std::size_t m_handles;
 
 		static void deleteDangling(std::queue<Node*>& _dangling, bool _descending);
 		bool onAttach(Node& _node, bool _descending);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <HMP/Commander.hpp>
+#include <HMP/Dag/NodeHandle.hpp>
 #include <HMP/Dag/Element.hpp>
 #include <HMP/Dag/Delete.hpp>
 
@@ -13,9 +14,7 @@ namespace HMP::Actions
 	private:
 
 		Dag::Element& m_element;
-		Dag::Delete& m_operation;
-
-		~Delete() override;
+		Dag::NodeHandle<Dag::Delete> m_operation;
 
 		void apply() override;
 		void unapply() override;

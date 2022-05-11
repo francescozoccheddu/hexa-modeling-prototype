@@ -6,15 +6,6 @@
 namespace HMP::Actions
 {
 
-	Clear::~Clear()
-	{
-		if (m_otherRoot)
-		{
-			m_otherRoot->children().detachAll(true);
-			delete m_otherRoot;
-		}
-	}
-
 	void Clear::apply()
 	{
 		std::swap(m_otherRoot, root());
@@ -28,7 +19,7 @@ namespace HMP::Actions
 	}
 
 	Clear::Clear()
-		: m_otherRoot{ new Dag::Element{} }
+		: m_otherRoot{ *new Dag::Element{} }
 	{
 		constexpr Real cubeSize{ 1 };
 		m_otherRoot->vertices() = {

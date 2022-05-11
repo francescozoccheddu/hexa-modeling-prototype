@@ -64,7 +64,7 @@ namespace HMP
 		return m_commander->m_project.mesher();
 	}
 
-	Dag::Element*& Commander::ActionBase::root()
+	Dag::NodeHandle<Dag::Element>& Commander::ActionBase::root()
 	{
 		ensureAttached();
 		return m_commander->m_project.root();

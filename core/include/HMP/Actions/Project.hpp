@@ -1,6 +1,7 @@
 #pragma once
 
 #include <HMP/Commander.hpp>
+#include <HMP/Dag/NodeHandle.hpp>
 #include <HMP/Dag/Element.hpp>
 #include <cinolib/meshes/trimesh.h>
 #include <vector>

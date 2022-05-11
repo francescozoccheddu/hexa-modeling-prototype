@@ -3,6 +3,7 @@
 #include <HMP/Commander.hpp>
 #include <HMP/Meshing/Mesher.hpp>
 #include <HMP/Dag/Element.hpp>
+#include <HMP/Dag/NodeHandle.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
 
 namespace HMP
@@ -13,7 +14,7 @@ namespace HMP
 
 	private:
 
-		Dag::Element* m_root;
+		Dag::NodeHandle<Dag::Element> m_root;
 		Meshing::Mesher m_mesher;
 		Commander m_commander;
 
@@ -24,7 +25,7 @@ namespace HMP
 		Commander& commander();
 		const Commander& commander() const;
 
-		Dag::Element*& root();
+		Dag::NodeHandle<Dag::Element>& root();
 		const Dag::Element* root() const;
 
 		Meshing::Mesher& mesher();

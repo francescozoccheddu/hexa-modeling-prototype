@@ -1,6 +1,7 @@
 #pragma once
 
 #include <HMP/Commander.hpp>
+#include <HMP/Dag/NodeHandle.hpp>
 #include <HMP/Dag/Element.hpp>
 #include <HMP/Dag/Extrude.hpp>
 
@@ -13,10 +14,8 @@ namespace HMP::Actions
 	private:
 
 		Dag::Element& m_element;
-		Dag::Extrude& m_operation;
+		Dag::NodeHandle<Dag::Extrude> m_operation;
 		bool m_prepared;
-
-		~Paste() override;
 
 		void apply() override;
 		void unapply() override;

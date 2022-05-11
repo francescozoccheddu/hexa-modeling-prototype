@@ -4,7 +4,7 @@ namespace HMP
 {
 
 	Project::Project()
-		: m_mesher{}, m_commander{ *reinterpret_cast<Project*>(this) }, m_root{}
+		: m_mesher{}, m_commander{ *reinterpret_cast<Project*>(this) }, m_root{ nullptr }
 	{}
 
 	Commander& Project::commander()
@@ -17,7 +17,7 @@ namespace HMP
 		return m_commander;
 	}
 
-	Dag::Element*& Project::root()
+	Dag::NodeHandle<Dag::Element>& Project::root()
 	{
 		return m_root;
 	}

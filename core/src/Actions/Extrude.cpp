@@ -5,15 +5,6 @@
 namespace HMP::Actions
 {
 
-	Extrude::~Extrude()
-	{
-		if (!applied())
-		{
-			m_operation.children().detachAll(true);
-			delete& m_operation;
-		}
-	}
-
 	void Extrude::apply()
 	{
 		for (const Dag::Operation& child : m_element.children())
@@ -22,19 +13,19 @@ namespace HMP::Actions
 			{
 				throw std::logic_error{ "element has non-extrude child" };
 			}
-			if (static_cast<const Dag::Extrude&>(child).forwardFaceOffset() == m_operation.forwardFaceOffset())
+			if (static_cast<const Dag::Extrude&>(child).forwardFaceOffset() == m_operation->forwardFaceOffset())
 			{
 				throw std::logic_error{ "element already has equivalent child" };
 			}
 		}
-		m_operation.parents().attach(m_element);
-		Utils::applyExtrude(mesher(), m_operation);
+		m_operation->parents().attach(m_element);
+		Utils::applyExtrude(mesher(), *m_operation);
 		mesher().updateMesh();
 	}
 
 	void Extrude::unapply()
 	{
-		Utils::unapplyExtrude(mesher(), m_operation);
+		Utils::unapplyExtrude(mesher(), *m_operation);
 		mesher().updateMesh();
 	}
 
