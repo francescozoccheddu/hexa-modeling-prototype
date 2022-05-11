@@ -2,6 +2,7 @@
 
 #include <HMP/Commander.hpp>
 #include <HMP/Dag/Element.hpp>
+#include <HMP/Dag/NodeHandle.hpp>
 
 namespace HMP::Actions
 {
@@ -11,9 +12,7 @@ namespace HMP::Actions
 
 	private:
 
-		Dag::Element* m_otherRoot;
-
-		~Clear() override;
+		Dag::NodeHandle<Dag::Element> m_otherRoot;
 
 		void apply() override;
 		void unapply() override;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <HMP/Meshing/types.hpp>
+#include <HMP/Dag/NodeHandle.hpp>
 #include <vector>
 #include <unordered_set>
 #include <utility>
@@ -15,10 +16,8 @@ namespace HMP::Actions
 
 	private:
 
-		std::vector<std::pair<Dag::Refine*, Dag::Element*>> m_operations;
+		std::vector<std::pair<Dag::NodeHandle<Dag::Refine>, Dag::Element*>> m_operations;
 		bool m_prepared;
-
-		~MakeConforming() override;
 
 		void apply() override;
 		void unapply() override;

@@ -11,24 +11,12 @@
 namespace HMP::Actions
 {
 
-	MakeConforming::~MakeConforming()
-	{
-		if (!applied())
-		{
-			for (const auto [operation, element] : m_operations)
-			{
-				operation->children().detachAll(true);
-				delete operation;
-			}
-		}
-	}
-
 	void MakeConforming::apply()
 	{
 		Meshing::Mesher& mesher{ this->mesher() };
 		if (m_prepared)
 		{
-			for (const auto [operation, element] : m_operations)
+			for (auto [operation, element] : m_operations)
 			{
 				operation->parents().attach(*element);
 				Utils::applyRefine(mesher, *operation);
@@ -213,7 +201,7 @@ namespace HMP::Actions
 
 	void MakeConforming::unapply()
 	{
-		for (const auto [operation, element] : m_operations)
+		for (auto [operation, element] : m_operations)
 		{
 			Utils::unapplyRefine(mesher(), *operation);
 		}

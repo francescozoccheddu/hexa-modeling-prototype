@@ -5,15 +5,6 @@
 namespace HMP::Actions
 {
 
-	Refine::~Refine()
-	{
-		if (!applied())
-		{
-			m_operation.children().detachAll(true);
-			delete& m_operation;
-		}
-	}
-
 	void Refine::apply()
 	{
 		for (const Dag::Operation& child : m_element.children())
@@ -23,14 +14,14 @@ namespace HMP::Actions
 				throw std::logic_error{ "element has non-extrude child" };
 			}
 		}
-		m_operation.parents().attach(m_element);
-		Utils::applyRefine(mesher(), m_operation);
+		m_operation->parents().attach(m_element);
+		Utils::applyRefine(mesher(), *m_operation);
 		mesher().updateMesh();
 	}
 
 	void Refine::unapply()
 	{
-		Utils::unapplyRefine(mesher(), m_operation);
+		Utils::unapplyRefine(mesher(), *m_operation);
 		mesher().updateMesh();
 	}
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <HMP/Commander.hpp>
+#include <HMP/Dag/NodeHandle.hpp>
 #include <HMP/Dag/Element.hpp>
 
 namespace HMP::Actions
@@ -11,9 +12,7 @@ namespace HMP::Actions
 
 	private:
 
-		Dag::Element* m_otherRoot;
-
-		~Load() override;
+		Dag::NodeHandle<Dag::Element> m_otherRoot;
 
 		void apply() override;
 		void unapply() override;

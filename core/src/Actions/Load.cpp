@@ -6,15 +6,6 @@
 namespace HMP::Actions
 {
 
-	Load::~Load()
-	{
-		if (m_otherRoot)
-		{
-			m_otherRoot->children().detachAll(true);
-			delete m_otherRoot;
-		}
-	}
-
 	void Load::apply()
 	{
 		std::swap(m_otherRoot, root());

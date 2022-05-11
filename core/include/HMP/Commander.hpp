@@ -43,8 +43,8 @@ namespace HMP
 			Meshing::Mesher& mesher();
 			const Meshing::Mesher& mesher() const;
 
+			Dag::NodeHandle<Dag::Element>& root();
 			const Dag::Element* root() const;
-			Dag::Element*& root();
 
 			virtual void apply() = 0;
 			virtual void unapply() = 0;

@@ -19,7 +19,8 @@ namespace HMP::Dag
 			[this](auto && ..._args) { return onChildAttach(_args...); },
 			[this](auto && ..._args) { return onChildDetach(_args...); },
 			[this](auto && ..._args) { return onChildrenDetachAll(_args...); }
-	}
+	},
+		m_handles{ 0 }
 	{}
 
 	void assertSync(bool _condition)
@@ -40,7 +41,7 @@ namespace HMP::Dag
 			for (Node& next : node.forward(_descending))
 			{
 				assertSync(next.back(_descending).data().remove(node));
-				if (next.back(_descending).empty())
+				if (next.back(_descending).empty() && !next.m_handles)
 				{
 					_dangling.push(&next);
 				}
