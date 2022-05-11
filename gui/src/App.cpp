@@ -93,8 +93,9 @@ namespace HMP::Gui
 			{
 				m_mesher.faceMarkerSet().add(*m_mouse.element, m_mouse.faceOffset);
 			}
-			m_mesher.updateMesh(true);
+			m_mesher.updateMeshMarkers();
 		}
+		updateMove();
 	}
 
 	void App::updateDagViewer()
@@ -104,6 +105,18 @@ namespace HMP::Gui
 			m_dagViewer.layout = Dag::createLayout(*m_project.root());
 		}
 		m_dagViewer.resetView();
+	}
+
+	void App::updateMove()
+	{
+		if (m_move.element)
+		{
+			const Id pid{ m_mesher.elementToPid(*m_move.element) };
+			const Id vid{ m_mesh.poly_vert_id(pid, m_move.vertOffset) };
+			m_mesher.moveVert(vid, m_mouse.worldPosition);
+			m_canvas.refit_scene();
+			m_mesher.updateMesh();
+		}
 	}
 
 	// Events
@@ -277,7 +290,6 @@ namespace HMP::Gui
 		{
 			if (m_move.element && m_mesher.has(*m_move.element))
 			{
-				// FIXME move in plane instead of using world_mouse_pos
 				m_commander.apply(*new Actions::MoveVert{ *m_move.element, m_move.vertOffset, m_mouse.worldPosition });
 				m_move.element = nullptr;
 				m_canvas.refit_scene();
@@ -286,11 +298,19 @@ namespace HMP::Gui
 			{
 				m_move.element = m_mouse.element;
 				m_move.vertOffset = m_mouse.vertOffset;
+				const Id pid{ m_mesher.elementToPid(*m_move.element) };
+				const Id vid{ m_mesh.poly_vert_id(pid, m_move.vertOffset) };
+				m_move.startPosition = m_mesh.vert(vid);
 			}
 		}
 		else
 		{
+			const Id pid{ m_mesher.elementToPid(*m_move.element) };
+			const Id vid{ m_mesh.poly_vert_id(pid, m_move.vertOffset) };
+			m_mesher.moveVert(vid, m_move.startPosition);
 			m_move.element = nullptr;
+			m_canvas.refit_scene();
+			m_mesher.updateMesh();
 		}
 	}
 

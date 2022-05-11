@@ -30,6 +30,7 @@ namespace HMP::Gui
 		{
 			HMP::Dag::Element* element{};
 			Id vertOffset{};
+			Vec startPosition{};
 		} m_move;
 
 		struct
@@ -53,6 +54,7 @@ namespace HMP::Gui
 
 		void updateMouse();
 		void updateDagViewer();
+		void updateMove();
 
 		void onCameraChange();
 		bool onKeyPress(int _key, int _modifiers);

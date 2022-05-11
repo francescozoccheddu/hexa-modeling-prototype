@@ -21,13 +21,18 @@ namespace HMP::Meshing
 
 
 	Mesher::PolyMarkerSet::PolyMarkerSet(Mesher& _mesher)
-		: m_mesher{ _mesher }, m_data{}, Internal::PolyMarkerIterable{ m_data }
+		: m_mesher{ _mesher }, m_data{}, Internal::PolyMarkerIterable{ m_data }, m_dirty{ false }
 	{}
 
 	void Mesher::PolyMarkerSet::mark(const Dag::Element& _element, bool _marked)
 	{
 		const Id pid{ m_mesher.elementToPid(_element) };
-		m_mesher.m_mesh.poly_data(pid).flags[cinolib::MARKED] = _marked;
+		std::bitset<8>& flags{ m_mesher.m_mesh.poly_data(pid).flags };
+		if (flags[cinolib::MARKED] != _marked)
+		{
+			flags[cinolib::MARKED] = _marked;
+			m_dirty = true;
+		}
 	}
 
 	bool Mesher::PolyMarkerSet::has(const Dag::Element& _element) const
@@ -67,14 +72,19 @@ namespace HMP::Meshing
 	}
 
 	Mesher::FaceMarkerSet::FaceMarkerSet(Mesher& _mesher)
-		: m_mesher{ _mesher }, m_data{}, Internal::FaceMarkerIterable{ m_data }
+		: m_mesher{ _mesher }, m_data{}, Internal::FaceMarkerIterable{ m_data }, m_dirty{ false }
 	{}
 
 	void Mesher::FaceMarkerSet::mark(const Dag::Element& _element, Id _faceOffset, bool _marked)
 	{
 		const Id pid{ m_mesher.elementToPid(_element) };
 		const Id fid{ m_mesher.m_mesh.poly_face_id(pid, _faceOffset) };
-		m_mesher.m_mesh.face_data(fid).flags[cinolib::MARKED] = _marked;
+		std::bitset<8>& flags{ m_mesher.m_mesh.face_data(fid).flags };
+		if (flags[cinolib::MARKED] != _marked)
+		{
+			flags[cinolib::MARKED] = _marked;
+			m_dirty = true;
+		}
 	}
 
 	bool Mesher::FaceMarkerSet::has(const Dag::Element& _element, Id _faceOffset) const
@@ -146,13 +156,14 @@ namespace HMP::Meshing
 		const Id vid{ getVert(_vert) };
 		if (vid == noId)
 		{
+			m_dirty = true;
 			return m_mesh.vert_add(_vert);
 		}
 		return vid;
 	}
 
 	Mesher::Mesher()
-		: m_mesh(), m_elementToPid{}, Internal::ElementToPidIterable{ m_elementToPid }, m_polyMarkerSet{ *this }, m_faceMarkerSet{ *this }
+		: m_mesh(), m_elementToPid{}, Internal::ElementToPidIterable{ m_elementToPid }, m_polyMarkerSet{ *this }, m_faceMarkerSet{ *this }, m_dirty{ false }
 	{
 		m_mesh.show_mesh_flat();
 		m_mesh.marked_face_color = markedFaceColor;
@@ -210,6 +221,7 @@ namespace HMP::Meshing
 		m_mesh.poly_data(pid).m_element = &_element;
 		m_mesh.poly_data(pid).color = polyColor;
 		m_elementToPid[&_element] = pid;
+		m_dirty = true;
 	}
 
 	void Mesher::remove(Dag::Element& _element)
@@ -227,6 +239,7 @@ namespace HMP::Meshing
 		{
 			m_faceMarkerSet.m_data.erase({ &_element, o });
 		}
+		m_dirty = true;
 	}
 
 	void Mesher::moveVert(Id _vid, const Vec& _position)
@@ -236,15 +249,20 @@ namespace HMP::Meshing
 		{
 			throw std::logic_error{ "move will result in merge" };
 		}
-		m_mesh.vert(_vid) = _position;
-		for (const Id pid : m_mesh.adj_v2p(_vid))
+		if (m_mesh.vert(_vid) != _position)
 		{
-			pidToElement(pid).vertices()[m_mesh.poly_vert_offset(pid, _vid)] = _position;
+			m_mesh.vert(_vid) = _position;
+			for (const Id pid : m_mesh.adj_v2p(_vid))
+			{
+				pidToElement(pid).vertices()[m_mesh.poly_vert_offset(pid, _vid)] = _position;
+			}
+			m_dirty = true;
 		}
 	}
 
 	void Mesher::clear()
 	{
+		m_dirty = m_mesh.num_polys();
 		m_mesh.clear();
 		m_elementToPid.clear();
 		m_polyMarkerSet.m_data.clear();
@@ -271,17 +289,24 @@ namespace HMP::Meshing
 		return m_faceMarkerSet;
 	}
 
-	void Mesher::updateMesh(bool _markersOnly)
+	void Mesher::updateMesh()
 	{
-		if (_markersOnly)
+		if (m_dirty)
 		{
-			m_mesh.updateGL_marked();
-		}
-		else
-		{
-			m_mesh.updateGL();
+			//m_mesh.updateGL_in();
+			m_mesh.updateGL_out();
+			updateMeshMarkers();
+			m_dirty = false;
 		}
 	}
 
+	void Mesher::updateMeshMarkers()
+	{
+		if (m_dirty || m_polyMarkerSet.m_dirty || m_faceMarkerSet.m_dirty)
+		{
+			m_mesh.updateGL_marked();
+			m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = false;
+		}
+	}
 
 }

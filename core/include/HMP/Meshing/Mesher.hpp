@@ -83,6 +83,7 @@ namespace HMP::Meshing
 			friend class Mesher;
 
 			Mesher& m_mesher;
+			bool m_dirty;
 			std::unordered_set<const Dag::Element*> m_data;
 
 			PolyMarkerSet(Mesher& _mesher);
@@ -106,6 +107,7 @@ namespace HMP::Meshing
 			friend class Mesher;
 
 			Mesher& m_mesher;
+			bool m_dirty;
 			std::unordered_set < std::pair<const Dag::Element*, Id>, Internal::FaceMarkerHasher> m_data;
 
 			FaceMarkerSet(Mesher& _mesher);
@@ -129,6 +131,7 @@ namespace HMP::Meshing
 		std::unordered_map<Dag::Element*, Id> m_elementToPid;
 		FaceMarkerSet m_faceMarkerSet;
 		PolyMarkerSet m_polyMarkerSet;
+		bool m_dirty;
 
 		Id getOrAddVert(const Vec& _vert);
 
@@ -154,7 +157,8 @@ namespace HMP::Meshing
 		FaceMarkerSet& faceMarkerSet();
 		const FaceMarkerSet& faceMarkerSet() const;
 
-		void updateMesh(bool _markersOnly=false);
+		void updateMesh();
+		void updateMeshMarkers();
 
 	};
 
