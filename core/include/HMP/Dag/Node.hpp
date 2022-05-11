@@ -54,6 +54,7 @@ namespace HMP::Dag
 	protected:
 
 		Node(EType _type);
+		virtual ~Node();
 
 		virtual void onParentAttaching(Node& _parent) const;
 		virtual void onChildAttaching(Node& _child) const;
@@ -62,8 +63,6 @@ namespace HMP::Dag
 		Internal::NodeSetHandle& childrenHandle();
 
 	public:
-
-		virtual ~Node();
 
 		EType type() const;
 
