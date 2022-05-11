@@ -169,8 +169,8 @@ namespace HMP::Gui::Dag
 
 				{
 					constexpr ImU32 gridColor{ IM_COL32(60, 60, 60, 255) };
-					const int gridLevel{ std::max(0, static_cast<int>(-std::log2(m_windowHeight_n / 2.0))) };
-					const Real gridStep_s{ n2s / ((1 << gridLevel) * 10) / m_windowHeight_n };
+					const int gridLevel{ static_cast<int>(-std::log2(m_windowHeight_n / 2.0)) };
+					const Real gridStep_s{ n2s / (std::pow(2, gridLevel) * 10) / m_windowHeight_n};
 					const Vec2 origin_ss{ sw2ss(nw2sw(nl2nw(Vec2{0,1}))) };
 					for (Real x_s{ std::fmod(origin_ss.x(), gridStep_s) }; x_s <= bottomRight_sw.x(); x_s += gridStep_s)
 					{
