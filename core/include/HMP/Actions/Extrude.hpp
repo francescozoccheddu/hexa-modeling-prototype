@@ -22,6 +22,9 @@ namespace HMP::Actions
 
 		Extrude(Dag::Element& _element, Id _forwardFaceOffset, Id _upFaceOffset);
 
+		const Dag::Element& element() const;
+		const Dag::Extrude& operation() const;
+
 	};
 
 }

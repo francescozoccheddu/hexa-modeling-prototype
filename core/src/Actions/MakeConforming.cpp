@@ -179,7 +179,7 @@ namespace HMP::Actions
 									continue;
 								}
 								Dag::Element& targetElement = mesher.pidToElement(targetPid);
-								const Id targetForwardFid{ Meshing::Utils::anyFid(mesh, targetPid, sharedEid)};
+								const Id targetForwardFid{ Meshing::Utils::anyFid(mesh, targetPid, sharedEid) };
 								const Id targetForwardFaceOffset{ mesh.poly_face_offset(targetPid, targetForwardFid) };
 								const Id targetUpFid{ Meshing::Utils::adjacentFid(mesh, targetPid, targetForwardFid, sharedEid) };
 								const Id targetUpFaceOffset{ mesh.poly_face_offset(targetPid, targetUpFid) };
@@ -211,5 +211,16 @@ namespace HMP::Actions
 	MakeConforming::MakeConforming()
 		: m_operations{}, m_prepared{ false }
 	{}
+
+	std::vector<std::pair<const Dag::Refine*, const Dag::Element*>> MakeConforming::operations() const
+	{
+		std::vector<std::pair<const Dag::Refine*, const Dag::Element*>> operations{};
+		operations.reserve(m_operations.size());
+		for (const std::pair<const Dag::Refine*, const Dag::Element*> operation : m_operations)
+		{
+			operations.push_back({operation.first, operation.second});
+		}
+		return operations;
+	}
 
 }

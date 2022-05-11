@@ -9,7 +9,7 @@
 #include <cinolib/meshes/drawable_trimesh.h>
 #include <cinolib/color.h>
 #include <cpputils/mixins/ReferenceClass.hpp>
-#include <cpputils/collections/Namer.hpp>
+#include <cpputils/collections/SetNamer.hpp>
 #include <string>
 
 namespace HMP::Gui
@@ -56,7 +56,7 @@ namespace HMP::Gui
 		Meshing::Mesher& m_mesher;
 		const Meshing::Mesher::Mesh& m_mesh;
 		Commander& m_commander;
-		cpputils::collections::Namer<const HMP::Dag::Node*> m_dagNamer;
+		cpputils::collections::SetNamer<const HMP::Dag::Node*> m_dagNamer;
 		Dag::Viewer m_dagViewer; 
 		cinolib::VolumeMeshControls<Meshing::Mesher::Mesh> m_menu;
 

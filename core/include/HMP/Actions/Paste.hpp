@@ -24,6 +24,9 @@ namespace HMP::Actions
 		
 		Paste(Dag::Element& _target, Id _targetForwardFaceOffset, Id _targetUpFaceOffset, Dag::Extrude& _source);
 
+		const Dag::Element& element() const;
+		const Dag::Extrude& operation() const;
+
 	};
 
 }

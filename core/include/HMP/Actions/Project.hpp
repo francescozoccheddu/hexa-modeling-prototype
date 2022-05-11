@@ -38,6 +38,8 @@ namespace HMP::Actions
 		Project(Trimesh&& _target);
 		Project(const Trimesh& _target);
 
+		const Trimesh& target() const;
+
 	};
 
 }

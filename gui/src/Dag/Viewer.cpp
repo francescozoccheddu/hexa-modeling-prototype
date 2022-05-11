@@ -9,6 +9,7 @@
 #include <cinolib/geometry/vec_mat_utils.h>
 #include <imgui.h>
 #include <string>
+#include <HMP/Gui/HrDescriptions.hpp>
 #include <limits>
 
 
@@ -211,7 +212,6 @@ namespace HMP::Gui::Dag
 				{
 					constexpr ImU32 textColor{ backgroundColor };
 					const Vec2 center{ ll2ss(node.center()) };
-					std::string text{};
 					switch (node.node().type())
 					{
 						case Dag::Node::EType::Element:
@@ -236,25 +236,21 @@ namespace HMP::Gui::Dag
 							switch (node.node().operation().primitive())
 							{
 								case Dag::Operation::EPrimitive::Extrude:
-									text = "E";
 									operationColor = IM_COL32(252, 109, 171, 255);
 									break;
 								case Dag::Operation::EPrimitive::Refine:
-									text = "R";
 									operationColor = IM_COL32(192, 76, 253, 255);
 									break;
 								case Dag::Operation::EPrimitive::Delete:
-									text = "D";
 									operationColor = IM_COL32(94, 43, 255, 255);
 									break;
 							}
 							drawList->AddCircleFilled(toImVec(center), nodeRadius_s, operationColor, circleSegments);
 							drawList->AddCircle(toImVec(center), nodeRadius_s, strokeColor, circleSegments);
-							text += "-";
 						}
 						break;
 					}
-					text += m_namer(&(node.node()));
+					const std::string text{ HrDescriptions::name(node.node(), m_namer)};
 					const Vec2 textSize{ toVec(ImGui::CalcTextSize(text.c_str())) / ImGui::GetFontSize() };
 					const Real maxTextSize{ std::max(textSize.x(), textSize.y()) };
 					const Real fontSize{ nodeRadius_s * 1.25 / maxTextSize };

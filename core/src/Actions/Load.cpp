@@ -19,8 +19,13 @@ namespace HMP::Actions
 	}
 
 	Load::Load(Dag::Element& _root)
-		: m_otherRoot{ &_root }
+		: m_otherRoot{ &_root }, m_newRoot{ _root }
 	{
+	}
+
+	const Dag::Element& Load::newRoot() const
+	{
+		return m_newRoot;
 	}
 
 }

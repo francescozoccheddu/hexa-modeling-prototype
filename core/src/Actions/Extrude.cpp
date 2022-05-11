@@ -33,4 +33,14 @@ namespace HMP::Actions
 		: m_element{ _element }, m_operation{ Utils::prepareExtrude(_forwardFaceOffset, _upFaceOffset) }
 	{}
 
+	const Dag::Element& Extrude::element() const
+	{
+		return m_element;
+	}
+
+	const Dag::Extrude& Extrude::operation() const
+	{
+		return *m_operation;
+	}
+
 }

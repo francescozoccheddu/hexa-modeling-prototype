@@ -3,6 +3,7 @@
 add_executable (gui 
     "src/main.cpp" 
     "src/App.cpp"
+    "src/HrDescriptions.cpp"
     "src/Dag/createLayout.cpp"
     "src/Dag/Layout.cpp"
     "src/Dag/Viewer.cpp"

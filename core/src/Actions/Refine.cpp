@@ -29,4 +29,14 @@ namespace HMP::Actions
 		: m_element{ _element }, m_operation{ Utils::prepareRefine(_forwardFaceOffset, _upFaceOffset, _scheme) }
 	{}
 
+	const Dag::Element& Refine::element() const
+	{
+		return m_element;
+	}
+
+	const Dag::Refine& Refine::operation() const
+	{
+		return *m_operation;
+	}
+
 }

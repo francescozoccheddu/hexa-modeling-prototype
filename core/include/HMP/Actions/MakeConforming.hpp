@@ -26,6 +26,8 @@ namespace HMP::Actions
 
 		MakeConforming();
 
+		std::vector<std::pair<const Dag::Refine*, const Dag::Element*>> operations() const;
+
 	};
 
 }

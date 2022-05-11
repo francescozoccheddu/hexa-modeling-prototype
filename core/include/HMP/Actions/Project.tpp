@@ -85,4 +85,10 @@ namespace HMP::Actions
 		: m_target{ _target }, m_vertMoves{}, m_prepared{ false }
 	{}
 
+	template<typename TMeshAttributes, typename TVertAttributes, typename TEdgeAttributes, typename TPolyAttributes>
+	const typename Project<TMeshAttributes, TVertAttributes, TEdgeAttributes, TPolyAttributes>::Trimesh& Project<TMeshAttributes, TVertAttributes, TEdgeAttributes, TPolyAttributes>::target() const
+	{
+		return m_target;
+	}
+
 }

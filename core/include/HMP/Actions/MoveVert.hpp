@@ -13,6 +13,7 @@ namespace HMP::Actions
 
 		Dag::Element& m_element;
 		const Id m_vertOffset;
+		const Vec m_position;
 		Vec m_otherPosition;
 
 		void apply() override;
@@ -21,6 +22,10 @@ namespace HMP::Actions
 	public:
 
 		MoveVert(Dag::Element& _element, Id _vertOffset, const Vec& _position);
+
+		const Dag::Element& element() const;
+		Id vertOffset() const;
+		const Vec& position() const;
 
 	};
 
