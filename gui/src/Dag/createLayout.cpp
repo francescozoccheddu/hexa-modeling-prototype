@@ -23,20 +23,25 @@ namespace HMP::Gui::Dag
 	constexpr Real c_lineThickness{ c_nodeRadius / 20.0 };
 	constexpr Real c_nodeDistance{ c_nodeRadius + 0.25 };
 
-	std::unordered_map<const Dag::Node*, ogdf::node> populateGraph(const Dag::Node& _dag, ogdf::Graph& _graph)
+	std::vector<std::pair<const Dag::Node*, ogdf::node>> populateGraph(const Dag::Node& _dag, ogdf::Graph& _graph)
 	{
+		std::vector< std::pair<const Dag::Node*, ogdf::node>> dagToGraphNodePairs{};
 		std::unordered_map<const Dag::Node*, ogdf::node> dagToGraphNodeMap{};
 		// nodes
 		{
 			const std::vector<const Dag::Node*> dagNodes{ Dag::Utils::descendants(_dag) };
+			dagToGraphNodePairs.reserve(dagNodes.size());
+			dagToGraphNodeMap.reserve(dagNodes.size());
 			for (const Dag::Node* dagNode : dagNodes)
 			{
-				dagToGraphNodeMap.emplace(dagNode, _graph.newNode());
+				ogdf::node graphNode{ _graph.newNode() };
+				dagToGraphNodePairs.push_back({ dagNode, graphNode });
+				dagToGraphNodeMap.insert({ dagNode, graphNode });
 			}
 		}
 		// edges
 		{
-			for (auto const& [dagNode, graphNode] : dagToGraphNodeMap)
+			for (auto const& [dagNode, graphNode] : dagToGraphNodePairs)
 			{
 				for (const Dag::Node& dagParent : dagNode->parents())
 				{
@@ -46,7 +51,7 @@ namespace HMP::Gui::Dag
 			}
 		}
 
-		return dagToGraphNodeMap;
+		return dagToGraphNodePairs;
 	}
 
 	ogdf::GraphAttributes layoutGraph(const ogdf::Graph& _graph)
@@ -74,11 +79,11 @@ namespace HMP::Gui::Dag
 		return graphAttributes;
 	}
 
-	std::vector<Layout::Node> createLayoutNodes(const std::unordered_map<const Dag::Node*, ogdf::node>& _dagToGraphNodeMap, const ogdf::GraphAttributes& _graphAttributes)
+	std::vector<Layout::Node> createLayoutNodes(const std::vector<std::pair<const Dag::Node*, ogdf::node>>& _dagToGraphNodePairs, const ogdf::GraphAttributes& _graphAttributes)
 	{
 		std::vector<Layout::Node> nodes{ };
 		nodes.reserve(static_cast<size_t>(_graphAttributes.constGraph().numberOfNodes()));
-		for (auto const& [dagNode, graphNode] : _dagToGraphNodeMap)
+		for (auto const& [dagNode, graphNode] : _dagToGraphNodePairs)
 		{
 			const Vec2 center{ _graphAttributes.x(graphNode), -_graphAttributes.y(graphNode) };
 			nodes.push_back(Layout::Node{ center, *dagNode });
@@ -116,9 +121,9 @@ namespace HMP::Gui::Dag
 	{
 		ogdf::Logger::globalLogLevel(ogdf::Logger::Level::Alarm);
 		ogdf::Graph graph{};
-		const std::unordered_map<const Dag::Node*, ogdf::node> dagToGraphNodeMap{ populateGraph(_dag, graph) };
+		const std::vector<std::pair<const Dag::Node*, ogdf::node>> dagToGraphNodePairs{ populateGraph(_dag, graph) };
 		const ogdf::GraphAttributes graphAttributes{ layoutGraph(graph) };
-		std::vector<Layout::Node> nodes{ createLayoutNodes(dagToGraphNodeMap, graphAttributes) };
+		std::vector<Layout::Node> nodes{ createLayoutNodes(dagToGraphNodePairs, graphAttributes) };
 		std::vector<std::pair<Vec2, Vec2>> lines{ createLayoutLines(graphAttributes) };
 		return Layout{ std::move(nodes), std::move(lines),  c_nodeRadius, c_lineThickness };
 	}

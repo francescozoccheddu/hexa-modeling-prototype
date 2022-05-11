@@ -257,7 +257,7 @@ namespace HMP::Gui::Dag
 					text += m_namer(&(node.node()));
 					const Vec2 textSize{ toVec(ImGui::CalcTextSize(text.c_str())) / ImGui::GetFontSize() };
 					const Real maxTextSize{ std::max(textSize.x(), textSize.y()) };
-					const Real fontSize{ nodeRadius_s * 1.5 / maxTextSize };
+					const Real fontSize{ nodeRadius_s * 1.25 / maxTextSize };
 					drawList->AddText(
 						ImGui::GetFont(),
 						static_cast<float>(fontSize),
