@@ -9,6 +9,7 @@ add_library (core STATIC
     "src/Actions/MoveVert.cpp"
     "src/Actions/Paste.cpp"
     "src/Actions/Refine.cpp"
+    "src/Actions/Rotate.cpp"
     "src/Actions/Utils.cpp"
     "src/Dag/Delete.cpp"
     "src/Dag/Element.cpp"

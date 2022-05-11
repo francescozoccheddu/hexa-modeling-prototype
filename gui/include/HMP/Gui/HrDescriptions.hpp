@@ -12,9 +12,10 @@
 #include <HMP/Actions/Delete.hpp>
 #include <HMP/Actions/Extrude.hpp>
 #include <HMP/Actions/MakeConforming.hpp>
+#include <HMP/Actions/Paste.hpp>
 #include <HMP/Actions/Project.hpp>
 #include <HMP/Actions/Refine.hpp>
-#include <HMP/Actions/Paste.hpp>
+#include <HMP/Actions/Rotate.hpp>
 #include <cpputils/collections/Namer.hpp>
 #include <string>
 
@@ -44,6 +45,7 @@ namespace HMP::Gui::HrDescriptions
 	std::string describe(const Actions::Paste& _action, DagNamer& _dagNamer);
 	std::string describe(const ProjectAction& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::Refine& _action, DagNamer& _dagNamer);
+	std::string describe(const Actions::Rotate& _action, DagNamer& _dagNamer);
 	std::string describe(const Commander::Action& _action, DagNamer& _dagNamer);
 
 }

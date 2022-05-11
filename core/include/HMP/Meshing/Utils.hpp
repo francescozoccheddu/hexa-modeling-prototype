@@ -8,6 +8,8 @@
 namespace HMP::Meshing::Utils
 {
 
+	Id rotateEid(const Meshing::Mesher::Mesh& _mesh, Id _fid, Id _eid, int _rotation);
+
 	Id anyFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _eid);
 	Id adjacentFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _eid);
 	
