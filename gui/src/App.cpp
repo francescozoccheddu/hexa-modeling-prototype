@@ -467,6 +467,7 @@ namespace HMP::Gui
 			{
 				m_commander.apply(*new Actions::Paste{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset, static_cast<HMP::Dag::Extrude&>(m_copy.element->parents().single()) });
 				m_canvas.refit_scene();
+				updateDagViewer();
 			}
 		}
 	}
@@ -501,6 +502,7 @@ namespace HMP::Gui
 		if (m_mouse.element && m_mouse.element->parents().size() == 1 && m_mouse.element->parents().single().primitive() == HMP::Dag::Operation::EPrimitive::Extrude)
 		{
 			m_commander.apply(*new Actions::Rotate{ static_cast<HMP::Dag::Extrude&>(m_mouse.element->parents().single()) });
+			m_mouse.element = nullptr;
 			m_canvas.refit_scene();
 		}
 	}
