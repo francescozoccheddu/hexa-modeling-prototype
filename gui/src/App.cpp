@@ -40,6 +40,9 @@ namespace HMP::Gui
 		m_commander.apply(*new Actions::Clear());
 		m_commander.applied().clear();
 
+		m_commander.applied().limit(100);
+		m_commander.unapplied().limit(100);
+
 		m_canvas.push(&m_mesh);
 		m_canvas.push(&m_menu);
 		m_canvas.push(&m_dagViewer);
@@ -324,6 +327,7 @@ namespace HMP::Gui
 
 	void App::onDrawControls()
 	{
+		// show names
 		{
 			bool showNames{ m_options.showNames };
 			ImGui::Checkbox("Show element names", &showNames);
@@ -333,29 +337,54 @@ namespace HMP::Gui
 				updateMarkers();
 			}
 		}
+		// reset names
 		{
-			int historyLimit{ static_cast<int>(m_commander.applied().limit()) };
-			ImGui::SliderInt("History limit", &historyLimit, 3, 100, "%d actions", ImGuiSliderFlags_AlwaysClamp);
-			m_commander.applied().limit(historyLimit);
-			m_commander.unapplied().limit(historyLimit);
+			ImGui::SameLine();
+			if (ImGui::Button("Reset names"))
+			{
+				m_dagNamer.reset();
+				updateMarkers();
+			}
 		}
+		// history
+		if (ImGui::TreeNode("History"))
 		{
-			if (ImGui::TreeNode("History"))
+			// undo count
+			{
+				int limit{ static_cast<int>(m_commander.applied().limit()) };
+				ImGui::SliderInt("Undo count", &limit, 0, 100, "%d actions", ImGuiSliderFlags_AlwaysClamp);
+				m_commander.unapplied().limit(limit);
+			}
+			// redo count
+			{
+				int limit{ static_cast<int>(m_commander.applied().limit()) };
+				ImGui::SliderInt("Redo count", &limit, 0, 100, "%d actions", ImGuiSliderFlags_AlwaysClamp);
+				m_commander.unapplied().limit(limit);
+			}
+			// action list
 			{
 				constexpr auto getActionText{ [](const Commander::Action& _action) {
 					return "action";
 				} };
 
+				ImGui::Text("Actions list:");
+
+				if (m_commander.applied().empty() && m_commander.unapplied().empty())
+				{
+					ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "empty");
+				}
+
 				for (const Commander::Action& action : m_commander.unapplied())
 				{
 					ImGui::TextColored(ImVec4(0.75f, 0.2f, 0.2f, 1.0f), getActionText(action));
 				}
+
 				for (const Commander::Action& action : m_commander.applied())
 				{
 					ImGui::TextColored(ImVec4(0.2f, 0.75f, 0.2f, 1.0f), getActionText(action));
 				}
-				ImGui::TreePop();
 			}
+			ImGui::TreePop();
 		}
 	}
 
