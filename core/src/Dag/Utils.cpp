@@ -203,9 +203,8 @@ namespace HMP::Dag::Utils
 			{
 				for (Vec& vert : node->element().vertices())
 				{
-					Vec4 homoVert{ vert.x(),vert.y(), vert.z(), 1.0 };
-					homoVert = _transform * homoVert;
-					homoVert /= homoVert.w();
+					Vec4 homoVert = _transform * vert.add_coord(1.0);
+					homoVert /= homoVert[3];
 					vert = homoVert.rem_coord();
 				}
 			}

@@ -70,6 +70,7 @@ namespace HMP::Gui
 		bool onKeyPress(int _key, int _modifiers);
 		bool onMouseMove(double _x, double _y);
 		void onDrawControls();
+		void onDrawCustomGui();
 
 		void onMove();
 		void onExtrude();

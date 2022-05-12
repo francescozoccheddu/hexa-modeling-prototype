@@ -27,6 +27,7 @@
 #include <HMP/Utils/Serialization.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Gui/HrDescriptions.hpp>
+#include <HMP/Gui/Widgets.hpp>
 #include <sstream>
 
 namespace HMP::Gui
@@ -56,6 +57,7 @@ namespace HMP::Gui
 		m_canvas.callback_key_pressed = [this](auto && ..._args) { return onKeyPress(_args...); };
 		m_canvas.callback_app_controls = [this](auto && ..._args) { return onDrawControls(_args ...); };
 		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChange(_args...); };
+		m_canvas.callback_custom_gui = [this](auto && ..._args) { return onDrawCustomGui(_args...); };
 
 		updateDagViewer();
 	}
@@ -101,7 +103,7 @@ namespace HMP::Gui
 	void App::updateMouse()
 	{
 		HMP::Dag::Element* const lastElement{ m_mouse.element };
-		const Id lastFaceOffset{ m_mouse.faceOffset }, lastUpFaceOffset{ m_mouse.upFaceOffset };
+		const Id lastFaceOffset{ m_mouse.faceOffset }, lastUpFaceOffset{ m_mouse.upFaceOffset }, lastVertOffset{ m_mouse.vertOffset };
 		m_mouse.element = nullptr;
 		m_mouse.faceOffset = m_mouse.vertOffset = noId;
 		if (m_canvas.unproject(m_mouse.position, m_mouse.worldPosition))
@@ -138,7 +140,7 @@ namespace HMP::Gui
 			}
 			m_mesher.updateMeshMarkers();
 		}
-		if (m_mouse.element != lastElement || m_mouse.faceOffset != lastFaceOffset || m_mouse.upFaceOffset != lastUpFaceOffset)
+		if (m_mouse.element != lastElement || m_mouse.faceOffset != lastFaceOffset || m_mouse.upFaceOffset != lastUpFaceOffset || m_mouse.vertOffset != lastVertOffset)
 		{
 			updateMarkers();
 		}
@@ -339,7 +341,7 @@ namespace HMP::Gui
 
 	void App::onDrawControls()
 	{
-		// show names
+		// names
 		{
 			bool showNames{ m_options.showNames };
 			ImGui::Checkbox("Show element names", &showNames);
@@ -348,9 +350,6 @@ namespace HMP::Gui
 				m_options.showNames = showNames;
 				updateMarkers();
 			}
-		}
-		// reset names
-		{
 			ImGui::SameLine();
 			if (ImGui::Button("Reset names"))
 			{
@@ -359,46 +358,42 @@ namespace HMP::Gui
 			}
 		}
 		ImGui::Spacing();
-		// undo/redo count
-		constexpr auto actionsControl{ [](Commander::Stack& _stack, const std::string& _name) {
-			int limit{ static_cast<int>(_stack.limit()) };
-			ImGui::SliderInt((_name + " limit").c_str(), &limit, 0, 100, "Max %d actions", ImGuiSliderFlags_AlwaysClamp);
-			_stack.limit(limit);
-			if (!_stack.empty())
-			{
-				ImGui::SameLine();
-				if (ImGui::Button((std::string{ "Clear " } + std::to_string(_stack.size()) + " actions").c_str()))
-				{
-					_stack.clear();
-				}
-			}
-		} };
-		actionsControl(m_commander.applied(), "Undo");
-		actionsControl(m_commander.unapplied(), "Redo");
-		ImGui::Spacing();
-		// history
-		if (ImGui::TreeNode("History"))
+		// commander
+		Widgets::drawCommanderControls(m_commander, m_dagNamer);
+	}
+
+	void App::onDrawCustomGui()
+	{
+		Widgets::drawAxes(m_canvas.camera);
+		if (m_mouse.element)
 		{
-
-			if (m_commander.applied().empty() && m_commander.unapplied().empty())
-			{
-				ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "empty");
-			}
-
-			auto it{ m_commander.unapplied().rbegin() };
-			const auto end{ m_commander.unapplied().rend() };
-			while (it != end)
-			{
-				ImGui::TextColored(ImVec4(0.75f, 0.2f, 0.2f, 1.0f), HrDescriptions::describe(*it, m_dagNamer).c_str());
-				++it;
-			}
-
-			for (const Commander::Action& action : m_commander.applied())
-			{
-				ImGui::TextColored(ImVec4(0.2f, 0.75f, 0.2f, 1.0f), HrDescriptions::describe(action, m_dagNamer).c_str());
-			}
-
-			ImGui::TreePop();
+			std::ostringstream stream{};
+			stream
+				<< HrDescriptions::name(*m_mouse.element, m_dagNamer)
+				<< " ("
+				<< "faces " << HrDescriptions::describeFaces(m_mouse.faceOffset, m_mouse.upFaceOffset)
+				<< ", vert " << m_mouse.vertOffset
+				<< ")";
+			ImGui::Text(stream.str().c_str());
+		}
+		if (m_copy.element)
+		{
+			std::ostringstream stream{};
+			stream
+				<< "Copied"
+				<< " " << HrDescriptions::name(*m_copy.element, m_dagNamer);
+			ImGui::Text(stream.str().c_str());
+		}
+		if (m_move.element)
+		{
+			std::ostringstream stream{};
+			stream
+				<< "Moving"
+				<< " vert " << m_move.vertOffset
+				<< " of " << HrDescriptions::name(*m_move.element, m_dagNamer)
+				<< " from " << HrDescriptions::describe(m_move.startPosition)
+				<< " to " << HrDescriptions::describe(m_mouse.worldPosition);
+			ImGui::Text(stream.str().c_str());
 		}
 	}
 
@@ -600,6 +595,7 @@ namespace HMP::Gui
 			m_commander.undo();
 			updateDagViewer();
 			m_canvas.refit_scene();
+			updateMarkers();
 		}
 		else
 		{
@@ -614,6 +610,7 @@ namespace HMP::Gui
 			m_commander.redo();
 			updateDagViewer();
 			m_canvas.refit_scene();
+			updateMarkers();
 		}
 		{
 			std::cout << "cannot redo" << std::endl;
