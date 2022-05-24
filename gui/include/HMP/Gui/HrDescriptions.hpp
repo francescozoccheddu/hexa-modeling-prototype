@@ -16,6 +16,7 @@
 #include <HMP/Actions/Project.hpp>
 #include <HMP/Actions/Refine.hpp>
 #include <HMP/Actions/Rotate.hpp>
+#include <HMP/Actions/Transform.hpp>
 #include <cpputils/collections/Namer.hpp>
 #include <string>
 
@@ -28,6 +29,7 @@ namespace HMP::Gui::HrDescriptions
 	std::string name(const HMP::Dag::Node& _node, DagNamer& _dagNamer);
 	std::string describe(Meshing::ERefinementScheme _scheme);
 	std::string describe(const Vec& _vec);
+	std::string describe(const Mat4& _mat);
 	std::string describeFaces(Id _forwardFaceOffset, Id _upFaceOffset);
 	std::string describe(const HMP::Dag::Delete& _operation, const HMP::Dag::Element& _element, DagNamer& _dagNamer);
 	std::string describe(const HMP::Dag::Extrude& _operation, const HMP::Dag::Element& _element, DagNamer& _dagNamer);
@@ -46,6 +48,7 @@ namespace HMP::Gui::HrDescriptions
 	std::string describe(const ProjectAction& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::Refine& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::Rotate& _action, DagNamer& _dagNamer);
+	std::string describe(const Actions::Transform& _action, DagNamer& _dagNamer);
 	std::string describe(const Commander::Action& _action, DagNamer& _dagNamer);
 
 }

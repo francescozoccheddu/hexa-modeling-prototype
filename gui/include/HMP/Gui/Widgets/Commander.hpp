@@ -4,11 +4,12 @@
 #include <HMP/Commander.hpp>
 #include <HMP/Gui/HrDescriptions.hpp>
 #include <cinolib/gl/side_bar_item.h>
+#include <cpputils/mixins/ReferenceClass.hpp>
 
 namespace HMP::Gui::Widgets
 {
 
-	class Commander final : public cinolib::SideBarItem
+	class Commander final : public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
 	{
 
 	private:
