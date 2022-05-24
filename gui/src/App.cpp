@@ -24,6 +24,7 @@
 #include <HMP/Actions/Refine.hpp>
 #include <HMP/Actions/Rotate.hpp>
 #include <HMP/Actions/Paste.hpp>
+#include <HMP/Actions/Transform.hpp>
 #include <HMP/Utils/Serialization.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Gui/HrDescriptions.hpp>
@@ -545,11 +546,8 @@ namespace HMP::Gui
 
 	void App::onApplyTargetTransform(const Mat4& _transform)
 	{
-		Meshing::Utils::removeLeafs(m_mesher, *m_project.root());
-		HMP::Dag::Utils::transform(*m_project.root(), _transform);
-		Meshing::Utils::addLeafs(m_mesher, *m_project.root());
+		m_commander.apply(*new Actions::Transform{ _transform });
 		updateMarkers();
-		m_mesher.updateMesh();
 		m_canvas.reset_camera();
 	}
 

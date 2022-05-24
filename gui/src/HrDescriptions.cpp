@@ -57,6 +57,33 @@ namespace HMP::Gui::HrDescriptions
 		return stream.str();
 	}
 
+	std::string describe(const Mat4& _mat)
+	{
+		std::ostringstream stream{};
+		stream
+			<< std::fixed << std::setprecision(3)
+			<< "{";
+		for (std::size_t r{ 0 }; r < 4; r++)
+		{
+			if (r)
+			{
+				stream << ",";
+			}
+			stream << "{";
+			for (std::size_t c{ 0 }; c < 4; c++)
+			{
+				if (c)
+				{
+					stream << ",";
+				}
+				stream << _mat(r, c);
+			}
+			stream << "}";
+		}
+		stream << "}";
+		return stream.str();
+	}
+
 	std::string describeFaces(Id _forwardFaceOffset, Id _upFaceOffset)
 	{
 		std::ostringstream stream{};
@@ -217,6 +244,15 @@ namespace HMP::Gui::HrDescriptions
 		return stream.str();
 	}
 
+	std::string describe(const Actions::Transform& _action, DagNamer& _dagNamer)
+	{
+		std::ostringstream stream{};
+		stream
+			<< "Transform"
+			<< " " << describe(_action.transform());
+		return stream.str();
+	}
+
 	std::string describe(const Commander::Action& _action, DagNamer& _dagNamer)
 	{
 		if (const Actions::Clear* action{ dynamic_cast<const Actions::Clear*>(&_action) }; action)
@@ -256,6 +292,10 @@ namespace HMP::Gui::HrDescriptions
 			return describe(*action, _dagNamer);
 		}
 		if (const Actions::Rotate* action{ dynamic_cast<const Actions::Rotate*>(&_action) }; action)
+		{
+			return describe(*action, _dagNamer);
+		}
+		if (const Actions::Transform* action{ dynamic_cast<const Actions::Transform*>(&_action) }; action)
 		{
 			return describe(*action, _dagNamer);
 		}

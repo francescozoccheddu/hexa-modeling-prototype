@@ -10,11 +10,12 @@
 #include <cinolib/geometry/aabb.h>
 #include <cinolib/color.h>
 #include <string>
+#include <cpputils/mixins/ReferenceClass.hpp>
 
 namespace HMP::Gui::Widgets
 {
 
-	class Target final : public cinolib::SideBarItem
+	class Target final : public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
 	{
 
 	private:
