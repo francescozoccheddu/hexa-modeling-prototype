@@ -292,6 +292,7 @@ namespace HMP::Meshing
 		if (m_dirty)
 		{
 			//m_mesh.updateGL_in();
+			m_mesh.update_bbox();
 			m_mesh.updateGL_out();
 			updateMeshMarkers();
 			m_dirty = false;
