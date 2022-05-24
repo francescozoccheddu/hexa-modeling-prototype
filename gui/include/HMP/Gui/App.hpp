@@ -6,7 +6,6 @@
 #include <HMP/Dag/Extrude.hpp>
 #include <cinolib/gl/glcanvas.h>
 #include <cinolib/gl/volume_mesh_controls.h>
-#include <cinolib/meshes/drawable_trimesh.h>
 #include <cinolib/color.h>
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <cpputils/collections/SetNamer.hpp>
@@ -45,12 +44,6 @@ namespace HMP::Gui
 
 		struct
 		{
-			cinolib::DrawableTrimesh<>* mesh{ nullptr };
-			std::string filename{};
-		} m_target;
-
-		struct
-		{
 			bool showNames{ false };
 		} m_options;
 
@@ -64,6 +57,7 @@ namespace HMP::Gui
 		cinolib::VolumeMeshControls<Meshing::Mesher::Mesh> m_menu;
 		Widgets::Commander m_commanderWidget;
 		Widgets::Axes m_axesWidget;
+		Widgets::Target m_targetWidget;
 
 		void updateMarkers();
 

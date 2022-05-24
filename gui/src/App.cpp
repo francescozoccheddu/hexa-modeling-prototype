@@ -36,35 +36,6 @@ namespace HMP::Gui
 
 	// Actions
 
-	App::App() :
-		m_project{}, m_canvas{}, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() },
-		m_dagNamer{}, m_dagViewer{ m_mesher, m_dagNamer }, m_menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh controls" },
-		m_commanderWidget{ m_commander, m_dagNamer }, m_axesWidget{ m_canvas.camera }
-	{
-		m_commander.apply(*new Actions::Clear());
-		m_commander.applied().clear();
-
-		m_commander.applied().limit(100);
-		m_commander.unapplied().limit(100);
-
-		m_canvas.push(&m_mesh);
-		m_canvas.push(&m_axesWidget);
-
-		m_canvas.push(&m_commanderWidget);
-		m_canvas.push(&m_menu);
-		m_canvas.push(&m_dagViewer);
-
-		m_canvas.background = backgroundColor;
-		m_canvas.depth_cull_markers = false;
-		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMove(_args...); };
-		m_canvas.callback_key_pressed = [this](auto && ..._args) { return onKeyPress(_args...); };
-		m_canvas.callback_app_controls = [this](auto && ..._args) { return onDrawControls(_args ...); };
-		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChange(_args...); };
-		m_canvas.callback_custom_gui = [this](auto && ..._args) { return onDrawCustomGui(_args...); };
-
-		updateDagViewer();
-	}
-
 	void App::updateMarkers()
 	{
 		static const cinolib::Color overlayColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 0.9f) };
@@ -302,15 +273,6 @@ namespace HMP::Gui
 				if (!_modifiers)
 				{
 					onToggleTargetVisibility();
-				}
-			}
-			break;
-			// project to target
-			case GLFW_KEY_P:
-			{
-				if (!_modifiers)
-				{
-					onProjectToTarget();
 				}
 			}
 			break;
@@ -558,33 +520,18 @@ namespace HMP::Gui
 
 	void App::onToggleTargetVisibility()
 	{
-		if (!m_target.mesh)
+		if (m_targetWidget.hasMesh())
 		{
-			m_target.filename = cinolib::file_dialog_open();
-			if (!m_target.filename.empty())
-			{
-				m_target.mesh = new cinolib::DrawableTrimesh<>(m_target.filename.c_str());
-				m_canvas.push(m_target.mesh);
-			}
+			m_targetWidget.visible() ^= true;
+			m_targetWidget.updateVisibility();
 		}
-		else
-		{
-			m_canvas.pop(m_target.mesh);
-			m_target.filename = "";
-			delete m_target.mesh;
-			m_target.mesh = nullptr;
-		}
-		m_canvas.refit_scene();
 	}
 
 	void App::onProjectToTarget()
 	{
-		if (m_target.mesh)
-		{
-			m_commander.apply(*new Actions::Project{ *m_target.mesh });
-			updateDagViewer();
-			m_canvas.refit_scene();
-		}
+		m_commander.apply(*new Actions::Project{ m_targetWidget.mesh() });
+		updateDagViewer();
+		m_canvas.refit_scene();
 	}
 
 	void App::onUndo()
@@ -625,7 +572,42 @@ namespace HMP::Gui
 		m_canvas.refit_scene();
 	}
 
-	// Launch
+	// launch
+
+	App::App() :
+		m_project{}, m_canvas{}, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() },
+		m_dagNamer{}, m_dagViewer{ m_mesher, m_dagNamer }, m_menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh controls" },
+		m_commanderWidget{ m_commander, m_dagNamer }, m_axesWidget{ m_canvas.camera }, m_targetWidget{ m_mesh }
+	{
+
+		m_commander.apply(*new Actions::Clear());
+		m_commander.applied().clear();
+
+		m_commander.applied().limit(100);
+		m_commander.unapplied().limit(100);
+
+		m_canvas.push(&m_mesh);
+		m_canvas.push(&m_axesWidget);
+
+		m_canvas.push(&m_commanderWidget);
+		m_canvas.push(&m_targetWidget);
+		m_canvas.push(&m_menu);
+		m_canvas.push(&m_dagViewer);
+
+		m_targetWidget.onProjectRequest() = [this](const Widgets::Target& _target) { onProjectToTarget(); };
+		m_targetWidget.onMeshLoad() = [this](const Widgets::Target& _target) { m_canvas.push(&_target.mesh(), false); };
+		m_targetWidget.onMeshClear() = [this](const Widgets::Target& _target) { m_canvas.pop(&_target.mesh()); };
+
+		m_canvas.background = backgroundColor;
+		m_canvas.depth_cull_markers = false;
+		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMove(_args...); };
+		m_canvas.callback_key_pressed = [this](auto && ..._args) { return onKeyPress(_args...); };
+		m_canvas.callback_app_controls = [this](auto && ..._args) { return onDrawControls(_args ...); };
+		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChange(_args...); };
+		m_canvas.callback_custom_gui = [this](auto && ..._args) { return onDrawCustomGui(_args...); };
+
+		updateDagViewer();
+	}
 
 	int App::launch()
 	{
