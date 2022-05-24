@@ -216,17 +216,15 @@ namespace HMP::Gui::Dag
 					{
 						case Dag::Node::EType::Element:
 						{
-							static const ImU32 elementColor{ toImCol(Meshing::Mesher::polyColor) };
-							static const ImU32 inactiveElementColor{ toImCol(cinolib::Color(Meshing::Mesher::polyColor.r * 0.75f, Meshing::Mesher::polyColor.g * 0.75f,Meshing::Mesher::polyColor.b * 0.75f, Meshing::Mesher::polyColor.a)) };
-							static const ImU32 highlightedElementColor{ toImCol(Meshing::Mesher::markedFaceColor) };
+							const ImU32 elementColor{ toImCol(m_mesher.polyColor()) };
+							const ImU32 inactiveElementColor{ toImCol(cinolib::Color(m_mesher.polyColor().r * 0.75f, m_mesher.polyColor().g * 0.75f, m_mesher.polyColor().b * 0.75f, m_mesher.polyColor().a)) };
+							const ImU32 highlightedElementColor{ toImCol(m_mesher.faceMarkerSet().color()) };
 							const Dag::Element& element{ node.node().element() };
 							const ImU32 color{ highlight == &node.node()
 								? highlightedElementColor
 								: m_mesher.has(element) ? elementColor : inactiveElementColor };
 							drawList->AddRectFilled(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), color);
 							drawList->AddRect(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), strokeColor);
-							//const Id pid{ m_mesher.elementToPid(element) };
-							//text = pid != noId ? std::to_string(m_mesher.elementToPid(element)) : "";
 						}
 						break;
 						case Dag::Node::EType::Operation:
@@ -250,7 +248,7 @@ namespace HMP::Gui::Dag
 						}
 						break;
 					}
-					const std::string text{ HrDescriptions::name(node.node(), m_namer)};
+					const std::string text{ HrDescriptions::name(node.node(), m_namer) };
 					const Vec2 textSize{ toVec(ImGui::CalcTextSize(text.c_str())) / ImGui::GetFontSize() };
 					const Real maxTextSize{ std::max(textSize.x(), textSize.y()) };
 					const Real fontSize{ nodeRadius_s * 1.25 / maxTextSize };
