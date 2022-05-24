@@ -5,6 +5,7 @@
 #include <imgui.h>
 #include <cinolib/gl/glcanvas.h>
 #include <cinolib/deg_rad.h>
+#include <cmath>
 
 #include <stdexcept>
 
@@ -283,14 +284,6 @@ namespace HMP::Gui::Widgets
 				}
 			}
 			ImGui::Spacing();
-			const auto inputVec{ [this](cinolib::vec3d& _vec, const std::string& _label) {
-				float xyz[3]{ static_cast<float>(_vec.x()), static_cast<float>(_vec.y()), static_cast<float>(_vec.z())};
-				if (ImGui::InputFloat3(_label.c_str(), xyz))
-				{
-					_vec = cinolib::vec3d{ xyz[0], xyz[1], xyz[2] };
-					updateTransform();
-				}
-			} };
 			{
 				ImGui::PushID(0);
 				ImGui::Text("Transform");
@@ -308,7 +301,21 @@ namespace HMP::Gui::Widgets
 			}
 			{
 				ImGui::PushID(1);
-				inputVec(m_center, "Center");
+				const float sourceMeshSize{ static_cast<float>(m_sourceMesh.bbox().diag()) };
+				float xyz[3]{ static_cast<float>(m_center.x()), static_cast<float>(m_center.y()), static_cast<float>(m_center.z()) };
+				if (ImGui::DragFloat3("Center", xyz, sourceMeshSize / 200))
+				{
+					m_center = cinolib::vec3d{ xyz[0], xyz[1], xyz[2] };
+					m_center -= m_sourceMesh.bbox().center();
+					const double maxDistance{ sourceMeshSize * 2 };
+					const double distance{ m_center.norm() };
+					if (distance > maxDistance)
+					{
+						m_center *= maxDistance / distance;
+					}
+					m_center += m_sourceMesh.bbox().center();
+					updateTransform();
+				}
 				ImGui::SameLine();
 				if (ImGui::Button("Identity"))
 				{
@@ -323,7 +330,23 @@ namespace HMP::Gui::Widgets
 			}
 			{
 				ImGui::PushID(2);
-				inputVec(m_rotation, "Rotation");
+				float xyz[3]{ static_cast<float>(m_rotation.x()), static_cast<float>(m_rotation.y()), static_cast<float>(m_rotation.z()) };
+				if (ImGui::DragFloat3("Rotation", xyz, 0.5, -360, 360, "%.1f degrees"))
+				{
+					for (float& angle : xyz)
+					{
+						if (angle < 0)
+						{
+							angle = 360.0f - std::fmodf(-angle, 360.0f);
+						}
+						else
+						{
+							angle = std::fmodf(angle, 360.0f);
+						}
+					}
+					m_rotation = cinolib::vec3d{ xyz[0], xyz[1], xyz[2] };
+					updateTransform();
+				}
 				ImGui::SameLine();
 				if (ImGui::Button("Identity"))
 				{
@@ -333,7 +356,13 @@ namespace HMP::Gui::Widgets
 			}
 			{
 				ImGui::PushID(3);
-				ImGui::InputDouble("Scale", &m_scale);
+				const float sourceAndTargetMeshScaleRatio{ static_cast<float>(m_sourceMesh.bbox().diag() / m_mesh->bbox().diag()) };
+				float scale{ static_cast<float>(m_scale * 100.0) };
+				if (ImGui::DragFloat("Scale", &scale, sourceAndTargetMeshScaleRatio, sourceAndTargetMeshScaleRatio * 10, sourceAndTargetMeshScaleRatio * 1000, "%.2f%%"))
+				{
+					m_scale = scale / 100.0;
+					updateTransform();
+				}
 				ImGui::SameLine();
 				if (ImGui::Button("Identity"))
 				{

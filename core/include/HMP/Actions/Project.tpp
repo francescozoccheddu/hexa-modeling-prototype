@@ -25,18 +25,15 @@ namespace HMP::Actions
 			std::cout << "Projecting..." << std::endl;
 
 			cinolib::Quadmesh<TMeshAttributes, TVertAttributes, TEdgeAttributes, TPolyAttributes> peel;
-			std::unordered_map<Id, Id> h2q, q2h;
-			cinolib::export_surface(mesh, peel, h2q, q2h);
+			//std::unordered_map<Id, Id> h2q, q2h;
+			//cinolib::export_surface(mesh, peel, h2q, q2h);
 
-			std::unordered_map<Id, Id> m_map;
-			std::unordered_map<Id, Id> v_map;
+			std::unordered_map<Id, Id> m_map, v_map;
 			cinolib::export_surface(mesh, peel, m_map, v_map);
 			m_target.edge_set_flag(cinolib::MARKED, false);
 			peel.edge_set_flag(cinolib::MARKED, false);
 			cinolib::Quadmesh<TMeshAttributes, TVertAttributes, TEdgeAttributes, TPolyAttributes> tmp_peel = peel;
 			m_target.edge_mark_sharp_creases();
-			cinolib::Octree tree;
-			tree.build_from_mesh_edges(peel);
 
 			cinolib::SmootherOptions options;
 			options.n_iters = 3;
