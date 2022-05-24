@@ -14,7 +14,7 @@ namespace HMP::Gui::Widgets
 
 	Target::Target(const Meshing::Mesher::Mesh& _sourceMesh)
 		: m_mesh{}, m_sourceMesh{ _sourceMesh },
-		m_onProjectRequest{}, m_onMeshLoad{}, m_onMeshClear{},
+		m_onProjectRequest{}, m_onMeshLoad{}, m_onMeshClear{}, m_onApplyTransformToSource{},
 		m_visible{ true }, m_faceColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.25f} }, m_edgeColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.75f} },
 		m_rotation{ 0,0,0 }, m_center{ 0,0,0 }, m_scale{ 1 },
 		cinolib::SideBarItem{ "Target mesh" }
@@ -41,6 +41,11 @@ namespace HMP::Gui::Widgets
 	std::function<void(const Target&)>& Target::onMeshClear()
 	{
 		return m_onMeshClear;
+	}
+
+	std::function<void(const Target&, const Mat4&)>& Target::onApplyTransformToSource()
+	{
+		return m_onApplyTransformToSource;
 	}
 
 	const Meshing::Mesher::Mesh& Target::sourceMesh() const
@@ -98,22 +103,22 @@ namespace HMP::Gui::Widgets
 		return m_edgeColor;
 	}
 
-	cinolib::vec3d& Target::rotation()
+	Vec& Target::rotation()
 	{
 		return m_rotation;
 	}
 
-	const cinolib::vec3d& Target::rotation() const
+	const Vec& Target::rotation() const
 	{
 		return m_rotation;
 	}
 
-	cinolib::vec3d& Target::center()
+	Vec& Target::center()
 	{
 		return m_center;
 	}
 
-	const cinolib::vec3d& Target::center() const
+	const Vec& Target::center() const
 	{
 		return m_center;
 	}
@@ -128,7 +133,7 @@ namespace HMP::Gui::Widgets
 		return m_scale;
 	}
 
-	void Target::translate(const cinolib::vec3d& _offset)
+	void Target::translate(const Vec& _offset)
 	{
 		m_center += _offset;
 		if (hasMesh())
@@ -137,7 +142,7 @@ namespace HMP::Gui::Widgets
 		}
 	}
 
-	void Target::rotate(const cinolib::vec3d& _axis, double _angleDeg)
+	void Target::rotate(const Vec& _axis, double _angleDeg)
 	{
 		if (hasMesh())
 		{
@@ -162,7 +167,7 @@ namespace HMP::Gui::Widgets
 		}
 		if (_rotation)
 		{
-			m_rotation = cinolib::vec3d::ZERO();
+			m_rotation = Vec::ZERO();
 		}
 		if (_scale)
 		{
@@ -191,20 +196,20 @@ namespace HMP::Gui::Widgets
 	void Target::updateTransform()
 	{
 		ensureHasMesh();
-		const cinolib::mat3d rotation3(
-			cinolib::mat3d::ROT_3D(cinolib::GLcanvas::world_right, cinolib::to_rad(m_rotation.x())) *
-			cinolib::mat3d::ROT_3D(cinolib::GLcanvas::world_up, cinolib::to_rad(m_rotation.y())) *
-			cinolib::mat3d::ROT_3D(cinolib::GLcanvas::world_forward, cinolib::to_rad(m_rotation.z()))
+		const Mat3 rotation3(
+			Mat3::ROT_3D(cinolib::GLcanvas::world_right, cinolib::to_rad(m_rotation.x())) *
+			Mat3::ROT_3D(cinolib::GLcanvas::world_up, cinolib::to_rad(m_rotation.y())) *
+			Mat3::ROT_3D(cinolib::GLcanvas::world_forward, cinolib::to_rad(m_rotation.z()))
 		);
-		const cinolib::mat4d rotation{
+		const Mat4 rotation{
 			rotation3(0,0),	rotation3(0,1),	rotation3(0,2),	0,
 			rotation3(1,0),	rotation3(1,1),	rotation3(1,2),	0,
 			rotation3(2,0),	rotation3(2,1),	rotation3(2,2),	0,
 			0,				0,				0,				1
 		};
-		const cinolib::mat4d scale(cinolib::mat4d::DIAG(cinolib::vec4d{ m_scale, m_scale, m_scale, 1.0 }));
-		const cinolib::mat4d centerTranslation(cinolib::mat4d::TRANS(m_center));
-		const cinolib::mat4d originTranslation(cinolib::mat4d::TRANS(-m_mesh->bbox().center()));
+		const Mat4 scale(Mat4::DIAG(cinolib::vec4d{ m_scale, m_scale, m_scale, 1.0 }));
+		const Mat4 centerTranslation(Mat4::TRANS(m_center));
+		const Mat4 originTranslation(Mat4::TRANS(-m_mesh->bbox().center()));
 		m_mesh->transform = rotation * centerTranslation * scale * originTranslation;
 	}
 
@@ -266,6 +271,18 @@ namespace HMP::Gui::Widgets
 		m_onProjectRequest(*this);
 	}
 
+	void Target::requestApplyTransformToSource()
+	{
+		if (!m_onApplyTransformToSource)
+		{
+			throw std::logic_error{ "no apply transform to source callback" };
+		}
+		ensureHasMesh();
+		updateTransform();
+		m_onApplyTransformToSource(*this, m_mesh->transform.inverse());
+		identity();
+	}
+
 	void Target::draw()
 	{
 		if (hasMesh())
@@ -305,7 +322,7 @@ namespace HMP::Gui::Widgets
 				float xyz[3]{ static_cast<float>(m_center.x()), static_cast<float>(m_center.y()), static_cast<float>(m_center.z()) };
 				if (ImGui::DragFloat3("Center", xyz, sourceMeshSize / 200))
 				{
-					m_center = cinolib::vec3d{ xyz[0], xyz[1], xyz[2] };
+					m_center = Vec{ xyz[0], xyz[1], xyz[2] };
 					m_center -= m_sourceMesh.bbox().center();
 					const double maxDistance{ sourceMeshSize * 2 };
 					const double distance{ m_center.norm() };
@@ -344,7 +361,7 @@ namespace HMP::Gui::Widgets
 							angle = std::fmodf(angle, 360.0f);
 						}
 					}
-					m_rotation = cinolib::vec3d{ xyz[0], xyz[1], xyz[2] };
+					m_rotation = Vec{ xyz[0], xyz[1], xyz[2] };
 					updateTransform();
 				}
 				ImGui::SameLine();
@@ -407,6 +424,11 @@ namespace HMP::Gui::Widgets
 			if (ImGui::Button("Project"))
 			{
 				requestProjection();
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Apply transform to source"))
+			{
+				requestApplyTransformToSource();
 			}
 		}
 		else

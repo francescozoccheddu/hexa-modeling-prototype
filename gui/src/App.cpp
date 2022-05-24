@@ -538,9 +538,19 @@ namespace HMP::Gui
 			Vec& vert{ target.vert(vid) };
 			vert = target.transform * vert;
 		}
-		m_commander.apply(*new Actions::Project{ std::move(target)});
+		m_commander.apply(*new Actions::Project{ std::move(target) });
 		updateDagViewer();
 		m_canvas.refit_scene();
+	}
+
+	void App::onApplyTargetTransform(const Mat4& _transform)
+	{
+		Meshing::Utils::removeLeafs(m_mesher, *m_project.root());
+		HMP::Dag::Utils::transform(*m_project.root(), _transform);
+		Meshing::Utils::addLeafs(m_mesher, *m_project.root());
+		updateMarkers();
+		m_mesher.updateMesh();
+		m_canvas.reset_camera();
 	}
 
 	void App::onUndo()
@@ -608,6 +618,7 @@ namespace HMP::Gui
 		m_targetWidget.onProjectRequest() = [this](const Widgets::Target& _target) { onProjectToTarget(); };
 		m_targetWidget.onMeshLoad() = [this](const Widgets::Target& _target) { m_canvas.push(&_target.mesh(), false); };
 		m_targetWidget.onMeshClear() = [this](const Widgets::Target& _target) { m_canvas.pop(&_target.mesh()); };
+		m_targetWidget.onApplyTransformToSource() = [this](const Widgets::Target& _target, const Mat4& _transform) { onApplyTargetTransform(_transform); };
 
 		m_canvas.depth_cull_markers = false;
 		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMove(_args...); };
