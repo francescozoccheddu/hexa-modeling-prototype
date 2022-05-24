@@ -307,6 +307,8 @@ namespace HMP::Gui
 
 	void App::onDrawControls()
 	{
+		static float x{ 0 };
+		ImGui::DragFloat("ciao", &x);
 		// names
 		{
 			bool showNames{ m_options.showNames };
@@ -530,7 +532,13 @@ namespace HMP::Gui
 
 	void App::onProjectToTarget()
 	{
-		m_commander.apply(*new Actions::Project{ m_targetWidget.mesh() });
+		cinolib::DrawableTrimesh<> target{ m_targetWidget.mesh() };
+		for (unsigned int vid{}; vid < target.num_verts(); vid++)
+		{
+			Vec& vert{ target.vert(vid) };
+			vert = target.transform * vert;
+		}
+		m_commander.apply(*new Actions::Project{ std::move(target)});
 		updateDagViewer();
 		m_canvas.refit_scene();
 	}
@@ -581,6 +589,8 @@ namespace HMP::Gui
 		m_commanderWidget{ m_commander, m_dagNamer }, m_axesWidget{ m_canvas.camera }, m_targetWidget{ m_mesh }
 	{
 
+		m_canvas.background = backgroundColor;
+
 		m_commander.apply(*new Actions::Clear());
 		m_commander.applied().clear();
 
@@ -599,7 +609,6 @@ namespace HMP::Gui
 		m_targetWidget.onMeshLoad() = [this](const Widgets::Target& _target) { m_canvas.push(&_target.mesh(), false); };
 		m_targetWidget.onMeshClear() = [this](const Widgets::Target& _target) { m_canvas.pop(&_target.mesh()); };
 
-		m_canvas.background = backgroundColor;
 		m_canvas.depth_cull_markers = false;
 		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMove(_args...); };
 		m_canvas.callback_key_pressed = [this](auto && ..._args) { return onKeyPress(_args...); };
