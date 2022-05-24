@@ -225,6 +225,7 @@ namespace HMP::Gui
 					onDelete();
 				}
 			}
+			break;
 			// rotate
 			case GLFW_KEY_Y:
 			{

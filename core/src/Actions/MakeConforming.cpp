@@ -3,8 +3,9 @@
 #include <HMP/Meshing/refinementSchemes.hpp>s
 #include <HMP/Dag/Utils.hpp>
 #include <cpputils/collections/conversions.hpp>
+#include <unordered_map>
 #include <unordered_set>
-#include <list>
+#include <vector>
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Actions/Utils.hpp>
 
@@ -30,7 +31,12 @@ namespace HMP::Actions
 			do
 			{
 				didSomething = false;
-				std::list<Dag::Refine*> standardRefines{};
+				std::unordered_map<Meshing::ERefinementScheme, std::vector<Dag::Refine*>> standardRefines{};
+				standardRefines.reserve(Meshing::refinementSchemes.size());
+				for (const auto& [scheme, refinement] : Meshing::refinementSchemes)
+				{
+					standardRefines.insert({ scheme, {} });
+				}
 				for (Dag::Node* node : Dag::Utils::descendants(*root()))
 				{
 					if (node->isOperation() && node->operation().primitive() == Dag::Operation::EPrimitive::Refine)
@@ -38,9 +44,9 @@ namespace HMP::Actions
 						Dag::Refine& refine{ static_cast<Dag::Refine&>(node->operation()) };
 						std::unordered_set<Id> vids{};
 						{
-							const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(refine.scheme()) };
-							const std::vector<Vec> source{ cpputils::collections::conversions::toVector(refine.parents().single().vertices()) };
-							const std::vector<PolyVerts> polys{ refinement.apply(source) };
+							mesher.add(refine.parents().single());
+							const std::vector<PolyVerts> polys{ Utils::previewRefine(mesher, refine)};
+							mesher.remove(refine.parents().single());
 							for (const PolyVerts verts : polys)
 							{
 								for (const Vec& vert : verts)
@@ -82,7 +88,7 @@ namespace HMP::Actions
 								}
 							}
 						}
-						standardRefines.push_back(&refine);
+						standardRefines.at(refine.scheme()).push_back(&refine);
 					}
 				nextRefine:;
 				}
@@ -90,12 +96,8 @@ namespace HMP::Actions
 				{
 					std::unordered_set<Dag::Element*> targetCandidates;
 
-					for (Dag::Refine* standardRefine : standardRefines)
+					for (Dag::Refine* standardRefine : standardRefines.at(Meshing::ERefinementScheme::Subdivide3x3))
 					{
-						if (standardRefine->scheme() != Meshing::ERefinementScheme::Subdivide3x3)
-						{
-							continue;
-						}
 						Dag::Refine& sourceRefine = *standardRefine;
 						Dag::Element& sourceElement = sourceRefine.parents().single();
 						mesher.add(sourceElement);
@@ -113,7 +115,7 @@ namespace HMP::Actions
 								targetRefine.parents().attach(targetElement);
 								Utils::applyRefine(mesher, targetRefine);
 								m_operations.push_back({ &targetRefine, &targetElement });
-								standardRefines.push_back(&targetRefine);
+								standardRefines.at(Meshing::ERefinementScheme::Subdivide3x3).push_back(&targetRefine);
 								didSomething = true;
 							}
 						}
@@ -123,12 +125,8 @@ namespace HMP::Actions
 				}
 				// AdapterFaceSubdivide3x3
 				{
-					for (Dag::Refine* standardRefine : standardRefines)
+					for (Dag::Refine* standardRefine : standardRefines.at(Meshing::ERefinementScheme::Subdivide3x3))
 					{
-						if (standardRefine->scheme() != Meshing::ERefinementScheme::Subdivide3x3)
-						{
-							continue;
-						}
 						Dag::Refine& sourceRefine = *standardRefine;
 						Dag::Element& sourceElement = sourceRefine.parents().single();
 						mesher.add(sourceElement);
@@ -160,12 +158,8 @@ namespace HMP::Actions
 				}
 				// AdapterEdgeSubdivide3x3
 				{
-					for (Dag::Refine* standardRefine : standardRefines)
+					for (Dag::Refine* standardRefine : standardRefines.at(Meshing::ERefinementScheme::Subdivide3x3))
 					{
-						if (standardRefine->scheme() != Meshing::ERefinementScheme::Subdivide3x3)
-						{
-							continue;
-						}
 						Dag::Refine& sourceRefine = *standardRefine;
 						Dag::Element& sourceElement = sourceRefine.parents().single();
 						mesher.add(sourceElement);
@@ -189,6 +183,43 @@ namespace HMP::Actions
 								m_operations.push_back({ &targetRefine, &targetElement });
 								didSomething = true;
 							}
+						}
+						mesher.remove(sourceElement);
+					}
+				}
+				// Inset
+				{
+					for (Dag::Refine* standardRefine : standardRefines.at(Meshing::ERefinementScheme::Inset))
+					{
+						Dag::Refine& sourceRefine = *standardRefine;
+						Dag::Element& sourceElement = sourceRefine.parents().single();
+						mesher.add(sourceElement);
+						const Id sourcePid{ mesher.elementToPid(sourceElement) };
+						for (Id targetPid : mesh.adj_p2p(sourcePid))
+						{
+							if (targetPid == sourcePid)
+							{
+								continue;
+							}
+							const Id sharedFid = mesh.poly_shared_face(sourcePid, targetPid);
+							if (sharedFid == noId)
+							{
+								continue;
+							}
+							if (sharedFid != mesh.poly_face_id(sourcePid, sourceRefine.forwardFaceOffset()))
+							{
+								continue;
+							}
+							Dag::Element& targetElement = mesher.pidToElement(targetPid);
+							const Id targetForwardFid{ sharedFid };
+							const Id targetForwardFaceOffset{ mesh.poly_face_offset(targetPid, targetForwardFid) };
+							const Id targetUpFid{ Meshing::Utils::adjacentFid(mesh, targetPid, targetForwardFid, mesh.face_edge_id(targetForwardFid, 0)) };
+							const Id targetUpFaceOffset{ mesh.poly_face_offset(targetPid, targetUpFid) };
+							Dag::Refine& targetRefine{ Utils::prepareRefine(targetForwardFaceOffset, targetUpFaceOffset, Meshing::ERefinementScheme::Inset) };
+							targetRefine.parents().attach(targetElement);
+							Utils::applyRefine(mesher, targetRefine);
+							m_operations.push_back({ &targetRefine, &targetElement });
+							didSomething = true;
 						}
 						mesher.remove(sourceElement);
 					}
