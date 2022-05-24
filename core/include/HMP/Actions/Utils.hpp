@@ -6,11 +6,13 @@
 #include <HMP/Dag/Refine.hpp>
 #include <HMP/Dag/Delete.hpp>
 #include <HMP/Dag/Extrude.hpp>
+#include <vector>
 
 namespace HMP::Actions::Utils
 {
 
 	Dag::Refine& prepareRefine(Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme);
+	std::vector<PolyVerts> previewRefine(const Meshing::Mesher& _mesher, const Dag::Refine& _refine);
 	void applyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine);
 	void unapplyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach = true);
 

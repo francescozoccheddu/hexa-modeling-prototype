@@ -26,9 +26,9 @@ namespace HMP::Actions::Utils
 		return refine;
 	}
 
-	void applyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine)
+	std::vector<PolyVerts> previewRefine(const Meshing::Mesher& _mesher, const Dag::Refine& _refine)
 	{
-		Dag::Element& element{ _refine.parents().single() };
+		const Dag::Element& element{ _refine.parents().single() };
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
 		const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(_refine.scheme()) };
 		if (refinement.polyCount() != _refine.children().size())
@@ -42,12 +42,18 @@ namespace HMP::Actions::Utils
 		const PolyVertIds sourceVids{ Meshing::Utils::polyVids(mesh, pid, forwardFid, upEid) };
 		const PolyVerts source{ Meshing::Utils::verts(mesh, sourceVids) };
 		const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector(source)) };
+		return polys;
+	}
+
+	void applyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine)
+	{
+		const std::vector<PolyVerts> polys{ previewRefine(_mesher, _refine) };
 		for (const auto& [child, verts] : cpputils::collections::zip(_refine.children(), polys))
 		{
 			child.vertices() = verts;
 			_mesher.add(child);
 		}
-		_mesher.remove(element);
+		_mesher.remove(_refine.parents().single());
 	}
 
 	void unapplyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach)
