@@ -27,7 +27,6 @@
 #include <HMP/Utils/Serialization.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Gui/HrDescriptions.hpp>
-#include <HMP/Gui/Widgets.hpp>
 #include <sstream>
 
 namespace HMP::Gui
@@ -39,7 +38,8 @@ namespace HMP::Gui
 
 	App::App() :
 		m_project{}, m_canvas{}, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() },
-		m_dagNamer{}, m_dagViewer{ m_mesher, m_dagNamer }, m_menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh controls" }
+		m_dagNamer{}, m_dagViewer{ m_mesher, m_dagNamer }, m_menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh controls" },
+		m_commanderWidget{ m_commander, m_dagNamer }, m_axesWidget{ m_canvas.camera }
 	{
 		m_commander.apply(*new Actions::Clear());
 		m_commander.applied().clear();
@@ -48,6 +48,9 @@ namespace HMP::Gui
 		m_commander.unapplied().limit(100);
 
 		m_canvas.push(&m_mesh);
+		m_canvas.push(&m_axesWidget);
+
+		m_canvas.push(&m_commanderWidget);
 		m_canvas.push(&m_menu);
 		m_canvas.push(&m_dagViewer);
 
@@ -357,14 +360,10 @@ namespace HMP::Gui
 				updateMarkers();
 			}
 		}
-		ImGui::Spacing();
-		// commander
-		Widgets::drawCommanderControls(m_commander, m_dagNamer);
 	}
 
 	void App::onDrawCustomGui()
 	{
-		Widgets::drawAxes(m_canvas.camera);
 		if (m_mouse.element)
 		{
 			std::ostringstream stream{};
