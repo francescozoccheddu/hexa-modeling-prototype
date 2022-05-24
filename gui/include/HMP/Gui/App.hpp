@@ -85,6 +85,7 @@ namespace HMP::Gui
 		void onLoadTree();
 		void onToggleTargetVisibility();
 		void onProjectToTarget();
+		void onApplyTargetTransform(const Mat4& _transform);
 		void onUndo();
 		void onRedo();
 		void onClear();

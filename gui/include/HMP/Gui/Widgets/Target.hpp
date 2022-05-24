@@ -22,9 +22,10 @@ namespace HMP::Gui::Widgets
 		cinolib::DrawableTrimesh<>* m_mesh;
 		const Meshing::Mesher::Mesh& m_sourceMesh;
 		std::function<void(const Target&)> m_onProjectRequest, m_onMeshLoad, m_onMeshClear;
+		std::function<void(const Target&, const Mat4&)> m_onApplyTransformToSource;
 		bool m_visible;
 		std::string m_filename;
-		cinolib::vec3d m_rotation, m_center;
+		Vec m_rotation, m_center;
 		double m_scale;
 		cinolib::Color m_faceColor, m_edgeColor;
 
@@ -37,6 +38,7 @@ namespace HMP::Gui::Widgets
 		std::function<void(const Target&)>& onProjectRequest();
 		std::function<void(const Target&)>& onMeshLoad();
 		std::function<void(const Target&)>& onMeshClear();
+		std::function<void(const Target&, const Mat4&)>& onApplyTransformToSource();
 
 		const Meshing::Mesher::Mesh& sourceMesh() const;
 
@@ -53,17 +55,17 @@ namespace HMP::Gui::Widgets
 		cinolib::Color& edgeColor();
 		const cinolib::Color& edgeColor() const;
 
-		cinolib::vec3d& rotation();
-		const cinolib::vec3d& rotation() const;
+		Vec& rotation();
+		const Vec& rotation() const;
 
-		cinolib::vec3d& center();
-		const cinolib::vec3d& center() const;
+		Vec& center();
+		const Vec& center() const;
 
 		double& scale();
 		double scale() const;
 
-		void translate(const cinolib::vec3d& _offset);
-		void rotate(const cinolib::vec3d& _axis, double _angleDeg);
+		void translate(const Vec& _offset);
+		void rotate(const Vec& _axis, double _angleDeg);
 		void scale(double _amount);
 
 		void identity(bool _center = true, bool _rotation = true, bool _scale = true);
@@ -76,6 +78,7 @@ namespace HMP::Gui::Widgets
 		void load(const std::string& _filename);
 		void clearMesh();
 		void requestProjection();
+		void requestApplyTransformToSource();
 
 		void draw() override;
 

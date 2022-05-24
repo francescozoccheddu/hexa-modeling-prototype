@@ -40,8 +40,7 @@ namespace HMP::Gui::Widgets
 		const Vec up(origin + cinolib::GLcanvas::world_up * radius);
 		const Vec forward(origin + cinolib::GLcanvas::world_forward * radius);
 		const auto project{ [this](const Vec& _point) -> Vec {
-			const Vec4 homoProj(m_camera.projectionViewMatrix() * _point.add_coord(1));
-			Vec proj((homoProj / homoProj[3]).rem_coord());
+			Vec proj(m_camera.projectionViewMatrix() * _point);
 			proj.x() *= m_camera.projection.aspectRatio;
 			const Real size{ 100 };
 			const ImVec2 windowOrigin{ ImGui::GetWindowPos() };
