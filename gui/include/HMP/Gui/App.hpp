@@ -11,6 +11,9 @@
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <cpputils/collections/SetNamer.hpp>
 #include <string>
+#include <HMP/Gui/Widgets/Axes.hpp>
+#include <HMP/Gui/Widgets/Commander.hpp>
+#include <HMP/Gui/Widgets/Target.hpp>
 
 namespace HMP::Gui
 {
@@ -59,6 +62,8 @@ namespace HMP::Gui
 		cpputils::collections::SetNamer<const HMP::Dag::Node*> m_dagNamer;
 		Dag::Viewer m_dagViewer; 
 		cinolib::VolumeMeshControls<Meshing::Mesher::Mesh> m_menu;
+		Widgets::Commander m_commanderWidget;
+		Widgets::Axes m_axesWidget;
 
 		void updateMarkers();
 
