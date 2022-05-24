@@ -308,8 +308,6 @@ namespace HMP::Gui
 
 	void App::onDrawControls()
 	{
-		static float x{ 0 };
-		ImGui::DragFloat("ciao", &x);
 		// names
 		{
 			bool showNames{ m_options.showNames };

@@ -293,6 +293,7 @@ namespace HMP::Gui::Widgets
 				if (ImGui::Button("Clear"))
 				{
 					clearMesh();
+					return;
 				}
 				ImGui::SameLine();
 				if (ImGui::Checkbox("Visible", &m_visible))
