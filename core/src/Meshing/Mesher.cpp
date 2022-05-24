@@ -179,13 +179,15 @@ namespace HMP::Meshing
 	Mesher::Mesher()
 		: m_mesh(), m_elementToPid{}, Internal::ElementToPidIterable{ m_elementToPid },
 		m_polyMarkerSet{ *this }, m_faceMarkerSet{ *this },
-		m_polyColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.35f) }, m_edgeColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.0f) },
+		m_polyColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.35f) }, m_edgeColor{ cinolib::Color::BLACK() },
 		m_dirty{ false }
 	{
 		m_polyMarkerSet.color() = cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.5f);
 		m_faceMarkerSet.color() = cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.7f);
 		m_mesh.show_mesh_flat();
 		m_mesh.show_marked_face(true);
+		m_mesh.show_in_wireframe_width(2.0f);
+		m_mesh.show_out_wireframe_width(2.0f);
 		updateColors();
 	}
 
@@ -236,6 +238,10 @@ namespace HMP::Meshing
 		const Id pid{ m_mesh.poly_add(cpputils::collections::conversions::toVector(vids)) };
 		m_mesh.poly_data(pid).m_element = &_element;
 		m_mesh.poly_data(pid).color = m_polyColor;
+		for (const Id eid : m_mesh.adj_p2e(pid))
+		{
+			m_mesh.edge_data(eid).color = m_edgeColor;
+		}
 		m_elementToPid[&_element] = pid;
 		m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
 	}
@@ -333,10 +339,7 @@ namespace HMP::Meshing
 		}
 		if (_edge)
 		{
-			m_mesh.show_in_wireframe_width(2.0f);
-			m_mesh.show_out_wireframe_width(2.0f);
-			m_mesh.show_in_wireframe_color(m_edgeColor);
-			m_mesh.show_out_wireframe_color(m_edgeColor);
+			m_mesh.edge_set_color(m_edgeColor);
 		}
 	}
 
