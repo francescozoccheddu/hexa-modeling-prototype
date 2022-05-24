@@ -53,8 +53,6 @@ namespace HMP::Meshing
 
 	public:
 
-		static const cinolib::Color polyColor, markedPolyColor, markedFaceColor;
-
 		void add(Dag::Element& _element);
 
 		class PolyAttributes final : public cinolib::Polyhedron_std_attributes
@@ -75,15 +73,41 @@ namespace HMP::Meshing
 
 		using Mesh = cinolib::DrawableHexmesh<cinolib::Mesh_std_attributes, cinolib::Vert_std_attributes, cinolib::Edge_std_attributes, cinolib::Polygon_std_attributes, PolyAttributes>;
 
-		class PolyMarkerSet final : public cpputils::mixins::ReferenceClass, public Internal::PolyMarkerIterable
+		class PolyMarkerSet;
+		class FaceMarkerSet;
+
+		class MarkerSetBase : public cpputils::mixins::ReferenceClass
+		{
+
+		private:
+
+			friend class PolyMarkerSet;
+			friend class FaceMarkerSet;
+
+			Mesher& m_mesher;
+			bool m_dirty;
+			cinolib::Color m_color;
+
+			MarkerSetBase(Mesher& _mesher);
+
+		public:
+
+			cinolib::Color& color();
+			const cinolib::Color& color() const;
+
+			void requestUpdate();
+
+		};
+
+		class PolyMarkerSet final : public MarkerSetBase, public Internal::PolyMarkerIterable
 		{
 
 		private:
 
 			friend class Mesher;
 
-			Mesher& m_mesher;
-			bool m_dirty;
+			using MarkerSetBase::m_dirty;
+
 			std::unordered_set<const Dag::Element*> m_data;
 
 			PolyMarkerSet(Mesher& _mesher);
@@ -99,15 +123,15 @@ namespace HMP::Meshing
 
 		};
 
-		class FaceMarkerSet final : public cpputils::mixins::ReferenceClass, public Internal::FaceMarkerIterable
+		class FaceMarkerSet final : public MarkerSetBase, public Internal::FaceMarkerIterable
 		{
 
 		private:
 
 			friend class Mesher;
 
-			Mesher& m_mesher;
-			bool m_dirty;
+			using MarkerSetBase::m_dirty;
+
 			std::unordered_set < std::pair<const Dag::Element*, Id>, Internal::FaceMarkerHasher> m_data;
 
 			FaceMarkerSet(Mesher& _mesher);
@@ -132,6 +156,7 @@ namespace HMP::Meshing
 		FaceMarkerSet m_faceMarkerSet;
 		PolyMarkerSet m_polyMarkerSet;
 		bool m_dirty;
+		cinolib::Color m_polyColor, m_edgeColor;
 
 		Id getOrAddVert(const Vec& _vert);
 
@@ -156,6 +181,14 @@ namespace HMP::Meshing
 		const PolyMarkerSet& polyMarkerSet() const;
 		FaceMarkerSet& faceMarkerSet();
 		const FaceMarkerSet& faceMarkerSet() const;
+
+		cinolib::Color& polyColor();
+		const cinolib::Color& polyColor() const;
+
+		cinolib::Color& edgeColor();
+		const cinolib::Color& edgeColor() const;
+
+		void updateColors(bool _poly = true, bool _edge = true);
 
 		void updateMesh();
 		void updateMeshMarkers();

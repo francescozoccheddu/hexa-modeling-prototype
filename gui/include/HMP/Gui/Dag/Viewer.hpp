@@ -6,11 +6,12 @@
 #include <HMP/Meshing/types.hpp>
 #include <cinolib/gl/side_bar_item.h>
 #include <cpputils/collections/Namer.hpp>
+#include <cpputils/mixins/ReferenceClass.hpp>
 
 namespace HMP::Gui::Dag
 {
 
-	class Viewer final : public cinolib::SideBarItem
+	class Viewer final : public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
 	{
 
 	private:
@@ -38,7 +39,6 @@ namespace HMP::Gui::Dag
 		const Layout& layout() const;
 
 		const cpputils::collections::Namer<const HMP::Dag::Node*>& namer() const;
-
 
 		void resetView();
 

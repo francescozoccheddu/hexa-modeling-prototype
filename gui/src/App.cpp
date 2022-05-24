@@ -598,6 +598,8 @@ namespace HMP::Gui
 	{
 
 		m_canvas.background = backgroundColor;
+		m_mesher.polyMarkerSet().color() = cinolib::Color::hsv2rgb(0.1f, 0.75f, 0.5f);
+		m_mesher.faceMarkerSet().color() = cinolib::Color::hsv2rgb(0.1f, 0.75f, 0.7f);
 
 		m_commander.apply(*new Actions::Clear());
 		m_commander.applied().clear();
