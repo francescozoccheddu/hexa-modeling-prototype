@@ -31,7 +31,7 @@ namespace HMP::Gui::HrDescriptions
 	std::string describe(Meshing::ERefinementScheme _scheme);
 	std::string describe(const Vec& _vec);
 	std::string describe(const Mat4& _mat);
-	std::string describe(const std::vector<unsigned int>& _ids);
+	std::string describe(const std::vector<Id>& _ids);
 	std::string describe(const HMP::Meshing::Utils::PolyVertLoc _loc);
 	std::string describeFaces(Id _forwardFaceOffset, Id _upFaceOffset);
 	std::string describe(const HMP::Dag::Delete& _operation, const HMP::Dag::Element& _element, DagNamer& _dagNamer);

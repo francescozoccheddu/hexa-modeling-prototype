@@ -308,12 +308,12 @@ namespace HMP::Gui
 				std::cout << "Elements" << std::endl;
 				for (const auto [element, pid] : m_mesher)
 				{
-					const std::vector<unsigned int> vids{ m_mesh.poly_verts_id(pid, false) };
+					const std::vector<Id> vids{ m_mesh.poly_verts_id(pid, false) };
 					std::cout << m_dagNamer(&element) << ':' << ' ';
 					const HMP::Vec centroid{ m_mesh.poly_centroid(pid) };
 					bool first = true;
 					std::cout << '[';
-					for (const unsigned int vid : vids)
+					for (const Id vid : vids)
 					{
 						const HMP::Vec vert{ m_mesh.vert(vid) };
 						if (!first)
@@ -558,7 +558,7 @@ namespace HMP::Gui
 	void App::onProjectToTarget()
 	{
 		cinolib::DrawableTrimesh<> target{ m_targetWidget.mesh() };
-		for (unsigned int vid{}; vid < target.num_verts(); vid++)
+		for (Id vid{}; vid < target.num_verts(); vid++)
 		{
 			Vec& vert{ target.vert(vid) };
 			vert = target.transform * vert;

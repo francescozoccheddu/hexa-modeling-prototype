@@ -84,7 +84,7 @@ namespace HMP::Gui::HrDescriptions
 		return stream.str();
 	}
 
-	std::string describe(const std::vector<unsigned int>& _ids)
+	std::string describe(const std::vector<Id>& _ids)
 	{
 		std::ostringstream stream{};
 		stream << "[";
