@@ -1,5 +1,6 @@
 #include <HMP/Meshing/Mesher.hpp>
 
+#include <HMP/Meshing/Utils.hpp>
 #include <cpputils/collections/conversions.hpp>
 
 namespace HMP::Meshing
@@ -235,6 +236,7 @@ namespace HMP::Meshing
 		{
 			vids[i] = getOrAddVert(_element.vertices()[i]);
 		}
+		//vids = Utils::sortVids(m_mesh, vids);
 		const Id pid{ m_mesh.poly_add(cpputils::collections::conversions::toVector(vids)) };
 		m_mesh.poly_data(pid).m_element = &_element;
 		m_mesh.poly_data(pid).color = m_polyColor;

@@ -84,6 +84,31 @@ namespace HMP::Gui::HrDescriptions
 		return stream.str();
 	}
 
+	std::string describe(const std::vector<unsigned int>& _ids)
+	{
+		std::ostringstream stream{};
+		stream << "[";
+		if (!_ids.empty())
+		{
+			stream << _ids[0];
+			for (std::size_t i{ 1 }; i < _ids.size(); i++)
+			{
+				stream << "," << _ids[i];
+			}
+		}
+		stream << "]";
+		return stream.str();
+	}
+
+	std::string describe(const HMP::Meshing::Utils::PolyVertLoc _loc)
+	{
+		std::ostringstream stream{};
+		stream << (_loc.x() ? 'x' : '-');
+		stream << (_loc.y() ? 'y' : '-');
+		stream << (_loc.z() ? 'z' : '-');
+		return stream.str();
+	}
+
 	std::string describeFaces(Id _forwardFaceOffset, Id _upFaceOffset)
 	{
 		std::ostringstream stream{};
