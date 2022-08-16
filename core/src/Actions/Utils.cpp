@@ -113,7 +113,7 @@ namespace HMP::Actions::Utils
 		}
 		PolyVerts& verts{ _extrude.children().single().vertices() };
 		std::copy(faceVerts.begin(), faceVerts.end(), verts.begin());
-		const Vec faceNormal = mesh.face_data(forwardFid).normal;
+		const Vec faceNormal = mesh.poly_face_normal(pid, forwardFid);
 		int i{ 4 };
 		for (const Vec& faceVert : faceVerts)
 		{

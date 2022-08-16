@@ -302,6 +302,32 @@ namespace HMP::Gui
 				}
 			}
 			break;
+			// print elements
+			case GLFW_KEY_COMMA:
+			{
+				std::cout << "Elements" << std::endl;
+				for (const auto [element, pid] : m_mesher)
+				{
+					const std::vector<unsigned int> vids{ m_mesh.poly_verts_id(pid, false) };
+					std::cout << m_dagNamer(&element) << ':' << ' ';
+					const HMP::Vec centroid{ m_mesh.poly_centroid(pid) };
+					bool first = true;
+					std::cout << '[';
+					for (const unsigned int vid : vids)
+					{
+						const HMP::Vec vert{ m_mesh.vert(vid) };
+						if (!first)
+						{
+							std::cout << ",";
+						}
+						first = false;
+						std::cout << HrDescriptions::describe(HMP::Meshing::Utils::polyVertLoc(vert, centroid));
+					}
+					std::cout << ']' << ' ';
+					std::cout << HrDescriptions::describe(vids) << std::endl;
+				}
+			}
+			break;
 		}
 		return false;
 	}
