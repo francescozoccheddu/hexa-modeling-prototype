@@ -47,13 +47,13 @@ namespace HMP::Meshing::Utils
 
 	constexpr PolyVertData<PolyVertLoc> sortedPolyVertLocs{
 		PolyVertLoc{false,false,false},
-		PolyVertLoc{true,false,false},
-		PolyVertLoc{true,false,true},
 		PolyVertLoc{false,false,true},
+		PolyVertLoc{true,false,true},
+		PolyVertLoc{true,false,false},
 		PolyVertLoc{false,true,false},
-		PolyVertLoc{true,true,false},
+		PolyVertLoc{false,true,true},
 		PolyVertLoc{true,true,true},
-		PolyVertLoc{false,true,true}
+		PolyVertLoc{true,true,false},
 	};
 
 	Id rotateEid(const Meshing::Mesher::Mesh& _mesh, Id _fid, Id _eid, int _rotation);

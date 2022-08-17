@@ -251,14 +251,6 @@ namespace HMP::Meshing
 	void Mesher::remove(Dag::Element& _element)
 	{
 		const Id pid{ elementToPid(_element) };
-		/*for (const Id adjPid : m_mesh.adj_p2p(pid))
-		{
-			const int fid{ m_mesh.poly_shared_face(pid, adjPid) };
-			if (fid != -1)
-			{
-				m_mesh.face_data(static_cast<Id>(fid)).normal = m_mesh.poly_face_normal(adjPid, fid);
-			}
-		}*/
 		m_elementToPid.erase(&_element);
 		const Id lastPid{ m_mesh.num_polys() - 1 };
 		if (pid != lastPid)
@@ -357,6 +349,7 @@ namespace HMP::Meshing
 	{
 		if (m_dirty)
 		{
+			m_mesh.update_normals();
 			//m_mesh.updateGL_in();
 			m_mesh.update_bbox();
 			m_mesh.updateGL_out();
