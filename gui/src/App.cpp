@@ -410,7 +410,7 @@ namespace HMP::Gui
 				m_move.startPosition = m_mesh.vert(vid);
 			}
 		}
-		else
+		else if (m_move.element)
 		{
 			const Id pid{ m_mesher.elementToPid(*m_move.element) };
 			const Id vid{ m_mesh.poly_vert_id(pid, m_move.vertOffset) };
