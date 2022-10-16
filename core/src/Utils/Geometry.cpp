@@ -58,7 +58,7 @@ namespace HMP::Utils::Geometry
 			{EAxis::Y, {3,0,1,2,7,4,5,6}},
 			{EAxis::Z, {4,0,3,7,5,1,2,6}},
 		};
-		return transform<4>(map, _axis, _vid, _times);
+		return transform<4, 8>(map, _axis, _vid, _times);
 	}
 
 	Id rotateFid(EAxis _axis, Id _fid, int _times)
@@ -68,7 +68,7 @@ namespace HMP::Utils::Geometry
 			{EAxis::Y, {0,5,2,4,1,3}},
 			{EAxis::Z, {3,0,1,2,4,5}},
 		};
-		return transform<4>(map, _axis, _fid, _times);
+		return transform<4, 6>(map, _axis, _fid, _times);
 	}
 
 	Id reflectFid(EAxis _axis, Id _fid, int _times)
@@ -78,7 +78,7 @@ namespace HMP::Utils::Geometry
 			{EAxis::Y, {2,1,0,3,4,5}},
 			{EAxis::Z, {0,1,2,3,5,4}},
 		};
-		return transform<2>(map, _axis, _fid, _times);
+		return transform<2, 6>(map, _axis, _fid, _times);
 	}
 
 	void sortVertices(PolyVerts& _verts)

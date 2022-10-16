@@ -1,5 +1,3 @@
-#pragma once
-
 #include <HMP/Gui/App.hpp>
 #include <cinolib/gl/volume_mesh_controls.h>
 #include <cinolib/gl/glcanvas.h>

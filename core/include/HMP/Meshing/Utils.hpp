@@ -20,7 +20,7 @@ namespace HMP::Meshing::Utils
 		static constexpr int c_bitX{ 0 }, c_bitY{ 1 }, c_bitZ{ 2 };
 		static constexpr int c_maskX{ 1 << c_bitX }, c_maskY{ 1 << c_bitY }, c_maskZ{ 1 << c_bitZ };
 
-		constexpr PolyVertLoc(bool _x, bool _y, bool _z) : m_bits{ _x << c_bitX | _y << c_bitY | _z << c_bitZ }
+		constexpr PolyVertLoc(bool _x, bool _y, bool _z) : m_bits{ static_cast<char>(_x << c_bitX | _y << c_bitY | _z << c_bitZ) }
 		{}
 
 		constexpr char bits() const

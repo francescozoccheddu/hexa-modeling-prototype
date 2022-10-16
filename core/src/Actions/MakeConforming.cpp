@@ -1,6 +1,6 @@
 #include <HMP/Actions/MakeConforming.hpp>
 
-#include <HMP/Meshing/refinementSchemes.hpp>s
+#include <HMP/Meshing/refinementSchemes.hpp>
 #include <HMP/Dag/Utils.hpp>
 #include <cpputils/collections/conversions.hpp>
 #include <unordered_map>
