@@ -355,11 +355,11 @@ namespace HMP::Gui::Widgets
 					{
 						if (angle < 0)
 						{
-							angle = 360.0f - std::fmodf(-angle, 360.0f);
+							angle = 360.0f - static_cast<float>(std::fmod(-angle, 360.0f));
 						}
 						else
 						{
-							angle = std::fmodf(angle, 360.0f);
+							angle = static_cast<float>(std::fmod(angle, 360.0f));
 						}
 					}
 					m_rotation = Vec{ xyz[0], xyz[1], xyz[2] };

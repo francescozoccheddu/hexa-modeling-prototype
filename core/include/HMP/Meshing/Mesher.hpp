@@ -16,13 +16,23 @@ namespace HMP::Meshing
 	namespace Internal
 	{
 
+		inline constexpr std::pair<Dag::Element&, Id> ElementToPidIterableConvert(std::unordered_map<Dag::Element*, Id>::value_type& _entry)
+		{
+			return std::pair<Dag::Element&, Id>{*_entry.first, _entry.second};
+		}
+
+		inline constexpr std::pair<const Dag::Element&, Id> ElementToPidIterableConstConvert(const std::unordered_map<Dag::Element*, Id>::value_type& _entry)
+		{
+			return std::pair<const Dag::Element&, Id>{*_entry.first, _entry.second};
+		}
+
 		using ElementToPidIterable = cpputils::collections::Iterable <
 			std::unordered_map<Dag::Element*, Id>,
 			std::pair<Dag::Element&, Id>,
 			std::pair<const Dag::Element&, Id>,
-			[](std::unordered_map<Dag::Element*, Id>::value_type& _entry) { return std::pair<Dag::Element&, Id>{*_entry.first, _entry.second}; },
-			[](const std::unordered_map<Dag::Element*, Id>::value_type& _entry) { return std::pair<const Dag::Element&, Id>{*_entry.first, _entry.second}; }
-		> ;
+			ElementToPidIterableConvert,
+			ElementToPidIterableConstConvert
+		>;
 
 		using PolyMarkerIterable = cpputils::collections::DereferenceIterable <
 			std::unordered_set<const Dag::Element*>,
@@ -38,13 +48,18 @@ namespace HMP::Meshing
 			}
 		};
 
+		inline constexpr std::pair<const Dag::Element&, Id> FaceMarkerIterableConstConvert(const std::pair<const Dag::Element*, Id>& _entry)
+		{
+			return std::pair<const Dag::Element&, Id>{*_entry.first, _entry.second};
+		}
+
 		using FaceMarkerIterable = cpputils::collections::Iterable <
 			std::unordered_set<std::pair<const Dag::Element*, Id>, FaceMarkerHasher>,
 			std::pair<const Dag::Element&, Id>,
 			std::pair<const Dag::Element&, Id>,
-			[](const std::pair<const Dag::Element*, Id>& _entry) { return std::pair<const Dag::Element&, Id>{*_entry.first, _entry.second}; },
-			[](const std::pair<const Dag::Element*, Id>& _entry) { return std::pair<const Dag::Element&, Id>{*_entry.first, _entry.second}; }
-		> ;
+			FaceMarkerIterableConstConvert,
+			FaceMarkerIterableConstConvert
+		>;
 
 	}
 
