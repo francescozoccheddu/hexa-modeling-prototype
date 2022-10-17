@@ -256,7 +256,11 @@ namespace HMP::Gui::HrDescriptions
 
 	std::string describe(const Actions::Refine& _action, DagNamer& _dagNamer)
 	{
-		return describe(_action.operation(), _action.element(), _dagNamer);
+		std::ostringstream stream{};
+		stream
+			<< describe(_action.operation(), _action.element(), _dagNamer)
+			<< " with depth " << _action.depth();
+		return stream.str();
 	}
 
 	std::string describe(const Actions::Rotate& _action, DagNamer& _dagNamer)

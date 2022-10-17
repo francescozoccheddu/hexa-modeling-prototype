@@ -1,6 +1,7 @@
 #include <HMP/Actions/Refine.hpp>
 
 #include <HMP/Actions/Utils.hpp>
+#include <stdexcept>
 
 namespace HMP::Actions
 {
@@ -15,19 +16,24 @@ namespace HMP::Actions
 			}
 		}
 		m_operation->parents().attach(m_element);
-		Utils::applyRefine(mesher(), *m_operation);
+		Utils::applyRefineRecursive(mesher(), *m_operation);
 		mesher().updateMesh();
 	}
 
 	void Refine::unapply()
 	{
-		Utils::unapplyRefine(mesher(), *m_operation);
+		Utils::unapplyRefineRecursive(mesher(), *m_operation);
 		mesher().updateMesh();
 	}
 
-	Refine::Refine(Dag::Element& _element, Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme)
-		: m_element{ _element }, m_operation{ Utils::prepareRefine(_forwardFaceOffset, _upFaceOffset, _scheme) }
-	{}
+	Refine::Refine(Dag::Element& _element, Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme, std::size_t _depth)
+		: m_element{ _element }, m_operation{ Utils::prepareRefine(_forwardFaceOffset, _upFaceOffset, _scheme, _depth) }, m_depth{ _depth }
+	{
+		if (_depth < 1 || _depth > 3)
+		{
+			throw std::logic_error{ "depth must be in range [1, 3]" };
+		}
+	}
 
 	const Dag::Element& Refine::element() const
 	{
@@ -37,6 +43,11 @@ namespace HMP::Actions
 	const Dag::Refine& Refine::operation() const
 	{
 		return *m_operation;
+	}
+
+	std::size_t Refine::depth() const
+	{
+		return m_depth;
 	}
 
 }

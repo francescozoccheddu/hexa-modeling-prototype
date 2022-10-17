@@ -12,8 +12,12 @@
 namespace HMP::Actions::Utils
 {
 
-	Dag::Refine& prepareRefine(Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme)
+	Dag::Refine& prepareRefine(Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme, std::size_t _depth)
 	{
+		if (_depth < 1 || _depth > 3)
+		{
+			throw std::logic_error{ "depth must fall in range [1,3]" };
+		}
 		Dag::Refine& refine{ *new Dag::Refine{} };
 		refine.scheme() = _scheme;
 		refine.forwardFaceOffset() = _forwardFaceOffset;
@@ -21,7 +25,12 @@ namespace HMP::Actions::Utils
 		const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(_scheme) };
 		for (std::size_t i{ 0 }; i < refinement.polyCount(); i++)
 		{
-			refine.children().attach(*new Dag::Element{});
+			Dag::Element& child{ *new Dag::Element{} };
+			if (_depth > 1)
+			{
+				child.children().attach(prepareRefine(_forwardFaceOffset, _upFaceOffset, _scheme, _depth - 1));
+			}
+			refine.children().attach(child);
 		}
 		return refine;
 	}
@@ -36,6 +45,10 @@ namespace HMP::Actions::Utils
 			throw std::logic_error{ "wrong number of children" };
 		}
 		const Id pid{ _mesher.elementToPid(element) };
+		if (pid == noId)
+		{
+			throw std::logic_error{ "not an element" };
+		}
 		const Id forwardFid{ mesh.poly_face_id(pid, _refine.forwardFaceOffset()) };
 		const Id upFid{ mesh.poly_face_id(pid, _refine.upFaceOffset()) };
 		const Id upEid{ mesh.face_shared_edge(forwardFid, upFid) };
@@ -56,6 +69,19 @@ namespace HMP::Actions::Utils
 		_mesher.remove(_refine.parents().single());
 	}
 
+	void applyRefineRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine)
+	{
+		applyRefine(_mesher, _refine);
+		for (Dag::Element& child : _refine.children())
+		{
+			const auto refineIt{ child.children().singleIt([](const Dag::Operation& _op) {return _op.primitive() == Dag::Operation::EPrimitive::Refine; }) };
+			if (refineIt != child.children().end())
+			{
+				applyRefineRecursive(_mesher, static_cast<Dag::Refine&>(*refineIt));
+			}
+		}
+	}
+
 	void unapplyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach)
 	{
 		for (Dag::Element& child : _refine.children())
@@ -63,7 +89,23 @@ namespace HMP::Actions::Utils
 			_mesher.remove(child);
 		}
 		_mesher.add(_refine.parents().single());
-		_refine.parents().detachAll(false);
+		if (_detach)
+		{
+			_refine.parents().detachAll(false);
+		}
+	}
+
+	void unapplyRefineRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach)
+	{
+		for (Dag::Element& child : _refine.children())
+		{
+			const auto refineIt{ child.children().singleIt([](const Dag::Operation& _op) {return _op.primitive() == Dag::Operation::EPrimitive::Refine; }) };
+			if (refineIt != child.children().end())
+			{
+				unapplyRefineRecursive(_mesher, static_cast<Dag::Refine&>(*refineIt), false);
+			}
+		}
+		unapplyRefine(_mesher, _refine, _detach);
 	}
 
 	Dag::Delete& prepareDelete()
@@ -80,7 +122,10 @@ namespace HMP::Actions::Utils
 	void unapplyDelete(Meshing::Mesher& _mesher, Dag::Delete& _delete, bool _detach)
 	{
 		_mesher.add(_delete.parents().single());
-		_delete.parents().detachAll(false);
+		if (_detach)
+		{
+			_delete.parents().detachAll(false);
+		}
 	}
 
 	Dag::Extrude& prepareExtrude(Id _forwardFaceOffset, Id _upFaceOffset)

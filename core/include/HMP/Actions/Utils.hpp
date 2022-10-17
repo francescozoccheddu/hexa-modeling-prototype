@@ -7,14 +7,17 @@
 #include <HMP/Dag/Delete.hpp>
 #include <HMP/Dag/Extrude.hpp>
 #include <vector>
+#include <cstddef>
 
 namespace HMP::Actions::Utils
 {
 
-	Dag::Refine& prepareRefine(Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme);
+	Dag::Refine& prepareRefine(Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme, std::size_t _depth = 1);
 	std::vector<PolyVerts> previewRefine(const Meshing::Mesher& _mesher, const Dag::Refine& _refine);
 	void applyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine);
+	void applyRefineRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine);
 	void unapplyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach = true);
+	void unapplyRefineRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach = true);
 
 	Dag::Delete& prepareDelete();
 	void applyDelete(Meshing::Mesher& _mesher, Dag::Delete& _delete);

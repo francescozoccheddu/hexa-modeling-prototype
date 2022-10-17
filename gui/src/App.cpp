@@ -199,7 +199,11 @@ namespace HMP::Gui
 			{
 				if (!_modifiers)
 				{
-					onRefineElement();
+					onRefineElement(false);
+				}
+				else if (_modifiers == GLFW_MOD_SHIFT)
+				{
+					onRefineElement(true);
 				}
 			}
 			break;
@@ -463,11 +467,11 @@ namespace HMP::Gui
 		}
 	}
 
-	void App::onRefineElement()
+	void App::onRefineElement(bool _twice)
 	{
 		if (m_mouse.element)
 		{
-			m_commander.apply(*new Actions::Refine{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset, Meshing::ERefinementScheme::Subdivide3x3 });
+			m_commander.apply(*new Actions::Refine{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset, Meshing::ERefinementScheme::Subdivide3x3, _twice ? 2u : 1u });
 			updateDagViewer();
 			updateMouse();
 		}

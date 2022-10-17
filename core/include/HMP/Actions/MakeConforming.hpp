@@ -2,11 +2,10 @@
 
 #include <HMP/Meshing/types.hpp>
 #include <HMP/Dag/NodeHandle.hpp>
-#include <vector>
-#include <unordered_set>
-#include <utility>
 #include <HMP/Dag/Refine.hpp>
 #include <HMP/Commander.hpp>
+#include <vector>
+#include <utility>
 
 namespace HMP::Actions
 {
