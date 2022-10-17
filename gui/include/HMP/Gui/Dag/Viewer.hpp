@@ -7,6 +7,7 @@
 #include <cinolib/gl/side_bar_item.h>
 #include <cpputils/collections/Namer.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
+#include <cpputils/collections/Event.hpp>
 
 namespace HMP::Gui::Dag
 {
@@ -28,6 +29,8 @@ namespace HMP::Gui::Dag
 		void clampView();
 
 	public:
+
+		cpputils::collections::Event<Viewer> onDraw{};
 
 		Viewer(const Meshing::Mesher& _mesher, cpputils::collections::Namer<const HMP::Dag::Node*>& _namer);
 

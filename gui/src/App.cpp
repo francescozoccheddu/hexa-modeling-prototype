@@ -122,11 +122,7 @@ namespace HMP::Gui
 
 	void App::updateDagViewer()
 	{
-		if (m_project.root())
-		{
-			m_dagViewer.layout() = Dag::createLayout(*m_project.root());
-		}
-		m_dagViewer.resetView();
+		m_dagViewerNeedsUpdate = true;
 	}
 
 	void App::updateMove()
@@ -384,6 +380,19 @@ namespace HMP::Gui
 		}
 	}
 
+	void App::onDagViewerDraw()
+	{
+		if (m_dagViewerNeedsUpdate)
+		{
+			m_dagViewerNeedsUpdate = false;
+			if (m_project.root())
+			{
+				m_dagViewer.layout() = Dag::createLayout(*m_project.root());
+			}
+			m_dagViewer.resetView();
+		}
+	}
+
 	// Commands
 
 	void App::onMove()
@@ -616,7 +625,7 @@ namespace HMP::Gui
 	App::App() :
 		m_project{}, m_canvas{}, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() },
 		m_dagNamer{}, m_dagViewer{ m_mesher, m_dagNamer }, m_menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh controls" },
-		m_commanderWidget{ m_commander, m_dagNamer }, m_axesWidget{ m_canvas.camera }, m_targetWidget{ m_mesh }
+		m_commanderWidget{ m_commander, m_dagNamer }, m_axesWidget{ m_canvas.camera }, m_targetWidget{ m_mesh }, m_dagViewerNeedsUpdate{ true }
 	{
 
 		m_canvas.background = backgroundColor;
@@ -649,6 +658,7 @@ namespace HMP::Gui
 		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChange(_args...); };
 		m_canvas.callback_custom_gui = [this](auto && ..._args) { return onDrawCustomGui(_args...); };
 
+		m_dagViewer.onDraw += [this]() { onDagViewerDraw(); };
 		updateDagViewer();
 	}
 
