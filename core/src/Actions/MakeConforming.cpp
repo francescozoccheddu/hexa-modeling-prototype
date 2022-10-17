@@ -94,12 +94,14 @@ namespace HMP::Actions
 				nextRefine:;
 				}
 				// Subdivide3x3
-				{
+				bool didSomeSub3x3{};
+				do {
+					didSomeSub3x3 = false;
 					std::unordered_set<Dag::Element*> targetCandidates;
-
-					for (Dag::Refine* standardRefine : standardRefines.at(Meshing::ERefinementScheme::Subdivide3x3))
+					std::vector<Dag::Refine*> sub3x3Refines{ standardRefines.at(Meshing::ERefinementScheme::Subdivide3x3) };
+					for (std::size_t i{}; i < sub3x3Refines.size(); i++)
 					{
-						Dag::Refine& sourceRefine = *standardRefine;
+						Dag::Refine& sourceRefine = *sub3x3Refines[i];
 						Dag::Element& sourceElement = sourceRefine.parents().single();
 						mesher.add(sourceElement);
 						const Id sourcePid{ mesher.elementToPid(sourceElement) };
@@ -118,12 +120,13 @@ namespace HMP::Actions
 								m_operations.push_back({ &targetRefine, &targetElement });
 								standardRefines.at(Meshing::ERefinementScheme::Subdivide3x3).push_back(&targetRefine);
 								didSomething = true;
+								didSomeSub3x3 = true;
 							}
 						}
 						mesher.remove(sourceElement);
 					}
-
 				}
+				while (didSomeSub3x3);
 				// AdapterFaceSubdivide3x3
 				{
 					for (Dag::Refine* standardRefine : standardRefines.at(Meshing::ERefinementScheme::Subdivide3x3))
