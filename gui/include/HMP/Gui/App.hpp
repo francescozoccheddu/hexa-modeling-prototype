@@ -77,7 +77,7 @@ namespace HMP::Gui
 		void onExtrude();
 		void onCopy();
 		void onPaste();
-		void onRefineElement();
+		void onRefineElement(bool _twice);
 		void onDelete();
 		void onRotate();
 		void onRefineFace();
