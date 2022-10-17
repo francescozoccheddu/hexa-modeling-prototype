@@ -58,6 +58,7 @@ namespace HMP::Gui
 		Widgets::Commander m_commanderWidget;
 		Widgets::Axes m_axesWidget;
 		Widgets::Target m_targetWidget;
+		bool m_dagViewerNeedsUpdate;
 
 		void updateMarkers();
 
@@ -70,6 +71,7 @@ namespace HMP::Gui
 		bool onMouseMove(double _x, double _y);
 		void onDrawControls();
 		void onDrawCustomGui();
+		void onDagViewerDraw();
 
 		void onMove();
 		void onExtrude();

@@ -51,6 +51,8 @@ namespace HMP::Gui::Dag
 	void Viewer::draw()
 	{
 
+		onDraw();
+
 		// types
 
 		constexpr auto toVec{ [](const ImVec2& _vec) {
