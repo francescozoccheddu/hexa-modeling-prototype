@@ -251,6 +251,10 @@ namespace HMP::Meshing
 	void Mesher::remove(Dag::Element& _element)
 	{
 		const Id pid{ elementToPid(_element) };
+		if (pid == noId)
+		{
+			throw std::logic_error{ "not an element" };
+		}
 		m_elementToPid.erase(&_element);
 		const Id lastPid{ m_mesh.num_polys() - 1 };
 		if (pid != lastPid)

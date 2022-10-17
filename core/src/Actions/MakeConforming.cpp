@@ -8,6 +8,7 @@
 #include <vector>
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Actions/Utils.hpp>
+#include <ranges>
 
 namespace HMP::Actions
 {
@@ -232,7 +233,7 @@ namespace HMP::Actions
 
 	void MakeConforming::unapply()
 	{
-		for (auto [operation, element] : m_operations)
+		for (auto [operation, element] : std::ranges::views::reverse(m_operations))
 		{
 			Utils::unapplyRefine(mesher(), *operation);
 		}
