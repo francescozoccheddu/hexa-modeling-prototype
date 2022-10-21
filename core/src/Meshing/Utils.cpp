@@ -156,7 +156,7 @@ namespace HMP::Meshing::Utils
 		PolyVertData<char> indices{};
 		for (std::size_t i{ 0 }; i < 8; i++)
 		{
-			indices[sortedPolyVertLocs[i].bits()] = i;
+			indices[sortedPolyVertLocs[i].bits()] = static_cast<char>(i);
 		}
 		PolyVertIds sortedVids{};
 		const PolyVerts verts{ Utils::verts(_mesh, _vids) };
