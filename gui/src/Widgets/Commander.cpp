@@ -66,13 +66,13 @@ namespace HMP::Gui::Widgets
 			const auto end{ m_commander.unapplied().rend() };
 			while (it != end)
 			{
-				ImGui::TextColored(ImVec4(0.75f, 0.2f, 0.2f, 1.0f), HrDescriptions::describe(*it, m_dagNamer).c_str());
+				ImGui::TextColored(ImVec4(0.75f, 0.2f, 0.2f, 1.0f), "%s", HrDescriptions::describe(*it, m_dagNamer).c_str());
 				++it;
 			}
 
 			for (const HMP::Commander::Action& action : m_commander.applied())
 			{
-				ImGui::TextColored(ImVec4(0.2f, 0.75f, 0.2f, 1.0f), HrDescriptions::describe(action, m_dagNamer).c_str());
+				ImGui::TextColored(ImVec4(0.2f, 0.75f, 0.2f, 1.0f), "%s", HrDescriptions::describe(action, m_dagNamer).c_str());
 			}
 
 			ImGui::TreePop();
