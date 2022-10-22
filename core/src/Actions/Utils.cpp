@@ -54,7 +54,7 @@ namespace HMP::Actions::Utils
 		const Id upEid{ mesh.face_shared_edge(forwardFid, upFid) };
 		const PolyVertIds sourceVids{ Meshing::Utils::polyVids(mesh, pid, forwardFid, upEid) };
 		const PolyVerts source{ Meshing::Utils::verts(mesh, sourceVids) };
-		const std::vector<PolyVerts> polys{ refinement.apply(cpputils::collections::conversions::toVector(source)) };
+		const std::vector<PolyVerts> polys{ refinement.apply(source) };
 		return polys;
 	}
 

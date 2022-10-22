@@ -32,6 +32,9 @@ namespace HMP
 	template<typename TData>
 	using FaceEdgeData = std::array<TData, 4>;
 
+	template<typename TData>
+	using EdgeVertData = std::array<TData, 2>;
+
 	using PolyVerts = PolyVertData<Vec>;
 	using PolyVertIds = PolyVertData<Id>;
 	using PolyFaceIds = PolyFaceData<Id>;
@@ -39,5 +42,7 @@ namespace HMP
 	using FaceVerts = FaceVertData<Vec>;
 	using FaceVertIds = FaceVertData<Id>;
 	using FaceEdgeIds = FaceEdgeData<Id>;
+	using EdgeVerts = EdgeVertData<Vec>;
+	using EdgeVertIds = EdgeVertData<Id>;
 
 }

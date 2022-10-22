@@ -1,41 +1,40 @@
 #include <HMP/Meshing/Refinement.hpp>
 
+#include <HMP/Meshing/Utils.hpp>
 #include <utility>
+#include <cinolib/geometry/lerp.hpp>
 
 namespace HMP::Meshing
 {
 
-	Refinement::Effect::Effect(std::size_t _index, Real _weight)
-		: index{ _index }, weight{ _weight }
+	Refinement::Refinement(std::vector<PolyVerts>&& _polyCoords) : m_polyCoords{std::move(_polyCoords)} 
 	{}
 
-	Refinement::Refinement(Refinement::EffectList&& _effects)
-		: m_effects{ std::forward<Refinement::EffectList>(_effects) }
-	{}
-
-	std::vector<PolyVerts> Refinement::apply(const std::vector<Vec>& _source) const
+	std::vector<PolyVerts> Refinement::apply(const PolyVerts& _source) const
 	{
-		std::vector<PolyVerts> polys{};
-		polys.reserve(polyCount());
-		for (std::size_t p{ 0 }; p < polyCount(); p++)
+		static constexpr PolyVertData<std::size_t> cinolibInds{ 0,1,3,2,4,5,7,6 };
+		PolyVerts source;
+		for (std::size_t i{}; i < 8; i++)
 		{
-			PolyVerts verts;
-			verts.fill(Vec{ 0,0,0 });
-			for (std::size_t v{ 0 }; v < 8; v++)
-			{
-				for (const Effect& effect : m_effects[p][v])
-				{
-					verts[v] += effect.weight * _source[effect.index];
-				}
-			}
-			polys.push_back(verts);
+			source[cinolibInds[i]] = _source[i];
 		}
-		return polys;
+		std::vector<PolyVerts> childrenVerts;
+		childrenVerts.reserve(m_polyCoords.size());
+		for (const PolyVerts& coords : m_polyCoords)
+		{
+			PolyVerts childVerts;
+			for (std::size_t i{}; i < 8; i++)
+			{
+				childVerts[i] = cinolib::lerp3(source, coords[cinolibInds[i]]);
+			}
+			childrenVerts.push_back(childVerts);
+		}
+		return childrenVerts;
 	}
 
 	std::size_t Refinement::polyCount() const
 	{
-		return m_effects.size();
+		return m_polyCoords.size();
 	}
 
 }

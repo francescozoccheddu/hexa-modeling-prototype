@@ -12,31 +12,15 @@ namespace HMP::Meshing
 	class Refinement final : public cpputils::mixins::ReferenceClass
 	{
 
-	public:
-
-		class Effect final
-		{
-
-		public:
-
-			Real weight;
-			std::size_t index;
-
-			Effect(std::size_t _index, Real _weight);
-
-		};
-
-		using EffectList = std::vector<PolyVertData<std::vector<Effect>>>;
-
 	private:
 
-		const EffectList m_effects;
+		const std::vector<PolyVerts> m_polyCoords;
 
 	public:
 
-		explicit Refinement(EffectList&& _effects);
+		explicit Refinement(std::vector<PolyVerts>&& _effects);
 
-		std::vector<PolyVerts> apply(const std::vector<Vec>& _source) const;
+		std::vector<PolyVerts> apply(const PolyVerts& _source) const;
 
 		std::size_t polyCount() const;
 
