@@ -159,173 +159,173 @@ namespace HMP::Gui
 		switch (_key)
 		{
 			// move vertex
-			case GLFW_KEY_M:
+		case GLFW_KEY_M:
+		{
+			if (!_modifiers)
 			{
-				if (!_modifiers)
-				{
-					onMove();
-				}
+				onMove();
 			}
-			break;
-			// extrude
-			case GLFW_KEY_E:
+		}
+		break;
+		// extrude
+		case GLFW_KEY_E:
+		{
+			if (!_modifiers)
 			{
-				if (!_modifiers)
-				{
-					onExtrude();
-				}
+				onExtrude();
 			}
-			break;
-			// copy
-			case GLFW_KEY_C:
+		}
+		break;
+		// copy
+		case GLFW_KEY_C:
+		{
+			if (_modifiers == GLFW_MOD_CONTROL)
 			{
-				if (_modifiers == GLFW_MOD_CONTROL)
-				{
-					onCopy();
-				}
+				onCopy();
 			}
-			break;
-			// paste
-			case GLFW_KEY_V:
+		}
+		break;
+		// paste
+		case GLFW_KEY_V:
+		{
+			if (_modifiers == GLFW_MOD_CONTROL)
 			{
-				if (_modifiers == GLFW_MOD_CONTROL)
-				{
-					onPaste();
-				}
+				onPaste();
 			}
-			break;
-			// refine hexahedron
-			case GLFW_KEY_H:
+		}
+		break;
+		// refine hexahedron
+		case GLFW_KEY_H:
+		{
+			if (!_modifiers)
 			{
-				if (!_modifiers)
-				{
-					onRefineElement(false);
-				}
-				else if (_modifiers == GLFW_MOD_SHIFT)
-				{
-					onRefineElement(true);
-				}
+				onRefineElement(false);
 			}
-			break;
-			// refine face
-			case GLFW_KEY_F:
+			else if (_modifiers == GLFW_MOD_SHIFT)
 			{
-				if (!_modifiers)
-				{
-					onRefineFace();
-				}
+				onRefineElement(true);
 			}
-			break;
-			// delete hexahedron
-			case GLFW_KEY_DELETE:
+		}
+		break;
+		// refine face
+		case GLFW_KEY_F:
+		{
+			if (!_modifiers)
 			{
-				if (!_modifiers)
-				{
-					onDelete();
-				}
+				onRefineFace();
 			}
-			break;
-			// rotate
-			case GLFW_KEY_Y:
+		}
+		break;
+		// delete hexahedron
+		case GLFW_KEY_DELETE:
+		{
+			if (!_modifiers)
 			{
-				if (!_modifiers)
-				{
-					onRotate();
-				}
+				onDelete();
 			}
-			break;
-			// make conformant
-			case GLFW_KEY_Q:
+		}
+		break;
+		// rotate
+		case GLFW_KEY_Y:
+		{
+			if (!_modifiers)
 			{
-				if (!_modifiers)
-				{
-					onMakeConformant();
-				}
+				onRotate();
 			}
-			break;
+		}
+		break;
+		// make conformant
+		case GLFW_KEY_Q:
+		{
+			if (!_modifiers)
+			{
+				onMakeConformant();
+			}
+		}
+		break;
+		// save tree
+		case GLFW_KEY_S:
+		{
 			// save tree
-			case GLFW_KEY_S:
+			if (_modifiers == GLFW_MOD_CONTROL)
 			{
-				// save tree
-				if (_modifiers == GLFW_MOD_CONTROL)
-				{
-					onSaveTree();
-				}
-				// save mesh
-				else if (_modifiers == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT))
-				{
-					onSaveMesh();
-				}
+				onSaveTree();
 			}
-			break;
-			// load tree
-			case GLFW_KEY_O:
+			// save mesh
+			else if (_modifiers == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT))
 			{
-				if (_modifiers == GLFW_MOD_CONTROL)
-				{
-					onLoadTree();
-				}
+				onSaveMesh();
 			}
-			break;
-			// toggle target visibility
-			case GLFW_KEY_T:
+		}
+		break;
+		// load tree
+		case GLFW_KEY_O:
+		{
+			if (_modifiers == GLFW_MOD_CONTROL)
 			{
-				if (!_modifiers)
-				{
-					onToggleTargetVisibility();
-				}
+				onLoadTree();
 			}
-			break;
-			// undo or redo
-			case GLFW_KEY_Z:
+		}
+		break;
+		// toggle target visibility
+		case GLFW_KEY_T:
+		{
+			if (!_modifiers)
 			{
-				// undo
-				if (_modifiers == GLFW_MOD_CONTROL)
-				{
-					onUndo();
-				}
-				// redo
-				else if (_modifiers == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT))
-				{
-					onRedo();
-				}
+				onToggleTargetVisibility();
 			}
-			break;
-			// clear
-			case GLFW_KEY_N:
+		}
+		break;
+		// undo or redo
+		case GLFW_KEY_Z:
+		{
+			// undo
+			if (_modifiers == GLFW_MOD_CONTROL)
 			{
-				if (_modifiers == GLFW_MOD_CONTROL)
-				{
-					onClear();
-				}
+				onUndo();
 			}
-			break;
-			// print elements
-			case GLFW_KEY_COMMA:
+			// redo
+			else if (_modifiers == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT))
 			{
-				std::cout << "Elements" << std::endl;
-				for (const auto [element, pid] : m_mesher)
+				onRedo();
+			}
+		}
+		break;
+		// clear
+		case GLFW_KEY_N:
+		{
+			if (_modifiers == GLFW_MOD_CONTROL)
+			{
+				onClear();
+			}
+		}
+		break;
+		// print elements
+		case GLFW_KEY_COMMA:
+		{
+			std::cout << "Elements" << std::endl;
+			for (const auto [element, pid] : m_mesher)
+			{
+				const std::vector<Id> vids{ m_mesh.poly_verts_id(pid, false) };
+				std::cout << m_dagNamer(&element) << ':' << ' ';
+				const HMP::Vec centroid{ m_mesh.poly_centroid(pid) };
+				bool first = true;
+				std::cout << '[';
+				for (const Id vid : vids)
 				{
-					const std::vector<Id> vids{ m_mesh.poly_verts_id(pid, false) };
-					std::cout << m_dagNamer(&element) << ':' << ' ';
-					const HMP::Vec centroid{ m_mesh.poly_centroid(pid) };
-					bool first = true;
-					std::cout << '[';
-					for (const Id vid : vids)
+					const HMP::Vec vert{ m_mesh.vert(vid) };
+					if (!first)
 					{
-						const HMP::Vec vert{ m_mesh.vert(vid) };
-						if (!first)
-						{
-							std::cout << ",";
-						}
-						first = false;
-						std::cout << HrDescriptions::describe(HMP::Meshing::Utils::polyVertLoc(vert, centroid));
+						std::cout << ",";
 					}
-					std::cout << ']' << ' ';
-					std::cout << HrDescriptions::describe(vids) << std::endl;
+					first = false;
+					std::cout << HrDescriptions::describe(HMP::Meshing::Utils::polyVertLoc(vert, centroid));
 				}
+				std::cout << ']' << ' ';
+				std::cout << HrDescriptions::describe(vids) << std::endl;
 			}
-			break;
+		}
+		break;
 		}
 		return false;
 	}
@@ -361,7 +361,7 @@ namespace HMP::Gui
 				<< "faces " << HrDescriptions::describeFaces(m_mouse.faceOffset, m_mouse.upFaceOffset)
 				<< ", vert " << m_mouse.vertOffset
 				<< ")";
-			ImGui::Text(stream.str().c_str());
+			ImGui::Text("%s", stream.str().c_str());
 		}
 		if (m_copy.element)
 		{
@@ -369,7 +369,7 @@ namespace HMP::Gui
 			stream
 				<< "Copied"
 				<< " " << HrDescriptions::name(*m_copy.element, m_dagNamer);
-			ImGui::Text(stream.str().c_str());
+			ImGui::Text("%s", stream.str().c_str());
 		}
 		if (m_move.element)
 		{
@@ -380,7 +380,7 @@ namespace HMP::Gui
 				<< " of " << HrDescriptions::name(*m_move.element, m_dagNamer)
 				<< " from " << HrDescriptions::describe(m_move.startPosition)
 				<< " to " << HrDescriptions::describe(m_mouse.worldPosition);
-			ImGui::Text(stream.str().c_str());
+			ImGui::Text("%s", stream.str().c_str());
 		}
 	}
 

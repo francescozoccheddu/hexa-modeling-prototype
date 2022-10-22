@@ -8,7 +8,6 @@
 #include <vector>
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Actions/Utils.hpp>
-#include <ranges>
 
 namespace HMP::Actions
 {
@@ -46,7 +45,7 @@ namespace HMP::Actions
 						std::unordered_set<Id> vids{};
 						{
 							mesher.add(refine.parents().single());
-							const std::vector<PolyVerts> polys{ Utils::previewRefine(mesher, refine)};
+							const std::vector<PolyVerts> polys{ Utils::previewRefine(mesher, refine) };
 							mesher.remove(refine.parents().single());
 							for (const PolyVerts verts : polys)
 							{
@@ -95,7 +94,8 @@ namespace HMP::Actions
 				}
 				// Subdivide3x3
 				bool didSomeSub3x3{};
-				do {
+				do
+				{
 					didSomeSub3x3 = false;
 					std::unordered_set<Dag::Element*> targetCandidates;
 					std::vector<Dag::Refine*> sub3x3Refines{ standardRefines.at(Meshing::ERefinementScheme::Subdivide3x3) };
@@ -236,8 +236,9 @@ namespace HMP::Actions
 
 	void MakeConforming::unapply()
 	{
-		for (auto [operation, element] : std::ranges::views::reverse(m_operations))
+		for (auto it{ m_operations.rbegin() }; it != m_operations.rend(); ++it)
 		{
+			auto& [operation, element] {*it};
 			Utils::unapplyRefine(mesher(), *operation);
 		}
 		mesher().updateMesh();
@@ -253,7 +254,7 @@ namespace HMP::Actions
 		operations.reserve(m_operations.size());
 		for (const std::pair<const Dag::Refine*, const Dag::Element*> operation : m_operations)
 		{
-			operations.push_back({operation.first, operation.second});
+			operations.push_back({ operation.first, operation.second });
 		}
 		return operations;
 	}
