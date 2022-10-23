@@ -166,8 +166,8 @@ namespace HMP
 	{
 		_action.attach(*this);
 		m_unapplied.clear();
-		m_unapplied.push(_action);
-		redo();
+		_action.apply();
+		m_applied.push(_action);
 	}
 
 	void Commander::undo()
