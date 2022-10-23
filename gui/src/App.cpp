@@ -610,6 +610,7 @@ namespace HMP::Gui
 			m_canvas.refit_scene();
 			updateMarkers();
 		}
+		else
 		{
 			std::cout << "cannot redo" << std::endl;
 		}
