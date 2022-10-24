@@ -2,6 +2,8 @@
 
 #include <HMP/Meshing/Utils.hpp>
 #include <cpputils/collections/conversions.hpp>
+#include <cinolib/Moller_Trumbore_intersection.h>
+#include <limits>
 
 namespace HMP::Meshing
 {
@@ -370,6 +372,53 @@ namespace HMP::Meshing
 			m_mesh.marked_poly_color = m_polyMarkerSet.color();
 			m_mesh.updateGL_marked();
 			m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = false;
+		}
+	}
+
+	bool Mesher::pick(const Vec& _from, const Vec& _normDir, Id& _pid, Id& _fid, Id& _eid, Id& _vid) const
+	{
+		double minT{ std::numeric_limits<double>::infinity() };
+		_fid =  noId;
+		for (std::size_t fid{}; fid < m_mesh.num_faces(); fid++)
+		{
+			if (m_mesh.face_is_on_srf(fid))
+			{
+				for (std::size_t ti{}; ti < 2; ti++)
+				{
+					bool back, coplanar;
+					double t;
+					Vec bary;
+					if (cinolib::Moller_Trumbore_intersection(
+						_from,
+						_normDir,
+						m_mesh.vert(m_mesh.face_tessellation(fid)[ti * 3 + 0]),
+						m_mesh.vert(m_mesh.face_tessellation(fid)[ti * 3 + 1]),
+						m_mesh.vert(m_mesh.face_tessellation(fid)[ti * 3 + 2]),
+						back,
+						coplanar,
+						t,
+						bary))
+					{
+						if (!back && !coplanar && t < minT)
+						{
+							minT = t;
+							_fid = fid;
+						}
+					}
+				}
+			}
+		}
+		if (_fid != noId)
+		{
+			const Vec point{ _from + _normDir * minT };
+			_pid = m_mesh.adj_f2p(_fid)[0];
+			_eid = Meshing::Utils::closestFaceEid(m_mesh, _fid, point);
+			_vid = Meshing::Utils::closestFaceVid(m_mesh, _fid, point);
+			return true;
+		}
+		else
+		{
+			return false;
 		}
 	}
 

@@ -23,8 +23,8 @@ namespace HMP::Actions
 	{
 		constexpr Real cubeSize{ 1 };
 		m_otherRoot->vertices() = {
-			Vec(-cubeSize,-cubeSize,-cubeSize), Vec(+cubeSize,-cubeSize,-cubeSize), Vec(+cubeSize,+cubeSize,-cubeSize), Vec(-cubeSize,+cubeSize,-cubeSize),
-			Vec(-cubeSize,-cubeSize,+cubeSize), Vec(+cubeSize,-cubeSize,+cubeSize), Vec(+cubeSize,+cubeSize,+cubeSize), Vec(-cubeSize,+cubeSize,+cubeSize),
+			Vec{-cubeSize,-cubeSize,-cubeSize}, Vec{+cubeSize,-cubeSize,-cubeSize}, Vec{+cubeSize,+cubeSize,-cubeSize}, Vec{-cubeSize,+cubeSize,-cubeSize},
+			Vec{-cubeSize,-cubeSize,+cubeSize}, Vec{+cubeSize,-cubeSize,+cubeSize}, Vec{+cubeSize,+cubeSize,+cubeSize}, Vec{-cubeSize,+cubeSize,+cubeSize},
 		};
 	}
 

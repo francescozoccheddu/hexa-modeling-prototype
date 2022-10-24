@@ -79,21 +79,18 @@ namespace HMP::Gui
 		const Id lastFaceOffset{ m_mouse.faceOffset }, lastUpFaceOffset{ m_mouse.upFaceOffset }, lastVertOffset{ m_mouse.vertOffset };
 		m_mouse.element = nullptr;
 		m_mouse.faceOffset = m_mouse.vertOffset = noId;
-		if (m_canvas.unproject(m_mouse.position, m_mouse.worldPosition))
 		{
 			// poly
-			const Id pid{ m_mesh.pick_poly(m_mouse.worldPosition) };
-			m_mouse.element = &m_mesher.pidToElement(pid);
-			// face
-			const Id fid{ Meshing::Utils::closestPolyFid(m_mesh, pid, m_mouse.worldPosition) };
-			m_mouse.faceOffset = m_mesh.poly_face_offset(pid, fid);
-			// up face
-			const Id eid{ Meshing::Utils::closestFaceEid(m_mesh, fid, m_mouse.worldPosition) };
-			const Id upFid{ Meshing::Utils::adjacentFid(m_mesh, pid, fid, eid) };
-			m_mouse.upFaceOffset = m_mesh.poly_face_offset(pid, upFid);
-			// vert
-			const Id vid{ Meshing::Utils::closestFaceVid(m_mesh, fid, m_mouse.worldPosition) };
-			m_mouse.vertOffset = m_mesh.poly_vert_offset(pid, vid);
+			Id pid, fid, eid, vid;
+			const cinolib::Ray ray{ m_canvas.eye_to_mouse_ray() };
+			if (m_mesher.pick(ray.begin(), ray.dir(), pid, fid, eid, vid))
+			{
+				m_mouse.element = &m_mesher.pidToElement(pid);
+				m_mouse.faceOffset = m_mesh.poly_face_offset(pid, fid);
+				const Id upFid{ Meshing::Utils::adjacentFid(m_mesh, pid, fid, eid) };
+				m_mouse.upFaceOffset = m_mesh.poly_face_offset(pid, upFid);
+				m_mouse.vertOffset = m_mesh.poly_vert_offset(pid, vid);
+			}
 		}
 		m_dagViewer.highlight = m_mouse.element;
 		if (m_mouse.element != lastElement)
@@ -159,173 +156,173 @@ namespace HMP::Gui
 		switch (_key)
 		{
 			// move vertex
-		case GLFW_KEY_M:
-		{
-			if (!_modifiers)
+			case GLFW_KEY_M:
 			{
-				onMove();
-			}
-		}
-		break;
-		// extrude
-		case GLFW_KEY_E:
-		{
-			if (!_modifiers)
-			{
-				onExtrude();
-			}
-		}
-		break;
-		// copy
-		case GLFW_KEY_C:
-		{
-			if (_modifiers == GLFW_MOD_CONTROL)
-			{
-				onCopy();
-			}
-		}
-		break;
-		// paste
-		case GLFW_KEY_V:
-		{
-			if (_modifiers == GLFW_MOD_CONTROL)
-			{
-				onPaste();
-			}
-		}
-		break;
-		// refine hexahedron
-		case GLFW_KEY_H:
-		{
-			if (!_modifiers)
-			{
-				onRefineElement(false);
-			}
-			else if (_modifiers == GLFW_MOD_SHIFT)
-			{
-				onRefineElement(true);
-			}
-		}
-		break;
-		// refine face
-		case GLFW_KEY_F:
-		{
-			if (!_modifiers)
-			{
-				onRefineFace();
-			}
-		}
-		break;
-		// delete hexahedron
-		case GLFW_KEY_DELETE:
-		{
-			if (!_modifiers)
-			{
-				onDelete();
-			}
-		}
-		break;
-		// rotate
-		case GLFW_KEY_Y:
-		{
-			if (!_modifiers)
-			{
-				onRotate();
-			}
-		}
-		break;
-		// make conformant
-		case GLFW_KEY_Q:
-		{
-			if (!_modifiers)
-			{
-				onMakeConformant();
-			}
-		}
-		break;
-		// save tree
-		case GLFW_KEY_S:
-		{
-			// save tree
-			if (_modifiers == GLFW_MOD_CONTROL)
-			{
-				onSaveTree();
-			}
-			// save mesh
-			else if (_modifiers == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT))
-			{
-				onSaveMesh();
-			}
-		}
-		break;
-		// load tree
-		case GLFW_KEY_O:
-		{
-			if (_modifiers == GLFW_MOD_CONTROL)
-			{
-				onLoadTree();
-			}
-		}
-		break;
-		// toggle target visibility
-		case GLFW_KEY_T:
-		{
-			if (!_modifiers)
-			{
-				onToggleTargetVisibility();
-			}
-		}
-		break;
-		// undo or redo
-		case GLFW_KEY_Z:
-		{
-			// undo
-			if (_modifiers == GLFW_MOD_CONTROL)
-			{
-				onUndo();
-			}
-			// redo
-			else if (_modifiers == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT))
-			{
-				onRedo();
-			}
-		}
-		break;
-		// clear
-		case GLFW_KEY_N:
-		{
-			if (_modifiers == GLFW_MOD_CONTROL)
-			{
-				onClear();
-			}
-		}
-		break;
-		// print elements
-		case GLFW_KEY_COMMA:
-		{
-			std::cout << "Elements" << std::endl;
-			for (const auto [element, pid] : m_mesher)
-			{
-				const std::vector<Id> vids{ m_mesh.poly_verts_id(pid, false) };
-				std::cout << m_dagNamer(&element) << ':' << ' ';
-				const HMP::Vec centroid{ m_mesh.poly_centroid(pid) };
-				bool first = true;
-				std::cout << '[';
-				for (const Id vid : vids)
+				if (!_modifiers)
 				{
-					const HMP::Vec vert{ m_mesh.vert(vid) };
-					if (!first)
-					{
-						std::cout << ",";
-					}
-					first = false;
-					std::cout << HrDescriptions::describe(HMP::Meshing::Utils::polyVertLoc(vert, centroid));
+					onMove();
 				}
-				std::cout << ']' << ' ';
-				std::cout << HrDescriptions::describe(vids) << std::endl;
 			}
-		}
-		break;
+			break;
+			// extrude
+			case GLFW_KEY_E:
+			{
+				if (!_modifiers)
+				{
+					onExtrude();
+				}
+			}
+			break;
+			// copy
+			case GLFW_KEY_C:
+			{
+				if (_modifiers == GLFW_MOD_CONTROL)
+				{
+					onCopy();
+				}
+			}
+			break;
+			// paste
+			case GLFW_KEY_V:
+			{
+				if (_modifiers == GLFW_MOD_CONTROL)
+				{
+					onPaste();
+				}
+			}
+			break;
+			// refine hexahedron
+			case GLFW_KEY_H:
+			{
+				if (!_modifiers)
+				{
+					onRefineElement(false);
+				}
+				else if (_modifiers == GLFW_MOD_SHIFT)
+				{
+					onRefineElement(true);
+				}
+			}
+			break;
+			// refine face
+			case GLFW_KEY_F:
+			{
+				if (!_modifiers)
+				{
+					onRefineFace();
+				}
+			}
+			break;
+			// delete hexahedron
+			case GLFW_KEY_DELETE:
+			{
+				if (!_modifiers)
+				{
+					onDelete();
+				}
+			}
+			break;
+			// rotate
+			case GLFW_KEY_Y:
+			{
+				if (!_modifiers)
+				{
+					onRotate();
+				}
+			}
+			break;
+			// make conformant
+			case GLFW_KEY_Q:
+			{
+				if (!_modifiers)
+				{
+					onMakeConformant();
+				}
+			}
+			break;
+			// save tree
+			case GLFW_KEY_S:
+			{
+				// save tree
+				if (_modifiers == GLFW_MOD_CONTROL)
+				{
+					onSaveTree();
+				}
+				// save mesh
+				else if (_modifiers == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT))
+				{
+					onSaveMesh();
+				}
+			}
+			break;
+			// load tree
+			case GLFW_KEY_O:
+			{
+				if (_modifiers == GLFW_MOD_CONTROL)
+				{
+					onLoadTree();
+				}
+			}
+			break;
+			// toggle target visibility
+			case GLFW_KEY_T:
+			{
+				if (!_modifiers)
+				{
+					onToggleTargetVisibility();
+				}
+			}
+			break;
+			// undo or redo
+			case GLFW_KEY_Z:
+			{
+				// undo
+				if (_modifiers == GLFW_MOD_CONTROL)
+				{
+					onUndo();
+				}
+				// redo
+				else if (_modifiers == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT))
+				{
+					onRedo();
+				}
+			}
+			break;
+			// clear
+			case GLFW_KEY_N:
+			{
+				if (_modifiers == GLFW_MOD_CONTROL)
+				{
+					onClear();
+				}
+			}
+			break;
+			// print elements
+			case GLFW_KEY_COMMA:
+			{
+				std::cout << "Elements" << std::endl;
+				for (const auto [element, pid] : m_mesher)
+				{
+					const std::vector<Id> vids{ m_mesh.poly_verts_id(pid, false) };
+					std::cout << m_dagNamer(&element) << ':' << ' ';
+					const HMP::Vec centroid{ m_mesh.poly_centroid(pid) };
+					bool first = true;
+					std::cout << '[';
+					for (const Id vid : vids)
+					{
+						const HMP::Vec vert{ m_mesh.vert(vid) };
+						if (!first)
+						{
+							std::cout << ",";
+						}
+						first = false;
+						std::cout << HrDescriptions::describe(HMP::Meshing::Utils::polyVertLoc(vert, centroid));
+					}
+					std::cout << ']' << ' ';
+					std::cout << HrDescriptions::describe(vids) << std::endl;
+				}
+			}
+			break;
 		}
 		return false;
 	}
@@ -669,7 +666,6 @@ namespace HMP::Gui
 
 	int App::launch()
 	{
-		updateDagViewer();
 		return m_canvas.launch();
 	}
 

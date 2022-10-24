@@ -208,6 +208,8 @@ namespace HMP::Meshing
 		void updateMesh();
 		void updateMeshMarkers();
 
+		bool pick(const Vec& _from, const Vec& _dir, Id& _pid, Id& _fid, Id& _eid, Id& _vid) const;
+
 	};
 
 }
