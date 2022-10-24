@@ -63,6 +63,50 @@ namespace HMP::Meshing::Utils
 		throw std::runtime_error{ "unexpected" };
 	}
 
+	Id sharedEid(const Meshing::Mesher::Mesh& _mesh, Id _pid1, Id _pid2)
+	{
+		for (const Id sharedEid : _mesh.adj_p2e(_pid1))
+		{
+			for (const Id adjPid : _mesh.adj_e2p(sharedEid))
+			{
+				if (adjPid == _pid2)
+				{
+					return sharedEid;
+				}
+			}
+		}
+		throw std::logic_error{ "not adjacent" };
+	}
+
+	EdgeVertIds edgeVids(const Meshing::Mesher::Mesh& _mesh, const EdgeVertIds& _edgeVertOffsets, Id _pid)
+	{
+		return {
+			_mesh.poly_vert_id(_pid, _edgeVertOffsets[0]),
+			_mesh.poly_vert_id(_pid, _edgeVertOffsets[1])
+		};
+	}
+
+	EdgeVertIds edgeVids(const Meshing::Mesher::Mesh& _mesh, Id _eid)
+	{
+		return {
+			_mesh.edge_vert_id(_eid, 0),
+			_mesh.edge_vert_id(_eid, 1)
+		};
+	}
+
+	EdgeVertIds edgePolyVertOffsets(const Meshing::Mesher::Mesh& _mesh, Id _eid, Id _pid)
+	{
+		return edgePolyVertOffsets(_mesh, edgeVids(_mesh, _eid), _pid);
+	}
+
+	EdgeVertIds edgePolyVertOffsets(const Meshing::Mesher::Mesh& _mesh, const EdgeVertIds& _edgeVids, Id _pid)
+	{
+		return {
+			_mesh.poly_vert_offset(_pid, _edgeVids[0]),
+			_mesh.poly_vert_offset(_pid, _edgeVids[1])
+		};
+	}
+
 	FaceVertIds faceVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, bool _winding)
 	{
 		if (!_mesh.poly_contains_face(_pid, _fid))

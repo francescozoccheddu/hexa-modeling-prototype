@@ -119,192 +119,75 @@ namespace HMP::Actions
 		Meshing::Mesher& mesher{ this->mesher() };
 		const Meshing::Mesher::Mesh& mesh{ mesher.mesh() };
 		// copy the source refinements because we don't want to consider the newly added refines
-		const std::vector<Dag::Refine*> standardRefines{ _insets };
-		for (Dag::Refine* standardRefine : standardRefines)
+		const std::vector<Dag::Refine*> refines{ _insets };
+		for (Dag::Refine* const refine : refines)
 		{
-			Dag::Refine& sourceRefine = *standardRefine;
-			Dag::Element& sourceElement = sourceRefine.parents().single();
+			Dag::Refine& ref = *refine;
+			Dag::Element& refEl = ref.parents().single();
 			// temporarily add the element just to examine the adjacencies
-			mesher.add(sourceElement);
-			const Id sourcePid{ mesher.elementToPid(sourceElement) };
-			// for each adjacent poly targetPid
-			for (Id targetPid : mesh.adj_p2p(sourcePid))
+			mesher.add(refEl);
+			const Id refPid{ mesher.elementToPid(refEl) };
+			// for each adjacent poly candPid
+			for (const Id candPid : mesh.adj_p2p(refPid))
 			{
 				// skip if self-adjacent
-				if (targetPid == sourcePid)
+				if (candPid == refPid)
 				{
 					continue;
 				}
-				const Id sharedFid = mesh.poly_shared_face(sourcePid, targetPid);
+				const Id sharedFid = mesh.poly_shared_face(refPid, candPid);
 				// skip if they do not share a face
 				if (sharedFid == noId)
 				{
 					continue;
 				}
 				// skip if the shared face is not the refined one
-				if (sharedFid != mesh.poly_face_id(sourcePid, sourceRefine.forwardFaceOffset()))
+				if (sharedFid != mesh.poly_face_id(refPid, ref.forwardFaceOffset()))
 				{
 					continue;
 				}
 				// get the orientation right
-				Dag::Element& targetElement = mesher.pidToElement(targetPid);
-				const Id targetForwardFid{ sharedFid };
-				const Id targetForwardFaceOffset{ mesh.poly_face_offset(targetPid, targetForwardFid) };
-				const Id targetUpFid{ Meshing::Utils::adjacentFid(mesh, targetPid, targetForwardFid, mesh.face_edge_id(targetForwardFid, 0)) };
-				const Id targetUpFaceOffset{ mesh.poly_face_offset(targetPid, targetUpFid) };
+				Dag::Element& candEl = mesher.pidToElement(candPid);
+				const Id candForwardFid{ sharedFid };
+				const Id candForwardFaceOffset{ mesh.poly_face_offset(candPid, candForwardFid) };
+				const Id candUpFid{ Meshing::Utils::adjacentFid(mesh, candPid, candForwardFid, mesh.face_edge_id(candForwardFid, 0)) };
+				const Id candUpFaceOffset{ mesh.poly_face_offset(candPid, candUpFid) };
 				// apply the refinement
-				Dag::Refine& targetRefine{ Utils::prepareRefine(targetForwardFaceOffset, targetUpFaceOffset, ERefinementScheme::Inset) };
-				targetRefine.parents().attach(targetElement);
-				Utils::applyRefine(mesher, targetRefine);
-				m_operations.push_back({ &targetRefine, &targetElement });
-				_insets.push_back(&targetRefine);
+				Dag::Refine& adapterRef{ Utils::prepareRefine(candForwardFaceOffset, candUpFaceOffset, ERefinementScheme::Inset) };
+				adapterRef.parents().attach(candEl);
+				Utils::applyRefine(mesher, adapterRef);
+				m_operations.push_back({ &adapterRef, &candEl });
+				_insets.push_back(&adapterRef);
 			}
 			// remove the temporarily added element
-			mesher.remove(sourceElement);
+			mesher.remove(refEl);
 		}
 	}
-
-	class Sub3x3AdapterCandidate final
-	{
-
-	private:
-
-		Dag::Element* m_element;
-		std::optional<ERefinementScheme> m_scheme;
-		Id m_forwardFaceOffset, m_upFaceOffset;
-
-	public:
-
-		Sub3x3AdapterCandidate(Dag::Element& _element) : m_element{ &_element }, m_scheme{} {}
-
-		Dag::Element& element() const
-		{
-			return *m_element;
-		}
-
-		ERefinementScheme scheme() const
-		{
-			return *m_scheme;
-		}
-
-		void addAdjacency(const Meshing::Mesher& _mesher, const Dag::Element& _refined, bool _edge)
-		{
-			throw std::logic_error{ "not implemented yet" }; // TODO
-		}
-
-		Dag::Refine& prepareAdapter(const Meshing::Mesher& _mesher) const
-		{
-			return Utils::prepareRefine(m_forwardFaceOffset, m_upFaceOffset, *m_scheme);
-		}
-
-	};
-
-	class Sub3x3AdapterCandidateSet final
-	{
-
-	private:
-
-		using Map = std::unordered_map<Dag::Element*, Sub3x3AdapterCandidate>;
-
-		Map m_sub3x3Map{}; // candidates that will be refined as a new Subdivide3x3 (they need to be processed first)
-		Map m_nonSub3x3Map{}; // other candidates (they must be processed only after)
-
-		void addAdjacency(const Meshing::Mesher& _mesher, Dag::Element& _candidate, const Dag::Element& _refined, bool _edge)
-		{
-			// find the map that contains the candidate (if any) and the iterator
-			Map* map{ &m_sub3x3Map };
-			auto it{ m_sub3x3Map.find(&_candidate) };
-			if (it == m_sub3x3Map.end())
-			{
-				it = m_nonSub3x3Map.find(&_candidate);
-				map = &m_nonSub3x3Map;
-			}
-			// get the existing candidate or create a new one
-			Sub3x3AdapterCandidate candidate{ it == map->end() ? Sub3x3AdapterCandidate{_candidate} : it->second };
-			candidate.addAdjacency(_mesher, _refined, _edge);
-			// if the candidate was not previously stored or it changed its target map
-			if ((candidate.scheme() == ERefinementScheme::Subdivide3x3) != (map == &m_sub3x3Map))
-			{
-				// remove it from the previous map (if any) and add it to the right one
-				if (it != map->end())
-				{
-					map->erase(it);
-				}
-				Map& newMap{ (candidate.scheme() == ERefinementScheme::Subdivide3x3) ? m_sub3x3Map : m_nonSub3x3Map };
-				newMap.insert({ &_candidate, candidate });
-			}
-		}
-
-	public:
-
-		void addAdjacency(Meshing::Mesher& _mesher, Dag::Refine& _refine)
-		{
-			const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
-			Dag::Element& sourceElement = _refine.parents().single();
-			// temporarily add the element just to examine the adjacencies
-			_mesher.add(sourceElement);
-			const Id sourcePid{ _mesher.elementToPid(sourceElement) };
-			// add face to face adjacent elements
-			for (const Id targetPid : mesh.adj_p2p(sourcePid))
-			{
-				addAdjacency(_mesher, _mesher.pidToElement(targetPid), sourceElement, false);
-			}
-			// add face to edge adjacent elements
-			for (const Id sharedEid : mesh.adj_p2e(sourcePid)) // for each adjacent edge sharedEid
-			{
-				for (const Id targetPid : mesh.adj_e2p(sharedEid)) // foreeach adjacent element targetPid to sharedEid
-				{
-					// if targetPid is not the source element, nor is adjacent face to face to it
-					if (targetPid != sourcePid && mesh.poly_shared_face(targetPid, sourcePid) == noId)
-					{
-						addAdjacency(_mesher, _mesher.pidToElement(targetPid), sourceElement, true);
-					}
-				}
-			}
-			// remove the temporarily added element
-			_mesher.remove(sourceElement);
-		}
-
-		const Sub3x3AdapterCandidate& pop()
-		{
-			Map& map{ m_sub3x3Map.empty() ? m_nonSub3x3Map : m_sub3x3Map };
-			const auto it{ map.begin() };
-			const Sub3x3AdapterCandidate candidate{ it->second };
-			map.erase(it);
-			return candidate;
-		}
-
-		bool empty() const
-		{
-			return m_sub3x3Map.empty() && m_nonSub3x3Map.empty();
-		}
-
-	};
 
 	void MakeConforming::installSubdivide3x3Adapters(std::vector<Dag::Refine*>& _sub3x3s)
 	{
 		Meshing::Mesher& mesher{ this->mesher() };
 		const Meshing::Mesher::Mesh& mesh{ mesher.mesh() };
-		Sub3x3AdapterCandidateSet set{};
+		Utils::Sub3x3AdapterCandidateSet set{};
 		// build a set of candidates based on the source refinements
-		for (Dag::Refine* standardRefine : _sub3x3s)
+		for (Dag::Refine* refine : _sub3x3s)
 		{
-			set.addAdjacency(mesher, *standardRefine);
+			set.addAdjacency(mesher, *refine);
 		}
 		// while there is a candidate
 		while (!set.empty())
 		{
 			// prepare and apply its refinement
-			const Sub3x3AdapterCandidate candidate{ set.pop() };
-			Dag::Refine& targetRefine{ candidate.prepareAdapter(mesher) };
-			targetRefine.parents().attach(candidate.element());
-			Utils::applyRefine(mesher, targetRefine);
-			m_operations.push_back({ &targetRefine, &candidate.element() });
+			const Utils::Sub3x3AdapterCandidate candidate{ set.pop() };
+			Dag::Refine& adapterRefine{ candidate.prepareAdapter(mesher) };
+			adapterRefine.parents().attach(candidate.element());
+			Utils::applyRefine(mesher, adapterRefine);
+			m_operations.push_back({ &adapterRefine, &candidate.element() });
 			// if the refinement is a new Subdivide3x3, then add it to the set
 			if (candidate.scheme() == ERefinementScheme::Subdivide3x3)
 			{
-				set.addAdjacency(mesher, targetRefine);
-				_sub3x3s.push_back(&targetRefine);
+				set.addAdjacency(mesher, adapterRefine);
+				_sub3x3s.push_back(&adapterRefine);
 			}
 		}
 	}
