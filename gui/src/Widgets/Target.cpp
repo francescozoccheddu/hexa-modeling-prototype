@@ -210,7 +210,7 @@ namespace HMP::Gui::Widgets
 		const Mat4 scale(Mat4::DIAG(cinolib::vec4d{ m_scale, m_scale, m_scale, 1.0 }));
 		const Mat4 centerTranslation(Mat4::TRANS(m_center));
 		const Mat4 originTranslation(Mat4::TRANS(-m_mesh->bbox().center()));
-		m_mesh->transform = rotation * centerTranslation * scale * originTranslation;
+		m_mesh->transform = centerTranslation * rotation * scale * originTranslation;
 	}
 
 	void Target::updateVisibility()
@@ -238,6 +238,7 @@ namespace HMP::Gui::Widgets
 		m_visible = true;
 		m_filename = _filename;
 		m_mesh = new cinolib::DrawableTrimesh<>(m_filename.c_str());
+		m_mesh->draw_back_faces = false;
 		fit();
 		updateVisibility();
 		updateColor();
@@ -349,7 +350,7 @@ namespace HMP::Gui::Widgets
 			{
 				ImGui::PushID(2);
 				float xyz[3]{ static_cast<float>(m_rotation.x()), static_cast<float>(m_rotation.y()), static_cast<float>(m_rotation.z()) };
-				if (ImGui::DragFloat3("Rotation", xyz, 0.5, -360, 360, "%.1f degrees"))
+				if (ImGui::DragFloat3("Rotation", xyz, 0.5, -360, 360, "%.1f deg"))
 				{
 					for (float& angle : xyz)
 					{

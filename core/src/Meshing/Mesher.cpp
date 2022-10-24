@@ -187,6 +187,7 @@ namespace HMP::Meshing
 	{
 		m_polyMarkerSet.color() = cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.5f);
 		m_faceMarkerSet.color() = cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.7f);
+		m_mesh.draw_back_faces = false;
 		m_mesh.show_mesh_flat();
 		m_mesh.show_marked_face(true);
 		m_mesh.show_in_wireframe_width(2.0f);
