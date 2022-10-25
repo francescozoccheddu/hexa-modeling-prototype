@@ -289,7 +289,7 @@ namespace HMP::Gui::Widgets
 		if (hasMesh())
 		{
 			{
-				ImGui::TextColored(ImVec4(0.75f, 0.75f, 0.75f, 1.0f), m_filename.c_str() + m_filename.find_last_of("/\\") + 1);
+				ImGui::TextColored(ImVec4(0.75f, 0.75f, 0.75f, 1.0f), "%s", m_filename.c_str());
 				ImGui::SameLine();
 				if (ImGui::Button("Clear"))
 				{
