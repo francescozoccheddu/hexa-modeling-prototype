@@ -100,6 +100,38 @@ namespace HMP::Gui::HrDescriptions
 		return stream.str();
 	}
 
+	std::string describe(const std::vector<bool>& _flags)
+	{
+		std::ostringstream stream{};
+		stream << "[";
+		if (!_flags.empty())
+		{
+			stream << (_flags[0] ? '+' : '-');
+			for (std::size_t i{ 1 }; i < _flags.size(); i++)
+			{
+				stream << "," << (_flags[i] ? '+' : '-');
+			}
+		}
+		stream << "]";
+		return stream.str();
+	}
+
+	std::string describe(const std::vector<HMP::Meshing::Utils::PolyVertLoc>& _locs)
+	{
+		std::ostringstream stream{};
+		stream << "[";
+		if (!_locs.empty())
+		{
+			stream << describe(_locs[0]);
+			for (std::size_t i{ 1 }; i < _locs.size(); i++)
+			{
+				stream << "," << describe(_locs[i]);
+			}
+		}
+		stream << "]";
+		return stream.str();
+	}
+
 	std::string describe(const HMP::Meshing::Utils::PolyVertLoc _loc)
 	{
 		std::ostringstream stream{};

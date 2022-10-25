@@ -397,7 +397,7 @@ namespace HMP::Gui::Widgets
 			ImGui::Spacing();
 			{
 				const auto inputColor{ [this](cinolib::Color& _color, const std::string& _label) {
-					float rgba[4]{_color.r, _color.g, _color.b, _color.a};
+					float rgba[4]{_color.r(), _color.g(), _color.b(), _color.a()};
 					if (ImGui::ColorEdit4(_label.c_str(), rgba))
 					{
 						_color = cinolib::Color{ rgba[0], rgba[1], rgba[2], rgba[3]};
