@@ -1,4 +1,4 @@
-﻿cmake_minimum_required (VERSION 3.8)
+﻿cmake_minimum_required (VERSION 3.14)
 
 add_executable (gui 
     "src/main.cpp" 
@@ -20,11 +20,10 @@ set_target_properties (gui PROPERTIES
 )
 
 target_include_directories (gui
-    PRIVATE "${CMAKE_CURRENT_LIST_DIR}/include"
+    PRIVATE "include"
 )
 
 target_link_libraries (gui 
     PRIVATE core
-    PRIVATE OGDF
+    PRIVATE ogdf
 )
-

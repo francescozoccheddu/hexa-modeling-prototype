@@ -1,4 +1,4 @@
-﻿cmake_minimum_required (VERSION 3.8)
+﻿cmake_minimum_required (VERSION 3.14)
 
 add_library (core STATIC
     "src/Actions/Clear.cpp"
@@ -41,7 +41,7 @@ if (MSVC AND CINOLIB_HEADER_ONLY)
 endif()
 
 target_include_directories (core
-    PUBLIC "${CMAKE_CURRENT_LIST_DIR}/include"
+    PUBLIC "include"
 )
 
 target_link_libraries (core 

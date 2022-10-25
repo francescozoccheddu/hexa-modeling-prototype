@@ -1,9 +1,0 @@
-[submodule "external/cinolib"]
-	path = external/cinolib
-	url = https://github.com/francescozoccheddu/cinolib
-[submodule "external/ogdf"]
-	path = external/ogdf
-	url = https://github.com/ogdf/ogdf
-[submodule "external/cpputils"]
-	path = external/cpputils
-	url = https://github.com/francescozoccheddu/cpputils
