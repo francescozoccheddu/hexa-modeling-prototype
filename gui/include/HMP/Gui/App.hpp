@@ -43,13 +43,6 @@ namespace HMP::Gui
 		struct
 		{
 			HMP::Dag::Element* element{};
-			Id vertOffset{};
-			Vec startPosition{};
-		} m_move;
-
-		struct
-		{
-			HMP::Dag::Element* element{};
 		} m_copy;
 
 		struct
@@ -77,7 +70,6 @@ namespace HMP::Gui
 
 		void updateMouse();
 		void updateDagViewer();
-		void updateMove();
 
 		void onCameraChange();
 		bool onKeyPress(int _key, int _modifiers);
@@ -86,7 +78,6 @@ namespace HMP::Gui
 		void onDrawCustomGui();
 		void onDagViewerDraw();
 
-		void onMove();
 		void onExtrude();
 		void onCopy();
 		void onPaste();

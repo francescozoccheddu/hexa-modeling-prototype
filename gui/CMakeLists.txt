@@ -10,6 +10,7 @@ add_executable (gui
     "src/Widgets/Axes.cpp"
     "src/Widgets/Commander.cpp"
     "src/Widgets/Target.cpp"
+    "src/Widgets/VertEdit.cpp"
 )
 
 set_target_properties (gui PROPERTIES

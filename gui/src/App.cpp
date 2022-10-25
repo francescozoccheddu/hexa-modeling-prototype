@@ -12,7 +12,6 @@
 #include <HMP/Gui/Dag/createLayout.hpp>
 #include <utility>
 #include <HMP/Dag/Operation.hpp>
-#include <HMP/Actions/MoveVert.hpp>
 #include <HMP/Actions/Clear.hpp>
 #include <HMP/Actions/Load.hpp>
 #include <HMP/Actions/Delete.hpp>
@@ -22,7 +21,7 @@
 #include <HMP/Actions/Refine.hpp>
 #include <HMP/Actions/Rotate.hpp>
 #include <HMP/Actions/Paste.hpp>
-#include <HMP/Actions/Transform.hpp>
+#include <HMP/Actions/TransformAll.hpp>
 #include <HMP/Utils/Serialization.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Gui/HrDescriptions.hpp>
@@ -148,27 +147,11 @@ namespace HMP::Gui
 			updateMouseMarkers();
 			updateElementsMarkers();
 		}
-		updateMove();
 	}
 
 	void App::updateDagViewer()
 	{
 		m_dagViewerNeedsUpdate = true;
-	}
-
-	void App::updateMove()
-	{
-		if (m_move.element)
-		{
-			const Id pid{ m_mesher.elementToPid(*m_move.element) };
-			const Id vid{ m_mesh.poly_vert_id(pid, m_move.vertOffset) };
-			if (m_mesher.getVert(m_mouse.worldPosition) == noId)
-			{
-				m_mesher.moveVert(vid, m_mouse.worldPosition);
-			}
-			updateAllMarkers();
-			m_mesher.updateMesh();
-		}
 	}
 
 	// Events
@@ -189,14 +172,6 @@ namespace HMP::Gui
 	{
 		switch (_key)
 		{
-			// move vertex
-			case GLFW_KEY_M:
-			{
-				if (!_modifiers)
-				{
-					onMove();
-				}
-			}
 			break;
 			// extrude
 			case GLFW_KEY_E:
@@ -443,17 +418,6 @@ namespace HMP::Gui
 				<< " " << HrDescriptions::name(*m_copy.element, m_dagNamer);
 			ImGui::Text("%s", stream.str().c_str());
 		}
-		if (m_move.element)
-		{
-			std::ostringstream stream{};
-			stream
-				<< "Moving"
-				<< " vert " << m_move.vertOffset
-				<< " of " << HrDescriptions::name(*m_move.element, m_dagNamer)
-				<< " from " << HrDescriptions::describe(m_move.startPosition)
-				<< " to " << HrDescriptions::describe(m_mouse.worldPosition);
-			ImGui::Text("%s", stream.str().c_str());
-		}
 	}
 
 	void App::onDagViewerDraw()
@@ -470,39 +434,6 @@ namespace HMP::Gui
 	}
 
 	// Commands
-
-	void App::onMove()
-	{
-		if (m_mouse.element)
-		{
-			if (m_move.element && m_mesher.has(*m_move.element))
-			{
-				const Id pid{ m_mesher.elementToPid(*m_move.element) };
-				const Id vid{ m_mesh.poly_vert_id(pid, m_move.vertOffset) };
-				m_mesher.moveVert(vid, m_move.startPosition);
-				m_commander.apply(*new Actions::MoveVert{ *m_move.element, m_move.vertOffset, m_mouse.worldPosition });
-				m_move.element = nullptr;
-				m_canvas.refit_scene();
-			}
-			else
-			{
-				m_move.element = m_mouse.element;
-				m_move.vertOffset = m_mouse.vertOffset;
-				const Id pid{ m_mesher.elementToPid(*m_move.element) };
-				const Id vid{ m_mesh.poly_vert_id(pid, m_move.vertOffset) };
-				m_move.startPosition = m_mesh.vert(vid);
-			}
-		}
-		else if (m_move.element)
-		{
-			const Id pid{ m_mesher.elementToPid(*m_move.element) };
-			const Id vid{ m_mesh.poly_vert_id(pid, m_move.vertOffset) };
-			m_mesher.moveVert(vid, m_move.startPosition);
-			m_move.element = nullptr;
-			m_canvas.refit_scene();
-			m_mesher.updateMesh();
-		}
-	}
 
 	void App::onExtrude()
 	{
@@ -653,7 +584,7 @@ namespace HMP::Gui
 
 	void App::onApplyTargetTransform(const Mat4& _transform)
 	{
-		m_commander.apply(*new Actions::Transform{ _transform });
+		m_commander.apply(*new Actions::TransformAll{ _transform });
 		updateAllMarkers();
 		m_canvas.reset_camera();
 	}
@@ -691,7 +622,6 @@ namespace HMP::Gui
 	void App::onClear()
 	{
 		m_commander.apply(*new Actions::Clear());
-		m_move.element = nullptr;
 		m_copy.element = nullptr;
 		updateDagViewer();
 		m_canvas.refit_scene();
@@ -723,10 +653,10 @@ namespace HMP::Gui
 		m_canvas.push(&m_menu);
 		m_canvas.push(&m_dagViewer);
 
-		m_targetWidget.onProjectRequest() = [this](const Widgets::Target& _target) { onProjectToTarget(); };
-		m_targetWidget.onMeshLoad() = [this](const Widgets::Target& _target) { m_canvas.push(&_target.mesh(), false); };
-		m_targetWidget.onMeshClear() = [this](const Widgets::Target& _target) { m_canvas.pop(&_target.mesh()); };
-		m_targetWidget.onApplyTransformToSource() = [this](const Widgets::Target& _target, const Mat4& _transform) { onApplyTargetTransform(_transform); };
+		m_targetWidget.onProjectRequest += [this](const Widgets::Target& _target) { onProjectToTarget(); };
+		m_targetWidget.onMeshLoad += [this](const Widgets::Target& _target) { m_canvas.push(&_target.mesh(), false); };
+		m_targetWidget.onMeshClear += [this](const Widgets::Target& _target) { m_canvas.pop(&_target.mesh()); };
+		m_targetWidget.onApplyTransformToSource += [this](const Widgets::Target& _target, const Mat4& _transform) { onApplyTargetTransform(_transform); };
 
 		m_canvas.depth_cull_markers = false;
 		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMove(_args...); };

@@ -1,12 +1,10 @@
 #include <HMP/Gui/Widgets/Target.hpp>
 
 #include <cinolib/gl/file_dialog_open.h>
-#include <Eigen/Core>
 #include <imgui.h>
 #include <cinolib/gl/glcanvas.h>
 #include <cinolib/deg_rad.h>
 #include <cmath>
-
 #include <stdexcept>
 
 namespace HMP::Gui::Widgets
@@ -14,7 +12,7 @@ namespace HMP::Gui::Widgets
 
 	Target::Target(const Meshing::Mesher::Mesh& _sourceMesh)
 		: m_mesh{}, m_sourceMesh{ _sourceMesh },
-		m_onProjectRequest{}, m_onMeshLoad{}, m_onMeshClear{}, m_onApplyTransformToSource{},
+		onProjectRequest{}, onMeshLoad{}, onMeshClear{}, onApplyTransformToSource{},
 		m_visible{ true }, m_faceColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.25f} }, m_edgeColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.75f} },
 		m_rotation{ 0,0,0 }, m_center{ 0,0,0 }, m_scale{ 1 },
 		cinolib::SideBarItem{ "Target mesh" }
@@ -26,26 +24,6 @@ namespace HMP::Gui::Widgets
 		{
 			throw std::logic_error{ "no mesh" };
 		}
-	}
-
-	std::function<void(const Target&)>& Target::onProjectRequest()
-	{
-		return m_onProjectRequest;
-	}
-
-	std::function<void(const Target&)>& Target::onMeshLoad()
-	{
-		return m_onMeshLoad;
-	}
-
-	std::function<void(const Target&)>& Target::onMeshClear()
-	{
-		return m_onMeshClear;
-	}
-
-	std::function<void(const Target&, const Mat4&)>& Target::onApplyTransformToSource()
-	{
-		return m_onApplyTransformToSource;
 	}
 
 	const Meshing::Mesher::Mesh& Target::sourceMesh() const
@@ -242,20 +220,14 @@ namespace HMP::Gui::Widgets
 		fit();
 		updateVisibility();
 		updateColor();
-		if (m_onMeshLoad)
-		{
-			m_onMeshLoad(*this);
-		}
+		onMeshLoad(*this);
 	}
 
 	void Target::clearMesh()
 	{
 		if (m_mesh)
 		{
-			if (m_onMeshClear)
-			{
-				m_onMeshClear(*this);
-			}
+			onMeshClear(*this);
 			delete m_mesh;
 			m_mesh = nullptr;
 			m_filename = "";
@@ -264,23 +236,15 @@ namespace HMP::Gui::Widgets
 
 	void Target::requestProjection()
 	{
-		if (!m_onProjectRequest)
-		{
-			throw std::logic_error{ "no projection callback" };
-		}
 		ensureHasMesh();
-		m_onProjectRequest(*this);
+		onProjectRequest(*this);
 	}
 
 	void Target::requestApplyTransformToSource()
 	{
-		if (!m_onApplyTransformToSource)
-		{
-			throw std::logic_error{ "no apply transform to source callback" };
-		}
 		ensureHasMesh();
 		updateTransform();
-		m_onApplyTransformToSource(*this, m_mesh->transform.inverse());
+		onApplyTransformToSource(*this, m_mesh->transform.inverse());
 		identity();
 	}
 

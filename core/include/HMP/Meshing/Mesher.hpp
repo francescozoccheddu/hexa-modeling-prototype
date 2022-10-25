@@ -16,12 +16,12 @@ namespace HMP::Meshing
 	namespace Internal
 	{
 
-		inline constexpr std::pair<Dag::Element&, Id> ElementToPidIterableConvert(std::unordered_map<Dag::Element*, Id>::value_type& _entry)
+		constexpr std::pair<Dag::Element&, Id> ElementToPidIterableConvert(std::unordered_map<Dag::Element*, Id>::value_type& _entry)
 		{
 			return std::pair<Dag::Element&, Id>{*_entry.first, _entry.second};
 		}
 
-		inline constexpr std::pair<const Dag::Element&, Id> ElementToPidIterableConstConvert(const std::unordered_map<Dag::Element*, Id>::value_type& _entry)
+		constexpr std::pair<const Dag::Element&, Id> ElementToPidIterableConstConvert(const std::unordered_map<Dag::Element*, Id>::value_type& _entry)
 		{
 			return std::pair<const Dag::Element&, Id>{*_entry.first, _entry.second};
 		}
@@ -48,7 +48,7 @@ namespace HMP::Meshing
 			}
 		};
 
-		inline constexpr std::pair<const Dag::Element&, Id> FaceMarkerIterableConstConvert(const std::pair<const Dag::Element*, Id>& _entry)
+		constexpr std::pair<const Dag::Element&, Id> FaceMarkerIterableConstConvert(const std::pair<const Dag::Element*, Id>& _entry)
 		{
 			return std::pair<const Dag::Element&, Id>{*_entry.first, _entry.second};
 		}

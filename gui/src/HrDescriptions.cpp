@@ -252,14 +252,12 @@ namespace HMP::Gui::HrDescriptions
 		return stream.str();
 	}
 
-	std::string describe(const Actions::MoveVert& _action, DagNamer& _dagNamer)
+	std::string describe(const Actions::TransformVerts& _action, DagNamer& _dagNamer)
 	{
 		std::ostringstream stream{};
 		stream
-			<< "Move vertex"
-			<< " " << _action.vertOffset()
-			<< " of " << name(_action.element(), _dagNamer)
-			<< " to " << describe(_action.position());
+			<< "Transform " << _action.verts().size() << " verts "
+			<< " " << describe(_action.transform());
 		return stream.str();
 	}
 
@@ -305,11 +303,11 @@ namespace HMP::Gui::HrDescriptions
 		return stream.str();
 	}
 
-	std::string describe(const Actions::Transform& _action, DagNamer& _dagNamer)
+	std::string describe(const Actions::TransformAll& _action, DagNamer& _dagNamer)
 	{
 		std::ostringstream stream{};
 		stream
-			<< "Transform"
+			<< "Transform all "
 			<< " " << describe(_action.transform());
 		return stream.str();
 	}
@@ -336,10 +334,6 @@ namespace HMP::Gui::HrDescriptions
 		{
 			return describe(*action, _dagNamer);
 		}
-		if (const Actions::MoveVert* action{ dynamic_cast<const Actions::MoveVert*>(&_action) }; action)
-		{
-			return describe(*action, _dagNamer);
-		}
 		if (const Actions::Paste* action{ dynamic_cast<const Actions::Paste*>(&_action) }; action)
 		{
 			return describe(*action, _dagNamer);
@@ -356,7 +350,11 @@ namespace HMP::Gui::HrDescriptions
 		{
 			return describe(*action, _dagNamer);
 		}
-		if (const Actions::Transform* action{ dynamic_cast<const Actions::Transform*>(&_action) }; action)
+		if (const Actions::TransformVerts* action{ dynamic_cast<const Actions::TransformVerts*>(&_action) }; action)
+		{
+			return describe(*action, _dagNamer);
+		}
+		if (const Actions::TransformAll* action{ dynamic_cast<const Actions::TransformAll*>(&_action) }; action)
 		{
 			return describe(*action, _dagNamer);
 		}
