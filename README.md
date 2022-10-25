@@ -27,23 +27,17 @@ cmake --build .
 
 5. Enjoy! 😉
 
-## Compatibility
+### Compatibility
 
 Requires [CMake](https://cmake.org/) 3.8+, a modern C++20 compiler and OpenGL 1.1 support.
 
-### Tested on
-
-- MSVC v143 with Windows 11 SDK (10.0.22621.0) on Windows 11 21H2 and Visual Studio 2022 17.3.6 with built-in CMake tools.  
-  No setup required.  
-  Everything works fine.
-
-- g++ 10.3 on Ubuntu 22.04 (Wayland) with CMake 3.24.2.  
-  Make sure to have `libgl1-mesa-dev`, `libglu1-mesa-dev` and `xorg-dev` installed and g++ 10 or latter as the default g++ version (see `update-alternatives`).  
-  I think there is a delay in the trigger of the mouse buttons release event and some minor rendering issues. I need to investigate further. Still usable.
-
-- g++ 10.3 on WSL2 (Windows 11 21H2) with Ubuntu 22.04 distro and CMake 3.24.2 or through Visual Studio 2022 17.3.6 with built-in CMake tools for Linux.  
-  Follow the instructions for g++ 10.3 on Ubuntu 22.04. Append `export DISPLAY=$(ip route list default | awk '{print $3}'):0` and `export LIBGL_ALWAYS_INDIRECT=1` to your `~/.bashrc` file.  
-  There is a problem when swapping the OpenGL buffers. I need to investigate further. Compiles fine but not usable for now.
+Tested on MSVC v143 on Windows 11 and g++ 10 and Clang 14 on Ubuntu 22.10. 
 
 > **NOTE:**  
 > With this configuration Cinolib generates hundreds of warnings (OGDF might also generate some warnings on g++). Compilation should succeed anyway; just ignore them.
+
+> **NOTE:**  
+> On Ubuntu, make sure to have `libgl1-mesa-dev`, `libglu1-mesa-dev` and `xorg-dev` installed.
+
+> **NOTE:**  
+> On Ubuntu there is a delay in the trigger of the GLFW mouse buttons release event, so the camera movement feels sticky.
