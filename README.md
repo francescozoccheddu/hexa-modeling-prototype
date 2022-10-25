@@ -2,10 +2,10 @@
 
 ## Setup
 
-1. Clone this repository and all its submodules:
+1. Clone this repository:
 
 ```Shell
-git clone --recurse-submodules https://github.com/francescozoccheddu/hexa-modeling-prototype
+git clone https://github.com/francescozoccheddu/hexa-modeling-prototype.git
 cd hexa-modeling-prototype
 ```
 
@@ -29,7 +29,7 @@ cmake --build .
 
 ### Compatibility
 
-Requires [CMake](https://cmake.org/) 3.8+, a modern C++20 compiler and OpenGL 1.1 support.
+Requires [CMake](https://cmake.org/) 3.14+, a modern C++20 compiler and OpenGL 1.1 support.
 
 Tested on MSVC v143 on Windows 11 and g++ 10 and Clang 14 on Ubuntu 22.10. 
 
