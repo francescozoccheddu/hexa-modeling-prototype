@@ -6,7 +6,7 @@
 namespace HMP::Actions
 {
 
-	class Transform final : public Commander::Action
+	class TransformAll final : public Commander::Action
 	{
 
 	private:
@@ -19,8 +19,8 @@ namespace HMP::Actions
 
 	public:
 		
-		Transform(const Mat4& _transform);
-		Transform(Mat4&& _transform);
+		TransformAll(const Mat4& _transform);
+		TransformAll(Mat4&& _transform);
 
 		const Mat4& transform() const;
 

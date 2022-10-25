@@ -3,13 +3,12 @@
 #include <HMP/Meshing/types.hpp>
 #include <cinolib/geometry/vec_mat.h>
 #include <cinolib/gl/side_bar_item.h>
-#include <cinolib/gl/canvas_gui_item.h>
 #include <cinolib/meshes/drawable_trimesh.h>
 #include <HMP/Meshing/Mesher.hpp>
-#include <functional>
 #include <cinolib/geometry/aabb.h>
 #include <cinolib/color.h>
 #include <string>
+#include <cpputils/collections/Event.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
 
 namespace HMP::Gui::Widgets
@@ -22,8 +21,6 @@ namespace HMP::Gui::Widgets
 
 		cinolib::DrawableTrimesh<>* m_mesh;
 		const Meshing::Mesher::Mesh& m_sourceMesh;
-		std::function<void(const Target&)> m_onProjectRequest, m_onMeshLoad, m_onMeshClear;
-		std::function<void(const Target&, const Mat4&)> m_onApplyTransformToSource;
 		bool m_visible;
 		std::string m_filename;
 		Vec m_rotation, m_center;
@@ -36,10 +33,8 @@ namespace HMP::Gui::Widgets
 
 		Target(const Meshing::Mesher::Mesh& _sourceMesh);
 
-		std::function<void(const Target&)>& onProjectRequest();
-		std::function<void(const Target&)>& onMeshLoad();
-		std::function<void(const Target&)>& onMeshClear();
-		std::function<void(const Target&, const Mat4&)>& onApplyTransformToSource();
+		cpputils::collections::Event<Target, const Target&> onProjectRequest, onMeshLoad, onMeshClear;
+		cpputils::collections::Event<Target, const Target&, const Mat4&> onApplyTransformToSource;
 
 		const Meshing::Mesher::Mesh& sourceMesh() const;
 
