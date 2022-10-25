@@ -219,7 +219,7 @@ namespace HMP::Gui::Dag
 						case Dag::Node::EType::Element:
 						{
 							const ImU32 elementColor{ toImCol(m_mesher.polyColor()) };
-							const ImU32 inactiveElementColor{ toImCol(cinolib::Color(m_mesher.polyColor().r * 0.75f, m_mesher.polyColor().g * 0.75f, m_mesher.polyColor().b * 0.75f, m_mesher.polyColor().a)) };
+							const ImU32 inactiveElementColor{ toImCol(cinolib::Color(m_mesher.polyColor().r() * 0.75f, m_mesher.polyColor().g() * 0.75f, m_mesher.polyColor().b() * 0.75f, m_mesher.polyColor().a()))};
 							const ImU32 highlightedElementColor{ toImCol(m_mesher.faceMarkerSet().color()) };
 							const Dag::Element& element{ node.node().element() };
 							const ImU32 color{ highlight == &node.node()

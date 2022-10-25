@@ -27,50 +27,83 @@
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Gui/HrDescriptions.hpp>
 #include <sstream>
+#include <iomanip>
 
 namespace HMP::Gui
 {
 
-	const cinolib::Color backgroundColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.1f) };
-
 	// Actions
 
-	void App::updateMarkers()
+	void App::updateMouseMarkers()
 	{
-		static const cinolib::Color overlayColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 0.9f) };
-		static const cinolib::Color mutedOverlayColor{ cinolib::Color::hsv2rgb(0.1f, 0.0f, 1.0f, 0.3f) };
-		constexpr float highlightRadius{ 4.0f };
-		constexpr float nameFontSize{ 20.0f };
-		m_canvas.pop_all_markers();
+		std::vector<cinolib::Marker>& set{ m_canvas.marker_sets[c_mouseMarkerSetInd] };
+		static constexpr unsigned int highlightRadius{ 4 };
 		if (m_mouse.element)
 		{
+			set.resize(2);
 			const Id pid{ m_mesher.elementToPid(*m_mouse.element) };
 			const Id vid{ m_mesh.poly_vert_id(pid, m_mouse.vertOffset) };
 			const Id forwardFid{ m_mesh.poly_face_id(pid, m_mouse.faceOffset) };
 			const Id upFid{ m_mesh.poly_face_id(pid, m_mouse.upFaceOffset) };
 			const Id eid{ m_mesh.face_shared_edge(forwardFid, upFid) };
-			m_canvas.push_marker(Meshing::Utils::midpoint(m_mesh, eid), "", overlayColor, highlightRadius);
-			m_canvas.push_marker(m_mesh.vert(m_mesh.poly_vert_id(pid, m_mouse.vertOffset)), "", overlayColor, highlightRadius);
+			set[0] = cinolib::Marker{
+					.pos_3d{m_mesh.vert(m_mesh.poly_vert_id(pid, m_mouse.vertOffset))},
+					.color{c_overlayColor},
+					.shape_radius{highlightRadius},
+					.shape{cinolib::Marker::EShape::CircleFilled}
+			};
+			set[1] = cinolib::Marker{
+					.pos_3d{Meshing::Utils::midpoint(m_mesh, eid)},
+					.color{c_overlayColor},
+					.shape_radius{highlightRadius},
+					.shape{cinolib::Marker::EShape::Cross45},
+					.line_thickness{2.0f}
+			};
 		}
+		else
+		{
+			set.clear();
+		}
+	}
+
+	void App::updateVertSelectionMarkers()
+	{}
+
+	void App::updateElementsMarkers()
+	{
+		std::vector<cinolib::Marker>& set{ m_canvas.marker_sets[c_elementsMarkerSetInd] };
+		set.clear();
+		static constexpr unsigned int nameFontSize{ 20 };
 		if (m_options.showNames)
 		{
-			for (const HMP::Dag::Node* node : HMP::Dag::Utils::descendants(*m_project.root()))
+			set.reserve(m_mesh.num_polys());
+			for (std::size_t pid{}; pid < m_mesh.num_polys(); pid++)
 			{
-				if (node->isElement())
+				if (m_mesh.poly_is_on_surf(pid))
 				{
-					const Id pid{ m_mesher.elementToPid(node->element()) };
-					if (pid != noId)
+					const HMP::Dag::Element& element{ m_mesher.pidToElement(pid) };
+					cinolib::Color color{ m_mouse.element == &element ? c_overlayColor : c_mutedOverlayColor };
+					if (m_mouse.element && m_mouse.element != &element)
 					{
-						cinolib::Color color{ m_mouse.element == node ? overlayColor : mutedOverlayColor };
-						if (m_mouse.element && m_mouse.element != node)
-						{
-							color.a /= 5;
-						}
-						m_canvas.push_marker(m_mesh.poly_centroid(pid), m_dagNamer(node), color, 0, nameFontSize);
+						color.a() /= 5;
 					}
+					set.push_back(cinolib::Marker{
+						.pos_3d{m_mesh.poly_centroid(pid)},
+						.text{m_dagNamer(&element)},
+						.color{color},
+						.shape_radius{0},
+						.font_size{nameFontSize}
+						});
 				}
 			}
 		}
+	}
+
+	void App::updateAllMarkers()
+	{
+		updateMouseMarkers();
+		updateElementsMarkers();
+		updateVertSelectionMarkers();
 	}
 
 	void App::updateMouse()
@@ -112,7 +145,8 @@ namespace HMP::Gui
 		}
 		if (m_mouse.element != lastElement || m_mouse.faceOffset != lastFaceOffset || m_mouse.upFaceOffset != lastUpFaceOffset || m_mouse.vertOffset != lastVertOffset)
 		{
-			updateMarkers();
+			updateMouseMarkers();
+			updateElementsMarkers();
 		}
 		updateMove();
 	}
@@ -132,7 +166,7 @@ namespace HMP::Gui
 			{
 				m_mesher.moveVert(vid, m_mouse.worldPosition);
 			}
-			updateMarkers();
+			updateAllMarkers();
 			m_mesher.updateMesh();
 		}
 	}
@@ -300,27 +334,68 @@ namespace HMP::Gui
 			// print elements
 			case GLFW_KEY_COMMA:
 			{
-				std::cout << "Elements" << std::endl;
+				std::cout << "-------- PRINT DEBUG INFO --------\n";
+				std::cout << "---- Elements\n";
+				std::vector<Meshing::Utils::PolyVertLoc> locs{};
+				locs.reserve(8);
 				for (const auto [element, pid] : m_mesher)
 				{
-					const std::vector<Id> vids{ m_mesh.poly_verts_id(pid, false) };
-					std::cout << m_dagNamer(&element) << ':' << ' ';
+					locs.clear();
 					const HMP::Vec centroid{ m_mesh.poly_centroid(pid) };
-					bool first = true;
-					std::cout << '[';
-					for (const Id vid : vids)
+					for (const Id vid : m_mesh.adj_p2v(pid))
 					{
-						const HMP::Vec vert{ m_mesh.vert(vid) };
-						if (!first)
-						{
-							std::cout << ",";
-						}
-						first = false;
-						std::cout << HrDescriptions::describe(HMP::Meshing::Utils::polyVertLoc(vert, centroid));
+						locs.push_back(Meshing::Utils::polyVertLoc(m_mesh.vert(vid), centroid));
 					}
-					std::cout << ']' << ' ';
-					std::cout << HrDescriptions::describe(vids) << std::endl;
+					std::cout
+						<< "name: " << m_dagNamer(&element)
+						<< " pid: " << pid
+						<< " centroid: " << HrDescriptions::describe(centroid)
+						<< " vids: " << HrDescriptions::describe(m_mesh.adj_p2v(pid))
+						<< " eids: " << HrDescriptions::describe(m_mesh.adj_p2e(pid))
+						<< " fids: " << HrDescriptions::describe(m_mesh.adj_p2f(pid))
+						<< " pids: " << HrDescriptions::describe(m_mesh.adj_p2p(pid))
+						<< " winding: " << HrDescriptions::describe(m_mesh.poly_faces_winding(pid))
+						<< " locs: " << HrDescriptions::describe(locs)
+						<< "\n";
 				}
+				std::cout << "---- Faces\n";
+				for (std::size_t fid{}; fid < m_mesh.num_faces(); fid++)
+				{
+					std::cout
+						<< "fid: " << fid
+						<< " centroid: " << HrDescriptions::describe(m_mesh.face_centroid(fid))
+						<< " vids: " << HrDescriptions::describe(m_mesh.adj_f2v(fid))
+						<< " eids: " << HrDescriptions::describe(m_mesh.adj_f2e(fid))
+						<< " fids: " << HrDescriptions::describe(m_mesh.adj_f2f(fid))
+						<< " pids: " << HrDescriptions::describe(m_mesh.adj_f2p(fid))
+						<< " normal: " << HrDescriptions::describe(m_mesh.face_data(fid).normal)
+						<< "\n";
+				}
+				std::cout << "---- Edges\n";
+				for (std::size_t eid{}; eid < m_mesh.num_edges(); eid++)
+				{
+					std::cout
+						<< "eid: " << eid
+						<< " midpoint: " << HrDescriptions::describe(Meshing::Utils::midpoint(m_mesh, eid))
+						<< " vids: " << HrDescriptions::describe(m_mesh.adj_e2v(eid))
+						<< " eids: " << HrDescriptions::describe(m_mesh.adj_e2e(eid))
+						<< " fids: " << HrDescriptions::describe(m_mesh.adj_e2f(eid))
+						<< " pids: " << HrDescriptions::describe(m_mesh.adj_e2p(eid))
+						<< "\n";
+				}
+				std::cout << "---- Vertices\n";
+				for (std::size_t vid{}; vid < m_mesh.num_verts(); vid++)
+				{
+					std::cout
+						<< "vid: " << vid
+						<< " position: " << HrDescriptions::describe(m_mesh.vert(vid))
+						<< " vids: " << HrDescriptions::describe(m_mesh.adj_v2v(vid))
+						<< " eids: " << HrDescriptions::describe(m_mesh.adj_v2e(vid))
+						<< " fids: " << HrDescriptions::describe(m_mesh.adj_v2f(vid))
+						<< " pids: " << HrDescriptions::describe(m_mesh.adj_v2p(vid))
+						<< "\n";
+				}
+				std::cout << "----------------------------------" << std::endl;
 			}
 			break;
 		}
@@ -336,13 +411,13 @@ namespace HMP::Gui
 			if (showNames != m_options.showNames)
 			{
 				m_options.showNames = showNames;
-				updateMarkers();
+				updateElementsMarkers();
 			}
 			ImGui::SameLine();
 			if (ImGui::Button("Reset names"))
 			{
 				m_dagNamer.reset();
-				updateMarkers();
+				updateElementsMarkers();
 			}
 		}
 	}
@@ -579,7 +654,7 @@ namespace HMP::Gui
 	void App::onApplyTargetTransform(const Mat4& _transform)
 	{
 		m_commander.apply(*new Actions::Transform{ _transform });
-		updateMarkers();
+		updateAllMarkers();
 		m_canvas.reset_camera();
 	}
 
@@ -590,7 +665,7 @@ namespace HMP::Gui
 			m_commander.undo();
 			updateDagViewer();
 			m_canvas.refit_scene();
-			updateMarkers();
+			updateAllMarkers();
 		}
 		else
 		{
@@ -605,7 +680,7 @@ namespace HMP::Gui
 			m_commander.redo();
 			updateDagViewer();
 			m_canvas.refit_scene();
-			updateMarkers();
+			updateAllMarkers();
 		}
 		else
 		{
@@ -630,9 +705,9 @@ namespace HMP::Gui
 		m_commanderWidget{ m_commander, m_dagNamer }, m_axesWidget{ m_canvas.camera }, m_targetWidget{ m_mesh }, m_dagViewerNeedsUpdate{ true }
 	{
 
-		m_canvas.background = backgroundColor;
-		m_mesher.polyMarkerSet().color() = cinolib::Color::hsv2rgb(0.1f, 0.75f, 0.5f);
-		m_mesher.faceMarkerSet().color() = cinolib::Color::hsv2rgb(0.1f, 0.75f, 0.7f);
+		m_canvas.background = c_backgroundColor;
+		m_mesher.polyMarkerSet().color() = c_selectedPolyColor;
+		m_mesher.faceMarkerSet().color() = c_selectedFaceColor;
 
 		m_commander.apply(*new Actions::Clear());
 		m_commander.applied().clear();
@@ -659,6 +734,7 @@ namespace HMP::Gui
 		m_canvas.callback_app_controls = [this](auto && ..._args) { return onDrawControls(_args ...); };
 		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChange(_args...); };
 		m_canvas.callback_custom_gui = [this](auto && ..._args) { return onDrawCustomGui(_args...); };
+		m_canvas.marker_sets.resize(3);
 
 		m_dagViewer.onDraw += [this]() { onDagViewerDraw(); };
 		updateDagViewer();

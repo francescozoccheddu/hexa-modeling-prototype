@@ -22,6 +22,16 @@ namespace HMP::Gui
 
 	private:
 
+		static constexpr cinolib::Color c_backgroundColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.1f) };
+		static constexpr cinolib::Color c_overlayColor{ cinolib::Color::hsv2rgb(0.1f, 0.5f, 1.0f) };
+		static constexpr cinolib::Color c_mutedOverlayColor{ cinolib::Color::hsv2rgb(0.1f, 0.0f, 1.0f, 0.25f) };
+		static constexpr cinolib::Color c_selectedPolyColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 0.5f) };
+		static constexpr cinolib::Color c_selectedFaceColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 1.0f) };
+		
+		static constexpr std::size_t c_mouseMarkerSetInd{0};
+		static constexpr std::size_t c_vertSelectionMarkerSetInd{1};
+		static constexpr std::size_t c_elementsMarkerSetInd{2};
+
 		struct
 		{
 			cinolib::vec2d position{};
@@ -60,7 +70,10 @@ namespace HMP::Gui
 		Widgets::Target m_targetWidget;
 		bool m_dagViewerNeedsUpdate;
 
-		void updateMarkers();
+		void updateMouseMarkers();
+		void updateVertSelectionMarkers();
+		void updateElementsMarkers();
+		void updateAllMarkers();
 
 		void updateMouse();
 		void updateDagViewer();
