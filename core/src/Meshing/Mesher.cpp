@@ -188,9 +188,9 @@ namespace HMP::Meshing
 		m_polyMarkerSet.color() = cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.5f);
 		m_faceMarkerSet.color() = cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.7f);
 		m_mesh.draw_back_faces = false;
+		m_mesh.show_mesh(true);
 		m_mesh.show_mesh_flat();
 		m_mesh.show_marked_face(true);
-		m_mesh.show_in_wireframe_width(2.0f);
 		m_mesh.show_out_wireframe_width(2.0f);
 		updateColors();
 	}
@@ -382,8 +382,10 @@ namespace HMP::Meshing
 		_fid =  noId;
 		for (std::size_t fid{}; fid < m_mesh.num_faces(); fid++)
 		{
-			if (m_mesh.face_is_on_srf(fid))
+			Id facePid;
+			if (m_mesh.face_is_visible(fid, facePid))
 			{
+				const bool cw{ m_mesh.poly_face_is_CW(facePid, fid)};
 				for (std::size_t ti{}; ti < 2; ti++)
 				{
 					bool back, coplanar;
@@ -392,9 +394,9 @@ namespace HMP::Meshing
 					if (cinolib::Moller_Trumbore_intersection(
 						_from,
 						_normDir,
-						m_mesh.vert(m_mesh.face_tessellation(fid)[ti * 3 + 0]),
+						m_mesh.vert(m_mesh.face_tessellation(fid)[ti * 3 + (cw ? 2 : 0)]),
 						m_mesh.vert(m_mesh.face_tessellation(fid)[ti * 3 + 1]),
-						m_mesh.vert(m_mesh.face_tessellation(fid)[ti * 3 + 2]),
+						m_mesh.vert(m_mesh.face_tessellation(fid)[ti * 3 + (cw ? 0 : 2)]),
 						back,
 						coplanar,
 						t,
