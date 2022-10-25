@@ -8,6 +8,8 @@
 #include <HMP/Dag/Delete.hpp>
 #include <HMP/Dag/Extrude.hpp>
 #include <vector>
+#include <optional>
+#include <unordered_set>
 #include <cstddef>
 
 namespace HMP::Actions::Utils
