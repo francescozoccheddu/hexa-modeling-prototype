@@ -210,6 +210,18 @@ namespace HMP::Gui::Widgets
 		}
 	}
 
+	bool Target::load()
+	{
+		const std::string filename{ cinolib::file_dialog_open() };
+		if (!filename.empty())
+		{
+			m_visible = true;
+			load(filename);
+			return true;
+		}
+		return false;
+	}
+
 	void Target::load(const std::string& _filename)
 	{
 		clearMesh();
@@ -254,7 +266,6 @@ namespace HMP::Gui::Widgets
 		{
 			{
 				ImGui::TextColored(ImVec4(0.75f, 0.75f, 0.75f, 1.0f), "%s", m_filename.c_str());
-				ImGui::SameLine();
 				if (ImGui::Button("Clear"))
 				{
 					clearMesh();
@@ -271,12 +282,12 @@ namespace HMP::Gui::Widgets
 				ImGui::PushID(0);
 				ImGui::Text("Transform");
 				ImGui::SameLine();
-				if (ImGui::Button("Identity"))
+				if (ImGui::SmallButton("Identity"))
 				{
 					identity();
 				}
 				ImGui::SameLine();
-				if (ImGui::Button("Fit"))
+				if (ImGui::SmallButton("Fit"))
 				{
 					fit();
 				}
@@ -300,12 +311,12 @@ namespace HMP::Gui::Widgets
 					updateTransform();
 				}
 				ImGui::SameLine();
-				if (ImGui::Button("Identity"))
+				if (ImGui::SmallButton("Identity"))
 				{
 					identity(true, false, false);
 				}
 				ImGui::SameLine();
-				if (ImGui::Button("Fit"))
+				if (ImGui::SmallButton("Fit"))
 				{
 					fit(true, false);
 				}
@@ -331,7 +342,7 @@ namespace HMP::Gui::Widgets
 					updateTransform();
 				}
 				ImGui::SameLine();
-				if (ImGui::Button("Identity"))
+				if (ImGui::SmallButton("Identity"))
 				{
 					identity(false, true, false);
 				}
@@ -347,12 +358,12 @@ namespace HMP::Gui::Widgets
 					updateTransform();
 				}
 				ImGui::SameLine();
-				if (ImGui::Button("Identity"))
+				if (ImGui::SmallButton("Identity"))
 				{
 					identity(false, false, true);
 				}
 				ImGui::SameLine();
-				if (ImGui::Button("Fit"))
+				if (ImGui::SmallButton("Fit"))
 				{
 					fit(false, true);
 				}
@@ -367,7 +378,7 @@ namespace HMP::Gui::Widgets
 						_color = cinolib::Color{ rgba[0], rgba[1], rgba[2], rgba[3]};
 					}
 					ImGui::SameLine();
-					if (ImGui::Button("Apply"))
+					if (ImGui::SmallButton("Apply"))
 					{
 						return true;
 					}
@@ -401,12 +412,7 @@ namespace HMP::Gui::Widgets
 		{
 			if (ImGui::Button("Load"))
 			{
-				const std::string filename{ cinolib::file_dialog_open() };
-				if (!filename.empty())
-				{
-					m_visible = true;
-					load(filename);
-				}
+				load();
 			}
 		}
 	}

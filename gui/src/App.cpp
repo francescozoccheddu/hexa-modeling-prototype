@@ -252,6 +252,11 @@ namespace HMP::Gui
 		{
 			onPaste();
 		}
+		// load target mesh
+		else if (key == c_kbLoadTarget)
+		{
+			onLoadTargetMesh();
+		}
 		// refine hexahedron
 		else if (key == c_kbRefine)
 		{
@@ -510,6 +515,11 @@ namespace HMP::Gui
 			updateDagViewer();
 			m_canvas.refit_scene();
 		}
+	}
+
+	void App::onLoadTargetMesh()
+	{
+		m_targetWidget.load();
 	}
 
 	void App::onToggleTargetVisibility()
