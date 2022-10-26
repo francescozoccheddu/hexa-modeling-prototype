@@ -25,5 +25,5 @@ target_include_directories (gui
 
 target_link_libraries (gui 
     PRIVATE core
-    PRIVATE ogdf
+    PRIVATE OGDF
 )
