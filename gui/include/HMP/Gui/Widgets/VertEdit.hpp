@@ -20,7 +20,7 @@ namespace HMP::Gui::Widgets
 		{
 			return _entry.first;
 		}
-		
+
 		static constexpr Id vertsIterableConvertConst(const std::pair<const Id, Vec>& _entry)
 		{
 			return _entry.first;
@@ -56,17 +56,19 @@ namespace HMP::Gui::Widgets
 
 		bool planar() const;
 
+		void consolidate();
+
 		const Vec& extent() const;
 
 		const Vec& planarExtent() const;
 
 		const Vec& planarRotation() const;
 
-		void translate(const Vec& _offset);
+		void translate(const Vec& _offset, bool _consolidate = true);
 
-		void rotate(const Vec& _axis, double _angleDeg);
+		void rotate(const Vec& _axis, double _angleDeg, bool _consolidate = true);
 
-		void scale(double _amount);
+		void scale(double _amount, bool _consolidate = true);
 
 		void draw() override;
 
