@@ -258,6 +258,7 @@ namespace HMP::Meshing
 		{
 			throw std::logic_error{ "not an element" };
 		}
+		onElementRemove(_element);
 		m_elementToPid.erase(&_element);
 		const Id lastPid{ m_mesh.num_polys() - 1 };
 		if (pid != lastPid)
@@ -271,6 +272,7 @@ namespace HMP::Meshing
 			m_faceMarkerSet.m_data.erase({ &_element, o });
 		}
 		m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
+		onElementRemoved(_element);
 	}
 
 	void Mesher::moveVert(Id _vid, const Vec& _position)
@@ -293,11 +295,13 @@ namespace HMP::Meshing
 
 	void Mesher::clear()
 	{
+		onClear();
 		m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = m_mesh.num_polys();
 		m_mesh.clear();
 		m_elementToPid.clear();
 		m_polyMarkerSet.m_data.clear();
 		m_faceMarkerSet.m_data.clear();
+		onCleared();
 	}
 
 	Mesher::PolyMarkerSet& Mesher::polyMarkerSet()

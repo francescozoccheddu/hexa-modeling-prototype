@@ -15,6 +15,7 @@
 #include <HMP/Gui/Widgets/Axes.hpp>
 #include <HMP/Gui/Widgets/Commander.hpp>
 #include <HMP/Gui/Widgets/Target.hpp>
+#include <HMP/Gui/Widgets/VertEdit.hpp>
 
 namespace HMP::Gui
 {
@@ -52,8 +53,19 @@ namespace HMP::Gui
 		static constexpr cinolib::KeyBinding c_kbRedo{ GLFW_KEY_Z, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbClear{ GLFW_KEY_N, GLFW_MOD_CONTROL };
 		static constexpr cinolib::KeyBinding c_kbPrintDebugInfo{ GLFW_KEY_COMMA };
+		static constexpr cinolib::KeyBinding c_kbSelectVertex{ GLFW_KEY_1 };
+		static constexpr cinolib::KeyBinding c_kbSelectEdge{ GLFW_KEY_2 };
+		static constexpr cinolib::KeyBinding c_kbSelectFace{ GLFW_KEY_3 };
+		static constexpr cinolib::KeyBinding c_kbSelectPoly{ GLFW_KEY_4 };
+		static constexpr cinolib::KeyBinding c_kbDeselectAll{ GLFW_KEY_A, GLFW_MOD_CONTROL };
+		static constexpr int c_kmodDeselect{ GLFW_MOD_CONTROL };
 
 		static void printKeyBindings();
+
+		enum class ESelectionSource
+		{
+			Vertex, Edge, Face, Poly
+		};
 
 		struct
 		{
@@ -65,7 +77,7 @@ namespace HMP::Gui
 
 		struct
 		{
-			HMP::Dag::Element* element{};
+			HMP::Dag::NodeHandle<HMP::Dag::Element> element{};
 		} m_copy;
 
 		struct
@@ -81,26 +93,42 @@ namespace HMP::Gui
 		cpputils::collections::SetNamer<const HMP::Dag::Node*> m_dagNamer;
 		Dag::Viewer m_dagViewer;
 		cinolib::VolumeMeshControls<Meshing::Mesher::Mesh> m_menu;
-		Widgets::Commander m_commanderWidget;
 		Widgets::Axes m_axesWidget;
 		Widgets::Target m_targetWidget;
+		Widgets::VertEdit m_vertEditWidget;
+		Widgets::Commander m_commanderWidget;
 		bool m_dagViewerNeedsUpdate;
 
+		// markers
 		void updateMouseMarkers();
 		void updateVertSelectionMarkers();
 		void updateElementsMarkers();
 		void updateAllMarkers();
 
-		void updateMouse();
-		void updateDagViewer();
+		// actions
+		void onActionApplied();
+		void applyAction(Commander::Action& _action);
+		void requestDagViewerUpdate();
 
-		void onCameraChange();
-		bool onKeyPress(int _key, int _modifiers);
-		bool onMouseMove(double _x, double _y);
+		// mesher events
+		void onElementRemove(const HMP::Dag::Element& _element);
+		void onClearElements();
+
+		// vert edit events
+		void onVertSelectionChange();
+		void onVertEditMeshUpdate();
+		void onApplyVertEdit(std::unordered_set<Id> _vids, Mat4 _transform);
+
+		// canvas events
+		void onCameraChanged();
+		bool onKeyPressed(int _key, int _modifiers);
+		bool onMouseMoved(double _x, double _y);
 		void onDrawControls();
 		void onDrawCustomGui();
 		void onDagViewerDraw();
+		void updateMouse();
 
+		// user operation
 		void onPrintDebugInfo() const;
 		void onExtrude();
 		void onCopy();
@@ -120,6 +148,8 @@ namespace HMP::Gui
 		void onUndo();
 		void onRedo();
 		void onClear();
+		void onSelect(ESelectionSource _source, bool _add);
+		void onClearSelection();
 
 	public:
 

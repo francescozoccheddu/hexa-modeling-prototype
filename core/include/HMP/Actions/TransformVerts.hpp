@@ -45,8 +45,8 @@ namespace HMP::Actions
 
 	public:
 
-		TransformVerts(const Mat4& _transform, const std::vector<Vert> _verts);
-		TransformVerts(Mat4&& _transform, const std::vector<Vert> _verts);
+		TransformVerts(const Mat4& _transform, const std::vector<Vert>& _verts);
+		TransformVerts(Mat4&& _transform, const std::vector<Vert>& _verts);
 		TransformVerts(const Mat4& _transform, std::vector<Vert>&& _verts);
 		TransformVerts(Mat4&& _transform, std::vector<Vert>&& _verts);
 

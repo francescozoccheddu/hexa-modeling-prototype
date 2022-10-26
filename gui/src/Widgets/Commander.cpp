@@ -11,9 +11,14 @@
 namespace HMP::Gui::Widgets
 {
 
-	Commander::Commander(HMP::Commander& _commander, HrDescriptions::DagNamer& _dagNamer)
-		: m_commander{ _commander }, m_dagNamer{ _dagNamer }, cinolib::SideBarItem{ "Commander" }
+	Commander::Commander(HMP::Commander& _commander, HrDescriptions::DagNamer& _dagNamer, const VertEdit& _vertEdit)
+		: m_commander{ _commander }, m_dagNamer{ _dagNamer }, m_vertEdit{ _vertEdit }, cinolib::SideBarItem{ "Commander" }
 	{}
+
+	const VertEdit& Commander::vertEdit() const
+	{
+		return m_vertEdit;
+	}
 
 	HMP::Commander& Commander::commander()
 	{
@@ -60,6 +65,11 @@ namespace HMP::Gui::Widgets
 			if (m_commander.applied().empty() && m_commander.unapplied().empty())
 			{
 				ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "empty");
+			}
+
+			if (m_vertEdit.pendingAction())
+			{
+				ImGui::TextColored(ImVec4(0.75f, 0.75f, 0.2f, 1.0f), "Pending vertex edit action on %d vertices", m_vertEdit.vids().size());
 			}
 
 			auto it{ m_commander.unapplied().rbegin() };

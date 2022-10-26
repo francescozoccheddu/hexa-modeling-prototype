@@ -6,6 +6,7 @@
 #include <HMP/Dag/Element.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <cpputils/collections/Iterable.hpp>
+#include <cpputils/collections/Event.hpp>
 #include <cpputils/collections/DereferenceIterable.hpp>
 #include <utility>
 #include <functional>
@@ -178,6 +179,11 @@ namespace HMP::Meshing
 	public:
 
 		Mesher();
+
+		cpputils::collections::Event<Mesher, const Dag::Element&> onElementRemove;
+		cpputils::collections::Event<Mesher, const Dag::Element&> onElementRemoved;
+		cpputils::collections::Event<Mesher> onClear;
+		cpputils::collections::Event<Mesher> onCleared;
 
 		const Mesh& mesh() const;
 
