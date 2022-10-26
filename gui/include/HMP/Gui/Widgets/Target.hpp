@@ -71,6 +71,7 @@ namespace HMP::Gui::Widgets
 		void updateVisibility();
 		void updateColor(bool _face = true, bool _edge = true);
 
+		bool load();
 		void load(const std::string& _filename);
 		void clearMesh();
 		void requestProjection();

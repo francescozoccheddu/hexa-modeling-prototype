@@ -113,6 +113,7 @@ namespace HMP::Gui
 		void onSaveMesh();
 		void onSaveTree();
 		void onLoadTree();
+		void onLoadTargetMesh();
 		void onToggleTargetVisibility();
 		void onProjectToTarget();
 		void onApplyTargetTransform(const Mat4& _transform);
