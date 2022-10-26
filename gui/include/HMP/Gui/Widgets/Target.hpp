@@ -24,7 +24,7 @@ namespace HMP::Gui::Widgets
 		bool m_visible;
 		std::string m_filename;
 		Vec m_rotation, m_center;
-		double m_scale;
+		Real m_scale;
 		cinolib::Color m_faceColor, m_edgeColor;
 
 		void ensureHasMesh() const;
@@ -33,8 +33,8 @@ namespace HMP::Gui::Widgets
 
 		Target(const Meshing::Mesher::Mesh& _sourceMesh);
 
-		cpputils::collections::Event<Target, const Target&> onProjectRequest, onMeshLoad, onMeshClear;
-		cpputils::collections::Event<Target, const Target&, const Mat4&> onApplyTransformToSource;
+		cpputils::collections::Event<Target> onProjectRequest, onMeshLoad, onMeshClear;
+		cpputils::collections::Event<Target, const Mat4&> onApplyTransformToSource;
 
 		const Meshing::Mesher::Mesh& sourceMesh() const;
 
@@ -57,12 +57,12 @@ namespace HMP::Gui::Widgets
 		Vec& center();
 		const Vec& center() const;
 
-		double& scale();
-		double scale() const;
+		Real& scale();
+		Real scale() const;
 
 		void translate(const Vec& _offset);
-		void rotate(const Vec& _axis, double _angleDeg);
-		void scale(double _amount);
+		void rotate(const Vec& _axis, Real _angleDeg);
+		void scale(Real _amount);
 
 		void identity(bool _center = true, bool _rotation = true, bool _scale = true);
 		void fit(bool _fitTranslation = true, bool _fitScale = true);

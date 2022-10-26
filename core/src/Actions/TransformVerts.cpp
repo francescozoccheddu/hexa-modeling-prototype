@@ -57,11 +57,11 @@ namespace HMP::Actions
 		apply(m_transform.inverse());
 	}
 
-	TransformVerts::TransformVerts(const Mat4& _transform, const std::vector<Vert> _verts)
+	TransformVerts::TransformVerts(const Mat4& _transform, const std::vector<Vert>& _verts)
 		: m_transform{ _transform }, m_verts{ _verts }
 	{}
 
-	TransformVerts::TransformVerts(Mat4&& _transform, const std::vector<Vert> _verts)
+	TransformVerts::TransformVerts(Mat4&& _transform, const std::vector<Vert>& _verts)
 		: m_transform{ std::move(_transform) }, m_verts{ _verts }
 	{}
 

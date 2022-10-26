@@ -101,12 +101,12 @@ namespace HMP::Gui::Widgets
 		return m_center;
 	}
 
-	double& Target::scale()
+	Real& Target::scale()
 	{
 		return m_scale;
 	}
 
-	double Target::scale() const
+	Real Target::scale() const
 	{
 		return m_scale;
 	}
@@ -120,7 +120,7 @@ namespace HMP::Gui::Widgets
 		}
 	}
 
-	void Target::rotate(const Vec& _axis, double _angleDeg)
+	void Target::rotate(const Vec& _axis, Real _angleDeg)
 	{
 		if (hasMesh())
 		{
@@ -128,7 +128,7 @@ namespace HMP::Gui::Widgets
 		}
 	}
 
-	void Target::scale(double _amount)
+	void Target::scale(Real _amount)
 	{
 		m_scale *= _amount;
 		if (hasMesh())
@@ -232,14 +232,14 @@ namespace HMP::Gui::Widgets
 		fit();
 		updateVisibility();
 		updateColor();
-		onMeshLoad(*this);
+		onMeshLoad();
 	}
 
 	void Target::clearMesh()
 	{
 		if (m_mesh)
 		{
-			onMeshClear(*this);
+			onMeshClear();
 			delete m_mesh;
 			m_mesh = nullptr;
 			m_filename = "";
@@ -249,14 +249,14 @@ namespace HMP::Gui::Widgets
 	void Target::requestProjection()
 	{
 		ensureHasMesh();
-		onProjectRequest(*this);
+		onProjectRequest();
 	}
 
 	void Target::requestApplyTransformToSource()
 	{
 		ensureHasMesh();
 		updateTransform();
-		onApplyTransformToSource(*this, m_mesh->transform.inverse());
+		onApplyTransformToSource(m_mesh->transform.inverse());
 		identity();
 	}
 
@@ -301,8 +301,8 @@ namespace HMP::Gui::Widgets
 				{
 					m_center = Vec{ xyz[0], xyz[1], xyz[2] };
 					m_center -= m_sourceMesh.bbox().center();
-					const double maxDistance{ sourceMeshSize * 2 };
-					const double distance{ m_center.norm() };
+					const Real maxDistance{ sourceMeshSize * 2 };
+					const Real distance{ m_center.norm() };
 					if (distance > maxDistance)
 					{
 						m_center *= maxDistance / distance;

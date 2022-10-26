@@ -31,7 +31,37 @@
 namespace HMP::Gui
 {
 
-	// Actions
+	void App::printKeyBindings()
+	{
+		std::cout << "------ App key bindings -------\n";
+		cinolib::print_binding(c_kbExtrude.name().c_str(), "extrude");
+		cinolib::print_binding(c_kbRefine.name().c_str(), "refine");
+		cinolib::print_binding(c_kbDoubleRefine.name().c_str(), "refine twice");
+		cinolib::print_binding(c_kbFaceRefine.name().c_str(), "refine face");
+		cinolib::print_binding(c_kbDelete.name().c_str(), "delete");
+		cinolib::print_binding(c_kbCopy.name().c_str(), "copy");
+		cinolib::print_binding(c_kbPaste.name().c_str(), "paste");
+		cinolib::print_binding(c_kbRotate.name().c_str(), "rotate");
+		cinolib::print_binding(c_kbClear.name().c_str(), "clear");
+		cinolib::print_binding(c_kbMakeConforming.name().c_str(), "make conforming");
+		cinolib::print_binding(c_kbSelectVertex.name().c_str(), "select vertex");
+		cinolib::print_binding(c_kbSelectEdge.name().c_str(), "select edge vertices");
+		cinolib::print_binding(c_kbSelectFace.name().c_str(), "select face vertices");
+		cinolib::print_binding(c_kbSelectPoly.name().c_str(), "select poly vertices");
+		cinolib::print_binding(cinolib::KeyBinding::mod_names(c_kmodDeselect).c_str(), "invert selection (hold down)");
+		cinolib::print_binding(c_kbDeselectAll.name().c_str(), "deselect all vertices");
+		cinolib::print_binding(c_kbSave.name().c_str(), "save");
+		cinolib::print_binding(c_kbOpen.name().c_str(), "open");
+		cinolib::print_binding(c_kbSaveMesh.name().c_str(), "save mesh");
+		cinolib::print_binding(c_kbLoadTarget.name().c_str(), "load target mesh");
+		cinolib::print_binding(c_kbToggleTargetVisibility.name().c_str(), "toggle target visibility");
+		cinolib::print_binding(c_kbUndo.name().c_str(), "undo");
+		cinolib::print_binding(c_kbRedo.name().c_str(), "redo");
+		cinolib::print_binding(c_kbPrintDebugInfo.name().c_str(), "print debug info");
+		std::cout << "-------------------------------\n";
+	}
+
+	// markers
 
 	void App::updateMouseMarkers()
 	{
@@ -66,7 +96,31 @@ namespace HMP::Gui
 	}
 
 	void App::updateVertSelectionMarkers()
-	{}
+	{
+		std::vector<cinolib::Marker>& set{ m_canvas.marker_sets[c_vertSelectionMarkerSetInd] };
+		set.clear();
+		set.reserve(m_vertEditWidget.vids().size() + 1);
+		for (const Id vid : m_vertEditWidget.vids())
+		{
+			set.push_back(cinolib::Marker{
+				.pos_3d{m_mesh.vert(vid)},
+				.color{c_overlayColor},
+				.shape_radius{6u},
+				.shape{cinolib::Marker::EShape::CircleOutline},
+				.line_thickness{1.5f}
+				});
+		}
+		if (!m_vertEditWidget.empty())
+		{
+			set.push_back(cinolib::Marker{
+				.pos_3d{m_vertEditWidget.centroid()},
+				.color{c_overlayColor},
+				.shape_radius{6u},
+				.shape{cinolib::Marker::EShape::Cross90},
+				.line_thickness{2.0f},
+				});
+		}
+	}
 
 	void App::updateElementsMarkers()
 	{
@@ -76,7 +130,7 @@ namespace HMP::Gui
 		if (m_options.showNames)
 		{
 			set.reserve(m_mesh.num_polys());
-			for (std::size_t pid{}; pid < m_mesh.num_polys(); pid++)
+			for (Id pid{}; pid < m_mesh.num_polys(); pid++)
 			{
 				if (m_mesh.poly_is_on_surf(pid))
 				{
@@ -105,136 +159,86 @@ namespace HMP::Gui
 		updateVertSelectionMarkers();
 	}
 
-	void App::updateMouse()
+	// actions
+
+	void App::onActionApplied()
 	{
-		HMP::Dag::Element* const lastElement{ m_mouse.element };
-		const Id lastFaceOffset{ m_mouse.faceOffset }, lastUpFaceOffset{ m_mouse.upFaceOffset }, lastVertOffset{ m_mouse.vertOffset };
-		m_mouse.element = nullptr;
-		m_mouse.faceOffset = m_mouse.vertOffset = noId;
-		{
-			// poly
-			Id pid, fid, eid, vid;
-			const cinolib::Ray ray{ m_canvas.eye_to_mouse_ray() };
-			if (m_mesher.pick(ray.begin(), ray.dir(), pid, fid, eid, vid))
-			{
-				m_mouse.element = &m_mesher.pidToElement(pid);
-				m_mouse.faceOffset = m_mesh.poly_face_offset(pid, fid);
-				const Id upFid{ Meshing::Utils::adjacentFid(m_mesh, pid, fid, eid) };
-				m_mouse.upFaceOffset = m_mesh.poly_face_offset(pid, upFid);
-				m_mouse.vertOffset = m_mesh.poly_vert_offset(pid, vid);
-			}
-		}
-		m_dagViewer.highlight = m_mouse.element;
-		if (m_mouse.element != lastElement)
-		{
-			m_mesher.polyMarkerSet().clear();
-			if (m_mouse.element)
-			{
-				m_mesher.polyMarkerSet().add(*m_mouse.element);
-			}
-		}
-		if (m_mouse.element != lastElement || m_mouse.faceOffset != lastFaceOffset)
-		{
-			m_mesher.faceMarkerSet().clear();
-			if (m_mouse.element)
-			{
-				m_mesher.faceMarkerSet().add(*m_mouse.element, m_mouse.faceOffset);
-			}
-			m_mesher.updateMeshMarkers();
-		}
-		if (m_mouse.element != lastElement || m_mouse.faceOffset != lastFaceOffset || m_mouse.upFaceOffset != lastUpFaceOffset || m_mouse.vertOffset != lastVertOffset)
-		{
-			updateMouseMarkers();
-			updateElementsMarkers();
-		}
+		updateMouse();
+		updateAllMarkers();
+		requestDagViewerUpdate();
+		m_canvas.refit_scene();
 	}
 
-	void App::updateDagViewer()
+	void App::applyAction(Commander::Action& _action)
+	{
+		m_vertEditWidget.applyAction();
+		m_commander.apply(_action);
+		onActionApplied();
+	}
+
+	void App::requestDagViewerUpdate()
 	{
 		m_dagViewerNeedsUpdate = true;
 	}
 
-	// Events
+	// mesher events
 
-	void App::onCameraChange()
+	void App::onElementRemove(const HMP::Dag::Element& _element)
 	{
-		updateMouse();
-	}
-
-	bool App::onMouseMove(double _x, double _y)
-	{
-		m_mouse.position = cinolib::vec2d{ _x, _y };
-		updateMouse();
-		return false;
-	}
-
-	void App::onPrintDebugInfo() const
-	{
-		std::cout << "-------- PRINT DEBUG INFO --------\n";
-		std::cout << "---- Elements\n";
-		std::vector<Meshing::Utils::PolyVertLoc> locs{};
-		locs.reserve(8);
-		for (const auto [element, pid] : m_mesher)
+		if (m_mouse.element == &_element)
 		{
-			locs.clear();
-			const HMP::Vec centroid{ m_mesh.poly_centroid(pid) };
-			for (const Id vid : m_mesh.adj_p2v(pid))
+			m_mouse.element = nullptr;
+		}
+		std::vector<Id> vids{};
+		for (const Id vid : m_mesh.poly_verts_id(m_mesher.elementToPid(_element)))
+		{
+			if (m_mesh.adj_v2p(vid).size() == 1)
 			{
-				locs.push_back(Meshing::Utils::polyVertLoc(m_mesh.vert(vid), centroid));
+				vids.push_back(vid);
 			}
-			std::cout
-				<< "name: " << m_dagNamer.nameOrUnknown(&element)
-				<< " pid: " << pid
-				<< " centroid: " << HrDescriptions::describe(centroid)
-				<< " vids: " << HrDescriptions::describe(m_mesh.adj_p2v(pid))
-				<< " eids: " << HrDescriptions::describe(m_mesh.adj_p2e(pid))
-				<< " fids: " << HrDescriptions::describe(m_mesh.adj_p2f(pid))
-				<< " pids: " << HrDescriptions::describe(m_mesh.adj_p2p(pid))
-				<< " winding: " << HrDescriptions::describe(m_mesh.poly_faces_winding(pid))
-				<< " locs: " << HrDescriptions::describe(locs)
-				<< "\n";
 		}
-		std::cout << "---- Faces\n";
-		for (std::size_t fid{}; fid < m_mesh.num_faces(); fid++)
-		{
-			std::cout
-				<< "fid: " << fid
-				<< " centroid: " << HrDescriptions::describe(m_mesh.face_centroid(fid))
-				<< " vids: " << HrDescriptions::describe(m_mesh.adj_f2v(fid))
-				<< " eids: " << HrDescriptions::describe(m_mesh.adj_f2e(fid))
-				<< " fids: " << HrDescriptions::describe(m_mesh.adj_f2f(fid))
-				<< " pids: " << HrDescriptions::describe(m_mesh.adj_f2p(fid))
-				<< " normal: " << HrDescriptions::describe(m_mesh.face_data(fid).normal)
-				<< "\n";
-		}
-		std::cout << "---- Edges\n";
-		for (std::size_t eid{}; eid < m_mesh.num_edges(); eid++)
-		{
-			std::cout
-				<< "eid: " << eid
-				<< " midpoint: " << HrDescriptions::describe(Meshing::Utils::midpoint(m_mesh, eid))
-				<< " vids: " << HrDescriptions::describe(m_mesh.adj_e2v(eid))
-				<< " eids: " << HrDescriptions::describe(m_mesh.adj_e2e(eid))
-				<< " fids: " << HrDescriptions::describe(m_mesh.adj_e2f(eid))
-				<< " pids: " << HrDescriptions::describe(m_mesh.adj_e2p(eid))
-				<< "\n";
-		}
-		std::cout << "---- Vertices\n";
-		for (std::size_t vid{}; vid < m_mesh.num_verts(); vid++)
-		{
-			std::cout
-				<< "vid: " << vid
-				<< " position: " << HrDescriptions::describe(m_mesh.vert(vid))
-				<< " vids: " << HrDescriptions::describe(m_mesh.adj_v2v(vid))
-				<< " eids: " << HrDescriptions::describe(m_mesh.adj_v2e(vid))
-				<< " fids: " << HrDescriptions::describe(m_mesh.adj_v2f(vid))
-				<< " pids: " << HrDescriptions::describe(m_mesh.adj_v2p(vid))
-				<< "\n";
-		}
-		std::cout << "----------------------------------" << std::endl;
+		m_vertEditWidget.remove(vids);
 	}
 
-	bool App::onKeyPress(int _key, int _modifiers)
+	void App::onClearElements()
+	{
+		m_mouse.element = nullptr;
+		m_vertEditWidget.clear();
+	}
+
+	// vert edit events
+
+	void App::onVertSelectionChange()
+	{
+		updateVertSelectionMarkers();
+	}
+
+	void App::onVertEditMeshUpdate()
+	{
+		updateAllMarkers();
+	}
+
+	void App::onApplyVertEdit(std::unordered_set<Id> _vids, Mat4 _transform)
+	{
+		std::vector<Actions::TransformVerts::Vert> verts{};
+		verts.reserve(_vids.size());
+		for (const Id vid : _vids)
+		{
+			const Id pid{ m_mesh.adj_v2p(vid)[0] };
+			const Id vertOffs{ m_mesh.poly_vert_offset(pid, vid) };
+			verts.push_back({ m_mesher.pidToElement(pid), vertOffs });
+		}
+		applyAction(*new Actions::TransformVerts{ std::move(_transform), std::move(verts) });
+	}
+
+	// canvas events
+
+	void App::onCameraChanged()
+	{
+		updateMouse();
+	}
+
+	bool App::onKeyPressed(int _key, int _modifiers)
 	{
 		cinolib::KeyBinding key{ _key, _modifiers };
 		// extrude
@@ -327,11 +331,56 @@ namespace HMP::Gui
 		{
 			onPrintDebugInfo();
 		}
+		// selection
+		else if (key == c_kbSelectVertex)
+		{
+			onSelect(ESelectionSource::Vertex, true);
+		}
+		else if (key == c_kbSelectEdge)
+		{
+			onSelect(ESelectionSource::Edge, true);
+		}
+		else if (key == c_kbSelectFace)
+		{
+			onSelect(ESelectionSource::Face, true);
+		}
+		else if (key == c_kbSelectPoly)
+		{
+			onSelect(ESelectionSource::Poly, true);
+		}
+		// deselection
+		else if (key == (c_kbSelectVertex | c_kmodDeselect))
+		{
+			onSelect(ESelectionSource::Vertex, false);
+		}
+		else if (key == (c_kbSelectEdge | c_kmodDeselect))
+		{
+			onSelect(ESelectionSource::Edge, false);
+		}
+		else if (key == (c_kbSelectFace | c_kmodDeselect))
+		{
+			onSelect(ESelectionSource::Face, false);
+		}
+		else if (key == (c_kbSelectPoly | c_kmodDeselect))
+		{
+			onSelect(ESelectionSource::Poly, false);
+		}
+		else if (key == c_kbDeselectAll)
+		{
+			onClearSelection();
+		}
 		else
 		{
 			return false;
 		}
 		return true;
+	}
+
+	bool App::onMouseMoved(double _x, double _y)
+	{
+		m_mouse.position = cinolib::vec2d{ _x, _y };
+		updateMouse();
+		return false;
 	}
 
 	void App::onDrawControls()
@@ -390,28 +439,129 @@ namespace HMP::Gui
 		}
 	}
 
+	void App::updateMouse()
+	{
+		HMP::Dag::Element* const lastElement{ m_mouse.element };
+		const Id lastFaceOffset{ m_mouse.faceOffset }, lastUpFaceOffset{ m_mouse.upFaceOffset }, lastVertOffset{ m_mouse.vertOffset };
+		m_mouse.element = nullptr;
+		m_mouse.faceOffset = m_mouse.vertOffset = noId;
+		{
+			// poly
+			Id pid, fid, eid, vid;
+			const cinolib::Ray ray{ m_canvas.eye_to_mouse_ray() };
+			if (m_mesher.pick(ray.begin(), ray.dir(), pid, fid, eid, vid))
+			{
+				m_mouse.element = &m_mesher.pidToElement(pid);
+				m_mouse.faceOffset = m_mesh.poly_face_offset(pid, fid);
+				const Id upFid{ Meshing::Utils::adjacentFid(m_mesh, pid, fid, eid) };
+				m_mouse.upFaceOffset = m_mesh.poly_face_offset(pid, upFid);
+				m_mouse.vertOffset = m_mesh.poly_vert_offset(pid, vid);
+			}
+		}
+		m_dagViewer.highlight = m_mouse.element;
+		if (m_mouse.element != lastElement)
+		{
+			m_mesher.polyMarkerSet().clear();
+			if (m_mouse.element)
+			{
+				m_mesher.polyMarkerSet().add(*m_mouse.element);
+			}
+		}
+		if (m_mouse.element != lastElement || m_mouse.faceOffset != lastFaceOffset)
+		{
+			m_mesher.faceMarkerSet().clear();
+			if (m_mouse.element)
+			{
+				m_mesher.faceMarkerSet().add(*m_mouse.element, m_mouse.faceOffset);
+			}
+			m_mesher.updateMeshMarkers();
+		}
+		if (m_mouse.element != lastElement || m_mouse.faceOffset != lastFaceOffset || m_mouse.upFaceOffset != lastUpFaceOffset || m_mouse.vertOffset != lastVertOffset)
+		{
+			updateMouseMarkers();
+			updateElementsMarkers();
+		}
+	}
+
 	// Commands
+
+	void App::onPrintDebugInfo() const
+	{
+		std::cout << "-------- PRINT DEBUG INFO --------\n";
+		std::cout << "---- Elements\n";
+		std::vector<Meshing::Utils::PolyVertLoc> locs{};
+		locs.reserve(8);
+		for (const auto [element, pid] : m_mesher)
+		{
+			locs.clear();
+			const HMP::Vec centroid{ m_mesh.poly_centroid(pid) };
+			for (const Id vid : m_mesh.adj_p2v(pid))
+			{
+				locs.push_back(Meshing::Utils::polyVertLoc(m_mesh.vert(vid), centroid));
+			}
+			std::cout
+				<< "name: " << m_dagNamer.nameOrUnknown(&element)
+				<< " pid: " << pid
+				<< " centroid: " << HrDescriptions::describe(centroid)
+				<< " vids: " << HrDescriptions::describe(m_mesh.adj_p2v(pid))
+				<< " eids: " << HrDescriptions::describe(m_mesh.adj_p2e(pid))
+				<< " fids: " << HrDescriptions::describe(m_mesh.adj_p2f(pid))
+				<< " pids: " << HrDescriptions::describe(m_mesh.adj_p2p(pid))
+				<< " winding: " << HrDescriptions::describe(m_mesh.poly_faces_winding(pid))
+				<< " locs: " << HrDescriptions::describe(locs)
+				<< "\n";
+		}
+		std::cout << "---- Faces\n";
+		for (Id fid{}; fid < m_mesh.num_faces(); fid++)
+		{
+			std::cout
+				<< "fid: " << fid
+				<< " centroid: " << HrDescriptions::describe(m_mesh.face_centroid(fid))
+				<< " vids: " << HrDescriptions::describe(m_mesh.adj_f2v(fid))
+				<< " eids: " << HrDescriptions::describe(m_mesh.adj_f2e(fid))
+				<< " fids: " << HrDescriptions::describe(m_mesh.adj_f2f(fid))
+				<< " pids: " << HrDescriptions::describe(m_mesh.adj_f2p(fid))
+				<< " normal: " << HrDescriptions::describe(m_mesh.face_data(fid).normal)
+				<< "\n";
+		}
+		std::cout << "---- Edges\n";
+		for (Id eid{}; eid < m_mesh.num_edges(); eid++)
+		{
+			std::cout
+				<< "eid: " << eid
+				<< " midpoint: " << HrDescriptions::describe(Meshing::Utils::midpoint(m_mesh, eid))
+				<< " vids: " << HrDescriptions::describe(m_mesh.adj_e2v(eid))
+				<< " eids: " << HrDescriptions::describe(m_mesh.adj_e2e(eid))
+				<< " fids: " << HrDescriptions::describe(m_mesh.adj_e2f(eid))
+				<< " pids: " << HrDescriptions::describe(m_mesh.adj_e2p(eid))
+				<< "\n";
+		}
+		std::cout << "---- Vertices\n";
+		for (Id vid{}; vid < m_mesh.num_verts(); vid++)
+		{
+			std::cout
+				<< "vid: " << vid
+				<< " position: " << HrDescriptions::describe(m_mesh.vert(vid))
+				<< " vids: " << HrDescriptions::describe(m_mesh.adj_v2v(vid))
+				<< " eids: " << HrDescriptions::describe(m_mesh.adj_v2e(vid))
+				<< " fids: " << HrDescriptions::describe(m_mesh.adj_v2f(vid))
+				<< " pids: " << HrDescriptions::describe(m_mesh.adj_v2p(vid))
+				<< "\n";
+		}
+		std::cout << "----------------------------------" << std::endl;
+	}
 
 	void App::onExtrude()
 	{
 		if (m_mouse.element)
 		{
-			m_commander.apply(*new Actions::Extrude{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset });
-			updateDagViewer();
-			m_canvas.refit_scene();
+			applyAction(*new Actions::Extrude{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset });
 		}
 	}
 
 	void App::onCopy()
 	{
-		if (m_mouse.element)
-		{
-			m_copy.element = m_mouse.element;
-		}
-		else
-		{
-			m_copy.element = nullptr;
-		}
+		m_copy.element = m_mouse.element;
 	}
 
 	void App::onPaste()
@@ -420,9 +570,7 @@ namespace HMP::Gui
 		{
 			if (m_copy.element->parents().size() == 1 && m_copy.element->parents().single().primitive() == HMP::Dag::Operation::EPrimitive::Extrude)
 			{
-				m_commander.apply(*new Actions::Paste{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset, static_cast<HMP::Dag::Extrude&>(m_copy.element->parents().single()) });
-				m_canvas.refit_scene();
-				updateDagViewer();
+				applyAction(*new Actions::Paste{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset, static_cast<HMP::Dag::Extrude&>(m_copy.element->parents().single()) });
 			}
 		}
 	}
@@ -431,9 +579,7 @@ namespace HMP::Gui
 	{
 		if (m_mouse.element)
 		{
-			m_commander.apply(*new Actions::Refine{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset, Meshing::ERefinementScheme::Subdivide3x3, _twice ? 2u : 1u });
-			updateDagViewer();
-			updateMouse();
+			applyAction(*new Actions::Refine{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset, Meshing::ERefinementScheme::Subdivide3x3, _twice ? 2u : 1u });
 		}
 	}
 
@@ -446,9 +592,7 @@ namespace HMP::Gui
 		}
 		if (m_mouse.element)
 		{
-			m_commander.apply(*new Actions::Delete{ *m_mouse.element });
-			updateDagViewer();
-			m_canvas.refit_scene();
+			applyAction(*new Actions::Delete{ *m_mouse.element });
 		}
 	}
 
@@ -456,9 +600,7 @@ namespace HMP::Gui
 	{
 		if (m_mouse.element && m_mouse.element->parents().size() == 1 && m_mouse.element->parents().single().primitive() == HMP::Dag::Operation::EPrimitive::Extrude)
 		{
-			m_commander.apply(*new Actions::Rotate{ static_cast<HMP::Dag::Extrude&>(m_mouse.element->parents().single()) });
-			m_mouse.element = nullptr;
-			m_canvas.refit_scene();
+			applyAction(*new Actions::Rotate{ static_cast<HMP::Dag::Extrude&>(m_mouse.element->parents().single()) });
 		}
 	}
 
@@ -466,17 +608,13 @@ namespace HMP::Gui
 	{
 		if (m_mouse.element)
 		{
-			m_commander.apply(*new Actions::Refine{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset, Meshing::ERefinementScheme::Inset });
-			updateDagViewer();
-			updateMouse();
+			applyAction(*new Actions::Refine{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset, Meshing::ERefinementScheme::Inset });
 		}
 	}
 
 	void App::onMakeConformant()
 	{
-		m_commander.apply(*new Actions::MakeConforming());
-		updateDagViewer();
-		updateMouse();
+		applyAction(*new Actions::MakeConforming());
 	}
 
 	void App::onSaveMesh()
@@ -511,9 +649,8 @@ namespace HMP::Gui
 			Utils::Serialization::Deserializer deserializer{ file };
 			HMP::Dag::Element& root = HMP::Dag::Utils::deserialize(deserializer).element();
 			file.close();
-			m_commander.apply(*new Actions::Load{ root });
-			updateDagViewer();
-			m_canvas.refit_scene();
+			applyAction(*new Actions::Load{ root });
+			m_canvas.reset_camera();
 		}
 	}
 
@@ -539,15 +676,12 @@ namespace HMP::Gui
 			Vec& vert{ target.vert(vid) };
 			vert = target.transform * vert;
 		}
-		m_commander.apply(*new Actions::Project{ std::move(target) });
-		updateDagViewer();
-		m_canvas.refit_scene();
+		applyAction(*new Actions::Project{ std::move(target) });
 	}
 
 	void App::onApplyTargetTransform(const Mat4& _transform)
 	{
-		m_commander.apply(*new Actions::TransformAll{ _transform });
-		updateAllMarkers();
+		applyAction(*new Actions::TransformAll{ _transform });
 		m_canvas.reset_camera();
 	}
 
@@ -555,10 +689,9 @@ namespace HMP::Gui
 	{
 		if (m_commander.canUndo())
 		{
+			m_vertEditWidget.applyAction();
 			m_commander.undo();
-			updateDagViewer();
-			m_canvas.refit_scene();
-			updateAllMarkers();
+			onActionApplied();
 		}
 		else
 		{
@@ -570,10 +703,9 @@ namespace HMP::Gui
 	{
 		if (m_commander.canRedo())
 		{
+			m_vertEditWidget.applyAction();
 			m_commander.redo();
-			updateDagViewer();
-			m_canvas.refit_scene();
-			updateAllMarkers();
+			onActionApplied();
 		}
 		else
 		{
@@ -583,10 +715,48 @@ namespace HMP::Gui
 
 	void App::onClear()
 	{
-		m_commander.apply(*new Actions::Clear());
-		m_copy.element = nullptr;
-		updateDagViewer();
-		m_canvas.refit_scene();
+		applyAction(*new Actions::Clear());
+	}
+
+	void App::onSelect(ESelectionSource _source, bool _add)
+	{
+		if (m_mouse.element)
+		{
+			const Id pid{ m_mesher.elementToPid(*m_mouse.element) };
+			const Id vid{ m_mesh.poly_vert_id(pid, m_mouse.vertOffset) };
+			const Id fid{ m_mesh.poly_face_id(pid, m_mouse.faceOffset) };
+			const Id upFid{ m_mesh.poly_face_id(pid, m_mouse.upFaceOffset) };
+			const Id eid{ m_mesh.face_shared_edge(fid, upFid) };
+			std::vector<Id> vids{};
+			switch (_source)
+			{
+				case ESelectionSource::Vertex:
+					vids = { vid };
+					break;
+				case ESelectionSource::Edge:
+					vids = m_mesh.edge_vert_ids(eid);
+					break;
+				case ESelectionSource::Face:
+					vids = m_mesh.face_verts_id(fid);
+					break;
+				case ESelectionSource::Poly:
+					vids = m_mesh.poly_verts_id(pid);
+					break;
+			}
+			if (_add)
+			{
+				m_vertEditWidget.add(vids);
+			}
+			else
+			{
+				m_vertEditWidget.remove(vids);
+			}
+		}
+	}
+
+	void App::onClearSelection()
+	{
+		m_vertEditWidget.clear();
 	}
 
 	// launch
@@ -594,12 +764,15 @@ namespace HMP::Gui
 	App::App() :
 		m_project{}, m_canvas{}, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() },
 		m_dagNamer{}, m_dagViewer{ m_mesher, m_dagNamer }, m_menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh controls" },
-		m_commanderWidget{ m_commander, m_dagNamer }, m_axesWidget{ m_canvas.camera }, m_targetWidget{ m_mesh }, m_dagViewerNeedsUpdate{ true }
+		m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{ m_canvas.camera }, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher }, m_dagViewerNeedsUpdate{ true }
 	{
 
 		m_canvas.background = c_backgroundColor;
 		m_mesher.polyMarkerSet().color() = c_selectedPolyColor;
 		m_mesher.faceMarkerSet().color() = c_selectedFaceColor;
+
+		m_mesher.onElementRemove += [this](const HMP::Dag::Element& _element) { onElementRemove(_element); };
+		m_mesher.onClear += [this]() { onClearElements(); };
 
 		m_commander.apply(*new Actions::Clear());
 		m_commander.applied().clear();
@@ -611,49 +784,30 @@ namespace HMP::Gui
 		m_canvas.push(&m_axesWidget);
 
 		m_canvas.push(&m_commanderWidget);
+		m_canvas.push(&m_vertEditWidget);
 		m_canvas.push(&m_targetWidget);
 		m_canvas.push(&m_menu);
 		m_canvas.push(&m_dagViewer);
 
-		m_targetWidget.onProjectRequest += [this](const Widgets::Target& _target) { onProjectToTarget(); };
-		m_targetWidget.onMeshLoad += [this](const Widgets::Target& _target) { m_canvas.push(&_target.mesh(), false); };
-		m_targetWidget.onMeshClear += [this](const Widgets::Target& _target) { m_canvas.pop(&_target.mesh()); };
-		m_targetWidget.onApplyTransformToSource += [this](const Widgets::Target& _target, const Mat4& _transform) { onApplyTargetTransform(_transform); };
+		m_targetWidget.onProjectRequest += [this]() { onProjectToTarget(); };
+		m_targetWidget.onMeshLoad += [this]() { m_canvas.push(&m_targetWidget.mesh(), false); };
+		m_targetWidget.onMeshClear += [this]() { m_canvas.pop(&m_targetWidget.mesh()); };
+		m_targetWidget.onApplyTransformToSource += [this](const Mat4& _transform) { onApplyTargetTransform(_transform); };
+
+		m_vertEditWidget.onApplyAction += [this](std::unordered_set<Id> _vids, Mat4 _transform) { onApplyVertEdit(_vids, _transform); };
+		m_vertEditWidget.onMeshUpdate += [this]() { onVertEditMeshUpdate(); };
+		m_vertEditWidget.onSelectionUpdate += [this]() { onVertSelectionChange(); };
 
 		m_canvas.depth_cull_markers = false;
-		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMove(_args...); };
-		m_canvas.callback_key_pressed = [this](auto && ..._args) { return onKeyPress(_args...); };
+		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMoved(_args...); };
+		m_canvas.callback_key_pressed = [this](auto && ..._args) { return onKeyPressed(_args...); };
 		m_canvas.callback_app_controls = [this](auto && ..._args) { return onDrawControls(_args ...); };
-		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChange(_args...); };
+		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChanged(_args...); };
 		m_canvas.callback_custom_gui = [this](auto && ..._args) { return onDrawCustomGui(_args...); };
 		m_canvas.marker_sets.resize(3);
 
 		m_dagViewer.onDraw += [this]() { onDagViewerDraw(); };
-		updateDagViewer();
-	}
-
-	void App::printKeyBindings()
-	{
-		std::cout << "------ App key bindings -------\n";
-		cinolib::print_binding(c_kbExtrude.name().c_str(), "extrude");
-		cinolib::print_binding(c_kbRefine.name().c_str(), "refine");
-		cinolib::print_binding(c_kbDoubleRefine.name().c_str(), "refine twice");
-		cinolib::print_binding(c_kbFaceRefine.name().c_str(), "refine face");
-		cinolib::print_binding(c_kbDelete.name().c_str(), "delete");
-		cinolib::print_binding(c_kbCopy.name().c_str(), "copy");
-		cinolib::print_binding(c_kbPaste.name().c_str(), "paste");
-		cinolib::print_binding(c_kbRotate.name().c_str(), "rotate");
-		cinolib::print_binding(c_kbClear.name().c_str(), "clear");
-		cinolib::print_binding(c_kbMakeConforming.name().c_str(), "make conforming");
-		cinolib::print_binding(c_kbSave.name().c_str(), "save");
-		cinolib::print_binding(c_kbOpen.name().c_str(), "open");
-		cinolib::print_binding(c_kbSaveMesh.name().c_str(), "save mesh");
-		cinolib::print_binding(c_kbLoadTarget.name().c_str(), "load target mesh");
-		cinolib::print_binding(c_kbToggleTargetVisibility.name().c_str(), "toggle target visibility");
-		cinolib::print_binding(c_kbUndo.name().c_str(), "undo");
-		cinolib::print_binding(c_kbRedo.name().c_str(), "redo");
-		cinolib::print_binding(c_kbPrintDebugInfo.name().c_str(), "print debug info");
-		std::cout << "-------------------------------\n";
+		requestDagViewerUpdate();
 	}
 
 	int App::launch()

@@ -5,8 +5,7 @@
 #include <HMP/Meshing/Mesher.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <cpputils/collections/Event.hpp>
-#include <cpputils/collections/Iterable.hpp>
-#include <unordered_map>
+#include <unordered_set>
 
 namespace HMP::Gui::Widgets
 {
@@ -28,15 +27,22 @@ namespace HMP::Gui::Widgets
 
 		Meshing::Mesher& m_mesher;
 		Vec m_centroid;
-		std::unordered_map<Id, Vec> m_verts;
+		std::unordered_set<Id> m_vids;
+		Mat4 m_transform;
+		bool m_pendingAction;
+
+		void vidsChanged();
+		void apply(const Mat4& _transform, bool _notify = true);
+		void applyAndCombine(const Mat4& _transform);
+		bool isIdentity() const;
+
+		void addOrRemove(const Id* _vids, std::size_t _count, bool _add);
 
 	public:
 
-		using Verts = cpputils::collections::Iterable<std::unordered_map<Id, Vec>, Id, Id, vertsIterableConvert, vertsIterableConvertConst>;
-
-		cpputils::collections::Event<VertEdit, const VertEdit&> onSelectionUpdate;
-		cpputils::collections::Event<VertEdit, const VertEdit&> onMeshUpdate;
-		cpputils::collections::Event<VertEdit, const VertEdit&> onConsolidate;
+		cpputils::collections::Event<VertEdit> onSelectionUpdate;
+		cpputils::collections::Event<VertEdit> onMeshUpdate;
+		cpputils::collections::Event<VertEdit, std::unordered_set<Id>, Mat4> onApplyAction;
 
 		VertEdit(Meshing::Mesher& _mesher);
 
@@ -44,9 +50,13 @@ namespace HMP::Gui::Widgets
 
 		void remove(Id _vid);
 
+		void add(const std::vector<Id>& _vids);
+
+		void remove(const std::vector<Id>& _vids);
+
 		bool has(Id _vid) const;
 
-		Verts verts() const;
+		const std::unordered_set<Id>& vids() const;
 
 		void clear();
 
@@ -54,21 +64,15 @@ namespace HMP::Gui::Widgets
 
 		const Vec& centroid() const;
 
-		bool planar() const;
+		bool pendingAction() const;
 
-		void consolidate();
+		void applyAction();
 
-		const Vec& extent() const;
+		void translate(const Vec& _offset);
 
-		const Vec& planarExtent() const;
+		void rotate(const Vec& _normAxis, Real _angleDeg);
 
-		const Vec& planarRotation() const;
-
-		void translate(const Vec& _offset, bool _consolidate = true);
-
-		void rotate(const Vec& _axis, double _angleDeg, bool _consolidate = true);
-
-		void scale(double _amount, bool _consolidate = true);
+		void scale(const Vec& _amount);
 
 		void draw() override;
 
