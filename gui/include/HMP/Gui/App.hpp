@@ -5,6 +5,8 @@
 #include <HMP/Dag/Element.hpp>
 #include <HMP/Dag/Extrude.hpp>
 #include <cinolib/gl/glcanvas.h>
+#include <cinolib/gl/gl_glfw.h>
+#include <cinolib/gl/key_bindings.hpp>
 #include <cinolib/gl/volume_mesh_controls.h>
 #include <cinolib/color.h>
 #include <cpputils/mixins/ReferenceClass.hpp>
@@ -27,10 +29,31 @@ namespace HMP::Gui
 		static constexpr cinolib::Color c_mutedOverlayColor{ cinolib::Color::hsv2rgb(0.1f, 0.0f, 1.0f, 0.25f) };
 		static constexpr cinolib::Color c_selectedPolyColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 0.5f) };
 		static constexpr cinolib::Color c_selectedFaceColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 1.0f) };
-		
-		static constexpr std::size_t c_mouseMarkerSetInd{0};
-		static constexpr std::size_t c_vertSelectionMarkerSetInd{1};
-		static constexpr std::size_t c_elementsMarkerSetInd{2};
+
+		static constexpr std::size_t c_mouseMarkerSetInd{ 0 };
+		static constexpr std::size_t c_vertSelectionMarkerSetInd{ 1 };
+		static constexpr std::size_t c_elementsMarkerSetInd{ 2 };
+
+		static constexpr cinolib::KeyBinding c_kbExtrude{ GLFW_KEY_E };
+		static constexpr cinolib::KeyBinding c_kbRefine{ GLFW_KEY_H };
+		static constexpr cinolib::KeyBinding c_kbDoubleRefine{ GLFW_KEY_H, GLFW_MOD_SHIFT };
+		static constexpr cinolib::KeyBinding c_kbFaceRefine{ GLFW_KEY_F };
+		static constexpr cinolib::KeyBinding c_kbSave{ GLFW_KEY_S, GLFW_MOD_CONTROL };
+		static constexpr cinolib::KeyBinding c_kbSaveMesh{ GLFW_KEY_S, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT };
+		static constexpr cinolib::KeyBinding c_kbOpen{ GLFW_KEY_O, GLFW_MOD_CONTROL };
+		static constexpr cinolib::KeyBinding c_kbLoadTarget{ GLFW_KEY_L, GLFW_MOD_CONTROL };
+		static constexpr cinolib::KeyBinding c_kbDelete{ GLFW_KEY_D };
+		static constexpr cinolib::KeyBinding c_kbCopy{ GLFW_KEY_C };
+		static constexpr cinolib::KeyBinding c_kbPaste{ GLFW_KEY_V };
+		static constexpr cinolib::KeyBinding c_kbRotate{ GLFW_KEY_Y };
+		static constexpr cinolib::KeyBinding c_kbMakeConforming{ GLFW_KEY_Q };
+		static constexpr cinolib::KeyBinding c_kbToggleTargetVisibility{ GLFW_KEY_T };
+		static constexpr cinolib::KeyBinding c_kbUndo{ GLFW_KEY_Z, GLFW_MOD_CONTROL };
+		static constexpr cinolib::KeyBinding c_kbRedo{ GLFW_KEY_Z, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT };
+		static constexpr cinolib::KeyBinding c_kbClear{ GLFW_KEY_N, GLFW_MOD_CONTROL };
+		static constexpr cinolib::KeyBinding c_kbPrintDebugInfo{ GLFW_KEY_COMMA };
+
+		static void printKeyBindings();
 
 		struct
 		{
@@ -56,7 +79,7 @@ namespace HMP::Gui
 		const Meshing::Mesher::Mesh& m_mesh;
 		Commander& m_commander;
 		cpputils::collections::SetNamer<const HMP::Dag::Node*> m_dagNamer;
-		Dag::Viewer m_dagViewer; 
+		Dag::Viewer m_dagViewer;
 		cinolib::VolumeMeshControls<Meshing::Mesher::Mesh> m_menu;
 		Widgets::Commander m_commanderWidget;
 		Widgets::Axes m_axesWidget;
@@ -78,6 +101,7 @@ namespace HMP::Gui
 		void onDrawCustomGui();
 		void onDagViewerDraw();
 
+		void onPrintDebugInfo() const;
 		void onExtrude();
 		void onCopy();
 		void onPaste();

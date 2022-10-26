@@ -168,213 +168,165 @@ namespace HMP::Gui
 		return false;
 	}
 
+	void App::onPrintDebugInfo() const
+	{
+		std::cout << "-------- PRINT DEBUG INFO --------\n";
+		std::cout << "---- Elements\n";
+		std::vector<Meshing::Utils::PolyVertLoc> locs{};
+		locs.reserve(8);
+		for (const auto [element, pid] : m_mesher)
+		{
+			locs.clear();
+			const HMP::Vec centroid{ m_mesh.poly_centroid(pid) };
+			for (const Id vid : m_mesh.adj_p2v(pid))
+			{
+				locs.push_back(Meshing::Utils::polyVertLoc(m_mesh.vert(vid), centroid));
+			}
+			std::cout
+				<< "name: " << m_dagNamer.nameOrUnknown(&element)
+				<< " pid: " << pid
+				<< " centroid: " << HrDescriptions::describe(centroid)
+				<< " vids: " << HrDescriptions::describe(m_mesh.adj_p2v(pid))
+				<< " eids: " << HrDescriptions::describe(m_mesh.adj_p2e(pid))
+				<< " fids: " << HrDescriptions::describe(m_mesh.adj_p2f(pid))
+				<< " pids: " << HrDescriptions::describe(m_mesh.adj_p2p(pid))
+				<< " winding: " << HrDescriptions::describe(m_mesh.poly_faces_winding(pid))
+				<< " locs: " << HrDescriptions::describe(locs)
+				<< "\n";
+		}
+		std::cout << "---- Faces\n";
+		for (std::size_t fid{}; fid < m_mesh.num_faces(); fid++)
+		{
+			std::cout
+				<< "fid: " << fid
+				<< " centroid: " << HrDescriptions::describe(m_mesh.face_centroid(fid))
+				<< " vids: " << HrDescriptions::describe(m_mesh.adj_f2v(fid))
+				<< " eids: " << HrDescriptions::describe(m_mesh.adj_f2e(fid))
+				<< " fids: " << HrDescriptions::describe(m_mesh.adj_f2f(fid))
+				<< " pids: " << HrDescriptions::describe(m_mesh.adj_f2p(fid))
+				<< " normal: " << HrDescriptions::describe(m_mesh.face_data(fid).normal)
+				<< "\n";
+		}
+		std::cout << "---- Edges\n";
+		for (std::size_t eid{}; eid < m_mesh.num_edges(); eid++)
+		{
+			std::cout
+				<< "eid: " << eid
+				<< " midpoint: " << HrDescriptions::describe(Meshing::Utils::midpoint(m_mesh, eid))
+				<< " vids: " << HrDescriptions::describe(m_mesh.adj_e2v(eid))
+				<< " eids: " << HrDescriptions::describe(m_mesh.adj_e2e(eid))
+				<< " fids: " << HrDescriptions::describe(m_mesh.adj_e2f(eid))
+				<< " pids: " << HrDescriptions::describe(m_mesh.adj_e2p(eid))
+				<< "\n";
+		}
+		std::cout << "---- Vertices\n";
+		for (std::size_t vid{}; vid < m_mesh.num_verts(); vid++)
+		{
+			std::cout
+				<< "vid: " << vid
+				<< " position: " << HrDescriptions::describe(m_mesh.vert(vid))
+				<< " vids: " << HrDescriptions::describe(m_mesh.adj_v2v(vid))
+				<< " eids: " << HrDescriptions::describe(m_mesh.adj_v2e(vid))
+				<< " fids: " << HrDescriptions::describe(m_mesh.adj_v2f(vid))
+				<< " pids: " << HrDescriptions::describe(m_mesh.adj_v2p(vid))
+				<< "\n";
+		}
+		std::cout << "----------------------------------" << std::endl;
+	}
+
 	bool App::onKeyPress(int _key, int _modifiers)
 	{
-		switch (_key)
+		cinolib::KeyBinding key{ _key, _modifiers };
+		// extrude
+		if (key == c_kbExtrude)
 		{
-			break;
-			// extrude
-			case GLFW_KEY_E:
-			{
-				if (!_modifiers)
-				{
-					onExtrude();
-				}
-			}
-			break;
-			// copy
-			case GLFW_KEY_C:
-			{
-				if (_modifiers == GLFW_MOD_CONTROL)
-				{
-					onCopy();
-				}
-			}
-			break;
-			// paste
-			case GLFW_KEY_V:
-			{
-				if (_modifiers == GLFW_MOD_CONTROL)
-				{
-					onPaste();
-				}
-			}
-			break;
-			// refine hexahedron
-			case GLFW_KEY_H:
-			{
-				if (!_modifiers)
-				{
-					onRefineElement(false);
-				}
-				else if (_modifiers == GLFW_MOD_SHIFT)
-				{
-					onRefineElement(true);
-				}
-			}
-			break;
-			// refine face
-			case GLFW_KEY_F:
-			{
-				if (!_modifiers)
-				{
-					onRefineFace();
-				}
-			}
-			break;
-			// delete hexahedron
-			case GLFW_KEY_DELETE:
-			{
-				if (!_modifiers)
-				{
-					onDelete();
-				}
-			}
-			break;
-			// rotate
-			case GLFW_KEY_Y:
-			{
-				if (!_modifiers)
-				{
-					onRotate();
-				}
-			}
-			break;
-			// make conformant
-			case GLFW_KEY_Q:
-			{
-				if (!_modifiers)
-				{
-					onMakeConformant();
-				}
-			}
-			break;
-			// save tree
-			case GLFW_KEY_S:
-			{
-				// save tree
-				if (_modifiers == GLFW_MOD_CONTROL)
-				{
-					onSaveTree();
-				}
-				// save mesh
-				else if (_modifiers == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT))
-				{
-					onSaveMesh();
-				}
-			}
-			break;
-			// load tree
-			case GLFW_KEY_O:
-			{
-				if (_modifiers == GLFW_MOD_CONTROL)
-				{
-					onLoadTree();
-				}
-			}
-			break;
-			// toggle target visibility
-			case GLFW_KEY_T:
-			{
-				if (!_modifiers)
-				{
-					onToggleTargetVisibility();
-				}
-			}
-			break;
-			// undo or redo
-			case GLFW_KEY_Z:
-			{
-				// undo
-				if (_modifiers == GLFW_MOD_CONTROL)
-				{
-					onUndo();
-				}
-				// redo
-				else if (_modifiers == (GLFW_MOD_CONTROL | GLFW_MOD_SHIFT))
-				{
-					onRedo();
-				}
-			}
-			break;
-			// clear
-			case GLFW_KEY_N:
-			{
-				if (_modifiers == GLFW_MOD_CONTROL)
-				{
-					onClear();
-				}
-			}
-			break;
-			// print elements
-			case GLFW_KEY_COMMA:
-			{
-				std::cout << "-------- PRINT DEBUG INFO --------\n";
-				std::cout << "---- Elements\n";
-				std::vector<Meshing::Utils::PolyVertLoc> locs{};
-				locs.reserve(8);
-				for (const auto [element, pid] : m_mesher)
-				{
-					locs.clear();
-					const HMP::Vec centroid{ m_mesh.poly_centroid(pid) };
-					for (const Id vid : m_mesh.adj_p2v(pid))
-					{
-						locs.push_back(Meshing::Utils::polyVertLoc(m_mesh.vert(vid), centroid));
-					}
-					std::cout
-						<< "name: " << m_dagNamer(&element)
-						<< " pid: " << pid
-						<< " centroid: " << HrDescriptions::describe(centroid)
-						<< " vids: " << HrDescriptions::describe(m_mesh.adj_p2v(pid))
-						<< " eids: " << HrDescriptions::describe(m_mesh.adj_p2e(pid))
-						<< " fids: " << HrDescriptions::describe(m_mesh.adj_p2f(pid))
-						<< " pids: " << HrDescriptions::describe(m_mesh.adj_p2p(pid))
-						<< " winding: " << HrDescriptions::describe(m_mesh.poly_faces_winding(pid))
-						<< " locs: " << HrDescriptions::describe(locs)
-						<< "\n";
-				}
-				std::cout << "---- Faces\n";
-				for (std::size_t fid{}; fid < m_mesh.num_faces(); fid++)
-				{
-					std::cout
-						<< "fid: " << fid
-						<< " centroid: " << HrDescriptions::describe(m_mesh.face_centroid(fid))
-						<< " vids: " << HrDescriptions::describe(m_mesh.adj_f2v(fid))
-						<< " eids: " << HrDescriptions::describe(m_mesh.adj_f2e(fid))
-						<< " fids: " << HrDescriptions::describe(m_mesh.adj_f2f(fid))
-						<< " pids: " << HrDescriptions::describe(m_mesh.adj_f2p(fid))
-						<< " normal: " << HrDescriptions::describe(m_mesh.face_data(fid).normal)
-						<< "\n";
-				}
-				std::cout << "---- Edges\n";
-				for (std::size_t eid{}; eid < m_mesh.num_edges(); eid++)
-				{
-					std::cout
-						<< "eid: " << eid
-						<< " midpoint: " << HrDescriptions::describe(Meshing::Utils::midpoint(m_mesh, eid))
-						<< " vids: " << HrDescriptions::describe(m_mesh.adj_e2v(eid))
-						<< " eids: " << HrDescriptions::describe(m_mesh.adj_e2e(eid))
-						<< " fids: " << HrDescriptions::describe(m_mesh.adj_e2f(eid))
-						<< " pids: " << HrDescriptions::describe(m_mesh.adj_e2p(eid))
-						<< "\n";
-				}
-				std::cout << "---- Vertices\n";
-				for (std::size_t vid{}; vid < m_mesh.num_verts(); vid++)
-				{
-					std::cout
-						<< "vid: " << vid
-						<< " position: " << HrDescriptions::describe(m_mesh.vert(vid))
-						<< " vids: " << HrDescriptions::describe(m_mesh.adj_v2v(vid))
-						<< " eids: " << HrDescriptions::describe(m_mesh.adj_v2e(vid))
-						<< " fids: " << HrDescriptions::describe(m_mesh.adj_v2f(vid))
-						<< " pids: " << HrDescriptions::describe(m_mesh.adj_v2p(vid))
-						<< "\n";
-				}
-				std::cout << "----------------------------------" << std::endl;
-			}
-			break;
+			onExtrude();
 		}
-		return false;
+		// copy
+		else if (key == c_kbCopy)
+		{
+			onCopy();
+		}
+		// paste
+		else if (key == c_kbPaste)
+		{
+			onPaste();
+		}
+		// refine hexahedron
+		else if (key == c_kbRefine)
+		{
+			onRefineElement(false);
+		}
+		// refine hexahedron twice
+		else if (key == c_kbDoubleRefine)
+		{
+			onRefineElement(true);
+		}
+		// refine face
+		else if (key == c_kbFaceRefine)
+		{
+			onRefineFace();
+		}
+		// delete hexahedron
+		else if (key == c_kbDelete)
+		{
+			onDelete();
+		}
+		// rotate
+		else if (key == c_kbRotate)
+		{
+			onRotate();
+		}
+		// make conformant
+		else if (key == c_kbMakeConforming)
+		{
+			onMakeConformant();
+		}
+		// save tree
+		else if (key == c_kbSave)
+		{
+			onSaveTree();
+		}
+		// save mesh
+		else if (key == c_kbSaveMesh)
+		{
+			onSaveMesh();
+		}
+		// load tree
+		else if (key == c_kbOpen)
+		{
+			onLoadTree();
+		}
+		// toggle target visibility
+		else if (key == c_kbToggleTargetVisibility)
+		{
+			onToggleTargetVisibility();
+		}
+		// undo
+		else if (key == c_kbUndo)
+		{
+			onUndo();
+		}
+		// redo
+		else if (key == c_kbRedo)
+		{
+			onRedo();
+		}
+		// clear
+		else if (key == c_kbClear)
+		{
+			onClear();
+		}
+		// print elements
+		else if (key == c_kbPrintDebugInfo)
+		{
+			onPrintDebugInfo();
+		}
+		else
+		{
+			return false;
+		}
+		return true;
 	}
 
 	void App::onDrawControls()
@@ -670,8 +622,33 @@ namespace HMP::Gui
 		updateDagViewer();
 	}
 
+	void App::printKeyBindings()
+	{
+		std::cout << "------ App key bindings -------\n";
+		cinolib::print_binding(c_kbExtrude.name().c_str(), "extrude");
+		cinolib::print_binding(c_kbRefine.name().c_str(), "refine");
+		cinolib::print_binding(c_kbDoubleRefine.name().c_str(), "refine twice");
+		cinolib::print_binding(c_kbFaceRefine.name().c_str(), "refine face");
+		cinolib::print_binding(c_kbDelete.name().c_str(), "delete");
+		cinolib::print_binding(c_kbCopy.name().c_str(), "copy");
+		cinolib::print_binding(c_kbPaste.name().c_str(), "paste");
+		cinolib::print_binding(c_kbRotate.name().c_str(), "rotate");
+		cinolib::print_binding(c_kbClear.name().c_str(), "clear");
+		cinolib::print_binding(c_kbMakeConforming.name().c_str(), "make conforming");
+		cinolib::print_binding(c_kbSave.name().c_str(), "save");
+		cinolib::print_binding(c_kbOpen.name().c_str(), "open");
+		cinolib::print_binding(c_kbSaveMesh.name().c_str(), "save mesh");
+		cinolib::print_binding(c_kbLoadTarget.name().c_str(), "load target mesh");
+		cinolib::print_binding(c_kbToggleTargetVisibility.name().c_str(), "toggle target visibility");
+		cinolib::print_binding(c_kbUndo.name().c_str(), "undo");
+		cinolib::print_binding(c_kbRedo.name().c_str(), "redo");
+		cinolib::print_binding(c_kbPrintDebugInfo.name().c_str(), "print debug info");
+		std::cout << "-------------------------------\n";
+	}
+
 	int App::launch()
 	{
+		printKeyBindings();
 		return m_canvas.launch();
 	}
 
