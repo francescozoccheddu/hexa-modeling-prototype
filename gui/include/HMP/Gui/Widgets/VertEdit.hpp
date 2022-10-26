@@ -31,17 +31,22 @@ namespace HMP::Gui::Widgets
 		Mat4 m_transform;
 		bool m_pendingAction;
 
-		void vidsChanged();
-		void apply(const Mat4& _transform, bool _notify = true);
-		void applyAndCombine(const Mat4& _transform);
+		cinolib::vec3<float> m_translationSlider, m_scaleSlider, m_rotationSlider;
+
+		bool apply(const Mat4& _transform, bool _updateMesh = true);
+		bool applyAndCombine(const Mat4& _transform);
 		bool isIdentity() const;
 
 		void addOrRemove(const Id* _vids, std::size_t _count, bool _add);
 
+		void cancel(bool _updateMesh);
+
 	public:
 
-		cpputils::collections::Event<VertEdit> onSelectionUpdate;
-		cpputils::collections::Event<VertEdit> onMeshUpdate;
+		cpputils::collections::Event<VertEdit> onVidsChanged;
+		cpputils::collections::Event<VertEdit> onCentroidChanged;
+		cpputils::collections::Event<VertEdit> onMeshUpdated;
+		cpputils::collections::Event<VertEdit> onPendingActionChanged;
 		cpputils::collections::Event<VertEdit, std::unordered_set<Id>, Mat4> onApplyAction;
 
 		VertEdit(Meshing::Mesher& _mesher);
@@ -66,13 +71,17 @@ namespace HMP::Gui::Widgets
 
 		bool pendingAction() const;
 
+		void cancel();
+
 		void applyAction();
 
-		void translate(const Vec& _offset);
+		bool translate(const Vec& _offset);
 
-		void rotate(const Vec& _normAxis, Real _angleDeg);
+		bool rotate(const Vec& _normAxis, Real _angleDeg);
 
-		void scale(const Vec& _amount);
+		bool scale(const Vec& _amount);
+
+		void update();
 
 		void draw() override;
 
