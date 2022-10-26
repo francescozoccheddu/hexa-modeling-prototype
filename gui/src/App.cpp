@@ -163,6 +163,7 @@ namespace HMP::Gui
 
 	void App::onActionApplied()
 	{
+		m_vertEditWidget.update();
 		updateMouse();
 		updateAllMarkers();
 		requestDagViewerUpdate();
@@ -208,12 +209,12 @@ namespace HMP::Gui
 
 	// vert edit events
 
-	void App::onVertSelectionChange()
+	void App::onVertEditVidsOrCentroidChanged()
 	{
 		updateVertSelectionMarkers();
 	}
 
-	void App::onVertEditMeshUpdate()
+	void App::onVertEditMeshUpdated()
 	{
 		updateAllMarkers();
 	}
@@ -229,6 +230,14 @@ namespace HMP::Gui
 			verts.push_back({ m_mesher.pidToElement(pid), vertOffs });
 		}
 		applyAction(*new Actions::TransformVerts{ std::move(_transform), std::move(verts) });
+	}
+
+	void App::onVertEditPendingActionChanged()
+	{
+		if (m_vertEditWidget.pendingAction())
+		{
+			m_commander.unapplied().clear();
+		}
 	}
 
 	// canvas events
@@ -795,8 +804,10 @@ namespace HMP::Gui
 		m_targetWidget.onApplyTransformToSource += [this](const Mat4& _transform) { onApplyTargetTransform(_transform); };
 
 		m_vertEditWidget.onApplyAction += [this](std::unordered_set<Id> _vids, Mat4 _transform) { onApplyVertEdit(_vids, _transform); };
-		m_vertEditWidget.onMeshUpdate += [this]() { onVertEditMeshUpdate(); };
-		m_vertEditWidget.onSelectionUpdate += [this]() { onVertSelectionChange(); };
+		m_vertEditWidget.onMeshUpdated += [this]() { onVertEditMeshUpdated(); };
+		m_vertEditWidget.onVidsChanged += [this]() { onVertEditVidsOrCentroidChanged(); };
+		m_vertEditWidget.onCentroidChanged += [this]() { onVertEditVidsOrCentroidChanged(); };
+		m_vertEditWidget.onPendingActionChanged += [this]() { onVertEditPendingActionChanged(); };
 
 		m_canvas.depth_cull_markers = false;
 		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMoved(_args...); };

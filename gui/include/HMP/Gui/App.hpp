@@ -115,9 +115,10 @@ namespace HMP::Gui
 		void onClearElements();
 
 		// vert edit events
-		void onVertSelectionChange();
-		void onVertEditMeshUpdate();
+		void onVertEditVidsOrCentroidChanged();
+		void onVertEditMeshUpdated();
 		void onApplyVertEdit(std::unordered_set<Id> _vids, Mat4 _transform);
+		void onVertEditPendingActionChanged();
 
 		// canvas events
 		void onCameraChanged();

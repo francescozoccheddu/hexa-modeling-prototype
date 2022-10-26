@@ -4,32 +4,63 @@
 #include <stdexcept>
 #include <cinolib/gl/glcanvas.h>
 #include <cinolib/deg_rad.h>
+#include <limits>
+#include <utility>
 
 namespace HMP::Gui::Widgets
 {
 
-	void VertEdit::vidsChanged()
+	bool VertEdit::apply(const Mat4& _transform, bool _updateMesh)
 	{
-		onSelectionUpdate();
-	}
-
-	void VertEdit::apply(const Mat4& _transform, bool _notify)
-	{
+		std::vector<std::pair<Id, Vec>> backup{};
+		backup.reserve(m_vids.size());
+		bool succeeded{ true };
 		for (const Id vid : m_vids)
 		{
-			m_mesher.moveVert(vid, _transform * m_mesher.mesh().vert(vid));
+			const Vec oldPos{ m_mesher.mesh().vert(vid) };
+			backup.push_back({ vid,oldPos });
+			const Vec newPos{ _transform * oldPos };
+			const Id vidAtNewPos{ m_mesher.getVert(newPos) };
+			if (vidAtNewPos != noId && vidAtNewPos != vid)
+			{
+				succeeded = false;
+				break;
+			}
+			m_mesher.moveVert(vid, newPos);
 		}
-		if (_notify)
+		if (succeeded)
 		{
-			onMeshUpdate();
+			if (_updateMesh)
+			{
+				m_mesher.updateMesh();
+				onMeshUpdated();
+			}
 		}
+		else
+		{
+			for (std::size_t iPlusOne{ backup.size() }; iPlusOne > 0; iPlusOne--)
+			{
+				const auto& [vid, oldPos] {backup[iPlusOne - 1]};
+				m_mesher.moveVert(vid, oldPos);
+			}
+		}
+		return succeeded;
 	}
 
-	void VertEdit::applyAndCombine(const Mat4& _transform)
+	bool VertEdit::applyAndCombine(const Mat4& _transform)
 	{
-		m_transform = _transform * m_transform;
-		m_pendingAction = !isIdentity();
-		apply(_transform);
+		if (apply(_transform))
+		{
+			m_transform = _transform * m_transform;
+			const bool hadPendingAction{ m_pendingAction };
+			m_pendingAction = !isIdentity();
+			if (m_pendingAction != hadPendingAction)
+			{
+				onPendingActionChanged();
+			}
+			return true;
+		}
+		return false;
 	}
 
 	void VertEdit::addOrRemove(const Id* _vids, std::size_t _count, bool _add)
@@ -71,8 +102,7 @@ namespace HMP::Gui::Widgets
 		if (changed)
 		{
 			m_pendingAction &= !empty();
-			m_mesher.updateMesh();
-			vidsChanged();
+			onVidsChanged();
 		}
 	}
 
@@ -94,7 +124,28 @@ namespace HMP::Gui::Widgets
 		return true;
 	}
 
-	VertEdit::VertEdit(Meshing::Mesher& _mesher) : cinolib::SideBarItem{ "Vertex editor" }, m_mesher{ _mesher }, m_centroid{}, m_vids{}, m_pendingAction{ false }
+	void VertEdit::cancel(bool _updateMesh)
+	{
+		if (!apply(m_transform.inverse(), _updateMesh))
+		{
+			throw std::logic_error{ "cannot revert" };
+		}
+		m_translationSlider = {};
+		m_rotationSlider = {};
+		m_scaleSlider = { 1.0f };
+		m_transform = Mat4::DIAG(Vec4{ 1 });
+		update();
+		if (m_pendingAction)
+		{
+			m_pendingAction = false;
+			onPendingActionChanged();
+		}
+	}
+
+	VertEdit::VertEdit(Meshing::Mesher& _mesher) :
+		cinolib::SideBarItem{ "Vertex editor" }, m_mesher{ _mesher },
+		m_centroid{}, m_vids{}, m_pendingAction{ false },
+		m_transform{ Mat4::DIAG({1}) }, m_translationSlider{}, m_scaleSlider{}, m_rotationSlider{}
 	{ }
 
 	void VertEdit::add(Id _vid)
@@ -137,7 +188,7 @@ namespace HMP::Gui::Widgets
 	{
 		applyAction();
 		m_vids.clear();
-		vidsChanged();
+		onVidsChanged();
 	}
 
 	bool VertEdit::empty() const
@@ -159,27 +210,36 @@ namespace HMP::Gui::Widgets
 		return m_pendingAction;
 	}
 
+	void VertEdit::cancel()
+	{
+		cancel(true);
+	}
+
 	void VertEdit::applyAction()
 	{
 		if (m_pendingAction)
 		{
-			apply(m_transform.inverse(), false);
-			m_pendingAction = false;
-			onApplyAction(m_vids, m_transform);
+			const Mat4 transform{ m_transform };
+			cancel(false);
+			onApplyAction(m_vids, transform);
 		}
-		m_transform = Mat4::DIAG(Vec4{ 1 });
 	}
 
-	void VertEdit::translate(const Vec& _offset)
+	bool VertEdit::translate(const Vec& _offset)
 	{
 		if (!m_vids.empty())
 		{
-			m_centroid += _offset;
-			applyAndCombine(Mat4::TRANS(_offset));
+			if (applyAndCombine(Mat4::TRANS(_offset)))
+			{
+				m_centroid += _offset;
+				onCentroidChanged();
+				return true;
+			}
 		}
+		return false;
 	}
 
-	void VertEdit::rotate(const Vec& _normAxis, Real _angleDeg)
+	bool VertEdit::rotate(const Vec& _normAxis, Real _angleDeg)
 	{
 		if (m_vids.size() > 1)
 		{
@@ -192,24 +252,65 @@ namespace HMP::Gui::Widgets
 				0,				0,				0,				1
 			};
 			const Mat4 fromCentroid{ Mat4::TRANS(-m_centroid) };
-			applyAndCombine(toCentroid * rotateHom * fromCentroid);
+			return applyAndCombine(toCentroid * rotateHom * fromCentroid);
 		}
+		return false;
 	}
 
-	void VertEdit::scale(const Vec& _amount)
+	bool VertEdit::scale(const Vec& _amount)
 	{
 		if (m_vids.size() > 1)
 		{
 			const Mat4 toCentroid{ Mat4::TRANS(m_centroid) };
 			const Mat4 scaleHom(Mat4::DIAG(_amount.add_coord(1.0)));
 			const Mat4 fromCentroid{ Mat4::TRANS(-m_centroid) };
-			applyAndCombine(toCentroid * scaleHom * fromCentroid);
+			return applyAndCombine(toCentroid * scaleHom * fromCentroid);
 		}
+		return false;
+	}
+
+	void VertEdit::update()
+	{
+		m_centroid = {};
+		if (!empty())
+		{
+			for (const Id vid : m_vids)
+			{
+				m_centroid += m_mesher.mesh().vert(vid);
+			}
+			m_centroid /= m_vids.size();
+		}
+		onCentroidChanged();
 	}
 
 	void VertEdit::draw()
 	{
 		ImGui::TextDisabled("%d vertices selected", static_cast<int>(m_vids.size()));
+		if (empty())
+		{
+			return;
+		}
+		const float size{ m_mesher.mesh().scene_radius() };
+		const cinolib::vec3<float> lastTranslation{ m_translationSlider };
+		if (ImGui::DragFloat3("Translation", m_translationSlider.ptr(), size / 1000.0f, 0.0f, 0.0f, "%.3f,"))
+		{
+			if (!translate((m_translationSlider - lastTranslation).cast<Real>()))
+			{
+				m_translationSlider = lastTranslation;
+			}
+		}
+		ImGui::SameLine();
+		if (ImGui::SmallButton("Reset##translation"))
+		{
+			if (translate(-m_translationSlider.cast<Real>()))
+			{
+				m_translationSlider = {};
+			}
+		}
+		if (ImGui::Button("Reset##all"))
+		{
+			cancel();
+		}
 	}
 
 }
