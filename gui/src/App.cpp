@@ -418,6 +418,7 @@ namespace HMP::Gui
 		{
 			std::ostringstream stream{};
 			stream
+				<< "Hovering "
 				<< Utils::HrDescriptions::name(*m_mouse.element, m_dagNamer)
 				<< " ("
 				<< "faces " << Utils::HrDescriptions::describeFaces(m_mouse.faceOffset, m_mouse.upFaceOffset)
@@ -432,6 +433,10 @@ namespace HMP::Gui
 				<< "Copied"
 				<< " " << Utils::HrDescriptions::name(*m_copy.element, m_dagNamer);
 			ImGui::Text("%s", stream.str().c_str());
+		}
+		if (!m_vertEditWidget.empty())
+		{
+			ImGui::Text("%d %s selected", m_vertEditWidget.vids().size(), m_vertEditWidget.vids().size() == 1 ? "vertex" : "vertices");
 		}
 	}
 
@@ -795,12 +800,14 @@ namespace HMP::Gui
 		m_canvas.push(&m_commanderWidget);
 		m_canvas.push(&m_vertEditWidget);
 		m_canvas.push(&m_targetWidget);
+		m_canvas.push(&m_targetWidget.projectLines());
 		m_canvas.push(&m_menu);
 		m_canvas.push(&m_dagViewer);
 
 		m_targetWidget.onProjectRequest += [this]() { onProjectToTarget(); };
 		m_targetWidget.onMeshLoad += [this]() { m_canvas.push(&m_targetWidget.mesh(), false); };
 		m_targetWidget.onMeshClear += [this]() { m_canvas.pop(&m_targetWidget.mesh()); };
+		m_targetWidget.onTransform += [this]() { m_canvas.refit_scene(); };
 		m_targetWidget.onApplyTransformToSource += [this](const Mat4& _transform) { onApplyTargetTransform(_transform); };
 
 		m_vertEditWidget.onApplyAction += [this](std::vector<Id> _vids, Mat4 _transform) { onApplyVertEdit(_vids, _transform); };

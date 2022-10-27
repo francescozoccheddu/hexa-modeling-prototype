@@ -22,6 +22,8 @@ namespace HMP::Gui::Utils
 
 		Mat4 matrix() const;
 
+		Real avgScale() const;
+
 		bool isIdentity(Real epsilon = 1e-6) const;
 
 	};

@@ -8,6 +8,7 @@ add_executable (gui
     "src/Dag/Viewer.cpp"
     "src/Utils/HrDescriptions.cpp"
     "src/Utils/Transform.cpp"
+    "src/Utils/Controls.cpp"
     "src/Widgets/Axes.cpp"
     "src/Widgets/Commander.cpp"
     "src/Widgets/Target.cpp"

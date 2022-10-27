@@ -2,21 +2,51 @@
 
 #include <cinolib/gl/file_dialog_open.h>
 #include <imgui.h>
-#include <cinolib/gl/glcanvas.h>
-#include <cinolib/deg_rad.h>
-#include <cmath>
+#include <HMP/Gui/Utils/Controls.hpp>
+#include <vector>
 #include <stdexcept>
 
 namespace HMP::Gui::Widgets
 {
 
-	Target::Target(const Meshing::Mesher::Mesh& _sourceMesh)
-		: m_mesh{}, m_sourceMesh{ _sourceMesh },
+	Target::Target(const Meshing::Mesher::Mesh& _sourceMesh) :
+		cinolib::SideBarItem{ "Target mesh" },
+		m_mesh{}, m_sourceMesh{ _sourceMesh },
 		onProjectRequest{}, onMeshLoad{}, onMeshClear{}, onApplyTransformToSource{},
 		m_visible{ true }, m_faceColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.25f} }, m_edgeColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.75f} },
 		m_transform{},
-		cinolib::SideBarItem{ "Target mesh" }
-	{}
+		m_projectLines{}, m_showProjectLines{}
+	{
+		m_projectLines.set_color(cinolib::Color::hsv2rgb(0.0f, 1.0f, 1.0f));
+		m_projectLines.set_thickness(1.0f);
+		m_projectLines.set_cheap_rendering(true);
+		m_projectLines.set_always_in_front(true);
+	}
+
+	void Target::showProjectLines(bool _visible)
+	{
+		m_projectLines.show = _visible;
+	}
+
+	void Target::setProjectLinesColor(const cinolib::Color& _color)
+	{
+		m_projectLines.set_color(_color);
+	}
+
+	void Target::setProjectLinesThickness(float _thickness)
+	{
+		m_projectLines.set_thickness(_thickness);
+	}
+
+	void Target::setProjectLinesAlwaysOnFront(bool _alwaysInFront)
+	{
+		m_projectLines.set_always_in_front(_alwaysInFront);
+	}
+
+	const cinolib::DrawableSegmentSoup& Target::projectLines() const
+	{
+		return m_projectLines;
+	}
 
 	void Target::ensureHasMesh() const
 	{
@@ -131,6 +161,7 @@ namespace HMP::Gui::Widgets
 	{
 		ensureHasMesh();
 		m_mesh->transform = m_transform.matrix();
+		onTransform();
 	}
 
 	void Target::updateVisibility()
@@ -191,7 +222,20 @@ namespace HMP::Gui::Widgets
 	void Target::requestProjection()
 	{
 		ensureHasMesh();
+		std::vector<Vec> fromVerts{};
+		fromVerts.reserve(m_sourceMesh.num_verts());
+		for (Id vid{}; vid < m_sourceMesh.num_verts(); vid++)
+		{
+			fromVerts.push_back(m_sourceMesh.vert(vid));
+		}
 		onProjectRequest();
+		m_projectLines.clear();
+		m_projectLines.reserve(fromVerts.size() * 2);
+		for (Id vid{}; vid < m_sourceMesh.num_verts(); vid++)
+		{
+			m_projectLines.push_seg(fromVerts[static_cast<std::size_t>(vid)], m_sourceMesh.vert(vid));
+		}
+		m_projectLines.update_bbox();
 	}
 
 	void Target::requestApplyTransformToSource()
@@ -238,10 +282,10 @@ namespace HMP::Gui::Widgets
 			{
 				ImGui::PushID(1);
 				const float sourceMeshSize{ static_cast<float>(m_sourceMesh.bbox().diag()) };
-				cinolib::vec3<float> xyz{ (m_transform.translation + m_mesh->bbox().center()).cast<float>() };
-				if (ImGui::DragFloat3("Center", xyz.ptr(), sourceMeshSize / 200))
+				Vec center{ m_transform.translation + m_mesh->bbox().center() };
+				if (Utils::Controls::dragTranslationVec("Center", center, sourceMeshSize))
 				{
-					m_transform.translation = xyz.cast<Real>() - m_mesh->bbox().center();
+					m_transform.translation = center - m_mesh->bbox().center();
 					updateTransform();
 				}
 				ImGui::SameLine();
@@ -258,10 +302,8 @@ namespace HMP::Gui::Widgets
 			}
 			{
 				ImGui::PushID(2);
-				cinolib::vec3<float> xyz{ m_transform.rotation.cast<float>() };
-				if (ImGui::DragFloat3("Rotation", xyz.ptr(), 0.5, -360, 360, "%.1f deg"))
+				if (Utils::Controls::dragRotation("Rotation", m_transform.rotation))
 				{
-					m_transform.rotation = Utils::Transform::wrapAngles(xyz.cast<Real>());
 					updateTransform();
 				}
 				ImGui::SameLine();
@@ -273,11 +315,11 @@ namespace HMP::Gui::Widgets
 			}
 			{
 				ImGui::PushID(3);
-				const float sourceAndTargetMeshScaleRatio{ static_cast<float>(m_sourceMesh.bbox().diag() / m_mesh->bbox().diag()) };
-				float scale{ static_cast<float>((m_transform.scale.x() + m_transform.scale.y() + m_transform.scale.z()) / 3 * 100.0) };
-				if (ImGui::DragFloat("Scale", &scale, sourceAndTargetMeshScaleRatio, sourceAndTargetMeshScaleRatio * 10, sourceAndTargetMeshScaleRatio * 1000, "%.2f%%"))
+				const Real sourceAndTargetMeshScaleRatio{ m_sourceMesh.bbox().diag() / m_mesh->bbox().diag() };
+				Real scale{ m_transform.avgScale() };
+				if (Utils::Controls::dragScale("Scale", scale, sourceAndTargetMeshScaleRatio))
 				{
-					m_transform.scale = { scale / 100.0 };
+					m_transform.scale = { scale };
 					updateTransform();
 				}
 				ImGui::SameLine();
@@ -294,23 +336,15 @@ namespace HMP::Gui::Widgets
 			}
 			ImGui::Spacing();
 			{
-				const auto inputColor{ [this](cinolib::Color& _color, const std::string& _label) {
-					ImGui::ColorEdit4(_label.c_str(), _color.rgba);
-					ImGui::SameLine();
-					return ImGui::SmallButton("Apply");
-				} };
-				ImGui::PushID(0);
-				if (inputColor(m_faceColor, "Face color"))
+				if (Utils::Controls::colorButton("Face color", m_faceColor))
 				{
 					updateColor(true, false);
 				}
-				ImGui::PopID();
-				ImGui::PushID(1);
-				if (inputColor(m_edgeColor, "Edge color"))
+				ImGui::SameLine();
+				if (Utils::Controls::colorButton("Edge color", m_edgeColor))
 				{
 					updateColor(false, true);
 				}
-				ImGui::PopID();
 			}
 			ImGui::Spacing();
 			if (ImGui::Button("Project"))
@@ -321,6 +355,16 @@ namespace HMP::Gui::Widgets
 			if (ImGui::Button("Apply transform to source"))
 			{
 				requestApplyTransformToSource();
+			}
+			if (!m_projectLines.empty())
+			{
+				ImGui::SameLine();
+				ImGui::Checkbox("Show lines", &m_projectLines.show);
+				if (m_projectLines.show)
+				{
+					ImGui::SameLine();
+					ImGui::Checkbox("On top", &m_projectLines.no_depth_test);
+				}
 			}
 		}
 		else

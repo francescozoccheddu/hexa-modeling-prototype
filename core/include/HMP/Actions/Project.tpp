@@ -55,14 +55,17 @@ namespace HMP::Actions
 
 			m_target.clear();
 		}
+		std::unordered_map<Id, Vec> vertMovesMap{};
+		vertMovesMap.reserve(m_vertMoves.size());
 		for (VertMove& move : m_vertMoves)
 		{
 			const Id pid{ mesher.elementToPid(*move.element) };
 			const Id vid{ mesh.poly_vert_id(pid, move.vertOffset) };
 			const Vec oldPosition{ mesh.vert(vid) };
-			mesher.moveVert(vid, move.position);
+			vertMovesMap.insert({ vid, move.position });
 			move.position = oldPosition;
 		}
+		mesher.moveVerts(vertMovesMap);
 		mesher.updateMesh();
 	}
 

@@ -38,6 +38,11 @@ namespace HMP::Gui::Utils
 		};
 	}
 
+	Real Transform::avgScale() const
+	{
+		return (scale.x() + scale.y() + scale.z()) / 3;
+	}
+
 	Mat4 Transform::matrix() const
 	{
 		const Mat3 rotation3{
