@@ -211,7 +211,7 @@ namespace HMP::Gui::Widgets
 			applyTransform();
 		}
 		// scale
-		if (Utils::Controls::dragScaleVec("Scale", m_appliedTransform.scale))
+		if (Utils::Controls::dragScaleVec("Scale", m_unappliedTransform.scale))
 		{
 			applyTransform();
 		}
