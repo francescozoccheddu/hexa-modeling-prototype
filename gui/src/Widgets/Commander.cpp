@@ -69,7 +69,7 @@ namespace HMP::Gui::Widgets
 
 			if (m_vertEdit.pendingAction())
 			{
-				ImGui::TextColored(ImVec4(0.75f, 0.75f, 0.2f, 1.0f), "Pending vertex edit action on %d vertices", m_vertEdit.vids().size());
+				ImGui::TextColored(ImVec4(0.75f, 0.75f, 0.2f, 1.0f), "Pending vertex edit action on %d vertices", static_cast<int>(m_vertEdit.vids().size()));
 			}
 
 			auto it{ m_commander.unapplied().rbegin() };

@@ -77,16 +77,16 @@ namespace HMP::Gui
 			const Id eid{ m_mesh.face_shared_edge(forwardFid, upFid) };
 			set[0] = cinolib::Marker{
 					.pos_3d{m_mesh.vert(m_mesh.poly_vert_id(pid, m_mouse.vertOffset))},
-					.color{c_overlayColor},
-					.shape_radius{highlightRadius},
-					.shape{cinolib::Marker::EShape::CircleFilled}
+					.color = c_overlayColor,
+					.shape_radius = highlightRadius,
+					.shape = cinolib::Marker::EShape::CircleFilled
 			};
 			set[1] = cinolib::Marker{
 					.pos_3d{Meshing::Utils::midpoint(m_mesh, eid)},
 					.color{c_overlayColor},
-					.shape_radius{highlightRadius},
-					.shape{cinolib::Marker::EShape::Cross45},
-					.line_thickness{2.0f}
+					.shape_radius = highlightRadius,
+					.shape = cinolib::Marker::EShape::Cross45,
+					.line_thickness = 2.0f
 			};
 		}
 		else
@@ -105,9 +105,9 @@ namespace HMP::Gui
 			set.push_back(cinolib::Marker{
 				.pos_3d{m_mesh.vert(vid)},
 				.color{c_overlayColor},
-				.shape_radius{6u},
-				.shape{cinolib::Marker::EShape::CircleOutline},
-				.line_thickness{1.5f}
+				.shape_radius = 6u,
+				.shape = cinolib::Marker::EShape::CircleOutline,
+				.line_thickness = 1.5f
 				});
 		}
 		if (!m_vertEditWidget.empty())
@@ -115,9 +115,9 @@ namespace HMP::Gui
 			set.push_back(cinolib::Marker{
 				.pos_3d{m_vertEditWidget.centroid()},
 				.color{c_overlayColor},
-				.shape_radius{6u},
-				.shape{cinolib::Marker::EShape::Cross90},
-				.line_thickness{2.0f},
+				.shape_radius = 6u,
+				.shape = cinolib::Marker::EShape::Cross90,
+				.line_thickness = 2.0f,
 				});
 		}
 	}
@@ -144,8 +144,8 @@ namespace HMP::Gui
 						.pos_3d{m_mesh.poly_centroid(pid)},
 						.text{m_dagNamer(&element)},
 						.color{color},
-						.shape_radius{0},
-						.font_size{nameFontSize}
+						.shape_radius = 0,
+						.font_size = nameFontSize
 						});
 				}
 			}
@@ -436,7 +436,7 @@ namespace HMP::Gui
 		}
 		if (!m_vertEditWidget.empty())
 		{
-			ImGui::Text("%d %s selected", m_vertEditWidget.vids().size(), m_vertEditWidget.vids().size() == 1 ? "vertex" : "vertices");
+			ImGui::Text("%d %s selected", static_cast<int>(m_vertEditWidget.vids().size()), m_vertEditWidget.vids().size() == 1 ? "vertex" : "vertices");
 		}
 	}
 
@@ -744,18 +744,18 @@ namespace HMP::Gui
 			std::vector<Id> vids{};
 			switch (_source)
 			{
-				case ESelectionSource::Vertex:
-					vids = { vid };
-					break;
-				case ESelectionSource::Edge:
-					vids = m_mesh.edge_vert_ids(eid);
-					break;
-				case ESelectionSource::Face:
-					vids = m_mesh.face_verts_id(fid);
-					break;
-				case ESelectionSource::Poly:
-					vids = m_mesh.poly_verts_id(pid);
-					break;
+			case ESelectionSource::Vertex:
+				vids = { vid };
+				break;
+			case ESelectionSource::Edge:
+				vids = m_mesh.edge_vert_ids(eid);
+				break;
+			case ESelectionSource::Face:
+				vids = m_mesh.face_verts_id(fid);
+				break;
+			case ESelectionSource::Poly:
+				vids = m_mesh.poly_verts_id(pid);
+				break;
 			}
 			if (_add)
 			{

@@ -130,7 +130,7 @@ namespace HMP::Gui::Widgets
 		}
 		if (_rotation)
 		{
-			m_transform.rotation = {};
+			m_transform.rotation = Vec{};
 		}
 		if (_scale)
 		{

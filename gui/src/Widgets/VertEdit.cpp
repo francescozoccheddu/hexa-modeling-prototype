@@ -178,7 +178,7 @@ namespace HMP::Gui::Widgets
 
 	void VertEdit::updateCentroid()
 	{
-		m_centroid = m_unappliedTransform.origin = {};
+		m_centroid = m_unappliedTransform.origin = Vec{};
 		if (!empty())
 		{
 			for (const auto& [vid, pos] : m_verts)
@@ -207,7 +207,7 @@ namespace HMP::Gui::Widgets
 		ImGui::SameLine();
 		if (ImGui::SmallButton("Reset##translation"))
 		{
-			m_unappliedTransform.translation = {};
+			m_unappliedTransform.translation = Vec{};
 			applyTransform();
 		}
 		// scale
@@ -229,7 +229,7 @@ namespace HMP::Gui::Widgets
 		ImGui::SameLine();
 		if (ImGui::SmallButton("Reset##rotation"))
 		{
-			m_unappliedTransform.rotation = {};
+			m_unappliedTransform.rotation = Vec{};
 			applyTransform();
 		}
 		if (ImGui::Button("Reset##all"))
