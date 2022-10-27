@@ -11,7 +11,7 @@
 namespace HMP::Gui::Widgets
 {
 
-	Commander::Commander(HMP::Commander& _commander, HrDescriptions::DagNamer& _dagNamer, const VertEdit& _vertEdit)
+	Commander::Commander(HMP::Commander& _commander, Utils::HrDescriptions::DagNamer& _dagNamer, const VertEdit& _vertEdit)
 		: m_commander{ _commander }, m_dagNamer{ _dagNamer }, m_vertEdit{ _vertEdit }, cinolib::SideBarItem{ "Commander" }
 	{}
 
@@ -30,12 +30,12 @@ namespace HMP::Gui::Widgets
 		return m_commander;
 	}
 
-	HrDescriptions::DagNamer& Commander::dagNamer()
+	Utils::HrDescriptions::DagNamer& Commander::dagNamer()
 	{
 		return m_dagNamer;
 	}
 
-	const HrDescriptions::DagNamer& Commander::dagNamer() const
+	const Utils::HrDescriptions::DagNamer& Commander::dagNamer() const
 	{
 		return m_dagNamer;
 	}
@@ -76,13 +76,13 @@ namespace HMP::Gui::Widgets
 			const auto end{ m_commander.unapplied().rend() };
 			while (it != end)
 			{
-				ImGui::TextColored(ImVec4(0.75f, 0.2f, 0.2f, 1.0f), "%s", HrDescriptions::describe(*it, m_dagNamer).c_str());
+				ImGui::TextColored(ImVec4(0.75f, 0.2f, 0.2f, 1.0f), "%s", Utils::HrDescriptions::describe(*it, m_dagNamer).c_str());
 				++it;
 			}
 
 			for (const HMP::Commander::Action& action : m_commander.applied())
 			{
-				ImGui::TextColored(ImVec4(0.2f, 0.75f, 0.2f, 1.0f), "%s", HrDescriptions::describe(action, m_dagNamer).c_str());
+				ImGui::TextColored(ImVec4(0.2f, 0.75f, 0.2f, 1.0f), "%s", Utils::HrDescriptions::describe(action, m_dagNamer).c_str());
 			}
 
 			ImGui::TreePop();

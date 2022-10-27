@@ -1,9 +1,9 @@
-#include <HMP/Gui/HrDescriptions.hpp>
+#include <HMP/Gui/Utils/HrDescriptions.hpp>
 
 #include <sstream>
 #include <iomanip>
 
-namespace HMP::Gui::HrDescriptions
+namespace HMP::Gui::Utils::HrDescriptions
 {
 
 	std::string name(const HMP::Dag::Node& _node, DagNamer& _dagNamer)

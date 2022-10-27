@@ -200,9 +200,29 @@ namespace HMP::Meshing
 		return m_mesh;
 	}
 
+	bool Mesher::areVerticesCollidingAt(const Vec& _vert) const
+	{
+		if (!m_mesh.num_verts())
+		{
+			return true;
+		}
+		bool pickedSome{ false };
+		for (Id vid{}; vid < m_mesh.num_verts(); vid++)
+		{
+			if (m_mesh.vert(vid).dist(_vert) < c_maxVertDistance)
+			{
+				if (pickedSome)
+				{
+					return true;
+				}
+				pickedSome = true;
+			}
+		}
+		return false;
+	}
+
 	Id Mesher::getVert(const Vec& _vert) const
 	{
-		constexpr Real c_maxVertDistance{ 1e-3 };
 		if (!m_mesh.num_verts())
 		{
 			return noId;
@@ -280,7 +300,7 @@ namespace HMP::Meshing
 		const Id oldVid{ getVert(_position) };
 		if (oldVid != noId && oldVid != _vid)
 		{
-			throw std::logic_error{ "move will result in merge" };
+			throw std::logic_error{ "move would result in merge" };
 		}
 		if (m_mesh.vert(_vid) != _position)
 		{
@@ -290,6 +310,53 @@ namespace HMP::Meshing
 				pidToElement(pid).vertices()[m_mesh.poly_vert_offset(pid, _vid)] = _position;
 			}
 			m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
+		}
+	}
+
+	bool Mesher::tryMoveVerts(const std::unordered_map<Id, Vec>& _verts)
+	{
+		std::vector<std::pair<Id, Vec>> backup{};
+		backup.reserve(_verts.size());
+		for (const auto& [vid, pos] : _verts)
+		{
+			backup.push_back({ vid, m_mesh.vert(vid) });
+			m_mesh.vert(vid) = pos;
+		}
+		bool ok{ true };
+		for (const auto& [vid, pos] : _verts)
+		{
+			if (areVerticesCollidingAt(pos))
+			{
+				ok = false;
+				break;
+			}
+		}
+		if (!ok)
+		{
+			for (const auto& [vid, oldPos] : backup)
+			{
+				m_mesh.vert(vid) = oldPos;
+			}
+		}
+		if (ok && !_verts.empty())
+		{
+			for (const auto& [vid, pos] : _verts)
+			{
+				for (const Id pid : m_mesh.adj_v2p(vid))
+				{
+					pidToElement(pid).vertices()[m_mesh.poly_vert_offset(pid, vid)] = pos;
+				}
+			}
+			m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
+		}
+		return ok;
+	}
+
+	void Mesher::moveVerts(const std::unordered_map<Id, Vec>& _verts)
+	{
+		if (!tryMoveVerts(_verts))
+		{
+			throw std::logic_error{ "move would result in merge" };
 		}
 	}
 
@@ -383,13 +450,13 @@ namespace HMP::Meshing
 	bool Mesher::pick(const Vec& _from, const Vec& _normDir, Id& _pid, Id& _fid, Id& _eid, Id& _vid) const
 	{
 		double minT{ std::numeric_limits<double>::infinity() };
-		_fid =  noId;
+		_fid = noId;
 		for (std::size_t fid{}; fid < m_mesh.num_faces(); fid++)
 		{
 			Id facePid;
 			if (m_mesh.face_is_visible(fid, facePid))
 			{
-				const bool cw{ m_mesh.poly_face_is_CW(facePid, fid)};
+				const bool cw{ m_mesh.poly_face_is_CW(facePid, fid) };
 				for (std::size_t ti{}; ti < 2; ti++)
 				{
 					bool back, coplanar;

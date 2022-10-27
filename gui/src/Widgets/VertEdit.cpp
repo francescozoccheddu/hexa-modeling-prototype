@@ -6,62 +6,10 @@
 #include <cinolib/deg_rad.h>
 #include <limits>
 #include <utility>
+#include <algorithm>
 
 namespace HMP::Gui::Widgets
 {
-
-	bool VertEdit::apply(const Mat4& _transform, bool _updateMesh)
-	{
-		std::vector<std::pair<Id, Vec>> backup{};
-		backup.reserve(m_vids.size());
-		bool succeeded{ true };
-		for (const Id vid : m_vids)
-		{
-			const Vec oldPos{ m_mesher.mesh().vert(vid) };
-			backup.push_back({ vid,oldPos });
-			const Vec newPos{ _transform * oldPos };
-			const Id vidAtNewPos{ m_mesher.getVert(newPos) };
-			if (vidAtNewPos != noId && vidAtNewPos != vid)
-			{
-				succeeded = false;
-				break;
-			}
-			m_mesher.moveVert(vid, newPos);
-		}
-		if (succeeded)
-		{
-			if (_updateMesh)
-			{
-				m_mesher.updateMesh();
-				onMeshUpdated();
-			}
-		}
-		else
-		{
-			for (std::size_t iPlusOne{ backup.size() }; iPlusOne > 0; iPlusOne--)
-			{
-				const auto& [vid, oldPos] {backup[iPlusOne - 1]};
-				m_mesher.moveVert(vid, oldPos);
-			}
-		}
-		return succeeded;
-	}
-
-	bool VertEdit::applyAndCombine(const Mat4& _transform)
-	{
-		if (apply(_transform))
-		{
-			m_transform = _transform * m_transform;
-			const bool hadPendingAction{ m_pendingAction };
-			m_pendingAction = !isIdentity();
-			if (m_pendingAction != hadPendingAction)
-			{
-				onPendingActionChanged();
-			}
-			return true;
-		}
-		return false;
-	}
 
 	void VertEdit::addOrRemove(const Id* _vids, std::size_t _count, bool _add)
 	{
@@ -69,83 +17,36 @@ namespace HMP::Gui::Widgets
 		for (const Id* vidp{ _vids }; vidp < _vids + _count; vidp++)
 		{
 			const Id vid{ *vidp };
-			const auto it{ m_vids.find(vid) };
-			if ((it == m_vids.end()) == _add)
+			const auto it{ m_verts.find(vid) };
+			if ((it == m_verts.end()) == _add)
 			{
 				if (!changed)
 				{
 					changed = true;
 					applyAction();
 				}
-				const Vec vert{ m_mesher.mesh().vert(vid) };
-				m_centroid *= static_cast<Real>(m_vids.size());
 				if (_add)
 				{
-					m_vids.insert(it, vid);
-					m_centroid += vert;
+					const Vec pos{ m_mesher.mesh().vert(vid) };
+					m_verts.insert(it, { vid, pos });
 				}
 				else
 				{
-					m_vids.erase(it);
-					m_centroid -= vert;
-				}
-				if (!empty())
-				{
-					m_centroid /= static_cast<Real>(m_vids.size());
-				}
-				else
-				{
-					m_centroid = {};
+					m_verts.erase(it);
 				}
 			}
 		}
 		if (changed)
 		{
-			m_pendingAction &= !empty();
 			onVidsChanged();
-		}
-	}
-
-	bool VertEdit::isIdentity() const
-	{
-		static constexpr Real eps{ 1e-9 };
-		for (unsigned int r{}; r < 4; r++)
-		{
-			for (unsigned int c{}; c < 4; c++)
-			{
-				const Real val{ m_transform(r,c) };
-				const Real idVal{ static_cast<Real>(r == c ? 1.0 : 0.0) };
-				if (val < idVal - eps || val > idVal + eps)
-				{
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-
-	void VertEdit::cancel(bool _updateMesh)
-	{
-		if (!apply(m_transform.inverse(), _updateMesh))
-		{
-			throw std::logic_error{ "cannot revert" };
-		}
-		m_translationSlider = {};
-		m_rotationSlider = {};
-		m_scaleSlider = { 1.0f };
-		m_transform = Mat4::DIAG(Vec4{ 1 });
-		update();
-		if (m_pendingAction)
-		{
-			m_pendingAction = false;
-			onPendingActionChanged();
+			updateCentroid();
 		}
 	}
 
 	VertEdit::VertEdit(Meshing::Mesher& _mesher) :
 		cinolib::SideBarItem{ "Vertex editor" }, m_mesher{ _mesher },
-		m_centroid{}, m_vids{}, m_pendingAction{ false },
-		m_transform{ Mat4::DIAG({1}) }, m_translationSlider{}, m_scaleSlider{}, m_rotationSlider{}
+		m_verts{}, m_pendingAction{ false },
+		m_unappliedTransform{}, m_appliedTransform{}, m_centroid{}
 	{ }
 
 	void VertEdit::add(Id _vid)
@@ -176,24 +77,24 @@ namespace HMP::Gui::Widgets
 
 	bool VertEdit::has(Id _vid) const
 	{
-		return m_vids.contains(_vid);
+		return m_verts.contains(_vid);
 	}
 
-	const std::unordered_set<Id>& VertEdit::vids() const
+	VertEdit::Vids VertEdit::vids() const
 	{
-		return m_vids;
+		return Vids{ m_verts };
 	}
 
 	void VertEdit::clear()
 	{
 		applyAction();
-		m_vids.clear();
+		m_verts.clear();
 		onVidsChanged();
 	}
 
 	bool VertEdit::empty() const
 	{
-		return m_vids.empty();
+		return m_verts.empty();
 	}
 
 	const Vec& VertEdit::centroid() const
@@ -210,102 +111,137 @@ namespace HMP::Gui::Widgets
 		return m_pendingAction;
 	}
 
-	void VertEdit::cancel()
-	{
-		cancel(true);
-	}
-
 	void VertEdit::applyAction()
 	{
 		if (m_pendingAction)
 		{
-			const Mat4 transform{ m_transform };
-			cancel(false);
-			onApplyAction(m_vids, transform);
+			const Mat4 transform{ m_appliedTransform.matrix() };
+			std::vector<Id> vids{};
+			vids.reserve(m_verts.size());
+			for (const auto& [vid, pos] : m_verts)
+			{
+				vids.push_back(vid);
+			}
+			cancel();
+			onApplyAction(vids, transform);
+			for (auto& [vid, pos] : m_verts)
+			{
+				pos = m_mesher.mesh().vert(vid);
+			}
+			updateCentroid();
 		}
 	}
 
-	bool VertEdit::translate(const Vec& _offset)
+	Utils::Transform& VertEdit::transform()
 	{
-		if (!m_vids.empty())
+		return m_unappliedTransform;
+	}
+
+	const Utils::Transform& VertEdit::transform() const
+	{
+		return m_unappliedTransform;
+	}
+
+	bool VertEdit::applyTransform()
+	{
+		const Mat4 transform{ m_unappliedTransform.matrix() };
+		std::unordered_map<Id, Vec> movedVerts{ m_verts };
+		for (auto& [vid, pos] : movedVerts)
 		{
-			if (applyAndCombine(Mat4::TRANS(_offset)))
+			pos = transform * pos;
+		}
+		const bool succeeded{ m_mesher.tryMoveVerts(movedVerts) };
+		if (succeeded)
+		{
+			m_appliedTransform = m_unappliedTransform;
+			m_mesher.updateMesh();
+			onMeshUpdated();
+			updateCentroid();
+			const bool hadPendingAction{ m_pendingAction };
+			m_pendingAction = !m_appliedTransform.isIdentity();
+			if (m_pendingAction != hadPendingAction)
 			{
-				m_centroid += _offset;
-				onCentroidChanged();
-				return true;
+				onPendingActionChanged();
 			}
 		}
-		return false;
-	}
-
-	bool VertEdit::rotate(const Vec& _normAxis, Real _angleDeg)
-	{
-		if (m_vids.size() > 1)
+		else
 		{
-			const Mat4 toCentroid{ Mat4::TRANS(m_centroid) };
-			const Mat3 rotate{ Mat3::ROT_3D(_normAxis, cinolib::to_rad(_angleDeg)) };
-			const Mat4 rotateHom{
-				rotate(0,0),	rotate(0,1),	rotate(0,2),	0,
-				rotate(1,0),	rotate(1,1),	rotate(1,2),	0,
-				rotate(2,0),	rotate(2,1),	rotate(2,2),	0,
-				0,				0,				0,				1
-			};
-			const Mat4 fromCentroid{ Mat4::TRANS(-m_centroid) };
-			return applyAndCombine(toCentroid * rotateHom * fromCentroid);
+			m_unappliedTransform = m_appliedTransform;
 		}
-		return false;
+		return succeeded;
 	}
 
-	bool VertEdit::scale(const Vec& _amount)
+	void VertEdit::cancel()
 	{
-		if (m_vids.size() > 1)
+		m_unappliedTransform = {};
+		if (!applyTransform())
 		{
-			const Mat4 toCentroid{ Mat4::TRANS(m_centroid) };
-			const Mat4 scaleHom(Mat4::DIAG(_amount.add_coord(1.0)));
-			const Mat4 fromCentroid{ Mat4::TRANS(-m_centroid) };
-			return applyAndCombine(toCentroid * scaleHom * fromCentroid);
+			throw std::logic_error{ "cannot revert transform" };
 		}
-		return false;
 	}
 
-	void VertEdit::update()
+	void VertEdit::updateCentroid()
 	{
-		m_centroid = {};
+		m_centroid = m_unappliedTransform.origin = {};
 		if (!empty())
 		{
-			for (const Id vid : m_vids)
+			for (const auto& [vid, pos] : m_verts)
 			{
+				m_unappliedTransform.origin += pos;
 				m_centroid += m_mesher.mesh().vert(vid);
 			}
-			m_centroid /= m_vids.size();
+			m_centroid /= m_verts.size();
+			m_unappliedTransform.origin /= m_verts.size();
 		}
 		onCentroidChanged();
 	}
 
 	void VertEdit::draw()
 	{
-		ImGui::TextDisabled("%d vertices selected", static_cast<int>(m_vids.size()));
+		ImGui::TextDisabled("%d vertices selected", static_cast<int>(m_verts.size()));
 		if (empty())
 		{
 			return;
 		}
+		// translation
 		const float size{ m_mesher.mesh().scene_radius() };
-		const cinolib::vec3<float> lastTranslation{ m_translationSlider };
-		if (ImGui::DragFloat3("Translation", m_translationSlider.ptr(), size / 1000.0f, 0.0f, 0.0f, "%.3f,"))
+		cinolib::vec3<float> translation{ m_appliedTransform.translation.cast<float>() };
+		if (ImGui::DragFloat3("Translation", translation.ptr(), size / 1000.0f, 0.0f, 0.0f, "%.3f"))
 		{
-			if (!translate((m_translationSlider - lastTranslation).cast<Real>()))
-			{
-				m_translationSlider = lastTranslation;
-			}
+			m_unappliedTransform.translation = translation.cast<Real>();
+			applyTransform();
 		}
 		ImGui::SameLine();
 		if (ImGui::SmallButton("Reset##translation"))
 		{
-			if (translate(-m_translationSlider.cast<Real>()))
-			{
-				m_translationSlider = {};
-			}
+			m_unappliedTransform.translation = {};
+			applyTransform();
+		}
+		// scale
+		cinolib::vec3<float> scale{ m_appliedTransform.scale.cast<float>() * 100.0f };
+		if (ImGui::DragFloat3("Scale", scale.ptr(), 100.0f / 1000.0f, 1.0f / 1000.0f, 1000.0f, "%.2f%"))
+		{
+			m_unappliedTransform.scale = (scale / 100.0f).cast<Real>();
+			applyTransform();
+		}
+		ImGui::SameLine();
+		if (ImGui::SmallButton("Reset##scale"))
+		{
+			m_unappliedTransform.scale = { 1.0 };
+			applyTransform();
+		}
+		// rotation
+		cinolib::vec3<float> rotation{ Utils::Transform::wrapAngles(m_appliedTransform.rotation).cast<float>() };
+		if (ImGui::DragFloat3("Rotation", rotation.ptr(), 360.0f / 1000.0f, 0.0f, 0.0f, "%.1f deg"))
+		{
+			m_unappliedTransform.rotation = rotation.cast<Real>();
+			applyTransform();
+		}
+		ImGui::SameLine();
+		if (ImGui::SmallButton("Reset##rotation"))
+		{
+			m_unappliedTransform.rotation = {};
+			applyTransform();
 		}
 		if (ImGui::Button("Reset##all"))
 		{

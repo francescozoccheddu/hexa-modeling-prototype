@@ -117,7 +117,7 @@ namespace HMP::Gui
 		// vert edit events
 		void onVertEditVidsOrCentroidChanged();
 		void onVertEditMeshUpdated();
-		void onApplyVertEdit(std::unordered_set<Id> _vids, Mat4 _transform);
+		void onApplyVertEdit(const std::vector<Id>& _vids, const Mat4& _transform);
 		void onVertEditPendingActionChanged();
 
 		// canvas events
