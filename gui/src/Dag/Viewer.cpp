@@ -9,7 +9,7 @@
 #include <cinolib/geometry/vec_mat_utils.h>
 #include <imgui.h>
 #include <string>
-#include <HMP/Gui/HrDescriptions.hpp>
+#include <HMP/Gui/Utils/HrDescriptions.hpp>
 #include <limits>
 
 
@@ -250,7 +250,7 @@ namespace HMP::Gui::Dag
 						}
 						break;
 					}
-					const std::string text{ HrDescriptions::name(node.node(), m_namer) };
+					const std::string text{ Utils::HrDescriptions::name(node.node(), m_namer) };
 					const Vec2 textSize{ toVec(ImGui::CalcTextSize(text.c_str())) / ImGui::GetFontSize() };
 					const Real maxTextSize{ std::max(textSize.x(), textSize.y()) };
 					const Real fontSize{ nodeRadius_s * 1.25 / maxTextSize };

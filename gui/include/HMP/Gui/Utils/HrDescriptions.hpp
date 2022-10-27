@@ -21,7 +21,7 @@
 #include <cpputils/collections/Namer.hpp>
 #include <string>
 
-namespace HMP::Gui::HrDescriptions
+namespace HMP::Gui::Utils::HrDescriptions
 {
 
 	using DagNamer = cpputils::collections::Namer<const HMP::Dag::Node*>;

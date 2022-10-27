@@ -14,7 +14,7 @@ namespace HMP::Gui::Widgets
 		: m_mesh{}, m_sourceMesh{ _sourceMesh },
 		onProjectRequest{}, onMeshLoad{}, onMeshClear{}, onApplyTransformToSource{},
 		m_visible{ true }, m_faceColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.25f} }, m_edgeColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.75f} },
-		m_rotation{ 0,0,0 }, m_center{ 0,0,0 }, m_scale{ 1 },
+		m_transform{},
 		cinolib::SideBarItem{ "Target mesh" }
 	{}
 
@@ -81,75 +81,30 @@ namespace HMP::Gui::Widgets
 		return m_edgeColor;
 	}
 
-	Vec& Target::rotation()
+	const Utils::Transform& Target::transform() const
 	{
-		return m_rotation;
+		return m_transform;
 	}
 
-	const Vec& Target::rotation() const
+	Utils::Transform& Target::transform()
 	{
-		return m_rotation;
-	}
-
-	Vec& Target::center()
-	{
-		return m_center;
-	}
-
-	const Vec& Target::center() const
-	{
-		return m_center;
-	}
-
-	Real& Target::scale()
-	{
-		return m_scale;
-	}
-
-	Real Target::scale() const
-	{
-		return m_scale;
-	}
-
-	void Target::translate(const Vec& _offset)
-	{
-		m_center += _offset;
-		if (hasMesh())
-		{
-			updateTransform();
-		}
-	}
-
-	void Target::rotate(const Vec& _axis, Real _angleDeg)
-	{
-		if (hasMesh())
-		{
-			updateTransform();
-		}
-	}
-
-	void Target::scale(Real _amount)
-	{
-		m_scale *= _amount;
-		if (hasMesh())
-		{
-			updateTransform();
-		}
+		return m_transform;
 	}
 
 	void Target::identity(bool _center, bool _rotation, bool _scale)
 	{
+		m_transform.origin = m_mesh ? m_mesh->bbox().center() : Vec{};
 		if (_center)
 		{
-			m_center = m_mesh->bbox().center();
+			m_transform.translation = -m_transform.origin;
 		}
 		if (_rotation)
 		{
-			m_rotation = Vec::ZERO();
+			m_transform.rotation = {};
 		}
 		if (_scale)
 		{
-			m_scale = 1.0;
+			m_transform.scale = { 1.0 };
 		}
 		if (hasMesh())
 		{
@@ -157,16 +112,17 @@ namespace HMP::Gui::Widgets
 		}
 	}
 
-	void Target::fit(bool _fitTranslation, bool _fitScale)
+	void Target::fit(bool _center, bool _scale)
 	{
 		ensureHasMesh();
-		if (_fitTranslation)
+		m_transform.origin = m_mesh->bbox().center();
+		if (_center)
 		{
-			m_center = m_sourceMesh.bbox().center();
+			m_transform.translation = -m_mesh->bbox().center() + m_sourceMesh.bbox().center();
 		}
-		if (_fitScale)
+		if (_scale)
 		{
-			m_scale = m_sourceMesh.bbox().diag() / m_mesh->bbox().diag();
+			m_transform.scale = { m_sourceMesh.bbox().diag() / m_mesh->bbox().diag() };
 		}
 		updateTransform();
 	}
@@ -174,21 +130,7 @@ namespace HMP::Gui::Widgets
 	void Target::updateTransform()
 	{
 		ensureHasMesh();
-		const Mat3 rotation3(
-			Mat3::ROT_3D(cinolib::GLcanvas::world_right, cinolib::to_rad(m_rotation.x())) *
-			Mat3::ROT_3D(cinolib::GLcanvas::world_up, cinolib::to_rad(m_rotation.y())) *
-			Mat3::ROT_3D(cinolib::GLcanvas::world_forward, cinolib::to_rad(m_rotation.z()))
-		);
-		const Mat4 rotation{
-			rotation3(0,0),	rotation3(0,1),	rotation3(0,2),	0,
-			rotation3(1,0),	rotation3(1,1),	rotation3(1,2),	0,
-			rotation3(2,0),	rotation3(2,1),	rotation3(2,2),	0,
-			0,				0,				0,				1
-		};
-		const Mat4 scale(Mat4::DIAG(cinolib::vec4d{ m_scale, m_scale, m_scale, 1.0 }));
-		const Mat4 centerTranslation(Mat4::TRANS(m_center));
-		const Mat4 originTranslation(Mat4::TRANS(-m_mesh->bbox().center()));
-		m_mesh->transform = centerTranslation * rotation * scale * originTranslation;
+		m_mesh->transform = m_transform.matrix();
 	}
 
 	void Target::updateVisibility()
@@ -296,18 +238,10 @@ namespace HMP::Gui::Widgets
 			{
 				ImGui::PushID(1);
 				const float sourceMeshSize{ static_cast<float>(m_sourceMesh.bbox().diag()) };
-				float xyz[3]{ static_cast<float>(m_center.x()), static_cast<float>(m_center.y()), static_cast<float>(m_center.z()) };
-				if (ImGui::DragFloat3("Center", xyz, sourceMeshSize / 200))
+				cinolib::vec3<float> xyz{ (m_transform.translation + m_mesh->bbox().center()).cast<float>() };
+				if (ImGui::DragFloat3("Center", xyz.ptr(), sourceMeshSize / 200))
 				{
-					m_center = Vec{ xyz[0], xyz[1], xyz[2] };
-					m_center -= m_sourceMesh.bbox().center();
-					const Real maxDistance{ sourceMeshSize * 2 };
-					const Real distance{ m_center.norm() };
-					if (distance > maxDistance)
-					{
-						m_center *= maxDistance / distance;
-					}
-					m_center += m_sourceMesh.bbox().center();
+					m_transform.translation = xyz.cast<Real>() - m_mesh->bbox().center();
 					updateTransform();
 				}
 				ImGui::SameLine();
@@ -324,21 +258,10 @@ namespace HMP::Gui::Widgets
 			}
 			{
 				ImGui::PushID(2);
-				float xyz[3]{ static_cast<float>(m_rotation.x()), static_cast<float>(m_rotation.y()), static_cast<float>(m_rotation.z()) };
-				if (ImGui::DragFloat3("Rotation", xyz, 0.5, -360, 360, "%.1f deg"))
+				cinolib::vec3<float> xyz{ m_transform.rotation.cast<float>() };
+				if (ImGui::DragFloat3("Rotation", xyz.ptr(), 0.5, -360, 360, "%.1f deg"))
 				{
-					for (float& angle : xyz)
-					{
-						if (angle < 0)
-						{
-							angle = 360.0f - static_cast<float>(std::fmod(-angle, 360.0f));
-						}
-						else
-						{
-							angle = static_cast<float>(std::fmod(angle, 360.0f));
-						}
-					}
-					m_rotation = Vec{ xyz[0], xyz[1], xyz[2] };
+					m_transform.rotation = Utils::Transform::wrapAngles(xyz.cast<Real>());
 					updateTransform();
 				}
 				ImGui::SameLine();
@@ -351,10 +274,10 @@ namespace HMP::Gui::Widgets
 			{
 				ImGui::PushID(3);
 				const float sourceAndTargetMeshScaleRatio{ static_cast<float>(m_sourceMesh.bbox().diag() / m_mesh->bbox().diag()) };
-				float scale{ static_cast<float>(m_scale * 100.0) };
+				float scale{ static_cast<float>((m_transform.scale.x() + m_transform.scale.y() + m_transform.scale.z()) / 3 * 100.0) };
 				if (ImGui::DragFloat("Scale", &scale, sourceAndTargetMeshScaleRatio, sourceAndTargetMeshScaleRatio * 10, sourceAndTargetMeshScaleRatio * 1000, "%.2f%%"))
 				{
-					m_scale = scale / 100.0;
+					m_transform.scale = { scale / 100.0 };
 					updateTransform();
 				}
 				ImGui::SameLine();
@@ -372,17 +295,9 @@ namespace HMP::Gui::Widgets
 			ImGui::Spacing();
 			{
 				const auto inputColor{ [this](cinolib::Color& _color, const std::string& _label) {
-					float rgba[4]{_color.r(), _color.g(), _color.b(), _color.a()};
-					if (ImGui::ColorEdit4(_label.c_str(), rgba))
-					{
-						_color = cinolib::Color{ rgba[0], rgba[1], rgba[2], rgba[3]};
-					}
+					ImGui::ColorEdit4(_label.c_str(), _color.rgba);
 					ImGui::SameLine();
-					if (ImGui::SmallButton("Apply"))
-					{
-						return true;
-					}
-					return false;
+					return ImGui::SmallButton("Apply");
 				} };
 				ImGui::PushID(0);
 				if (inputColor(m_faceColor, "Face color"))

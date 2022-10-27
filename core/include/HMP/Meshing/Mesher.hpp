@@ -10,6 +10,7 @@
 #include <cpputils/collections/DereferenceIterable.hpp>
 #include <utility>
 #include <functional>
+#include <unordered_map>
 
 namespace HMP::Meshing
 {
@@ -167,6 +168,8 @@ namespace HMP::Meshing
 
 	private:
 
+		static constexpr Real c_maxVertDistance{ 1e-3 };
+
 		Mesh m_mesh;
 		std::unordered_map<Dag::Element*, Id> m_elementToPid;
 		FaceMarkerSet m_faceMarkerSet;
@@ -175,6 +178,8 @@ namespace HMP::Meshing
 		cinolib::Color m_polyColor, m_edgeColor;
 
 		Id getOrAddVert(const Vec& _vert);
+
+		bool areVerticesCollidingAt(const Vec& _vert) const;
 
 	public:
 
@@ -196,6 +201,8 @@ namespace HMP::Meshing
 		//void add(Dag::Element& _element);
 		void remove(Dag::Element& _element);
 		void moveVert(Id _vid, const Vec& _position);
+		bool tryMoveVerts(const std::unordered_map<Id, Vec>& _verts);
+		void moveVerts(const std::unordered_map<Id, Vec>& _verts);
 		void clear();
 
 		PolyMarkerSet& polyMarkerSet();

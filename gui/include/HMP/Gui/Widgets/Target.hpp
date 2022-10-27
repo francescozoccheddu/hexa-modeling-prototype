@@ -9,6 +9,7 @@
 #include <cinolib/color.h>
 #include <string>
 #include <cpputils/collections/Event.hpp>
+#include <HMP/Gui/Utils/Transform.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
 
 namespace HMP::Gui::Widgets
@@ -23,8 +24,7 @@ namespace HMP::Gui::Widgets
 		const Meshing::Mesher::Mesh& m_sourceMesh;
 		bool m_visible;
 		std::string m_filename;
-		Vec m_rotation, m_center;
-		Real m_scale;
+		Utils::Transform m_transform;
 		cinolib::Color m_faceColor, m_edgeColor;
 
 		void ensureHasMesh() const;
@@ -51,21 +51,11 @@ namespace HMP::Gui::Widgets
 		cinolib::Color& edgeColor();
 		const cinolib::Color& edgeColor() const;
 
-		Vec& rotation();
-		const Vec& rotation() const;
-
-		Vec& center();
-		const Vec& center() const;
-
-		Real& scale();
-		Real scale() const;
-
-		void translate(const Vec& _offset);
-		void rotate(const Vec& _axis, Real _angleDeg);
-		void scale(Real _amount);
+		Utils::Transform& transform();
+		const Utils::Transform& transform() const;
 
 		void identity(bool _center = true, bool _rotation = true, bool _scale = true);
-		void fit(bool _fitTranslation = true, bool _fitScale = true);
+		void fit(bool _center = true, bool _scale = true);
 
 		void updateTransform();
 		void updateVisibility();

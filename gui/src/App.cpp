@@ -24,7 +24,7 @@
 #include <HMP/Actions/TransformAll.hpp>
 #include <HMP/Utils/Serialization.hpp>
 #include <HMP/Meshing/Utils.hpp>
-#include <HMP/Gui/HrDescriptions.hpp>
+#include <HMP/Gui/Utils/HrDescriptions.hpp>
 #include <sstream>
 #include <iomanip>
 
@@ -163,7 +163,7 @@ namespace HMP::Gui
 
 	void App::onActionApplied()
 	{
-		m_vertEditWidget.update();
+		m_vertEditWidget.updateCentroid();
 		updateMouse();
 		updateAllMarkers();
 		requestDagViewerUpdate();
@@ -219,7 +219,7 @@ namespace HMP::Gui
 		updateAllMarkers();
 	}
 
-	void App::onApplyVertEdit(std::unordered_set<Id> _vids, Mat4 _transform)
+	void App::onApplyVertEdit(const std::vector<Id>& _vids, const Mat4& _transform)
 	{
 		std::vector<Actions::TransformVerts::Vert> verts{};
 		verts.reserve(_vids.size());
@@ -229,7 +229,7 @@ namespace HMP::Gui
 			const Id vertOffs{ m_mesh.poly_vert_offset(pid, vid) };
 			verts.push_back({ m_mesher.pidToElement(pid), vertOffs });
 		}
-		applyAction(*new Actions::TransformVerts{ std::move(_transform), std::move(verts) });
+		applyAction(*new Actions::TransformVerts{ _transform, verts });
 	}
 
 	void App::onVertEditPendingActionChanged()
@@ -418,9 +418,9 @@ namespace HMP::Gui
 		{
 			std::ostringstream stream{};
 			stream
-				<< HrDescriptions::name(*m_mouse.element, m_dagNamer)
+				<< Utils::HrDescriptions::name(*m_mouse.element, m_dagNamer)
 				<< " ("
-				<< "faces " << HrDescriptions::describeFaces(m_mouse.faceOffset, m_mouse.upFaceOffset)
+				<< "faces " << Utils::HrDescriptions::describeFaces(m_mouse.faceOffset, m_mouse.upFaceOffset)
 				<< ", vert " << m_mouse.vertOffset
 				<< ")";
 			ImGui::Text("%s", stream.str().c_str());
@@ -430,7 +430,7 @@ namespace HMP::Gui
 			std::ostringstream stream{};
 			stream
 				<< "Copied"
-				<< " " << HrDescriptions::name(*m_copy.element, m_dagNamer);
+				<< " " << Utils::HrDescriptions::name(*m_copy.element, m_dagNamer);
 			ImGui::Text("%s", stream.str().c_str());
 		}
 	}
@@ -511,13 +511,13 @@ namespace HMP::Gui
 			std::cout
 				<< "name: " << m_dagNamer.nameOrUnknown(&element)
 				<< " pid: " << pid
-				<< " centroid: " << HrDescriptions::describe(centroid)
-				<< " vids: " << HrDescriptions::describe(m_mesh.adj_p2v(pid))
-				<< " eids: " << HrDescriptions::describe(m_mesh.adj_p2e(pid))
-				<< " fids: " << HrDescriptions::describe(m_mesh.adj_p2f(pid))
-				<< " pids: " << HrDescriptions::describe(m_mesh.adj_p2p(pid))
-				<< " winding: " << HrDescriptions::describe(m_mesh.poly_faces_winding(pid))
-				<< " locs: " << HrDescriptions::describe(locs)
+				<< " centroid: " << Utils::HrDescriptions::describe(centroid)
+				<< " vids: " << Utils::HrDescriptions::describe(m_mesh.adj_p2v(pid))
+				<< " eids: " << Utils::HrDescriptions::describe(m_mesh.adj_p2e(pid))
+				<< " fids: " << Utils::HrDescriptions::describe(m_mesh.adj_p2f(pid))
+				<< " pids: " << Utils::HrDescriptions::describe(m_mesh.adj_p2p(pid))
+				<< " winding: " << Utils::HrDescriptions::describe(m_mesh.poly_faces_winding(pid))
+				<< " locs: " << Utils::HrDescriptions::describe(locs)
 				<< "\n";
 		}
 		std::cout << "---- Faces\n";
@@ -525,12 +525,12 @@ namespace HMP::Gui
 		{
 			std::cout
 				<< "fid: " << fid
-				<< " centroid: " << HrDescriptions::describe(m_mesh.face_centroid(fid))
-				<< " vids: " << HrDescriptions::describe(m_mesh.adj_f2v(fid))
-				<< " eids: " << HrDescriptions::describe(m_mesh.adj_f2e(fid))
-				<< " fids: " << HrDescriptions::describe(m_mesh.adj_f2f(fid))
-				<< " pids: " << HrDescriptions::describe(m_mesh.adj_f2p(fid))
-				<< " normal: " << HrDescriptions::describe(m_mesh.face_data(fid).normal)
+				<< " centroid: " << Utils::HrDescriptions::describe(m_mesh.face_centroid(fid))
+				<< " vids: " << Utils::HrDescriptions::describe(m_mesh.adj_f2v(fid))
+				<< " eids: " << Utils::HrDescriptions::describe(m_mesh.adj_f2e(fid))
+				<< " fids: " << Utils::HrDescriptions::describe(m_mesh.adj_f2f(fid))
+				<< " pids: " << Utils::HrDescriptions::describe(m_mesh.adj_f2p(fid))
+				<< " normal: " << Utils::HrDescriptions::describe(m_mesh.face_data(fid).normal)
 				<< "\n";
 		}
 		std::cout << "---- Edges\n";
@@ -538,11 +538,11 @@ namespace HMP::Gui
 		{
 			std::cout
 				<< "eid: " << eid
-				<< " midpoint: " << HrDescriptions::describe(Meshing::Utils::midpoint(m_mesh, eid))
-				<< " vids: " << HrDescriptions::describe(m_mesh.adj_e2v(eid))
-				<< " eids: " << HrDescriptions::describe(m_mesh.adj_e2e(eid))
-				<< " fids: " << HrDescriptions::describe(m_mesh.adj_e2f(eid))
-				<< " pids: " << HrDescriptions::describe(m_mesh.adj_e2p(eid))
+				<< " midpoint: " << Utils::HrDescriptions::describe(Meshing::Utils::midpoint(m_mesh, eid))
+				<< " vids: " << Utils::HrDescriptions::describe(m_mesh.adj_e2v(eid))
+				<< " eids: " << Utils::HrDescriptions::describe(m_mesh.adj_e2e(eid))
+				<< " fids: " << Utils::HrDescriptions::describe(m_mesh.adj_e2f(eid))
+				<< " pids: " << Utils::HrDescriptions::describe(m_mesh.adj_e2p(eid))
 				<< "\n";
 		}
 		std::cout << "---- Vertices\n";
@@ -550,11 +550,11 @@ namespace HMP::Gui
 		{
 			std::cout
 				<< "vid: " << vid
-				<< " position: " << HrDescriptions::describe(m_mesh.vert(vid))
-				<< " vids: " << HrDescriptions::describe(m_mesh.adj_v2v(vid))
-				<< " eids: " << HrDescriptions::describe(m_mesh.adj_v2e(vid))
-				<< " fids: " << HrDescriptions::describe(m_mesh.adj_v2f(vid))
-				<< " pids: " << HrDescriptions::describe(m_mesh.adj_v2p(vid))
+				<< " position: " << Utils::HrDescriptions::describe(m_mesh.vert(vid))
+				<< " vids: " << Utils::HrDescriptions::describe(m_mesh.adj_v2v(vid))
+				<< " eids: " << Utils::HrDescriptions::describe(m_mesh.adj_v2e(vid))
+				<< " fids: " << Utils::HrDescriptions::describe(m_mesh.adj_v2f(vid))
+				<< " pids: " << Utils::HrDescriptions::describe(m_mesh.adj_v2p(vid))
 				<< "\n";
 		}
 		std::cout << "----------------------------------" << std::endl;
@@ -642,7 +642,7 @@ namespace HMP::Gui
 		{
 			std::ofstream file;
 			file.open(filename);
-			Utils::Serialization::Serializer serializer{ file };
+			HMP::Utils::Serialization::Serializer serializer{ file };
 			HMP::Dag::Utils::serialize(serializer, *m_project.root());
 			file.close();
 		}
@@ -655,7 +655,7 @@ namespace HMP::Gui
 		{
 			std::ifstream file;
 			file.open(filename);
-			Utils::Serialization::Deserializer deserializer{ file };
+			HMP::Utils::Serialization::Deserializer deserializer{ file };
 			HMP::Dag::Element& root = HMP::Dag::Utils::deserialize(deserializer).element();
 			file.close();
 			applyAction(*new Actions::Load{ root });
@@ -803,7 +803,7 @@ namespace HMP::Gui
 		m_targetWidget.onMeshClear += [this]() { m_canvas.pop(&m_targetWidget.mesh()); };
 		m_targetWidget.onApplyTransformToSource += [this](const Mat4& _transform) { onApplyTargetTransform(_transform); };
 
-		m_vertEditWidget.onApplyAction += [this](std::unordered_set<Id> _vids, Mat4 _transform) { onApplyVertEdit(_vids, _transform); };
+		m_vertEditWidget.onApplyAction += [this](std::vector<Id> _vids, Mat4 _transform) { onApplyVertEdit(_vids, _transform); };
 		m_vertEditWidget.onMeshUpdated += [this]() { onVertEditMeshUpdated(); };
 		m_vertEditWidget.onVidsChanged += [this]() { onVertEditVidsOrCentroidChanged(); };
 		m_vertEditWidget.onCentroidChanged += [this]() { onVertEditVidsOrCentroidChanged(); };
