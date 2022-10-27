@@ -46,9 +46,9 @@ namespace HMP::Gui::Utils
 	Mat4 Transform::matrix() const
 	{
 		const Mat3 rotation3{
-			Mat3::ROT_3D(cinolib::GLcanvas::world_right, cinolib::to_rad(rotation.x())) *
-			Mat3::ROT_3D(cinolib::GLcanvas::world_up, cinolib::to_rad(rotation.y())) *
-			Mat3::ROT_3D(cinolib::GLcanvas::world_forward, cinolib::to_rad(rotation.z()))
+			Mat3::ROT_3D(cinolib::GLcanvas::world_right(), cinolib::to_rad(rotation.x())) *
+			Mat3::ROT_3D(cinolib::GLcanvas::world_up(), cinolib::to_rad(rotation.y())) *
+			Mat3::ROT_3D(cinolib::GLcanvas::world_forward(), cinolib::to_rad(rotation.z()))
 		};
 		const Mat4 rotation{
 			rotation3(0,0),	rotation3(0,1),	rotation3(0,2),	0,
