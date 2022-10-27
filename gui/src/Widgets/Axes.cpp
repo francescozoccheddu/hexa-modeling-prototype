@@ -36,9 +36,9 @@ namespace HMP::Gui::Widgets
 			origin = m_camera.view.centerAt(2);
 			radius = m_camera.projection.verticalFieldOfView / 2 * 0.75;
 		}
-		const Vec right(origin + cinolib::GLcanvas::world_right * radius);
-		const Vec up(origin + cinolib::GLcanvas::world_up * radius);
-		const Vec forward(origin - cinolib::GLcanvas::world_forward * radius);
+		const Vec right(origin + cinolib::GLcanvas::world_right() * radius);
+		const Vec up(origin + cinolib::GLcanvas::world_up() * radius);
+		const Vec forward(origin - cinolib::GLcanvas::world_forward() * radius);
 		const auto project{ [this](const Vec& _point) -> Vec {
 			Vec proj(m_camera.projectionViewMatrix() * _point);
 			proj.x() *= m_camera.projection.aspectRatio;
