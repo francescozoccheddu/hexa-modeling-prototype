@@ -2,11 +2,7 @@
 
 #include <imgui.h>
 #include <stdexcept>
-#include <cinolib/gl/glcanvas.h>
-#include <cinolib/deg_rad.h>
-#include <limits>
-#include <utility>
-#include <algorithm>
+#include <HMP/Gui/Utils/Controls.hpp>
 
 namespace HMP::Gui::Widgets
 {
@@ -204,11 +200,8 @@ namespace HMP::Gui::Widgets
 			return;
 		}
 		// translation
-		const float size{ m_mesher.mesh().scene_radius() };
-		cinolib::vec3<float> translation{ m_appliedTransform.translation.cast<float>() };
-		if (ImGui::DragFloat3("Translation", translation.ptr(), size / 1000.0f, 0.0f, 0.0f, "%.3f"))
+		if (Utils::Controls::dragTranslationVec("Translation", m_unappliedTransform.translation, m_mesher.mesh().scene_radius()))
 		{
-			m_unappliedTransform.translation = translation.cast<Real>();
 			applyTransform();
 		}
 		ImGui::SameLine();
@@ -218,10 +211,8 @@ namespace HMP::Gui::Widgets
 			applyTransform();
 		}
 		// scale
-		cinolib::vec3<float> scale{ m_appliedTransform.scale.cast<float>() * 100.0f };
-		if (ImGui::DragFloat3("Scale", scale.ptr(), 100.0f / 1000.0f, 1.0f / 1000.0f, 1000.0f, "%.2f%"))
+		if (Utils::Controls::dragScaleVec("Scale", m_appliedTransform.scale))
 		{
-			m_unappliedTransform.scale = (scale / 100.0f).cast<Real>();
 			applyTransform();
 		}
 		ImGui::SameLine();
@@ -231,10 +222,8 @@ namespace HMP::Gui::Widgets
 			applyTransform();
 		}
 		// rotation
-		cinolib::vec3<float> rotation{ Utils::Transform::wrapAngles(m_appliedTransform.rotation).cast<float>() };
-		if (ImGui::DragFloat3("Rotation", rotation.ptr(), 360.0f / 1000.0f, 0.0f, 0.0f, "%.1f deg"))
+		if (Utils::Controls::dragRotation("Rotation", m_unappliedTransform.rotation))
 		{
-			m_unappliedTransform.rotation = rotation.cast<Real>();
 			applyTransform();
 		}
 		ImGui::SameLine();
