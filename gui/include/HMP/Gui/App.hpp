@@ -36,6 +36,7 @@ namespace HMP::Gui
 		static constexpr std::size_t c_elementsMarkerSetInd{ 2 };
 
 		static constexpr cinolib::KeyBinding c_kbExtrude{ GLFW_KEY_E };
+		static constexpr cinolib::KeyBinding c_kbExtrudeAndSelect{ GLFW_KEY_E, GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbRefine{ GLFW_KEY_H };
 		static constexpr cinolib::KeyBinding c_kbDoubleRefine{ GLFW_KEY_H, GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbFaceRefine{ GLFW_KEY_F };
@@ -132,6 +133,7 @@ namespace HMP::Gui
 		// user operation
 		void onPrintDebugInfo() const;
 		void onExtrude();
+		void onExtrudeAndSelect();
 		void onCopy();
 		void onPaste();
 		void onRefineElement(bool _twice);
