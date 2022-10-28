@@ -25,6 +25,7 @@
 #include <HMP/Utils/Serialization.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Gui/Utils/HrDescriptions.hpp>
+#include <cpputils/collections/conversions.hpp>
 #include <sstream>
 #include <iomanip>
 
@@ -34,30 +35,31 @@ namespace HMP::Gui
 	void App::printKeyBindings()
 	{
 		std::cout << "------ App key bindings -------\n";
-		cinolib::print_binding(c_kbExtrude.name().c_str(), "extrude");
-		cinolib::print_binding(c_kbRefine.name().c_str(), "refine");
-		cinolib::print_binding(c_kbDoubleRefine.name().c_str(), "refine twice");
-		cinolib::print_binding(c_kbFaceRefine.name().c_str(), "refine face");
-		cinolib::print_binding(c_kbDelete.name().c_str(), "delete");
-		cinolib::print_binding(c_kbCopy.name().c_str(), "copy");
-		cinolib::print_binding(c_kbPaste.name().c_str(), "paste");
-		cinolib::print_binding(c_kbRotate.name().c_str(), "rotate");
-		cinolib::print_binding(c_kbClear.name().c_str(), "clear");
-		cinolib::print_binding(c_kbMakeConforming.name().c_str(), "make conforming");
-		cinolib::print_binding(c_kbSelectVertex.name().c_str(), "select vertex");
-		cinolib::print_binding(c_kbSelectEdge.name().c_str(), "select edge vertices");
-		cinolib::print_binding(c_kbSelectFace.name().c_str(), "select face vertices");
-		cinolib::print_binding(c_kbSelectPoly.name().c_str(), "select poly vertices");
-		cinolib::print_binding(cinolib::KeyBinding::mod_names(c_kmodDeselect).c_str(), "invert selection (hold down)");
-		cinolib::print_binding(c_kbDeselectAll.name().c_str(), "deselect all vertices");
-		cinolib::print_binding(c_kbSave.name().c_str(), "save");
-		cinolib::print_binding(c_kbOpen.name().c_str(), "open");
-		cinolib::print_binding(c_kbSaveMesh.name().c_str(), "save mesh");
-		cinolib::print_binding(c_kbLoadTarget.name().c_str(), "load target mesh");
-		cinolib::print_binding(c_kbToggleTargetVisibility.name().c_str(), "toggle target visibility");
-		cinolib::print_binding(c_kbUndo.name().c_str(), "undo");
-		cinolib::print_binding(c_kbRedo.name().c_str(), "redo");
-		cinolib::print_binding(c_kbPrintDebugInfo.name().c_str(), "print debug info");
+		cinolib::print_binding(c_kbExtrude.name(), "extrude");
+		cinolib::print_binding(c_kbExtrudeAndSelect.name(), "extrude and select");
+		cinolib::print_binding(c_kbRefine.name(), "refine");
+		cinolib::print_binding(c_kbDoubleRefine.name(), "refine twice");
+		cinolib::print_binding(c_kbFaceRefine.name(), "refine face");
+		cinolib::print_binding(c_kbDelete.name(), "delete");
+		cinolib::print_binding(c_kbCopy.name(), "copy");
+		cinolib::print_binding(c_kbPaste.name(), "paste");
+		cinolib::print_binding(c_kbRotate.name(), "rotate");
+		cinolib::print_binding(c_kbClear.name(), "clear");
+		cinolib::print_binding(c_kbMakeConforming.name(), "make conforming");
+		cinolib::print_binding(c_kbSelectVertex.name(), "select vertex");
+		cinolib::print_binding(c_kbSelectEdge.name(), "select edge vertices");
+		cinolib::print_binding(c_kbSelectFace.name(), "select face vertices");
+		cinolib::print_binding(c_kbSelectPoly.name(), "select poly vertices");
+		cinolib::print_binding(cinolib::KeyBinding::mod_names(c_kmodDeselect), "invert selection (hold down)");
+		cinolib::print_binding(c_kbDeselectAll.name(), "deselect all vertices");
+		cinolib::print_binding(c_kbSave.name(), "save");
+		cinolib::print_binding(c_kbOpen.name(), "open");
+		cinolib::print_binding(c_kbSaveMesh.name(), "save mesh");
+		cinolib::print_binding(c_kbLoadTarget.name(), "load target mesh");
+		cinolib::print_binding(c_kbToggleTargetVisibility.name(), "toggle target visibility");
+		cinolib::print_binding(c_kbUndo.name(), "undo");
+		cinolib::print_binding(c_kbRedo.name(), "redo");
+		cinolib::print_binding(c_kbPrintDebugInfo.name(), "print debug info");
 		std::cout << "-------------------------------\n";
 	}
 
@@ -254,6 +256,11 @@ namespace HMP::Gui
 		if (key == c_kbExtrude)
 		{
 			onExtrude();
+		}
+		// extrude and select
+		else if (key == c_kbExtrudeAndSelect)
+		{
+			onExtrudeAndSelect();
 		}
 		// copy
 		else if (key == c_kbCopy)
@@ -573,6 +580,50 @@ namespace HMP::Gui
 		}
 	}
 
+	void App::onExtrudeAndSelect()
+	{
+		if (m_vertEditWidget.vids().size() == 4)
+		{
+
+			const std::vector<Id> vids{ cpputils::collections::conversions::toVector(m_vertEditWidget.vids()) };
+			const Id fid{ m_mesh.face_id(vids) };
+			if (fid == noId)
+			{
+				return;
+			}
+			Id pid;
+			if (m_mesh.face_is_visible(fid, pid))
+			{
+				HMP::Dag::Element& element{ m_mesher.pidToElement(pid) };
+				const Id faceOffset{ m_mesh.poly_face_offset(pid, fid) };
+				Id upFaceOffset{ faceOffset };
+				{
+					Real upFaceCentroidY{};
+					for (Id fo{}; fo < 6; fo++)
+					{
+						if (fo == upFaceOffset)
+						{
+							continue;
+						}
+						const Real centroidY{ m_mesh.face_centroid(m_mesh.poly_face_id(pid, fo)).y() };
+						if (upFaceOffset == faceOffset || centroidY > upFaceCentroidY)
+						{
+							upFaceCentroidY = centroidY;
+							upFaceOffset = fo;
+						}
+					}
+				}
+				Actions::Extrude& action{ *new Actions::Extrude{ element, faceOffset, upFaceOffset } };
+				applyAction(action);
+				const HMP::Dag::Element& newElement{ action.operation().children().single() };
+				const Id newPid{ m_mesher.elementToPid(newElement) };
+				const Id newFid{ m_mesh.poly_face_opposite_to(newPid, fid) };
+				m_vertEditWidget.clear();
+				m_vertEditWidget.add(m_mesh.face_verts_id(newFid));
+			}
+		}
+	}
+
 	void App::onCopy()
 	{
 		m_copy.element = m_mouse.element;
@@ -744,18 +795,18 @@ namespace HMP::Gui
 			std::vector<Id> vids{};
 			switch (_source)
 			{
-			case ESelectionSource::Vertex:
-				vids = { vid };
-				break;
-			case ESelectionSource::Edge:
-				vids = m_mesh.edge_vert_ids(eid);
-				break;
-			case ESelectionSource::Face:
-				vids = m_mesh.face_verts_id(fid);
-				break;
-			case ESelectionSource::Poly:
-				vids = m_mesh.poly_verts_id(pid);
-				break;
+				case ESelectionSource::Vertex:
+					vids = { vid };
+					break;
+				case ESelectionSource::Edge:
+					vids = m_mesh.edge_vert_ids(eid);
+					break;
+				case ESelectionSource::Face:
+					vids = m_mesh.face_verts_id(fid);
+					break;
+				case ESelectionSource::Poly:
+					vids = m_mesh.poly_verts_id(pid);
+					break;
 			}
 			if (_add)
 			{
