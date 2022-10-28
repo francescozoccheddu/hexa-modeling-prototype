@@ -25,6 +25,7 @@ namespace HMP::Gui
 
 	private:
 
+		static constexpr cinolib::Color c_warningTextColor{ cinolib::Color::hsv2rgb(0.2f, 0.6f, 0.6f) };
 		static constexpr cinolib::Color c_backgroundColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.1f) };
 		static constexpr cinolib::Color c_overlayColor{ cinolib::Color::hsv2rgb(0.1f, 0.5f, 1.0f) };
 		static constexpr cinolib::Color c_mutedOverlayColor{ cinolib::Color::hsv2rgb(0.1f, 0.0f, 1.0f, 0.25f) };
@@ -35,6 +36,9 @@ namespace HMP::Gui
 		static constexpr std::size_t c_vertSelectionMarkerSetInd{ 1 };
 		static constexpr std::size_t c_elementsMarkerSetInd{ 2 };
 
+		static constexpr cinolib::KeyBinding c_kbDirectTranslation{ GLFW_KEY_T };
+		static constexpr cinolib::KeyBinding c_kbDirectScale{ GLFW_KEY_S };
+		static constexpr cinolib::KeyBinding c_kbDirectRotation{ GLFW_KEY_R };
 		static constexpr cinolib::KeyBinding c_kbExtrude{ GLFW_KEY_E };
 		static constexpr cinolib::KeyBinding c_kbExtrudeAndSelect{ GLFW_KEY_E, GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbRefine{ GLFW_KEY_H };
@@ -49,7 +53,7 @@ namespace HMP::Gui
 		static constexpr cinolib::KeyBinding c_kbPaste{ GLFW_KEY_V };
 		static constexpr cinolib::KeyBinding c_kbRotate{ GLFW_KEY_Y };
 		static constexpr cinolib::KeyBinding c_kbMakeConforming{ GLFW_KEY_Q };
-		static constexpr cinolib::KeyBinding c_kbToggleTargetVisibility{ GLFW_KEY_T };
+		static constexpr cinolib::KeyBinding c_kbToggleTargetVisibility{ GLFW_KEY_U };
 		static constexpr cinolib::KeyBinding c_kbUndo{ GLFW_KEY_Z, GLFW_MOD_CONTROL };
 		static constexpr cinolib::KeyBinding c_kbRedo{ GLFW_KEY_Z, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbClear{ GLFW_KEY_N, GLFW_MOD_CONTROL };
@@ -71,7 +75,6 @@ namespace HMP::Gui
 		struct
 		{
 			cinolib::vec2d position{};
-			Vec worldPosition{};
 			HMP::Dag::Element* element{};
 			Id faceOffset{}, upFaceOffset{}, vertOffset{};
 		} m_mouse;
@@ -85,6 +88,18 @@ namespace HMP::Gui
 		{
 			bool showNames{ false };
 		} m_options;
+
+		enum class EDirectVertEdit
+		{
+			Translate, Rotate, Scale
+		};
+
+		struct
+		{
+			Vec2 startPos{};
+			EDirectVertEdit kind{};
+			bool pending{ false };
+		} m_directVertEdit;
 
 		HMP::Project m_project;
 		cinolib::GLcanvas m_canvas;
@@ -110,6 +125,10 @@ namespace HMP::Gui
 		void onActionApplied();
 		void applyAction(Commander::Action& _action);
 		void requestDagViewerUpdate();
+
+		// direct vert edit
+		void updateDirectVertEdit();
+		void onDirectVertEditRequested(EDirectVertEdit _kind);
 
 		// mesher events
 		void onElementRemove(const HMP::Dag::Element& _element);
