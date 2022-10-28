@@ -22,4 +22,6 @@ namespace HMP::Gui::Utils::Controls
 
 	ImVec4 toImGui(const cinolib::Color& _color);
 
+	ImVec2 toImGui(const Vec2& _vec);
+
 }

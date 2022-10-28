@@ -25,6 +25,8 @@ namespace HMP::Gui
 
 	private:
 
+		static constexpr cinolib::Color c_directVertEditLineStartColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 1.0f, 0.3f) };
+		static constexpr cinolib::Color c_directVertEditLineColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 1.0f, 0.6f) };
 		static constexpr cinolib::Color c_warningTextColor{ cinolib::Color::hsv2rgb(0.2f, 0.6f, 0.6f) };
 		static constexpr cinolib::Color c_backgroundColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.1f) };
 		static constexpr cinolib::Color c_overlayColor{ cinolib::Color::hsv2rgb(0.1f, 0.5f, 1.0f) };
@@ -36,6 +38,7 @@ namespace HMP::Gui
 		static constexpr std::size_t c_vertSelectionMarkerSetInd{ 1 };
 		static constexpr std::size_t c_elementsMarkerSetInd{ 2 };
 
+		static constexpr cinolib::KeyBinding c_kbCancelDirectEdit{ GLFW_KEY_ESCAPE };
 		static constexpr cinolib::KeyBinding c_kbDirectTranslation{ GLFW_KEY_T };
 		static constexpr cinolib::KeyBinding c_kbDirectScale{ GLFW_KEY_S };
 		static constexpr cinolib::KeyBinding c_kbDirectRotation{ GLFW_KEY_R };
@@ -63,13 +66,19 @@ namespace HMP::Gui
 		static constexpr cinolib::KeyBinding c_kbSelectFace{ GLFW_KEY_3 };
 		static constexpr cinolib::KeyBinding c_kbSelectPoly{ GLFW_KEY_4 };
 		static constexpr cinolib::KeyBinding c_kbDeselectAll{ GLFW_KEY_A, GLFW_MOD_CONTROL };
-		static constexpr int c_kmodDeselect{ GLFW_MOD_CONTROL };
+		static constexpr int c_kmodSelectAdd{ GLFW_MOD_SHIFT };
+		static constexpr int c_kmodSelectRemove{ GLFW_MOD_CONTROL };
 
 		static void printKeyBindings();
 
 		enum class ESelectionSource
 		{
 			Vertex, Edge, Face, Poly
+		};
+
+		enum class ESelectionMode
+		{
+			Add, Remove, Set
 		};
 
 		struct
@@ -97,8 +106,10 @@ namespace HMP::Gui
 		struct
 		{
 			Vec2 startPos{};
+			Vec2 startCentroidPos{};
 			EDirectVertEdit kind{};
 			bool pending{ false };
+			Vec2 transform{};
 		} m_directVertEdit;
 
 		HMP::Project m_project;
@@ -129,6 +140,7 @@ namespace HMP::Gui
 		// direct vert edit
 		void updateDirectVertEdit();
 		void onDirectVertEditRequested(EDirectVertEdit _kind);
+		void onCancelDirectVertEdit();
 
 		// mesher events
 		void onElementRemove(const HMP::Dag::Element& _element);
@@ -170,7 +182,7 @@ namespace HMP::Gui
 		void onUndo();
 		void onRedo();
 		void onClear();
-		void onSelect(ESelectionSource _source, bool _add);
+		void onSelect(ESelectionSource _source, ESelectionMode _mode);
 		void onClearSelection();
 
 	public:

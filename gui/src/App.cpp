@@ -51,11 +51,13 @@ namespace HMP::Gui
 		cinolib::print_binding(c_kbSelectEdge.name(), "select edge vertices");
 		cinolib::print_binding(c_kbSelectFace.name(), "select face vertices");
 		cinolib::print_binding(c_kbSelectPoly.name(), "select poly vertices");
-		cinolib::print_binding(cinolib::KeyBinding::mod_names(c_kmodDeselect), "invert selection (hold down)");
+		cinolib::print_binding(cinolib::KeyBinding::mod_names(c_kmodSelectAdd), "remove from selection (hold down)");
+		cinolib::print_binding(cinolib::KeyBinding::mod_names(c_kmodSelectRemove), "add to selection (hold down)");
 		cinolib::print_binding(c_kbDeselectAll.name(), "deselect all vertices");
 		cinolib::print_binding(c_kbDirectTranslation.name(), "translate selected vertices");
 		cinolib::print_binding(c_kbDirectScale.name(), "scale selected vertices");
 		cinolib::print_binding(c_kbDirectRotation.name(), "rotate selected vertices");
+		cinolib::print_binding(c_kbCancelDirectEdit.name(), "cancel direct edit");
 		cinolib::print_binding(c_kbSave.name(), "save");
 		cinolib::print_binding(c_kbOpen.name(), "open");
 		cinolib::print_binding(c_kbSaveMesh.name(), "save mesh");
@@ -196,18 +198,71 @@ namespace HMP::Gui
 		{
 			return;
 		}
+		const Vec up{ m_canvas.camera.view.normUp() };
+		const Vec right{ m_canvas.camera.view.normRight() };
+		Utils::Transform& transform{ m_vertEditWidget.transform() };
+		transform.translation = { 0.0 };
+		transform.scale = { 1.0 };
+		transform.rotation = { 0.0 };
+		switch (m_directVertEdit.kind)
+		{
+			case EDirectVertEdit::Translate:
+			{
+			}
+			break;
+			case EDirectVertEdit::Rotate:
+			{
+				Vec2 startDir{ m_directVertEdit.startPos - m_directVertEdit.startCentroidPos };
+				startDir = startDir.is_null() ? Vec2{ 1, 0 } : startDir.normalized();
+				Vec2 dir{ m_mouse.position - m_directVertEdit.startCentroidPos };
+				dir = dir.is_null() ? Vec2{ 1, 0 } : dir.normalized();
+				const Real angle{ Utils::Transform::wrapAngle(cinolib::to_deg(std::atan2(startDir.y(), startDir.x()) - std::atan2(dir.y(), dir.x()))) };
+				m_directVertEdit.transform = { angle };
+				const Mat3 mat{ Utils::Transform::rotationMat(m_canvas.camera.view.normBack(), angle) };
+				transform.rotation = Utils::Transform::rotationMatToVec(mat);
+			}
+			break;
+		}
+		m_vertEditWidget.applyTransform();
 	}
 
 	void App::onDirectVertEditRequested(EDirectVertEdit _kind)
 	{
+		const bool wasPending{ m_directVertEdit.pending };
+		m_directVertEdit.pending = false;
 		if (m_vertEditWidget.empty())
 		{
 			return;
 		}
 		m_vertEditWidget.applyAction();
-		m_directVertEdit.pending = !m_directVertEdit.pending || m_directVertEdit.kind != _kind;
+		m_directVertEdit.pending = !wasPending || m_directVertEdit.kind != _kind;
 		m_directVertEdit.startPos = m_mouse.position;
+		GLdouble depth;
+		m_canvas.project(m_vertEditWidget.centroid(), m_directVertEdit.startCentroidPos, depth);
 		m_directVertEdit.kind = _kind;
+		switch (m_directVertEdit.kind)
+		{
+			case EDirectVertEdit::Scale:
+				m_directVertEdit.transform = Vec2{ 1.0 };
+				break;
+			case EDirectVertEdit::Translate:
+				m_directVertEdit.transform = Vec2{};
+				break;
+			case EDirectVertEdit::Rotate:
+				m_directVertEdit.transform = Vec2{ 0 };
+				break;
+		}
+		updateMouse();
+	}
+
+	void App::onCancelDirectVertEdit()
+	{
+		if (!m_directVertEdit.pending)
+		{
+			return;
+		}
+		m_vertEditWidget.cancel();
+		m_directVertEdit.pending = false;
 		updateMouse();
 	}
 
@@ -273,6 +328,7 @@ namespace HMP::Gui
 
 	void App::onCameraChanged()
 	{
+		onCancelDirectVertEdit();
 		updateMouse();
 	}
 
@@ -387,39 +443,58 @@ namespace HMP::Gui
 		{
 			onDirectVertEditRequested(EDirectVertEdit::Rotate);
 		}
+		else if (key == c_kbCancelDirectEdit)
+		{
+			onCancelDirectVertEdit();
+		}
 		// selection
 		else if (key == c_kbSelectVertex)
 		{
-			onSelect(ESelectionSource::Vertex, true);
+			onSelect(ESelectionSource::Vertex, ESelectionMode::Set);
 		}
 		else if (key == c_kbSelectEdge)
 		{
-			onSelect(ESelectionSource::Edge, true);
+			onSelect(ESelectionSource::Edge, ESelectionMode::Set);
 		}
 		else if (key == c_kbSelectFace)
 		{
-			onSelect(ESelectionSource::Face, true);
+			onSelect(ESelectionSource::Face, ESelectionMode::Set);
 		}
 		else if (key == c_kbSelectPoly)
 		{
-			onSelect(ESelectionSource::Poly, true);
+			onSelect(ESelectionSource::Poly, ESelectionMode::Set);
 		}
-		// deselection
-		else if (key == (c_kbSelectVertex | c_kmodDeselect))
+		else if (key == (c_kbSelectVertex | c_kmodSelectAdd))
 		{
-			onSelect(ESelectionSource::Vertex, false);
+			onSelect(ESelectionSource::Vertex, ESelectionMode::Add);
 		}
-		else if (key == (c_kbSelectEdge | c_kmodDeselect))
+		else if (key == (c_kbSelectEdge | c_kmodSelectAdd))
 		{
-			onSelect(ESelectionSource::Edge, false);
+			onSelect(ESelectionSource::Edge, ESelectionMode::Add);
 		}
-		else if (key == (c_kbSelectFace | c_kmodDeselect))
+		else if (key == (c_kbSelectFace | c_kmodSelectAdd))
 		{
-			onSelect(ESelectionSource::Face, false);
+			onSelect(ESelectionSource::Face, ESelectionMode::Add);
 		}
-		else if (key == (c_kbSelectPoly | c_kmodDeselect))
+		else if (key == (c_kbSelectPoly | c_kmodSelectAdd))
 		{
-			onSelect(ESelectionSource::Poly, false);
+			onSelect(ESelectionSource::Poly, ESelectionMode::Add);
+		}
+		else if (key == (c_kbSelectVertex | c_kmodSelectRemove))
+		{
+			onSelect(ESelectionSource::Vertex, ESelectionMode::Remove);
+		}
+		else if (key == (c_kbSelectEdge | c_kmodSelectRemove))
+		{
+			onSelect(ESelectionSource::Edge, ESelectionMode::Remove);
+		}
+		else if (key == (c_kbSelectFace | c_kmodSelectRemove))
+		{
+			onSelect(ESelectionSource::Face, ESelectionMode::Remove);
+		}
+		else if (key == (c_kbSelectPoly | c_kmodSelectRemove))
+		{
+			onSelect(ESelectionSource::Poly, ESelectionMode::Remove);
 		}
 		else if (key == c_kbDeselectAll)
 		{
@@ -488,22 +563,48 @@ namespace HMP::Gui
 			ImGui::TextDisabled("%d %s selected", vertexCount, verticesLit);
 			if (m_directVertEdit.pending)
 			{
-				const char* operationLit;
+				using Utils::Controls::toImGui;
+				ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
+				const ImU32 startCol{ ImGui::ColorConvertFloat4ToU32(toImGui(c_directVertEditLineStartColor)) };
+				const ImU32 col{ ImGui::ColorConvertFloat4ToU32(toImGui(c_directVertEditLineColor)) };
+				const ImVec2 startCentroidPos{ toImGui(m_directVertEdit.startCentroidPos) };
+				const ImVec2 startPos{ toImGui(m_directVertEdit.startPos) };
+				const float fullLen{ static_cast<float>(std::max(m_canvas.width(), m_canvas.height()) * 2) };
+				static constexpr float thickness{ 1.0f };
 				switch (m_directVertEdit.kind)
 				{
 					case EDirectVertEdit::Rotate:
-						operationLit = "Rotating";
-						break;
+					{
+						Vec2 startDir{ m_directVertEdit.startPos - m_directVertEdit.startCentroidPos };
+						startDir = startDir.is_null() ? Vec2{ 1, 0 } : startDir.normalized();
+						drawList.AddLine(startCentroidPos, toImGui(m_directVertEdit.startCentroidPos + startDir * fullLen), startCol, thickness);
+						Vec2 dir{ m_mouse.position - m_directVertEdit.startCentroidPos };
+						dir = dir.is_null() ? Vec2{ 1, 0 } : dir.normalized();
+						drawList.AddLine(startCentroidPos, toImGui(m_directVertEdit.startCentroidPos + dir * fullLen), col, thickness);
+						ImGui::TextColored(toImGui(c_warningTextColor), "Rotating %d %s by %3.f degrees via direct manipulation", vertexCount, verticesLit, m_directVertEdit.transform[0]);
+					}
+					break;
 					case EDirectVertEdit::Scale:
-						operationLit = "Scaling";
-						break;
+					{
+						static constexpr int segCount{ 36 };
+						drawList.AddLine({ startCentroidPos.x, startCentroidPos.y + fullLen }, { startCentroidPos.x , startCentroidPos.y - fullLen }, startCol, thickness);
+						drawList.AddLine({ startCentroidPos.x + fullLen, startCentroidPos.y }, { startCentroidPos.x - fullLen, startCentroidPos.y }, startCol, thickness);
+						drawList.AddLine({ startCentroidPos.x + fullLen, startCentroidPos.y + fullLen }, { startCentroidPos.x - fullLen, startCentroidPos.y - fullLen }, startCol, thickness);
+						drawList.AddLine({ startCentroidPos.x + fullLen, startCentroidPos.y - fullLen }, { startCentroidPos.x - fullLen, startCentroidPos.y + fullLen }, startCol, thickness);
+						drawList.AddCircle(startCentroidPos, static_cast<float>(m_directVertEdit.startCentroidPos.dist(m_directVertEdit.startPos)), startCol, segCount, thickness);
+						drawList.AddCircle(startCentroidPos, static_cast<float>(m_directVertEdit.startCentroidPos.dist(m_mouse.position)), col, segCount, thickness);
+						ImGui::TextColored(toImGui(c_warningTextColor), "Scaling %d %s by %2.f%%,%2.f%% via direct manipulation", vertexCount, verticesLit, m_directVertEdit.transform.x() * 100.0, m_directVertEdit.transform.y() * 100.0);
+					}
+					break;
 					case EDirectVertEdit::Translate:
-						operationLit = "Translating";
-						break;
-					default:
-						throw std::domain_error{ "unknown kind" };
+					{
+						drawList.AddLine({ startPos.x, startPos.y + fullLen }, { startPos.x , startPos.y - fullLen }, startCol, thickness);
+						drawList.AddLine({ startPos.x + fullLen, startPos.y }, { startPos.x - fullLen, startPos.y }, startCol, thickness);
+						drawList.AddLine(startPos, toImGui(m_mouse.position), col, thickness);
+						ImGui::TextColored(toImGui(c_warningTextColor), "Translating %d %s by %3.f,%3.f via direct manipulation", vertexCount, verticesLit, m_directVertEdit.transform.x(), m_directVertEdit.transform.y());
+					}
+					break;
 				}
-				ImGui::TextColored(Utils::Controls::toImGui(c_warningTextColor), "%s %d %s via direct manipulation", operationLit, vertexCount, verticesLit);
 			}
 		}
 	}
@@ -845,7 +946,7 @@ namespace HMP::Gui
 		applyAction(*new Actions::Clear());
 	}
 
-	void App::onSelect(ESelectionSource _source, bool _add)
+	void App::onSelect(ESelectionSource _source, ESelectionMode _mode)
 	{
 		if (m_mouse.element)
 		{
@@ -870,13 +971,17 @@ namespace HMP::Gui
 					vids = m_mesh.poly_verts_id(pid);
 					break;
 			}
-			if (_add)
+			if (_mode == ESelectionMode::Set)
 			{
-				m_vertEditWidget.add(vids);
+				m_vertEditWidget.clear();
+			}
+			if (_mode == ESelectionMode::Remove)
+			{
+				m_vertEditWidget.remove(vids);
 			}
 			else
 			{
-				m_vertEditWidget.remove(vids);
+				m_vertEditWidget.add(vids);
 			}
 		}
 	}
