@@ -25,6 +25,7 @@
 #include <HMP/Utils/Serialization.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Gui/Utils/HrDescriptions.hpp>
+#include <HMP/Gui/Utils/Controls.hpp>
 #include <cpputils/collections/conversions.hpp>
 #include <sstream>
 #include <iomanip>
@@ -52,6 +53,9 @@ namespace HMP::Gui
 		cinolib::print_binding(c_kbSelectPoly.name(), "select poly vertices");
 		cinolib::print_binding(cinolib::KeyBinding::mod_names(c_kmodDeselect), "invert selection (hold down)");
 		cinolib::print_binding(c_kbDeselectAll.name(), "deselect all vertices");
+		cinolib::print_binding(c_kbDirectTranslation.name(), "translate selected vertices");
+		cinolib::print_binding(c_kbDirectScale.name(), "scale selected vertices");
+		cinolib::print_binding(c_kbDirectRotation.name(), "rotate selected vertices");
 		cinolib::print_binding(c_kbSave.name(), "save");
 		cinolib::print_binding(c_kbOpen.name(), "open");
 		cinolib::print_binding(c_kbSaveMesh.name(), "save mesh");
@@ -182,6 +186,29 @@ namespace HMP::Gui
 	void App::requestDagViewerUpdate()
 	{
 		m_dagViewerNeedsUpdate = true;
+	}
+
+	// direct vert edit
+
+	void App::updateDirectVertEdit()
+	{
+		if (!m_directVertEdit.pending)
+		{
+			return;
+		}
+	}
+
+	void App::onDirectVertEditRequested(EDirectVertEdit _kind)
+	{
+		if (m_vertEditWidget.empty())
+		{
+			return;
+		}
+		m_vertEditWidget.applyAction();
+		m_directVertEdit.pending = !m_directVertEdit.pending || m_directVertEdit.kind != _kind;
+		m_directVertEdit.startPos = m_mouse.position;
+		m_directVertEdit.kind = _kind;
+		updateMouse();
 	}
 
 	// mesher events
@@ -347,6 +374,19 @@ namespace HMP::Gui
 		{
 			onPrintDebugInfo();
 		}
+		// direct manipulation
+		else if (key == c_kbDirectTranslation)
+		{
+			onDirectVertEditRequested(EDirectVertEdit::Translate);
+		}
+		else if (key == c_kbDirectScale)
+		{
+			onDirectVertEditRequested(EDirectVertEdit::Scale);
+		}
+		else if (key == c_kbDirectRotation)
+		{
+			onDirectVertEditRequested(EDirectVertEdit::Rotate);
+		}
 		// selection
 		else if (key == c_kbSelectVertex)
 		{
@@ -431,7 +471,7 @@ namespace HMP::Gui
 				<< "faces " << Utils::HrDescriptions::describeFaces(m_mouse.faceOffset, m_mouse.upFaceOffset)
 				<< ", vert " << m_mouse.vertOffset
 				<< ")";
-			ImGui::Text("%s", stream.str().c_str());
+			ImGui::TextDisabled("%s", stream.str().c_str());
 		}
 		if (m_copy.element)
 		{
@@ -439,11 +479,32 @@ namespace HMP::Gui
 			stream
 				<< "Copied"
 				<< " " << Utils::HrDescriptions::name(*m_copy.element, m_dagNamer);
-			ImGui::Text("%s", stream.str().c_str());
+			ImGui::TextDisabled("%s", stream.str().c_str());
 		}
 		if (!m_vertEditWidget.empty())
 		{
-			ImGui::Text("%d %s selected", static_cast<int>(m_vertEditWidget.vids().size()), m_vertEditWidget.vids().size() == 1 ? "vertex" : "vertices");
+			const char* verticesLit{ m_vertEditWidget.vids().size() == 1 ? "vertex" : "vertices" };
+			const int vertexCount{ static_cast<int>(m_vertEditWidget.vids().size()) };
+			ImGui::TextDisabled("%d %s selected", vertexCount, verticesLit);
+			if (m_directVertEdit.pending)
+			{
+				const char* operationLit;
+				switch (m_directVertEdit.kind)
+				{
+					case EDirectVertEdit::Rotate:
+						operationLit = "Rotating";
+						break;
+					case EDirectVertEdit::Scale:
+						operationLit = "Scaling";
+						break;
+					case EDirectVertEdit::Translate:
+						operationLit = "Translating";
+						break;
+					default:
+						throw std::domain_error{ "unknown kind" };
+				}
+				ImGui::TextColored(Utils::Controls::toImGui(c_warningTextColor), "%s %d %s via direct manipulation", operationLit, vertexCount, verticesLit);
+			}
 		}
 	}
 
@@ -466,8 +527,8 @@ namespace HMP::Gui
 		const Id lastFaceOffset{ m_mouse.faceOffset }, lastUpFaceOffset{ m_mouse.upFaceOffset }, lastVertOffset{ m_mouse.vertOffset };
 		m_mouse.element = nullptr;
 		m_mouse.faceOffset = m_mouse.vertOffset = noId;
+		if (!m_directVertEdit.pending)
 		{
-			// poly
 			Id pid, fid, eid, vid;
 			const cinolib::Ray ray{ m_canvas.eye_to_mouse_ray() };
 			if (m_mesher.pick(ray.begin(), ray.dir(), pid, fid, eid, vid))
@@ -502,6 +563,7 @@ namespace HMP::Gui
 			updateMouseMarkers();
 			updateElementsMarkers();
 		}
+		updateDirectVertEdit();
 	}
 
 	// Commands
@@ -586,7 +648,7 @@ namespace HMP::Gui
 		{
 
 			const std::vector<Id> vids{ cpputils::collections::conversions::toVector(m_vertEditWidget.vids()) };
-			const Id fid{ m_mesh.face_id(vids) };
+			const Id fid{ static_cast<Id>(m_mesh.face_id(vids)) };
 			if (fid == noId)
 			{
 				return;
