@@ -14,6 +14,7 @@ namespace HMP::Gui::Utils
 		static bool isNull(const Vec& _vec, Real epsilon = 1e-6);
 		static Real wrapAngle(Real _angleDeg);
 		static Vec wrapAngles(const Vec& _anglesDeg);
+		static Vec rotationMatToVec(const Mat4& _mat);
 
 		Vec origin{};
 		Vec translation{};

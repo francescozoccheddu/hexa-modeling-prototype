@@ -1,6 +1,7 @@
 #include <HMP/Gui/Utils/Transform.hpp>
 
 #include <cinolib/gl/glcanvas.h>
+#include <cmath>
 
 namespace HMP::Gui::Utils
 {
@@ -38,6 +39,26 @@ namespace HMP::Gui::Utils
 		};
 	}
 
+	Vec Transform::rotationMatToVec(const Mat4& _mat)
+	{
+		Real sy = std::sqrt(_mat(0, 0) * _mat(0, 0) + _mat(1, 0) * _mat(1, 0));
+		const bool singular{ sy < 1e-6 };
+		Vec vec;
+		if (!singular)
+		{
+			vec.x() = std::atan2(_mat(2, 1), _mat(2, 2));
+			vec.y() = std::atan2(-_mat(2, 0), sy);
+			vec.z() = std::atan2(_mat(1, 0), _mat(0, 0));
+		}
+		else
+		{
+			vec.x() = std::atan2(-_mat(1, 2), _mat(1, 1));
+			vec.y() = std::atan2(-_mat(2, 0), sy);
+			vec.z() = 0;
+		}
+		return vec;
+	}
+
 	Real Transform::avgScale() const
 	{
 		return (scale.x() + scale.y() + scale.z()) / 3;
@@ -60,7 +81,6 @@ namespace HMP::Gui::Utils
 		const Mat4 translation{ Mat4::TRANS(this->translation + origin) };
 		const Mat4 origin{ Mat4::TRANS(-this->origin) };
 		return translation * rotation * scale * origin;
-
 	}
 
 	bool Transform::isIdentity(Real epsilon) const
