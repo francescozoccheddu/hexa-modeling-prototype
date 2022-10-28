@@ -39,24 +39,75 @@ namespace HMP::Gui::Utils
 		};
 	}
 
-	Vec Transform::rotationMatToVec(const Mat4& _mat)
+	Vec Transform::toDeg(const Vec& _rad)
+	{
+		return {
+			cinolib::to_deg(_rad.x()),
+			cinolib::to_deg(_rad.y()),
+			cinolib::to_deg(_rad.z())
+		};
+	}
+
+	Vec Transform::toRad(const Vec& _deg)
+	{
+		return {
+			cinolib::to_rad(_deg.x()),
+			cinolib::to_rad(_deg.y()),
+			cinolib::to_rad(_deg.z())
+		};
+	}
+
+	Vec Transform::rotationMatToVec(const Mat3& _mat)
 	{
 		Real sy = std::sqrt(_mat(0, 0) * _mat(0, 0) + _mat(1, 0) * _mat(1, 0));
-		const bool singular{ sy < 1e-6 };
-		Vec vec;
+		const bool singular{ isNull(sy) };
+		Vec rad;
 		if (!singular)
 		{
-			vec.x() = std::atan2(_mat(2, 1), _mat(2, 2));
-			vec.y() = std::atan2(-_mat(2, 0), sy);
-			vec.z() = std::atan2(_mat(1, 0), _mat(0, 0));
+			rad.x() = std::atan2(_mat(2, 1), _mat(2, 2));
+			rad.y() = std::atan2(-_mat(2, 0), sy);
+			rad.z() = std::atan2(_mat(1, 0), _mat(0, 0));
 		}
 		else
 		{
-			vec.x() = std::atan2(-_mat(1, 2), _mat(1, 1));
-			vec.y() = std::atan2(-_mat(2, 0), sy);
-			vec.z() = 0;
+			rad.x() = std::atan2(-_mat(1, 2), _mat(1, 1));
+			rad.y() = std::atan2(-_mat(2, 0), sy);
+			rad.z() = 0;
 		}
-		return vec;
+		return toDeg(rad);
+	}
+
+	Mat3 Transform::rotationMat(const Vec& _axis, Real _angleDeg)
+	{
+		return Mat3::ROT_3D(_axis, cinolib::to_rad(_angleDeg));
+	}
+
+	Mat3 Transform::rotationMat(const Vec& _eulerAnglesDeg)
+	{
+		return
+			rotationMat(cinolib::GLcanvas::world_right(), _eulerAnglesDeg.x()) *
+			rotationMat(cinolib::GLcanvas::world_up(), _eulerAnglesDeg.y()) *
+			rotationMat(-cinolib::GLcanvas::world_forward(), _eulerAnglesDeg.z());
+	}
+
+	Mat3 Transform::scaleMat(const Vec& _scale)
+	{
+		return Mat3::DIAG(_scale);
+	}
+
+	Mat4 Transform::translationMat(const Vec& _translation)
+	{
+		return Mat4::TRANS(_translation);
+	}
+
+	Mat4 Transform::homogeneous(const Mat3& _mat)
+	{
+		return Mat4{
+			_mat(0,0),	_mat(0,1), 	_mat(0,2), 	0,
+			_mat(1,0), 	_mat(1,1), 	_mat(1,2), 	0,
+			_mat(2,0), 	_mat(2,1), 	_mat(2,2), 	0,
+			0,			0,			0,			1
+		};
 	}
 
 	Real Transform::avgScale() const
@@ -66,20 +117,10 @@ namespace HMP::Gui::Utils
 
 	Mat4 Transform::matrix() const
 	{
-		const Mat3 rotation3{
-			Mat3::ROT_3D(cinolib::GLcanvas::world_right(), cinolib::to_rad(rotation.x())) *
-			Mat3::ROT_3D(cinolib::GLcanvas::world_up(), cinolib::to_rad(rotation.y())) *
-			Mat3::ROT_3D(cinolib::GLcanvas::world_forward(), cinolib::to_rad(rotation.z()))
-		};
-		const Mat4 rotation{
-			rotation3(0,0),	rotation3(0,1),	rotation3(0,2),	0,
-			rotation3(1,0),	rotation3(1,1),	rotation3(1,2),	0,
-			rotation3(2,0),	rotation3(2,1),	rotation3(2,2),	0,
-			0,				0,				0,				1
-		};
-		const Mat4 scale{ Mat4::DIAG(this->scale.add_coord(1.0)) };
-		const Mat4 translation{ Mat4::TRANS(this->translation + origin) };
-		const Mat4 origin{ Mat4::TRANS(-this->origin) };
+		const Mat4 rotation{ homogeneous(rotationMat(this->rotation)) };
+		const Mat4 scale{ homogeneous(scaleMat(this->scale)) };
+		const Mat4 translation{ translationMat(this->translation + origin) };
+		const Mat4 origin{ translationMat(-this->origin) };
 		return translation * rotation * scale * origin;
 	}
 

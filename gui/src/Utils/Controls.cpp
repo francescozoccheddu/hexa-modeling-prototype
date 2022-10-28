@@ -65,4 +65,9 @@ namespace HMP::Gui::Utils::Controls
 		return ImVec4{ _color.r(), _color.g(), _color.b(), _color.a() };
 	}
 
+	ImVec2 toImGui(const Vec2& _vec)
+	{
+		return ImVec2{ static_cast<float>(_vec.x()), static_cast<float>(_vec.y()) };
+	}
+
 }

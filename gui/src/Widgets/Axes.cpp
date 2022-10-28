@@ -4,6 +4,7 @@
 #include <imgui.h>
 #include <cinolib/deg_rad.h>
 #include <cinolib/gl/glcanvas.h>
+#include <HMP/Gui/Utils/Controls.hpp>
 #include <cmath>
 #include <array>
 #include <utility>
@@ -23,6 +24,7 @@ namespace HMP::Gui::Widgets
 
 	void Axes::draw()
 	{
+		using Utils::Controls::toImGui;
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
 		Vec origin;
 		Real radius;
@@ -49,9 +51,6 @@ namespace HMP::Gui::Widgets
 			proj.y() = -proj.y() * size + windowOrigin.y + windowSize.y - size;
 			return proj;
 		} };
-		constexpr auto toImVec{ [](const Vec& _vec) {
-			return ImVec2{static_cast<float>(_vec.x()), static_cast<float>(_vec.y())};
-		} };
 		origin = project(origin);
 		std::array<std::pair<Vec, ImColor>, 3> tips{
 			std::pair<Vec, ImColor>{project(right), IM_COL32(255,100,100,255)},
@@ -61,8 +60,8 @@ namespace HMP::Gui::Widgets
 		std::sort(tips.begin(), tips.end(), [](const std::pair<Vec, ImColor>& _a, const std::pair<Vec, ImColor>& _b) { return _a.first.z() > _b.first.z(); });
 		for (const auto& [tip, color] : tips)
 		{
-			drawList.AddLine(toImVec(origin), toImVec(tip), color, 3);
-			drawList.AddCircleFilled(toImVec(tip), 5, color, 6);
+			drawList.AddLine(toImGui(origin.rem_coord()), toImGui(tip.rem_coord()), color, 3);
+			drawList.AddCircleFilled(toImGui(tip.rem_coord()), 5, color, 6);
 		}
 	}
 
