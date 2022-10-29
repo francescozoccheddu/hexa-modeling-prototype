@@ -125,14 +125,25 @@ namespace HMP::Gui::Widgets
         m_vertEdit.applyTransform();
     }
 
+    void DirectVertEdit::apply()
+    {
+        if (!m_pending)
+        {
+            return;
+        }
+        m_pending = false;
+        m_vertEdit.applyAction();
+        onPendingChanged();
+    }
+
     void DirectVertEdit::cancel()
     {
         if (!m_pending)
         {
             return;
         }
-        m_vertEdit.cancel();
         m_pending = false;
+        m_vertEdit.cancel();
         onPendingChanged();
     }
 

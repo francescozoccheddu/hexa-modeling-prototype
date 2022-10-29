@@ -77,6 +77,42 @@ namespace HMP::Gui::Utils
 		return toDeg(rad);
 	}
 
+	Mat3 Transform::rotationXMat(Real _angleDeg)
+	{
+		const Real r{ cinolib::to_rad(_angleDeg) };
+		const Real c{ std::cos(r) };
+		const Real s{ std::sin(r) };
+		return Mat3{
+			1,	0,	0,
+			0,	c,	s,
+			0, -s,	c
+		};
+	}
+
+	Mat3 Transform::rotationYMat(Real _angleDeg)
+	{
+		const Real r{ cinolib::to_rad(_angleDeg) };
+		const Real c{ std::cos(r) };
+		const Real s{ std::sin(r) };
+		return Mat3{
+			c,	0, -s,
+			0,	1,	0,
+			s,	0,	c
+		};
+	}
+
+	Mat3 Transform::rotationZMat(Real _angleDeg)
+	{
+		const Real r{ cinolib::to_rad(_angleDeg) };
+		const Real c{ std::cos(r) };
+		const Real s{ std::sin(r) };
+		return Mat3{
+			c, -s,	0,
+			s,	c,	0,
+			0,	0,	1
+		};
+	}
+
 	Mat3 Transform::rotationMat(const Vec& _axis, Real _angleDeg)
 	{
 		return Mat3::ROT_3D(_axis, cinolib::to_rad(_angleDeg));
@@ -85,9 +121,9 @@ namespace HMP::Gui::Utils
 	Mat3 Transform::rotationMat(const Vec& _eulerAnglesDeg)
 	{
 		return
-			rotationMat(cinolib::GLcanvas::world_right(), _eulerAnglesDeg.x()) *
-			rotationMat(cinolib::GLcanvas::world_up(), _eulerAnglesDeg.y()) *
-			rotationMat(-cinolib::GLcanvas::world_forward(), _eulerAnglesDeg.z());
+			rotationXMat(_eulerAnglesDeg.x()) *
+			rotationYMat(_eulerAnglesDeg.y()) *
+			rotationZMat(_eulerAnglesDeg.z());
 	}
 
 	Mat3 Transform::scaleMat(const Vec& _scale)

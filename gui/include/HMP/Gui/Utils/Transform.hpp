@@ -17,6 +17,9 @@ namespace HMP::Gui::Utils
 		static Vec rotationMatToVec(const Mat3& _mat);
 		static Vec toDeg(const Vec& _rad);
 		static Vec toRad(const Vec& _deg);
+		static Mat3 rotationXMat(Real _angleDeg);
+		static Mat3 rotationYMat(Real _angleDeg);
+		static Mat3 rotationZMat(Real _angleDeg);
 		static Mat3 rotationMat(const Vec& _axis, Real _angleDeg);
 		static Mat3 rotationMat(const Vec& _eulerAnglesDeg);
 		static Mat3 scaleMat(const Vec& _scale);

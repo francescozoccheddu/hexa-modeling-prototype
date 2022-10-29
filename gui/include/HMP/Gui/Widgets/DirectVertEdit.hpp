@@ -55,6 +55,8 @@ namespace HMP::Gui::Widgets
 
         void cancel();
 
+        void apply();
+
         bool pending() const;
 
         EKind kind() const;
