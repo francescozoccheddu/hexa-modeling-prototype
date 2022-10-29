@@ -18,39 +18,34 @@ namespace HMP::Actions
 	void Project<TMeshAttributes, TVertAttributes, TEdgeAttributes, TPolyAttributes>::apply()
 	{
 		Meshing::Mesher& mesher{ this->mesher() };
-		const Meshing::Mesher::Mesh& mesh{ mesher.mesh() };
+		const Meshing::Mesher::Mesh& src{ mesher.mesh() };
 		if (!m_prepared)
 		{
 			m_prepared = true;
 			std::cout << "Projecting..." << std::endl;
 
-			cinolib::Quadmesh<TMeshAttributes, TVertAttributes, TEdgeAttributes, TPolyAttributes> peel;
-			//std::unordered_map<Id, Id> h2q, q2h;
-			//cinolib::export_surface(mesh, peel, h2q, q2h);
+			cinolib::Quadmesh<TMeshAttributes, TVertAttributes, TEdgeAttributes, TPolyAttributes> srf;
 
-			std::unordered_map<Id, Id> m_map, v_map;
-			cinolib::export_surface(mesh, peel, m_map, v_map);
+			std::unordered_map<Id, Id> src2srf, srf2src;
+			cinolib::export_surface(src, srf, src2srf, srf2src);
 			m_target.edge_set_flag(cinolib::MARKED, false);
-			peel.edge_set_flag(cinolib::MARKED, false);
-			cinolib::Quadmesh<TMeshAttributes, TVertAttributes, TEdgeAttributes, TPolyAttributes> tmp_peel = peel;
+			srf.edge_set_flag(cinolib::MARKED, false);
 			m_target.edge_mark_sharp_creases();
 
 			cinolib::SmootherOptions options;
 			options.n_iters = 3;
 			options.laplacian_mode = cinolib::UNIFORM;
-			cinolib::mesh_smoother(peel, m_target, options);
+			cinolib::mesh_smoother(srf, m_target, options);
 
-			for (Id vid{ 0 }; vid < peel.num_verts(); vid++)
+			for (Id srfVid{ 0 }; srfVid < srf.num_verts(); srfVid++)
 			{
-				if (!(mesh.vert(v_map[vid]) == peel.vert(vid)))
-				{
-					const Id pid{ mesh.adj_v2p(vid).front() };
-					m_vertMoves.push_back({
-						.position = peel.vert(vid),
-						.vertOffset{mesh.poly_vert_offset(pid, vid)},
-						.element{&mesher.pidToElement(pid)}
-						});
-				}
+				const Id vid{ srf2src[srfVid] };
+				const Id pid{ src.adj_v2p(vid).front() };
+				m_vertMoves.push_back({
+					.position = srf.vert(srfVid),
+					.vertOffset{src.poly_vert_offset(pid, vid)},
+					.element{&mesher.pidToElement(pid)}
+					});
 			}
 
 			m_target.clear();
@@ -60,8 +55,8 @@ namespace HMP::Actions
 		for (VertMove& move : m_vertMoves)
 		{
 			const Id pid{ mesher.elementToPid(*move.element) };
-			const Id vid{ mesh.poly_vert_id(pid, move.vertOffset) };
-			const Vec oldPosition{ mesh.vert(vid) };
+			const Id vid{ src.poly_vert_id(pid, move.vertOffset) };
+			const Vec oldPosition{ src.vert(vid) };
 			vertMovesMap.insert({ vid, move.position });
 			move.position = oldPosition;
 		}
