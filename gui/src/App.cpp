@@ -29,6 +29,8 @@
 #include <cpputils/collections/conversions.hpp>
 #include <sstream>
 #include <iomanip>
+#include <filesystem>
+#include <ctime>
 
 namespace HMP::Gui
 {
@@ -617,10 +619,10 @@ namespace HMP::Gui
 
 	// Commands
 
-	void App::onPrintDebugInfo() const
+	std::string App::getDebugInfo() const
 	{
-		std::cout << "-------- PRINT DEBUG INFO --------\n";
-		std::cout << "---- Elements\n";
+		std::ostringstream ss{};
+		ss << "---- Elements\n";
 		std::vector<Meshing::Utils::PolyVertLoc> locs{};
 		locs.reserve(8);
 		for (const auto [element, pid] : m_mesher)
@@ -631,7 +633,7 @@ namespace HMP::Gui
 			{
 				locs.push_back(Meshing::Utils::polyVertLoc(m_mesh.vert(vid), centroid));
 			}
-			std::cout
+			ss
 				<< "name: " << m_dagNamer.nameOrUnknown(&element)
 				<< " pid: " << pid
 				<< " centroid: " << Utils::HrDescriptions::describe(centroid)
@@ -643,10 +645,10 @@ namespace HMP::Gui
 				<< " locs: " << Utils::HrDescriptions::describe(locs)
 				<< "\n";
 		}
-		std::cout << "---- Faces\n";
+		ss << "---- Faces\n";
 		for (Id fid{}; fid < m_mesh.num_faces(); fid++)
 		{
-			std::cout
+			ss
 				<< "fid: " << fid
 				<< " centroid: " << Utils::HrDescriptions::describe(m_mesh.face_centroid(fid))
 				<< " vids: " << Utils::HrDescriptions::describe(m_mesh.adj_f2v(fid))
@@ -656,10 +658,10 @@ namespace HMP::Gui
 				<< " normal: " << Utils::HrDescriptions::describe(m_mesh.face_data(fid).normal)
 				<< "\n";
 		}
-		std::cout << "---- Edges\n";
+		ss << "---- Edges\n";
 		for (Id eid{}; eid < m_mesh.num_edges(); eid++)
 		{
-			std::cout
+			ss
 				<< "eid: " << eid
 				<< " midpoint: " << Utils::HrDescriptions::describe(Meshing::Utils::midpoint(m_mesh, eid))
 				<< " vids: " << Utils::HrDescriptions::describe(m_mesh.adj_e2v(eid))
@@ -668,10 +670,10 @@ namespace HMP::Gui
 				<< " pids: " << Utils::HrDescriptions::describe(m_mesh.adj_e2p(eid))
 				<< "\n";
 		}
-		std::cout << "---- Vertices\n";
+		ss << "---- Vertices\n";
 		for (Id vid{}; vid < m_mesh.num_verts(); vid++)
 		{
-			std::cout
+			ss
 				<< "vid: " << vid
 				<< " position: " << Utils::HrDescriptions::describe(m_mesh.vert(vid))
 				<< " vids: " << Utils::HrDescriptions::describe(m_mesh.adj_v2v(vid))
@@ -680,7 +682,16 @@ namespace HMP::Gui
 				<< " pids: " << Utils::HrDescriptions::describe(m_mesh.adj_v2p(vid))
 				<< "\n";
 		}
-		std::cout << "----------------------------------" << std::endl;
+		return ss.str();
+	}
+
+	void App::onPrintDebugInfo() const
+	{
+		std::cout
+			<< "-------- PRINT DEBUG INFO --------\n"
+			<< getDebugInfo()
+			<< "----------------------------------"
+			<< std::endl;
 	}
 
 	void App::onExtrude()
@@ -1007,7 +1018,35 @@ namespace HMP::Gui
 	int App::launch()
 	{
 		printKeyBindings();
-		return m_canvas.launch();
+		try
+		{
+			return m_canvas.launch();
+		}
+		catch (...)
+		{
+			const std::time_t time{ std::time(nullptr) };
+			const std::tm* now{ std::localtime(&time) };
+			std::ostringstream basename{};
+			basename << "crash_" << std::put_time(now, "%H-%M-%S_%d-%m-%y");
+			{
+				const std::string filename{ basename.str() + "_dag.txt" };
+				std::ofstream file;
+				file.open(filename);
+				HMP::Utils::Serialization::Serializer serializer{ file };
+				HMP::Dag::Utils::serialize(serializer, *m_project.root());
+				file.close();
+				std::cout << "Wrote dag to " << std::filesystem::absolute(filename) << std::endl;
+			}
+			{
+				const std::string filename{ basename.str() + "_mesh_debug.txt" };
+				std::ofstream file;
+				file.open(filename);
+				file << getDebugInfo();
+				file.close();
+				std::cout << "Wrote mesh debug info to " << std::filesystem::absolute(filename) << std::endl;
+			}
+			throw;
+		}
 	}
 
 }

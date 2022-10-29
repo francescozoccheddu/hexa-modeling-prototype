@@ -149,6 +149,7 @@ namespace HMP::Gui
 		void updateMouse();
 
 		// user operation
+		std::string getDebugInfo() const;
 		void onPrintDebugInfo() const;
 		void onExtrude();
 		void onExtrudeAndSelect();
