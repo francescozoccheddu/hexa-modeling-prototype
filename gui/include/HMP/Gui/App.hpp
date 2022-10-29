@@ -137,6 +137,8 @@ namespace HMP::Gui
 
 		// canvas events
 		void onCameraChanged();
+		bool onMouseLeftClicked(int _modifiers);
+		bool onMouseRightClicked(int _modifiers);
 		bool onKeyPressed(int _key, int _modifiers);
 		bool onMouseMoved(double _x, double _y);
 		void onDrawControls();

@@ -173,6 +173,7 @@ namespace HMP::Gui
 
 	void App::onActionApplied()
 	{
+		m_mesher.updateMesh();
 		m_vertEditWidget.updateCentroid();
 		updateMouse();
 		updateAllMarkers();
@@ -260,6 +261,18 @@ namespace HMP::Gui
 	{
 		m_directVertEditWidget.cancel();
 		updateMouse();
+	}
+
+	bool App::onMouseLeftClicked(int _modifiers)
+	{
+		m_directVertEditWidget.apply();
+		return true;
+	}
+
+	bool App::onMouseRightClicked(int _modifiers)
+	{
+		m_directVertEditWidget.cancel();
+		return true;
 	}
 
 	bool App::onKeyPressed(int _key, int _modifiers)
@@ -983,6 +996,8 @@ namespace HMP::Gui
 		m_directVertEditWidget.onPendingChanged += [this]() { updateMouse(); };
 
 		m_canvas.depth_cull_markers = false;
+		m_canvas.callback_mouse_left_click = [this](auto && ..._args) { return onMouseLeftClicked(_args ...); };
+		m_canvas.callback_mouse_right_click = [this](auto && ..._args) { return onMouseRightClicked(_args ...); };
 		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMoved(_args...); };
 		m_canvas.callback_key_pressed = [this](auto && ..._args) { return onKeyPressed(_args...); };
 		m_canvas.callback_app_controls = [this](auto && ..._args) { return onDrawControls(_args ...); };
