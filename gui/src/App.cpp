@@ -266,14 +266,22 @@ namespace HMP::Gui
 
 	bool App::onMouseLeftClicked(int _modifiers)
 	{
-		m_directVertEditWidget.apply();
-		return true;
+		if (m_directVertEditWidget.pending())
+		{
+			m_directVertEditWidget.apply();
+			return true;
+		}
+		return false;
 	}
 
 	bool App::onMouseRightClicked(int _modifiers)
 	{
-		m_directVertEditWidget.cancel();
-		return true;
+		if (m_directVertEditWidget.pending())
+		{
+			m_directVertEditWidget.cancel();
+			return true;
+		}
+		return false;
 	}
 
 	bool App::onKeyPressed(int _key, int _modifiers)
@@ -455,11 +463,7 @@ namespace HMP::Gui
 	{
 		m_mouse.position = cinolib::vec2d{ _x, _y };
 		updateMouse();
-		const bool lockX{ glfwGetKey(m_canvas.window, c_kbDirectEditX) == GLFW_PRESS };
-		const bool lockY{ glfwGetKey(m_canvas.window, c_kbDirectEditY) == GLFW_PRESS };
-		const bool lockZ{ glfwGetKey(m_canvas.window, c_kbDirectEditZ) == GLFW_PRESS };
-		m_directVertEditWidget.update(m_mouse.position, lockX, lockY, lockZ);
-		return false;
+		return m_directVertEditWidget.pending();
 	}
 
 	void App::onDrawControls()
@@ -592,6 +596,10 @@ namespace HMP::Gui
 			updateMouseMarkers();
 			updateElementsMarkers();
 		}
+		const bool lockX{ glfwGetKey(m_canvas.window, c_kbDirectEditX) == GLFW_PRESS };
+		const bool lockY{ glfwGetKey(m_canvas.window, c_kbDirectEditY) == GLFW_PRESS };
+		const bool lockZ{ glfwGetKey(m_canvas.window, c_kbDirectEditZ) == GLFW_PRESS };
+		m_directVertEditWidget.update(m_mouse.position, lockX, lockY, lockZ);
 	}
 
 	// Commands
@@ -970,6 +978,7 @@ namespace HMP::Gui
 		m_canvas.callback_mouse_right_click = [this](auto && ..._args) { return onMouseRightClicked(_args ...); };
 		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMoved(_args...); };
 		m_canvas.callback_key_pressed = [this](auto && ..._args) { return onKeyPressed(_args...); };
+		m_canvas.callback_key_event = [this](auto && ..._args) { updateMouse(); };
 		m_canvas.callback_app_controls = [this](auto && ..._args) { return onDrawControls(_args ...); };
 		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChanged(_args...); };
 		m_canvas.callback_custom_gui = [this](auto && ..._args) { return onDrawCustomGui(_args...); };
