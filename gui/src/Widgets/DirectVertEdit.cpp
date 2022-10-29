@@ -153,6 +153,10 @@ namespace HMP::Gui::Widgets
                 {
                     break;
                 }
+                if (axis.dot(forward) < 0)
+                {
+                    axis = -axis;
+                }
                 const Vec2 startDir{ Utils::Transform::dir(m_centroid, m_start) };
                 const Vec2 dir{ Utils::Transform::dir(m_centroid, m_mouse) };
                 const Real angle{ Utils::Transform::angle(startDir, dir) };
