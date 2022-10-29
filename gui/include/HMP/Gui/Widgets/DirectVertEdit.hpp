@@ -21,21 +21,18 @@ namespace HMP::Gui::Widgets
             Translation, Rotation, Scale
         };
 
-        enum class EModifier
-        {
-            XY, X, Y, None
-        };
-
     private:
 
-        static constexpr cinolib::Color c_lineStartColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 1.0f, 0.2f) };
-        static constexpr cinolib::Color c_lineColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 1.0f, 0.7f) };
+        static constexpr cinolib::Color c_mutedColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 1.0f, 0.2f) };
+        static constexpr cinolib::Color c_color{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 1.0f, 0.7f) };
         static constexpr float c_lineThickness{ 1.0f };
+        static constexpr float c_textSize{ 20.0f };
+        static constexpr Vec2 c_textMargin{ 10.0f };
 
         VertEdit& m_vertEdit;
         const cinolib::GLcanvas& m_canvas;
         bool m_pending;
-        EModifier m_modifier;
+        bool m_onX, m_onY, m_onZ;
         EKind m_kind;
         Vec2 m_start;
         Vec2 m_centroid;
@@ -51,7 +48,7 @@ namespace HMP::Gui::Widgets
 
         void request(EKind _kind, const Vec2& _mouse);
 
-        void update(const Vec2& _mouse, EModifier _modifier = EModifier::None);
+        void update(const Vec2& _mouse, bool _onX = false, bool _onY = false, bool _onZ = false);
 
         void cancel();
 
@@ -61,7 +58,13 @@ namespace HMP::Gui::Widgets
 
         EKind kind() const;
 
-        EModifier modifier() const;
+        bool locked() const;
+
+        bool onX() const;
+
+        bool onY() const;
+
+        bool onZ() const;
 
         void draw() override final;
 
