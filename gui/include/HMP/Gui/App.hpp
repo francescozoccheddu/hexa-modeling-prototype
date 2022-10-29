@@ -33,9 +33,10 @@ namespace HMP::Gui
 		static constexpr cinolib::Color c_selectedPolyColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 0.5f) };
 		static constexpr cinolib::Color c_selectedFaceColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 1.0f) };
 
-		static constexpr std::size_t c_mouseMarkerSetInd{ 0 };
-		static constexpr std::size_t c_vertSelectionMarkerSetInd{ 1 };
-		static constexpr std::size_t c_elementsMarkerSetInd{ 2 };
+		static constexpr std::size_t c_mouseMarkerSetInd{ 1 };
+		static constexpr std::size_t c_vertSelectionMarkerSetInd{ 2 };
+		static constexpr std::size_t c_elementsMarkerSetInd{ 3 };
+		static constexpr std::size_t c_markerSetCount{ 4 };
 
 		static constexpr cinolib::KeyBinding c_kbCancelDirectEdit{ GLFW_KEY_ESCAPE };
 		static constexpr cinolib::KeyBinding c_kbDirectTranslation{ GLFW_KEY_T };

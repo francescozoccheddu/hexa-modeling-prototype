@@ -1022,7 +1022,7 @@ namespace HMP::Gui
 		m_canvas.callback_app_controls = [this](auto && ..._args) { return onDrawControls(_args ...); };
 		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChanged(_args...); };
 		m_canvas.callback_custom_gui = [this](auto && ..._args) { return onDrawCustomGui(_args...); };
-		m_canvas.marker_sets.resize(3);
+		m_canvas.marker_sets.resize(c_markerSetCount);
 
 		m_dagViewer.onDraw += [this]() { onDagViewerDraw(); };
 		requestDagViewerUpdate();
