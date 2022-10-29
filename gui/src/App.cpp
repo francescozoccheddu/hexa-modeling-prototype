@@ -625,13 +625,20 @@ namespace HMP::Gui
 		ss << "---- Elements\n";
 		std::vector<Meshing::Utils::PolyVertLoc> locs{};
 		locs.reserve(8);
+		std::vector<Id> dagVids{};
+		dagVids.reserve(8);
 		for (const auto [element, pid] : m_mesher)
 		{
+			dagVids.clear();
 			locs.clear();
 			const HMP::Vec centroid{ m_mesh.poly_centroid(pid) };
 			for (const Id vid : m_mesh.adj_p2v(pid))
 			{
 				locs.push_back(Meshing::Utils::polyVertLoc(m_mesh.vert(vid), centroid));
+			}
+			for (const Vec& dagVert : element.vertices())
+			{
+				dagVids.push_back(m_mesher.getVert(dagVert));
 			}
 			ss
 				<< "name: " << m_dagNamer.nameOrUnknown(&element)
@@ -643,6 +650,7 @@ namespace HMP::Gui
 				<< " pids: " << Utils::HrDescriptions::describe(m_mesh.adj_p2p(pid))
 				<< " winding: " << Utils::HrDescriptions::describe(m_mesh.poly_faces_winding(pid))
 				<< " locs: " << Utils::HrDescriptions::describe(locs)
+				<< " dag_vids: " << Utils::HrDescriptions::describe(dagVids)
 				<< "\n";
 		}
 		ss << "---- Faces\n";
