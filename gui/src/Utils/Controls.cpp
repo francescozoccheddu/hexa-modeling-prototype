@@ -57,7 +57,14 @@ namespace HMP::Gui::Utils::Controls
 
 	bool colorButton(const char* _label, cinolib::Color& _color)
 	{
-		return ImGui::ColorEdit4(_label, _color.rgba, ImGuiColorEditFlags_NoInputs);
+		return ImGui::ColorEdit4(_label, _color.rgba,
+			ImGuiColorEditFlags_NoInputs |
+			ImGuiColorEditFlags_AlphaBar |
+			ImGuiColorEditFlags_AlphaPreviewHalf |
+			//ImGuiColorEditFlags_DisplayHSV |
+			//ImGuiColorEditFlags_InputHSV |
+			ImGuiColorEditFlags_PickerHueWheel
+		);
 	}
 
 	ImVec4 toImGui(const cinolib::Color& _color)

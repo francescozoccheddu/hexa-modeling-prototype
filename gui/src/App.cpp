@@ -970,7 +970,12 @@ namespace HMP::Gui
 		m_dagViewerNeedsUpdate{ true }
 	{
 
+		glfwSetWindowTitle(m_canvas.window, "hexa-modeling-prototype");
+
 		m_canvas.background = c_backgroundColor;
+		m_canvas.key_bindings.reset_camera = GLFW_KEY_P;
+		m_canvas.key_bindings.store_camera = cinolib::KeyBindings::no_key_binding();
+		m_canvas.key_bindings.restore_camera = cinolib::KeyBindings::no_key_binding();
 		m_mesher.polyMarkerSet().color() = c_selectedPolyColor;
 		m_mesher.faceMarkerSet().color() = c_selectedFaceColor;
 
@@ -1025,10 +1030,11 @@ namespace HMP::Gui
 
 	int App::launch()
 	{
+		m_canvas.print_key_bindings();
 		printKeyBindings();
 		try
 		{
-			return m_canvas.launch();
+			return m_canvas.launch({}, false);
 		}
 		catch (...)
 		{

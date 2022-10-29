@@ -13,7 +13,7 @@ namespace HMP::Gui::Widgets
 		cinolib::SideBarItem{ "Target mesh" },
 		m_mesh{}, m_sourceMesh{ _sourceMesh },
 		onProjectRequest{}, onMeshLoad{}, onMeshClear{}, onApplyTransformToSource{},
-		m_visible{ true }, m_faceColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.25f} }, m_edgeColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.75f} },
+		m_visible{ true }, m_faceColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.15f} }, m_edgeColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.4f} },
 		m_transform{},
 		m_projectLines{}, m_showProjectLines{}
 	{
@@ -281,7 +281,7 @@ namespace HMP::Gui::Widgets
 			}
 			{
 				ImGui::PushID(1);
-				const float sourceMeshSize{ static_cast<float>(m_sourceMesh.bbox().diag()) };
+				const float sourceMeshSize{ static_cast<float>(m_sourceMesh.bbox().diag()) * 2 };
 				Vec center{ m_transform.translation + m_mesh->bbox().center() };
 				if (Utils::Controls::dragTranslationVec("Center", center, sourceMeshSize))
 				{
@@ -315,7 +315,7 @@ namespace HMP::Gui::Widgets
 			}
 			{
 				ImGui::PushID(3);
-				const Real sourceAndTargetMeshScaleRatio{ m_sourceMesh.bbox().diag() / m_mesh->bbox().diag() };
+				const Real sourceAndTargetMeshScaleRatio{ m_sourceMesh.bbox().diag() / m_mesh->bbox().diag() * 3 };
 				Real scale{ m_transform.avgScale() };
 				if (Utils::Controls::dragScale("Scale", scale, sourceAndTargetMeshScaleRatio))
 				{
@@ -336,12 +336,15 @@ namespace HMP::Gui::Widgets
 			}
 			ImGui::Spacing();
 			{
-				if (Utils::Controls::colorButton("Face color", m_faceColor))
+				Utils::Controls::colorButton("Face color", m_faceColor);
+				ImGui::SameLine();
+				if (ImGui::SmallButton("Apply##face_color"))
 				{
 					updateColor(true, false);
 				}
+				Utils::Controls::colorButton("Edge color", m_edgeColor);
 				ImGui::SameLine();
-				if (Utils::Controls::colorButton("Edge color", m_edgeColor))
+				if (ImGui::SmallButton("Apply##edge_color"))
 				{
 					updateColor(false, true);
 				}
