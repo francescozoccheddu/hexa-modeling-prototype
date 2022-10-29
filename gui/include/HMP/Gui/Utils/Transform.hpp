@@ -22,6 +22,8 @@ namespace HMP::Gui::Utils
 		static Mat3 scaleMat(const Vec& _scale);
 		static Mat4 translationMat(const Vec& _translation);
 		static Mat4 homogeneous(const Mat3& _mat);
+		static Vec2 dir(const Vec2& _from, const Vec2& _to, const Vec2& _else = { 1.0, 0.0 });
+		static Real angle(const Vec2& _from, const Vec2& _to);
 
 		Vec origin{};
 		Vec translation{};

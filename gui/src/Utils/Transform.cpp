@@ -110,6 +110,17 @@ namespace HMP::Gui::Utils
 		};
 	}
 
+	Vec2 Transform::dir(const Vec2& _from, const Vec2& _to, const Vec2& _else)
+	{
+		Vec2 diff{ _to - _from };
+		return diff.is_null() ? _else : diff.normalized();
+	}
+
+	Real Transform::angle(const Vec2& _from, const Vec2& _to)
+	{
+		return wrapAngle(cinolib::to_deg(std::atan2(_from.y(), _from.x()) - std::atan2(_to.y(), _to.x())));
+	}
+
 	Real Transform::avgScale() const
 	{
 		return (scale.x() + scale.y() + scale.z()) / 3;
