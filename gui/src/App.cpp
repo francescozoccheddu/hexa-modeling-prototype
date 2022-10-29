@@ -58,6 +58,7 @@ namespace HMP::Gui
 		cinolib::print_binding(c_kbDirectScale.name(), "scale selected vertices");
 		cinolib::print_binding(cinolib::KeyBinding::key_name(c_kbDirectEditX), "lock direct edit along X (hold down)");
 		cinolib::print_binding(cinolib::KeyBinding::key_name(c_kbDirectEditY), "lock direct edit along Y (hold down)");
+		cinolib::print_binding(cinolib::KeyBinding::key_name(c_kbDirectEditZ), "lock direct edit along Z (hold down)");
 		cinolib::print_binding(c_kbDirectRotation.name(), "rotate selected vertices");
 		cinolib::print_binding(c_kbCancelDirectEdit.name(), "cancel direct edit");
 		cinolib::print_binding(c_kbSave.name(), "save");
@@ -454,25 +455,10 @@ namespace HMP::Gui
 	{
 		m_mouse.position = cinolib::vec2d{ _x, _y };
 		updateMouse();
-		Widgets::DirectVertEdit::EModifier modifier{ Widgets::DirectVertEdit::EModifier::None };
 		const bool lockX{ glfwGetKey(m_canvas.window, c_kbDirectEditX) == GLFW_PRESS };
 		const bool lockY{ glfwGetKey(m_canvas.window, c_kbDirectEditY) == GLFW_PRESS };
-		if (lockX)
-		{
-			if (lockY)
-			{
-				modifier = Widgets::DirectVertEdit::EModifier::XY;
-			}
-			else
-			{
-				modifier = Widgets::DirectVertEdit::EModifier::X;
-			}
-		}
-		else if (lockY)
-		{
-			modifier = Widgets::DirectVertEdit::EModifier::Y;
-		}
-		m_directVertEditWidget.update(m_mouse.position, modifier);
+		const bool lockZ{ glfwGetKey(m_canvas.window, c_kbDirectEditZ) == GLFW_PRESS };
+		m_directVertEditWidget.update(m_mouse.position, lockX, lockY, lockZ);
 		return false;
 	}
 
@@ -525,41 +511,25 @@ namespace HMP::Gui
 			ImGui::TextDisabled("%d %s selected", vertexCount, verticesLit);
 			if (m_directVertEditWidget.pending())
 			{
-				const char* modifiersLit;
-				switch (m_directVertEditWidget.modifier())
-				{
-					case Widgets::DirectVertEdit::EModifier::None:
-						modifiersLit = "";
-						break;
-					case Widgets::DirectVertEdit::EModifier::X:
-						modifiersLit = " (X locked)";
-						break;
-					case Widgets::DirectVertEdit::EModifier::Y:
-						modifiersLit = " (Y locked)";
-						break;
-					case Widgets::DirectVertEdit::EModifier::XY:
-						modifiersLit = " (XY locked)";
-						break;
-				}
 				const ImVec4 warningColor{ Utils::Controls::toImGui(c_warningTextColor) };
 				switch (m_directVertEditWidget.kind())
 				{
 					case Widgets::DirectVertEdit::EKind::Rotation:
 					{
 						const Vec rot{ m_vertEditWidget.transform().rotation };
-						ImGui::TextColored(warningColor, "Rotating %d %s by %1.f,%1.f,%1.f degrees via direct manipulation%s", vertexCount, verticesLit, rot.x(), rot.y(), rot.z(), modifiersLit);
+						ImGui::TextColored(warningColor, "Rotating %d %s by %1.f,%1.f,%1.f degrees via direct manipulation", vertexCount, verticesLit, rot.x(), rot.y(), rot.z());
 					}
 					break;
 					case Widgets::DirectVertEdit::EKind::Scale:
 					{
 						const Vec scl{ m_vertEditWidget.transform().scale * 100.0 };
-						ImGui::TextColored(warningColor, "Scaling %d %s by %2.f,%2.f,%2.f%% via direct manipulation%s", vertexCount, verticesLit, scl.x(), scl.y(), scl.z(), modifiersLit);
+						ImGui::TextColored(warningColor, "Scaling %d %s by %2.f,%2.f,%2.f%% via direct manipulation", vertexCount, verticesLit, scl.x(), scl.y(), scl.z());
 					}
 					break;
 					case Widgets::DirectVertEdit::EKind::Translation:
 					{
 						const Vec trs{ m_vertEditWidget.transform().translation };
-						ImGui::TextColored(warningColor, "Translating %d %s by %3.f,%3.f,%.3f via direct manipulation%s", vertexCount, verticesLit, trs.x(), trs.y(), trs.z(), modifiersLit);
+						ImGui::TextColored(warningColor, "Translating %d %s by %3.f,%3.f,%.3f via direct manipulation", vertexCount, verticesLit, trs.x(), trs.y(), trs.z());
 					}
 					break;
 				}

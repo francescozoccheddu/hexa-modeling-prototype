@@ -69,6 +69,7 @@ namespace HMP::Gui
 		static constexpr int c_kmodSelectRemove{ GLFW_MOD_CONTROL };
 		static constexpr int c_kbDirectEditX{ GLFW_KEY_LEFT_CONTROL };
 		static constexpr int c_kbDirectEditY{ GLFW_KEY_LEFT_SHIFT };
+		static constexpr int c_kbDirectEditZ{ GLFW_KEY_LEFT_ALT };
 
 		static void printKeyBindings();
 

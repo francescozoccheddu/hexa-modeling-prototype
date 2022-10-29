@@ -1,6 +1,5 @@
 #include <HMP/Gui/Utils/Transform.hpp>
 
-#include <cinolib/gl/glcanvas.h>
 #include <cmath>
 
 namespace HMP::Gui::Utils
