@@ -707,20 +707,20 @@ namespace HMP::Gui
 			{
 				HMP::Dag::Element& element{ m_mesher.pidToElement(pid) };
 				const Id faceOffset{ m_mesh.poly_face_offset(pid, fid) };
-				Id upFaceOffset{ faceOffset };
+				Id upFaceOffset{ noId };
 				{
 					Real upFaceCentroidY{};
-					for (Id fo{}; fo < 6; fo++)
+					for (const Id upFid : m_mesh.poly_faces_id(pid))
 					{
-						if (fo == upFaceOffset)
+						if (upFid == fid || m_mesh.face_shared_edge(fid, upFid) == noId)
 						{
 							continue;
 						}
-						const Real centroidY{ m_mesh.face_centroid(m_mesh.poly_face_id(pid, fo)).y() };
-						if (upFaceOffset == faceOffset || centroidY > upFaceCentroidY)
+						const Real centroidY{ m_mesh.face_centroid(upFid).y() };
+						if (upFaceOffset == noId || centroidY > upFaceCentroidY)
 						{
 							upFaceCentroidY = centroidY;
-							upFaceOffset = fo;
+							upFaceOffset = m_mesh.poly_face_offset(pid, upFid);
 						}
 					}
 				}
