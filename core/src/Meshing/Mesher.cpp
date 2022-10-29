@@ -267,6 +267,10 @@ namespace HMP::Meshing
 		{
 			m_mesh.edge_data(eid).color = m_edgeColor;
 		}
+		for (std::size_t vo{}; vo < 8; vo++)
+		{
+			_element.vertices()[vo] = m_mesh.vert(m_mesh.poly_vert_id(pid, vo));
+		}
 		m_elementToPid[&_element] = pid;
 		m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
 	}
