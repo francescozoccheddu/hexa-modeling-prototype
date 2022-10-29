@@ -56,6 +56,8 @@ namespace HMP::Gui
 		cinolib::print_binding(c_kbDeselectAll.name(), "deselect all vertices");
 		cinolib::print_binding(c_kbDirectTranslation.name(), "translate selected vertices");
 		cinolib::print_binding(c_kbDirectScale.name(), "scale selected vertices");
+		cinolib::print_binding(cinolib::KeyBinding::key_name(c_kbDirectEditX), "lock direct edit along X (hold down)");
+		cinolib::print_binding(cinolib::KeyBinding::key_name(c_kbDirectEditY), "lock direct edit along Y (hold down)");
 		cinolib::print_binding(c_kbDirectRotation.name(), "rotate selected vertices");
 		cinolib::print_binding(c_kbCancelDirectEdit.name(), "cancel direct edit");
 		cinolib::print_binding(c_kbSave.name(), "save");
@@ -190,82 +192,6 @@ namespace HMP::Gui
 		m_dagViewerNeedsUpdate = true;
 	}
 
-	// direct vert edit
-
-	void App::updateDirectVertEdit()
-	{
-		if (!m_directVertEdit.pending)
-		{
-			return;
-		}
-		const Vec up{ m_canvas.camera.view.normUp() };
-		const Vec right{ m_canvas.camera.view.normRight() };
-		Utils::Transform& transform{ m_vertEditWidget.transform() };
-		transform.translation = { 0.0 };
-		transform.scale = { 1.0 };
-		transform.rotation = { 0.0 };
-		switch (m_directVertEdit.kind)
-		{
-			case EDirectVertEdit::Translate:
-			{
-			}
-			break;
-			case EDirectVertEdit::Rotate:
-			{
-				Vec2 startDir{ m_directVertEdit.startPos - m_directVertEdit.startCentroidPos };
-				startDir = startDir.is_null() ? Vec2{ 1, 0 } : startDir.normalized();
-				Vec2 dir{ m_mouse.position - m_directVertEdit.startCentroidPos };
-				dir = dir.is_null() ? Vec2{ 1, 0 } : dir.normalized();
-				const Real angle{ Utils::Transform::wrapAngle(cinolib::to_deg(std::atan2(startDir.y(), startDir.x()) - std::atan2(dir.y(), dir.x()))) };
-				m_directVertEdit.transform = { angle };
-				const Mat3 mat{ Utils::Transform::rotationMat(m_canvas.camera.view.normBack(), angle) };
-				transform.rotation = Utils::Transform::rotationMatToVec(mat);
-			}
-			break;
-		}
-		m_vertEditWidget.applyTransform();
-	}
-
-	void App::onDirectVertEditRequested(EDirectVertEdit _kind)
-	{
-		const bool wasPending{ m_directVertEdit.pending };
-		m_directVertEdit.pending = false;
-		if (m_vertEditWidget.empty())
-		{
-			return;
-		}
-		m_vertEditWidget.applyAction();
-		m_directVertEdit.pending = !wasPending || m_directVertEdit.kind != _kind;
-		m_directVertEdit.startPos = m_mouse.position;
-		GLdouble depth;
-		m_canvas.project(m_vertEditWidget.centroid(), m_directVertEdit.startCentroidPos, depth);
-		m_directVertEdit.kind = _kind;
-		switch (m_directVertEdit.kind)
-		{
-			case EDirectVertEdit::Scale:
-				m_directVertEdit.transform = Vec2{ 1.0 };
-				break;
-			case EDirectVertEdit::Translate:
-				m_directVertEdit.transform = Vec2{};
-				break;
-			case EDirectVertEdit::Rotate:
-				m_directVertEdit.transform = Vec2{ 0 };
-				break;
-		}
-		updateMouse();
-	}
-
-	void App::onCancelDirectVertEdit()
-	{
-		if (!m_directVertEdit.pending)
-		{
-			return;
-		}
-		m_vertEditWidget.cancel();
-		m_directVertEdit.pending = false;
-		updateMouse();
-	}
-
 	// mesher events
 
 	void App::onElementRemove(const HMP::Dag::Element& _element)
@@ -295,6 +221,10 @@ namespace HMP::Gui
 
 	void App::onVertEditVidsOrCentroidChanged()
 	{
+		if (m_vertEditWidget.empty())
+		{
+			m_directVertEditWidget.cancel();
+		}
 		updateVertSelectionMarkers();
 	}
 
@@ -328,7 +258,7 @@ namespace HMP::Gui
 
 	void App::onCameraChanged()
 	{
-		onCancelDirectVertEdit();
+		m_directVertEditWidget.cancel();
 		updateMouse();
 	}
 
@@ -433,19 +363,19 @@ namespace HMP::Gui
 		// direct manipulation
 		else if (key == c_kbDirectTranslation)
 		{
-			onDirectVertEditRequested(EDirectVertEdit::Translate);
+			m_directVertEditWidget.request(Widgets::DirectVertEdit::EKind::Translation, m_mouse.position);
 		}
 		else if (key == c_kbDirectScale)
 		{
-			onDirectVertEditRequested(EDirectVertEdit::Scale);
+			m_directVertEditWidget.request(Widgets::DirectVertEdit::EKind::Scale, m_mouse.position);
 		}
 		else if (key == c_kbDirectRotation)
 		{
-			onDirectVertEditRequested(EDirectVertEdit::Rotate);
+			m_directVertEditWidget.request(Widgets::DirectVertEdit::EKind::Rotation, m_mouse.position);
 		}
 		else if (key == c_kbCancelDirectEdit)
 		{
-			onCancelDirectVertEdit();
+			m_directVertEditWidget.cancel();
 		}
 		// selection
 		else if (key == c_kbSelectVertex)
@@ -511,6 +441,25 @@ namespace HMP::Gui
 	{
 		m_mouse.position = cinolib::vec2d{ _x, _y };
 		updateMouse();
+		Widgets::DirectVertEdit::EModifier modifier{ Widgets::DirectVertEdit::EModifier::None };
+		const bool lockX{ glfwGetKey(m_canvas.window, c_kbDirectEditX) == GLFW_PRESS };
+		const bool lockY{ glfwGetKey(m_canvas.window, c_kbDirectEditY) == GLFW_PRESS };
+		if (lockX)
+		{
+			if (lockY)
+			{
+				modifier = Widgets::DirectVertEdit::EModifier::XY;
+			}
+			else
+			{
+				modifier = Widgets::DirectVertEdit::EModifier::X;
+			}
+		}
+		else if (lockY)
+		{
+			modifier = Widgets::DirectVertEdit::EModifier::Y;
+		}
+		m_directVertEditWidget.update(m_mouse.position, modifier);
 		return false;
 	}
 
@@ -561,47 +510,43 @@ namespace HMP::Gui
 			const char* verticesLit{ m_vertEditWidget.vids().size() == 1 ? "vertex" : "vertices" };
 			const int vertexCount{ static_cast<int>(m_vertEditWidget.vids().size()) };
 			ImGui::TextDisabled("%d %s selected", vertexCount, verticesLit);
-			if (m_directVertEdit.pending)
+			if (m_directVertEditWidget.pending())
 			{
-				using Utils::Controls::toImGui;
-				ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
-				const ImU32 startCol{ ImGui::ColorConvertFloat4ToU32(toImGui(c_directVertEditLineStartColor)) };
-				const ImU32 col{ ImGui::ColorConvertFloat4ToU32(toImGui(c_directVertEditLineColor)) };
-				const ImVec2 startCentroidPos{ toImGui(m_directVertEdit.startCentroidPos) };
-				const ImVec2 startPos{ toImGui(m_directVertEdit.startPos) };
-				const float fullLen{ static_cast<float>(std::max(m_canvas.width(), m_canvas.height()) * 2) };
-				static constexpr float thickness{ 1.0f };
-				switch (m_directVertEdit.kind)
+				const char* modifiersLit;
+				switch (m_directVertEditWidget.modifier())
 				{
-					case EDirectVertEdit::Rotate:
+					case Widgets::DirectVertEdit::EModifier::None:
+						modifiersLit = "";
+						break;
+					case Widgets::DirectVertEdit::EModifier::X:
+						modifiersLit = " (X locked)";
+						break;
+					case Widgets::DirectVertEdit::EModifier::Y:
+						modifiersLit = " (Y locked)";
+						break;
+					case Widgets::DirectVertEdit::EModifier::XY:
+						modifiersLit = " (XY locked)";
+						break;
+				}
+				const ImVec4 warningColor{ Utils::Controls::toImGui(c_warningTextColor) };
+				switch (m_directVertEditWidget.kind())
+				{
+					case Widgets::DirectVertEdit::EKind::Rotation:
 					{
-						Vec2 startDir{ m_directVertEdit.startPos - m_directVertEdit.startCentroidPos };
-						startDir = startDir.is_null() ? Vec2{ 1, 0 } : startDir.normalized();
-						drawList.AddLine(startCentroidPos, toImGui(m_directVertEdit.startCentroidPos + startDir * fullLen), startCol, thickness);
-						Vec2 dir{ m_mouse.position - m_directVertEdit.startCentroidPos };
-						dir = dir.is_null() ? Vec2{ 1, 0 } : dir.normalized();
-						drawList.AddLine(startCentroidPos, toImGui(m_directVertEdit.startCentroidPos + dir * fullLen), col, thickness);
-						ImGui::TextColored(toImGui(c_warningTextColor), "Rotating %d %s by %3.f degrees via direct manipulation", vertexCount, verticesLit, m_directVertEdit.transform[0]);
+						const Vec rot{ m_vertEditWidget.transform().rotation };
+						ImGui::TextColored(warningColor, "Rotating %d %s by %1.f,%1.f,%1.f degrees via direct manipulation%s", vertexCount, verticesLit, rot.x(), rot.y(), rot.z(), modifiersLit);
 					}
 					break;
-					case EDirectVertEdit::Scale:
+					case Widgets::DirectVertEdit::EKind::Scale:
 					{
-						static constexpr int segCount{ 36 };
-						drawList.AddLine({ startCentroidPos.x, startCentroidPos.y + fullLen }, { startCentroidPos.x , startCentroidPos.y - fullLen }, startCol, thickness);
-						drawList.AddLine({ startCentroidPos.x + fullLen, startCentroidPos.y }, { startCentroidPos.x - fullLen, startCentroidPos.y }, startCol, thickness);
-						drawList.AddLine({ startCentroidPos.x + fullLen, startCentroidPos.y + fullLen }, { startCentroidPos.x - fullLen, startCentroidPos.y - fullLen }, startCol, thickness);
-						drawList.AddLine({ startCentroidPos.x + fullLen, startCentroidPos.y - fullLen }, { startCentroidPos.x - fullLen, startCentroidPos.y + fullLen }, startCol, thickness);
-						drawList.AddCircle(startCentroidPos, static_cast<float>(m_directVertEdit.startCentroidPos.dist(m_directVertEdit.startPos)), startCol, segCount, thickness);
-						drawList.AddCircle(startCentroidPos, static_cast<float>(m_directVertEdit.startCentroidPos.dist(m_mouse.position)), col, segCount, thickness);
-						ImGui::TextColored(toImGui(c_warningTextColor), "Scaling %d %s by %2.f%%,%2.f%% via direct manipulation", vertexCount, verticesLit, m_directVertEdit.transform.x() * 100.0, m_directVertEdit.transform.y() * 100.0);
+						const Vec scl{ m_vertEditWidget.transform().scale * 100.0 };
+						ImGui::TextColored(warningColor, "Scaling %d %s by %2.f,%2.f,%2.f%% via direct manipulation%s", vertexCount, verticesLit, scl.x(), scl.y(), scl.z(), modifiersLit);
 					}
 					break;
-					case EDirectVertEdit::Translate:
+					case Widgets::DirectVertEdit::EKind::Translation:
 					{
-						drawList.AddLine({ startPos.x, startPos.y + fullLen }, { startPos.x , startPos.y - fullLen }, startCol, thickness);
-						drawList.AddLine({ startPos.x + fullLen, startPos.y }, { startPos.x - fullLen, startPos.y }, startCol, thickness);
-						drawList.AddLine(startPos, toImGui(m_mouse.position), col, thickness);
-						ImGui::TextColored(toImGui(c_warningTextColor), "Translating %d %s by %3.f,%3.f via direct manipulation", vertexCount, verticesLit, m_directVertEdit.transform.x(), m_directVertEdit.transform.y());
+						const Vec trs{ m_vertEditWidget.transform().translation };
+						ImGui::TextColored(warningColor, "Translating %d %s by %3.f,%3.f,%.3f via direct manipulation%s", vertexCount, verticesLit, trs.x(), trs.y(), trs.z(), modifiersLit);
 					}
 					break;
 				}
@@ -628,7 +573,7 @@ namespace HMP::Gui
 		const Id lastFaceOffset{ m_mouse.faceOffset }, lastUpFaceOffset{ m_mouse.upFaceOffset }, lastVertOffset{ m_mouse.vertOffset };
 		m_mouse.element = nullptr;
 		m_mouse.faceOffset = m_mouse.vertOffset = noId;
-		if (!m_directVertEdit.pending)
+		if (!m_directVertEditWidget.pending())
 		{
 			Id pid, fid, eid, vid;
 			const cinolib::Ray ray{ m_canvas.eye_to_mouse_ray() };
@@ -664,7 +609,6 @@ namespace HMP::Gui
 			updateMouseMarkers();
 			updateElementsMarkers();
 		}
-		updateDirectVertEdit();
 	}
 
 	// Commands
@@ -996,7 +940,8 @@ namespace HMP::Gui
 	App::App() :
 		m_project{}, m_canvas{}, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() },
 		m_dagNamer{}, m_dagViewer{ m_mesher, m_dagNamer }, m_menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh controls" },
-		m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{ m_canvas.camera }, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher }, m_dagViewerNeedsUpdate{ true }
+		m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{ m_canvas.camera }, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher }, m_directVertEditWidget{ m_vertEditWidget, m_canvas },
+		m_dagViewerNeedsUpdate{ true }
 	{
 
 		m_canvas.background = c_backgroundColor;
@@ -1013,12 +958,13 @@ namespace HMP::Gui
 		m_commander.unapplied().limit(100);
 
 		m_canvas.push(&m_mesh);
+		m_canvas.push(&m_targetWidget.projectLines());
+		m_canvas.push(&m_directVertEditWidget);
 		m_canvas.push(&m_axesWidget);
 
 		m_canvas.push(&m_commanderWidget);
 		m_canvas.push(&m_vertEditWidget);
 		m_canvas.push(&m_targetWidget);
-		m_canvas.push(&m_targetWidget.projectLines());
 		m_canvas.push(&m_menu);
 		m_canvas.push(&m_dagViewer);
 
@@ -1033,6 +979,8 @@ namespace HMP::Gui
 		m_vertEditWidget.onVidsChanged += [this]() { onVertEditVidsOrCentroidChanged(); };
 		m_vertEditWidget.onCentroidChanged += [this]() { onVertEditVidsOrCentroidChanged(); };
 		m_vertEditWidget.onPendingActionChanged += [this]() { onVertEditPendingActionChanged(); };
+
+		m_directVertEditWidget.onPendingChanged += [this]() { updateMouse(); };
 
 		m_canvas.depth_cull_markers = false;
 		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMoved(_args...); };

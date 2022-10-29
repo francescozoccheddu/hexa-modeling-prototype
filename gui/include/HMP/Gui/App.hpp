@@ -16,6 +16,7 @@
 #include <HMP/Gui/Widgets/Commander.hpp>
 #include <HMP/Gui/Widgets/Target.hpp>
 #include <HMP/Gui/Widgets/VertEdit.hpp>
+#include <HMP/Gui/Widgets/DirectVertEdit.hpp>
 
 namespace HMP::Gui
 {
@@ -25,8 +26,6 @@ namespace HMP::Gui
 
 	private:
 
-		static constexpr cinolib::Color c_directVertEditLineStartColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 1.0f, 0.3f) };
-		static constexpr cinolib::Color c_directVertEditLineColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 1.0f, 0.6f) };
 		static constexpr cinolib::Color c_warningTextColor{ cinolib::Color::hsv2rgb(0.2f, 0.6f, 0.6f) };
 		static constexpr cinolib::Color c_backgroundColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.1f) };
 		static constexpr cinolib::Color c_overlayColor{ cinolib::Color::hsv2rgb(0.1f, 0.5f, 1.0f) };
@@ -68,6 +67,8 @@ namespace HMP::Gui
 		static constexpr cinolib::KeyBinding c_kbDeselectAll{ GLFW_KEY_A, GLFW_MOD_CONTROL };
 		static constexpr int c_kmodSelectAdd{ GLFW_MOD_SHIFT };
 		static constexpr int c_kmodSelectRemove{ GLFW_MOD_CONTROL };
+		static constexpr int c_kbDirectEditX{ GLFW_KEY_LEFT_CONTROL };
+		static constexpr int c_kbDirectEditY{ GLFW_KEY_LEFT_SHIFT };
 
 		static void printKeyBindings();
 
@@ -98,20 +99,6 @@ namespace HMP::Gui
 			bool showNames{ false };
 		} m_options;
 
-		enum class EDirectVertEdit
-		{
-			Translate, Rotate, Scale
-		};
-
-		struct
-		{
-			Vec2 startPos{};
-			Vec2 startCentroidPos{};
-			EDirectVertEdit kind{};
-			bool pending{ false };
-			Vec2 transform{};
-		} m_directVertEdit;
-
 		HMP::Project m_project;
 		cinolib::GLcanvas m_canvas;
 		Meshing::Mesher& m_mesher;
@@ -124,6 +111,7 @@ namespace HMP::Gui
 		Widgets::Target m_targetWidget;
 		Widgets::VertEdit m_vertEditWidget;
 		Widgets::Commander m_commanderWidget;
+		Widgets::DirectVertEdit m_directVertEditWidget;
 		bool m_dagViewerNeedsUpdate;
 
 		// markers
@@ -136,11 +124,6 @@ namespace HMP::Gui
 		void onActionApplied();
 		void applyAction(Commander::Action& _action);
 		void requestDagViewerUpdate();
-
-		// direct vert edit
-		void updateDirectVertEdit();
-		void onDirectVertEditRequested(EDirectVertEdit _kind);
-		void onCancelDirectVertEdit();
 
 		// mesher events
 		void onElementRemove(const HMP::Dag::Element& _element);
