@@ -50,6 +50,7 @@ namespace HMP::Gui
 		cinolib::print_binding(c_kbSelectVertex.name(), "select vertex");
 		cinolib::print_binding(c_kbSelectEdge.name(), "select edge vertices");
 		cinolib::print_binding(c_kbSelectFace.name(), "select face vertices");
+		cinolib::print_binding(c_kbSelectUpFace.name(), "select adjacent face vertices");
 		cinolib::print_binding(c_kbSelectPoly.name(), "select poly vertices");
 		cinolib::print_binding(cinolib::KeyBinding::mod_names(c_kmodSelectAdd), "remove from selection (hold down)");
 		cinolib::print_binding(cinolib::KeyBinding::mod_names(c_kmodSelectRemove), "add to selection (hold down)");
@@ -412,6 +413,10 @@ namespace HMP::Gui
 		{
 			onSelect(ESelectionSource::Face, ESelectionMode::Set);
 		}
+		else if (key == c_kbSelectUpFace)
+		{
+			onSelect(ESelectionSource::UpFace, ESelectionMode::Set);
+		}
 		else if (key == c_kbSelectPoly)
 		{
 			onSelect(ESelectionSource::Poly, ESelectionMode::Set);
@@ -428,6 +433,10 @@ namespace HMP::Gui
 		{
 			onSelect(ESelectionSource::Face, ESelectionMode::Add);
 		}
+		else if (key == (c_kbSelectUpFace | c_kmodSelectAdd))
+		{
+			onSelect(ESelectionSource::UpFace, ESelectionMode::Add);
+		}
 		else if (key == (c_kbSelectPoly | c_kmodSelectAdd))
 		{
 			onSelect(ESelectionSource::Poly, ESelectionMode::Add);
@@ -443,6 +452,10 @@ namespace HMP::Gui
 		else if (key == (c_kbSelectFace | c_kmodSelectRemove))
 		{
 			onSelect(ESelectionSource::Face, ESelectionMode::Remove);
+		}
+		else if (key == (c_kbSelectUpFace | c_kmodSelectRemove))
+		{
+			onSelect(ESelectionSource::UpFace, ESelectionMode::Remove);
 		}
 		else if (key == (c_kbSelectPoly | c_kmodSelectRemove))
 		{
@@ -901,6 +914,9 @@ namespace HMP::Gui
 					break;
 				case ESelectionSource::Face:
 					vids = m_mesh.face_verts_id(fid);
+					break;
+				case ESelectionSource::UpFace:
+					vids = m_mesh.face_verts_id(upFid);
 					break;
 				case ESelectionSource::Poly:
 					vids = m_mesh.poly_verts_id(pid);
