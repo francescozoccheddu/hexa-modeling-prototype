@@ -83,8 +83,8 @@ namespace HMP::Gui::Utils
 		const Real s{ std::sin(r) };
 		return Mat3{
 			1,	0,	0,
-			0,	c,	s,
-			0, -s,	c
+			0,	c, -s,
+			0,  s,	c
 		};
 	}
 
@@ -94,9 +94,9 @@ namespace HMP::Gui::Utils
 		const Real c{ std::cos(r) };
 		const Real s{ std::sin(r) };
 		return Mat3{
-			c,	0, -s,
+			c,	0, 	s,
 			0,	1,	0,
-			s,	0,	c
+		   -s,	0,	c
 		};
 	}
 

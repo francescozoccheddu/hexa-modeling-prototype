@@ -23,6 +23,10 @@ namespace HMP::Gui::Widgets
 
     void DirectVertEdit::request(EKind _kind, const Vec2& _mouse)
     {
+        if (m_vertEdit.empty() && !m_pending)
+        {
+            return;
+        }
         const bool wasPending{ m_pending };
         m_pending = false;
         m_vertEdit.applyAction();
