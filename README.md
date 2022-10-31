@@ -38,6 +38,3 @@ Tested on MSVC v143 on Windows 11 and g++ 10 and Clang 14 on Ubuntu 22.10.
 
 > **NOTE:**  
 > On Ubuntu, make sure to have `libgl1-mesa-dev`, `libglu1-mesa-dev` and `xorg-dev` installed.
-
-> **NOTE:**  
-> On Ubuntu there is a delay in the trigger of the GLFW mouse buttons release event, so the camera movement feels sticky.
