@@ -187,6 +187,7 @@ namespace HMP::Gui
 
 	void App::applyAction(Commander::Action& _action)
 	{
+		m_targetWidget.clearDebugInfo();
 		m_vertEditWidget.applyAction();
 		m_commander.apply(_action);
 		onActionApplied();
@@ -257,6 +258,17 @@ namespace HMP::Gui
 		{
 			m_commander.unapplied().clear();
 		}
+	}
+
+	void App::onTargetVertInterpolationChanged(const std::unordered_map<Id, Vec>& _moves)
+	{
+		m_directVertEditWidget.cancel();
+		m_vertEditWidget.cancel();
+		m_vertEditWidget.clear();
+		m_mesher.tryMoveVerts(_moves);
+		m_mesher.updateMesh();
+		updateMouse();
+		m_canvas.refit_scene();
 	}
 
 	// canvas events
@@ -508,6 +520,7 @@ namespace HMP::Gui
 
 	void App::onDrawCustomGui()
 	{
+		const ImVec4 warningColor{ Utils::Controls::toImGui(c_warningTextColor) };
 		if (m_mouse.element)
 		{
 			std::ostringstream stream{};
@@ -535,7 +548,6 @@ namespace HMP::Gui
 			ImGui::TextDisabled("%d %s selected", vertexCount, verticesLit);
 			if (m_directVertEditWidget.pending())
 			{
-				const ImVec4 warningColor{ Utils::Controls::toImGui(c_warningTextColor) };
 				switch (m_directVertEditWidget.kind())
 				{
 					case Widgets::DirectVertEdit::EKind::Rotation:
@@ -559,6 +571,10 @@ namespace HMP::Gui
 				}
 			}
 		}
+		if (m_targetWidget.interpolatingVerts())
+		{
+			ImGui::TextColored(warningColor, "Interpolating projection vertices with %.3f%%", m_targetWidget.vertInterpolationProgress() * 100.0);
+		}
 	}
 
 	void App::onDagViewerDraw()
@@ -580,7 +596,7 @@ namespace HMP::Gui
 		const Id lastFaceOffset{ m_mouse.faceOffset }, lastUpFaceOffset{ m_mouse.upFaceOffset }, lastVertOffset{ m_mouse.vertOffset };
 		m_mouse.element = nullptr;
 		m_mouse.faceOffset = m_mouse.vertOffset = noId;
-		if (!m_directVertEditWidget.pending())
+		if (!m_directVertEditWidget.pending() && !m_targetWidget.interpolatingVerts())
 		{
 			Id pid, fid, eid, vid;
 			const cinolib::Ray ray{ m_canvas.eye_to_mouse_ray() };
@@ -944,6 +960,7 @@ namespace HMP::Gui
 	{
 		if (m_commander.canUndo())
 		{
+			m_targetWidget.clearDebugInfo();
 			m_vertEditWidget.applyAction();
 			m_commander.undo();
 			onActionApplied();
@@ -958,6 +975,7 @@ namespace HMP::Gui
 	{
 		if (m_commander.canRedo())
 		{
+			m_targetWidget.clearDebugInfo();
 			m_vertEditWidget.applyAction();
 			m_commander.redo();
 			onActionApplied();
@@ -1064,6 +1082,7 @@ namespace HMP::Gui
 		m_targetWidget.onMeshClear += [this]() { m_canvas.pop(&m_targetWidget.mesh()); };
 		m_targetWidget.onTransform += [this]() { m_canvas.refit_scene(); };
 		m_targetWidget.onApplyTransformToSource += [this](const Mat4& _transform) { onApplyTargetTransform(_transform); };
+		m_targetWidget.onVertsInterpolationChanged += [this](const std::unordered_map<Id, Vec>& _moves) { onTargetVertInterpolationChanged(_moves); };
 
 		m_vertEditWidget.onApplyAction += [this](std::vector<Id> _vids, Mat4 _transform) { onApplyVertEdit(_vids, _transform); };
 		m_vertEditWidget.onMeshUpdated += [this]() { onVertEditMeshUpdated(); };

@@ -12,6 +12,8 @@
 #include <cpputils/collections/Event.hpp>
 #include <HMP/Gui/Utils/Transform.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
+#include <utility>
+#include <unordered_map>
 
 namespace HMP::Gui::Widgets
 {
@@ -28,7 +30,10 @@ namespace HMP::Gui::Widgets
 		Utils::Transform m_transform;
 		cinolib::Color m_faceColor, m_edgeColor;
 		bool m_showProjectLines;
+		std::vector<std::pair<Vec, Vec>> m_verts;
 		cinolib::DrawableSegmentSoup m_projectLines;
+		Real m_vertInterpProgress;
+		float m_sliderVertInterpProgress;
 
 		void ensureHasMesh() const;
 
@@ -39,11 +44,24 @@ namespace HMP::Gui::Widgets
 		cpputils::collections::Event<Target> onProjectRequest, onMeshLoad, onMeshClear;
 		cpputils::collections::Event<Target> onTransform;
 		cpputils::collections::Event<Target, const Mat4&> onApplyTransformToSource;
+		cpputils::collections::Event<Target, const std::unordered_map<Id, Vec>&> onVertsInterpolationChanged;
 
 		const Meshing::Mesher::Mesh& sourceMesh() const;
 
 		bool hasMesh() const;
 		const cinolib::DrawableTrimesh<>& mesh() const;
+
+		const std::vector<std::pair<Vec, Vec>>& verts() const;
+
+		Real vertInterpolationProgress() const;
+
+		void interpolateVerts(Real _progress);
+
+		void cancelVertInterpolation();
+
+		bool interpolatingVerts() const;
+
+		void clearDebugInfo();
 
 		void show(bool _visible);
 		bool visible() const;
@@ -52,7 +70,7 @@ namespace HMP::Gui::Widgets
 		void showProjectLines(bool _visible);
 
 		void setProjectLinesColor(const cinolib::Color& _color);
-		
+
 		void setProjectLinesThickness(float _thickness);
 
 		void setProjectLinesAlwaysOnFront(bool _alwaysInFront);
