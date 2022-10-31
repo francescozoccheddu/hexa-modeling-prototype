@@ -1,6 +1,7 @@
 #include <HMP/Gui/Widgets/Target.hpp>
 
 #include <cinolib/gl/file_dialog_open.h>
+#include <cinolib/geometry/lerp.hpp>
 #include <imgui.h>
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <vector>
@@ -12,15 +13,53 @@ namespace HMP::Gui::Widgets
 	Target::Target(const Meshing::Mesher::Mesh& _sourceMesh) :
 		cinolib::SideBarItem{ "Target mesh" },
 		m_mesh{}, m_sourceMesh{ _sourceMesh },
-		onProjectRequest{}, onMeshLoad{}, onMeshClear{}, onApplyTransformToSource{},
+		onProjectRequest{}, onMeshLoad{}, onMeshClear{}, onApplyTransformToSource{}, onVertsInterpolationChanged{},
 		m_visible{ true }, m_faceColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.15f} }, m_edgeColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.4f} },
-		m_transform{},
+		m_transform{}, m_verts{}, m_vertInterpProgress{ 1.0 }, m_sliderVertInterpProgress{ 100.0f },
 		m_projectLines{}, m_showProjectLines{}
 	{
 		m_projectLines.set_color(cinolib::Color::hsv2rgb(0.0f, 1.0f, 1.0f));
 		m_projectLines.set_thickness(1.0f);
 		m_projectLines.set_cheap_rendering(true);
-		m_projectLines.set_always_in_front(true);
+		m_projectLines.set_always_in_front(false);
+		m_projectLines.show = false;
+	}
+
+	const std::vector<std::pair<Vec, Vec>>& Target::verts() const
+	{
+		return m_verts;
+	}
+
+	Real Target::vertInterpolationProgress() const
+	{
+		return m_vertInterpProgress;
+	}
+
+	void Target::interpolateVerts(Real _progress)
+	{
+		if (_progress != m_vertInterpProgress)
+		{
+			m_vertInterpProgress = _progress;
+			m_sliderVertInterpProgress = static_cast<float>(_progress) * 100.0f;
+			std::unordered_map<Id, Vec> move{};
+			move.reserve(m_verts.size());
+			Id vid{};
+			for (const auto& [a, b] : m_verts)
+			{
+				move.insert({ vid++, cinolib::lerp1(std::array<Vec,2>{a, b}, _progress) });
+			}
+			onVertsInterpolationChanged(move);
+		}
+	}
+
+	void Target::cancelVertInterpolation()
+	{
+		interpolateVerts(1.0);
+	}
+
+	bool Target::interpolatingVerts() const
+	{
+		return m_vertInterpProgress != 1.0;
 	}
 
 	void Target::showProjectLines(bool _visible)
@@ -222,19 +261,23 @@ namespace HMP::Gui::Widgets
 	void Target::requestProjection()
 	{
 		ensureHasMesh();
-		std::vector<Vec> fromVerts{};
-		fromVerts.reserve(m_sourceMesh.num_verts());
-		for (Id vid{}; vid < m_sourceMesh.num_verts(); vid++)
+		std::vector<std::pair<Vec, Vec>> verts{};
+		verts.resize(m_sourceMesh.num_verts());
+		for (std::size_t vid{}; vid < m_sourceMesh.num_verts(); vid++)
 		{
-			fromVerts.push_back(m_sourceMesh.vert(vid));
+			verts[vid].first = m_sourceMesh.vert(static_cast<Id>(vid));
 		}
 		onProjectRequest();
+		m_vertInterpProgress = 1.0;
+		m_sliderVertInterpProgress = 100.0f;
 		m_projectLines.clear();
-		m_projectLines.reserve(fromVerts.size() * 2);
-		for (Id vid{}; vid < m_sourceMesh.num_verts(); vid++)
+		m_projectLines.reserve(verts.size() * 2);
+		for (std::size_t vid{}; vid < m_sourceMesh.num_verts(); vid++)
 		{
-			m_projectLines.push_seg(fromVerts[static_cast<std::size_t>(vid)], m_sourceMesh.vert(vid));
+			verts[vid].second = m_sourceMesh.vert(static_cast<Id>(vid));
+			m_projectLines.push_seg(verts[vid].first, verts[vid].second);
 		}
+		m_verts.swap(verts);
 		m_projectLines.update_bbox();
 	}
 
@@ -244,6 +287,13 @@ namespace HMP::Gui::Widgets
 		updateTransform();
 		onApplyTransformToSource(m_mesh->transform.inverse());
 		identity();
+	}
+
+	void Target::clearDebugInfo()
+	{
+		cancelVertInterpolation();
+		m_projectLines.clear();
+		m_verts.clear();
 	}
 
 	void Target::draw()
@@ -361,12 +411,33 @@ namespace HMP::Gui::Widgets
 			}
 			if (!m_projectLines.empty())
 			{
-				ImGui::SameLine();
 				ImGui::Checkbox("Show lines", &m_projectLines.show);
 				if (m_projectLines.show)
 				{
 					ImGui::SameLine();
 					ImGui::Checkbox("On top", &m_projectLines.no_depth_test);
+				}
+			}
+			if (!m_verts.empty())
+			{
+				ImGui::SliderFloat("Interpolate", &m_sliderVertInterpProgress, 0.0f, 100.0f, "%.2f%%", ImGuiSliderFlags_AlwaysClamp);
+				Real desiredProgress{ static_cast<Real>(m_sliderVertInterpProgress / 100.0f) };
+				if (!Utils::Transform::isNull(desiredProgress - m_vertInterpProgress))
+				{
+					ImGui::SameLine();
+					if (ImGui::SmallButton("Apply"))
+					{
+						interpolateVerts(desiredProgress);
+					}
+				}
+				if (interpolatingVerts() || m_sliderVertInterpProgress != 100.0f)
+				{
+					ImGui::SameLine();
+					if (ImGui::SmallButton("Reset"))
+					{
+						m_sliderVertInterpProgress = 100.0f;
+						cancelVertInterpolation();
+					}
 				}
 			}
 		}
