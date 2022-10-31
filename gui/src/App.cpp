@@ -499,6 +499,11 @@ namespace HMP::Gui
 				updateElementsMarkers();
 			}
 		}
+		// debug
+		if (ImGui::SmallButton("Export for presentation"))
+		{
+			onExportForPresentation();
+		}
 	}
 
 	void App::onDrawCustomGui()
@@ -618,6 +623,61 @@ namespace HMP::Gui
 	}
 
 	// Commands
+
+	void App::onExportForPresentation() const
+	{
+		const std::string filename{ cinolib::file_dialog_save() };
+		if (!filename.empty())
+		{
+			std::ofstream file{};
+			file.open(filename);
+			std::vector<Vec> verts{};
+			verts.reserve(4);
+			file << "[";
+			bool firstFace{ true };
+			for (Id fid{}; fid < m_mesh.num_faces(); fid++)
+			{
+				Id pid;
+				if (m_mesh.face_is_visible(fid, pid))
+				{
+					if (!firstFace)
+					{
+						file << ",";
+					}
+					firstFace = false;
+					verts = m_mesh.face_verts(fid);
+					if (m_mesh.poly_face_is_CW(pid, fid))
+					{
+						std::reverse(verts.begin(), verts.end());
+					}
+					file << "{\"verts\":[";
+					bool firstVert{ true };
+					for (const Vec vert : verts)
+					{
+						Vec4 projHom{ m_canvas.camera.projectionViewMatrix() * vert.add_coord(1.0) };
+						Vec2 proj{ (projHom / projHom[3]).rem_coord().rem_coord() };
+						proj.y() /= m_canvas.camera.projection.aspectRatio;
+						if (!firstVert)
+						{
+							file << ",";
+						}
+						firstVert = false;
+						file
+							<< "{\"x\":" << proj.x()
+							<< ",\"y\":" << proj.y() << "}";
+					}
+					Vec4 projHom{ m_canvas.camera.projectionViewMatrix() * m_mesh.face_centroid(fid).add_coord(1.0) };
+					const Real depth{ (projHom / projHom[3]).z() };
+					const Real lambert{ m_canvas.camera.view.normBack().dot(m_mesh.face_data(fid).normal) };
+					file << "]"
+						<< ",\"depth\":" << depth
+						<< ",\"lambert\":" << lambert << "}";
+				}
+			}
+			file << "]";
+			file.close();
+		}
+	}
 
 	std::string App::getDebugInfo() const
 	{
