@@ -168,28 +168,34 @@ namespace HMP::Actions
 	{
 		Meshing::Mesher& mesher{ this->mesher() };
 		const Meshing::Mesher::Mesh& mesh{ mesher.mesh() };
-		Utils::Sub3x3AdapterCandidateSet set{};
-		// build a set of candidates based on the source refinements
-		for (Dag::Refine* refine : _sub3x3s)
+		bool didSomething{ false };
+		do
 		{
-			set.addAdjacency(mesher, *refine);
-		}
-		// while there is a candidate
-		while (!set.empty())
-		{
-			// prepare and apply its refinement
-			const Utils::Sub3x3AdapterCandidate candidate{ set.pop() };
-			Dag::Refine& adapterRefine{ candidate.prepareAdapter(mesher) };
-			adapterRefine.parents().attach(candidate.element());
-			Utils::applyRefine(mesher, adapterRefine);
-			m_operations.push_back({ &adapterRefine, &candidate.element() });
-			// if the refinement is a new Subdivide3x3, then add it to the set
-			if (candidate.scheme() == ERefinementScheme::Subdivide3x3)
+			Utils::Sub3x3AdapterCandidateSet set{};
+			// build a set of candidates based on the source refinements
+			for (Dag::Refine* refine : _sub3x3s)
 			{
-				set.addAdjacency(mesher, adapterRefine);
-				_sub3x3s.push_back(&adapterRefine);
+				set.addAdjacency(mesher, *refine);
+			}
+			didSomething = !set.empty();
+			// while there is a candidate
+			while (!set.empty())
+			{
+				// prepare and apply its refinement
+				const Utils::Sub3x3AdapterCandidate candidate{ set.pop() };
+				Dag::Refine& adapterRefine{ candidate.prepareAdapter(mesher) };
+				adapterRefine.parents().attach(candidate.element());
+				Utils::applyRefine(mesher, adapterRefine);
+				m_operations.push_back({ &adapterRefine, &candidate.element() });
+				// if the refinement is a new Subdivide3x3, then add it to the set
+				if (candidate.scheme() == ERefinementScheme::Subdivide3x3)
+				{
+					set.addAdjacency(mesher, adapterRefine);
+					_sub3x3s.push_back(&adapterRefine);
+				}
 			}
 		}
+		while (didSomething);
 	}
 
 	void MakeConforming::apply()
