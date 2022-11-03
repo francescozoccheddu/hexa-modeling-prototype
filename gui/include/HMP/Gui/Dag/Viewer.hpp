@@ -17,6 +17,8 @@ namespace HMP::Gui::Dag
 
 	private:
 
+		static void initFonts();
+
 		const Meshing::Mesher& m_mesher;
 		cpputils::collections::Namer<const HMP::Dag::Node*>& m_namer;
 
@@ -38,7 +40,7 @@ namespace HMP::Gui::Dag
 
 		const Meshing::Mesher& mesher() const;
 
-		Layout& layout() ;
+		Layout& layout();
 		const Layout& layout() const;
 
 		const cpputils::collections::Namer<const HMP::Dag::Node*>& namer() const;
