@@ -7,7 +7,10 @@
 #include <algorithm>
 #include <cmath>
 #include <cinolib/geometry/vec_mat_utils.h>
+#include <cinolib/fonts/droid_sans.hpp>
 #include <imgui.h>
+#include <imgui_impl_opengl2.h>
+#include <string>
 #include <string>
 #include <HMP/Gui/Utils/HrDescriptions.hpp>
 #include <limits>
@@ -18,9 +21,30 @@ namespace HMP::Gui::Dag
 
 	using namespace HMP::Dag;
 
+	void Viewer::initFonts()
+	{
+		static constexpr float c_minFontSize{ 100.0f };
+		ImGuiIO& io{ ImGui::GetIO() };
+		ImFont** maxFontIt{ std::max_element(io.Fonts->Fonts.begin(), io.Fonts->Fonts.end(), [](ImFont* _a, ImFont* _b) { return _a->FontSize < _b->FontSize; }) };
+		if (maxFontIt == io.Fonts->Fonts.end() || (*maxFontIt)->FontSize < c_minFontSize)
+		{
+			ImVector<ImWchar> ranges{};
+			ImFontGlyphRangesBuilder builder{};
+			builder.AddText("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-?");
+			builder.BuildRanges(&ranges);
+			ImFontConfig config{};
+			io.Fonts->AddFontFromMemoryCompressedTTF(cinolib::droid_sans_data, cinolib::droid_sans_size, c_minFontSize, &config, ranges.Data);
+			io.Fonts->Build();
+			ImGui_ImplOpenGL2_DestroyFontsTexture();
+			ImGui_ImplOpenGL2_CreateFontsTexture();
+		}
+	}
+
 	Viewer::Viewer(const Meshing::Mesher& _mesher, cpputils::collections::Namer<const HMP::Dag::Node*>& _namer)
 		: m_center_nl{ 0.5, 0.5 }, m_windowHeight_n{ 1.0 }, m_mesher{ _mesher }, m_namer{ _namer }, cinolib::SideBarItem{ "HMP Dag Viewer" }
-	{}
+	{
+		initFonts();
+	}
 
 	const Meshing::Mesher& Viewer::mesher() const
 	{
@@ -118,9 +142,15 @@ namespace HMP::Gui::Dag
 			return (_point_ll - m_layout.bottomLeft()) * l2n;
 		} };
 
-		// input
+		// font
 
 		ImGuiIO& io = ImGui::GetIO();
+
+		ImFont** maxFontIt{ std::max_element(io.Fonts->Fonts.begin(), io.Fonts->Fonts.end(), [](ImFont* _a, ImFont* _b) { return _a->FontSize < _b->FontSize; }) };
+		ImGui::PushFont(*maxFontIt);
+
+		// input
+
 		ImGui::InvisibleButton("canvas", toImVec(windowSize_s), ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle);
 
 		const auto clampCenter{ [&]() {
@@ -219,7 +249,7 @@ namespace HMP::Gui::Dag
 						case Dag::Node::EType::Element:
 						{
 							const ImU32 elementColor{ toImCol(m_mesher.polyColor()) };
-							const ImU32 inactiveElementColor{ toImCol(cinolib::Color(m_mesher.polyColor().r() * 0.75f, m_mesher.polyColor().g() * 0.75f, m_mesher.polyColor().b() * 0.75f, m_mesher.polyColor().a()))};
+							const ImU32 inactiveElementColor{ toImCol(cinolib::Color(m_mesher.polyColor().r() * 0.75f, m_mesher.polyColor().g() * 0.75f, m_mesher.polyColor().b() * 0.75f, m_mesher.polyColor().a())) };
 							const ImU32 highlightedElementColor{ toImCol(m_mesher.faceMarkerSet().color()) };
 							const Dag::Element& element{ node.node().element() };
 							const ImU32 color{ highlight == &node.node()
@@ -265,6 +295,7 @@ namespace HMP::Gui::Dag
 			drawList->PopClipRect();
 		}
 
+		ImGui::PopFont();
 	}
 
 }
