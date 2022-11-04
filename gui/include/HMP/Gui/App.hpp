@@ -17,6 +17,7 @@
 #include <HMP/Gui/Widgets/Target.hpp>
 #include <HMP/Gui/Widgets/VertEdit.hpp>
 #include <HMP/Gui/Widgets/DirectVertEdit.hpp>
+#include <HMP/Gui/Widgets/Ae3d2ShapeExporter.hpp>
 
 namespace HMP::Gui
 {
@@ -115,6 +116,7 @@ namespace HMP::Gui
 		Widgets::VertEdit m_vertEditWidget;
 		Widgets::Commander m_commanderWidget;
 		Widgets::DirectVertEdit m_directVertEditWidget;
+		Widgets::Ae3d2ShapeExporter m_ae3d2ShapeExporter;
 		bool m_dagViewerNeedsUpdate;
 
 		// markers

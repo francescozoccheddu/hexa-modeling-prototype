@@ -14,6 +14,7 @@ add_executable (gui
     "src/Widgets/Target.cpp"
     "src/Widgets/VertEdit.cpp"
     "src/Widgets/DirectVertEdit.cpp"
+    "src/Widgets/Ae3d2ShapeExporter.cpp"
 )
 
 set_target_properties (gui PROPERTIES

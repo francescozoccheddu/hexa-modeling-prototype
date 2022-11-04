@@ -1044,7 +1044,7 @@ namespace HMP::Gui
 	App::App() :
 		m_project{}, m_canvas{ 700, 600, 13, 1.0f }, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() },
 		m_dagNamer{}, m_dagViewer{ m_mesher, m_dagNamer }, m_menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh controls" },
-		m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{ m_canvas.camera }, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher }, m_directVertEditWidget{ m_vertEditWidget, m_canvas },
+		m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{ m_canvas.camera }, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher }, m_directVertEditWidget{ m_vertEditWidget, m_canvas }, m_ae3d2ShapeExporter{ m_mesh, m_canvas.camera },
 		m_dagViewerNeedsUpdate{ true }
 	{
 
@@ -1075,6 +1075,7 @@ namespace HMP::Gui
 		m_canvas.push(&m_vertEditWidget);
 		m_canvas.push(&m_targetWidget);
 		m_canvas.push(&m_menu);
+		m_canvas.push(&m_ae3d2ShapeExporter);
 		m_canvas.push(&m_dagViewer);
 
 		m_targetWidget.onProjectRequest += [this]() { onProjectToTarget(); };
