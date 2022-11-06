@@ -56,113 +56,94 @@ namespace HMP::Gui::Widgets
         {
             std::ofstream file{};
             file.open(filename);
-            file << '{';
+            file << '{'; // project
             {
                 std::time_t time = std::time(nullptr);
-                file
-                    << JProp{ "name" }
-                << '"' << "HMP export (" << std::put_time(std::localtime(&time), "%d-%m-%Y %H-%M-%S") << ')' << '"';
+                file << JProp{ "name" } << '"' << "HMP export (" << std::put_time(std::localtime(&time), "%d-%m-%Y %H-%M-%S") << ')' << '"'; // project.name
             }
-            file << ',';
+            file << ','; // project
             {
-                file << JProp{ "camera" } << '[';
-                for (std::size_t k{}; k < m_keyframes.size(); k++)
+                file << JProp{ "keyframes" } << '['; // project.keyframes
+                for (std::size_t k{}; k < keyframeCount(); k++)
                 {
-                    const Keyframe& keyframe{ m_keyframes[k] };
                     if (k > 0)
                     {
-                        file << ',';
+                        file << ','; // project.keyframes
                     }
                     file
                         << '{'
-                        << JProp{ "time" } << c_keyframeDuration * k << ','
-                        << JProp{ "value" };
+                        << JProp{ "time" } << k * c_keyframeDuration << ','
+                        << JProp{ "scene" } << '{'; // project.keyframes[k]
                     {
-                        file << '{';
-                        const cinolib::FreeCamera<Real>& camera{ keyframe.camera };
+                        const cinolib::FreeCamera<Real>& camera{ m_keyframes[k].camera };
+                        file << JProp{ "camera" } << '{'; // project.keyframes[k].scene.camera
                         {
                             file
                                 << JProp{ "view" } << '{'
                                 << JProp{ "up" } << JVec{ camera.view.up } << ','
                                 << JProp{ "eye" } << JVec{ camera.view.eye } << ','
-                                << JProp{ "forward" } << JVec{ camera.view.forward } << '}';
+                                << JProp{ "forward" } << JVec{ camera.view.forward } << '}'; // project.keyframes[k].scene.camera.view
                         }
-                        file << ',';
+                        file << ','; // project.keyframes[k].scene.camera
                         {
 
-                            file << JProp{ "projection" } << '{';
+                            file << JProp{ "projection" } << '{';  // project.keyframes[k].scene.camera.projection
                             if (camera.projection.perspective)
                             {
                                 file
                                     << JProp{ "kind" } << '"' << "perspective" << '"' << ','
-                                    << JProp{ "fieldOfViewDegrees" } << camera.projection.verticalFieldOfView;
+                                    << JProp{ "fieldOfViewDegrees" } << camera.projection.verticalFieldOfView;  // project.keyframes[k].scene.camera.projection
                             }
                             else
                             {
                                 file
                                     << JProp{ "kind" } << '"' << "orthographic" << '"' << ','
-                                    << JProp{ "scale" } << 1.0 / camera.projection.verticalFieldOfView;
+                                    << JProp{ "scale" } << 1.0 / camera.projection.verticalFieldOfView;  // project.keyframes[k].scene.camera.projection
                             }
-                            file << '}';
+                            file << '}'; // project.keyframes[k].scene.camera.projection
                         }
-                        file << '}';
+                        file << '}'; // project.keyframes[k].scene.camera
                     }
-                    file << '}';
-                }
-                file << ']';
-            }
-            file << ',';
-            {
-                file << JProp{ "polygons" } << '[';
-                for (std::size_t k{}; k < m_keyframes.size(); k++)
-                {
-                    const Keyframe& keyframe{ m_keyframes[k] };
-                    if (k > 0)
+                    file << ','; // project.keyframes[k].scene
                     {
-                        file << ',';
-                    }
-                    file
-                        << '{'
-                        << JProp{ "time" } << c_keyframeDuration * k << ','
-                        << JProp{ "value" };
-                    {
-                        const std::vector<FaceVerts>& polygons{ keyframe.polygons };
-                        file << '[';
+                        file << JProp{ "polygons" } << '['; // project.keyframes[k].polygons
                         bool firstPolygon{ true };
-                        for (const FaceVerts& polygon : polygons)
+                        for (const FaceVerts& face : m_keyframes[k].polygons)
                         {
                             if (!firstPolygon)
                             {
-                                file << ',';
+                                file << ','; // project.keyframes[k].scene.polygons
                             }
                             firstPolygon = false;
-                            file << '[';
+                            file << '{' << JProp{ "vertices" } << '[';
                             bool firstVert{ true };
-                            for (const Vec& vert : polygon)
+                            for (const Vec& vert : face)
                             {
                                 if (!firstVert)
                                 {
-                                    file << ',';
+                                    file << ','; // project.keyframes[k].scene.polygons[p].vertices
                                 }
                                 firstVert = false;
                                 file << JVec{ vert };
                             }
-                            file << ']';
+                            file << ']'; // project.keyframes[k].polygons[p].vertices
+                            file << '}'; // project.keyframes[k].polygons[p]
                         }
-                        file << ']';
+                        file << ']'; // project.keyframes[k].scene.polygons
                     }
-                    file << '}';
+                    file << '}'; // project.keyframes[k].scene
+                    file << '}'; // project.keyframe[k]
                 }
-                file << ']';
+                file << ']'; // project.keyframes
             }
-            file << ',';
+            file << ','; // project
             {
-                file << JProp{ "size" } << '{'
+                file << JProp{ "frameSize" } << '{'
                     << JProp{ "width" } << m_keyframes[0].camera.projection.aspectRatio << ','
                     << JProp{ "height" } << 1
-                    << '}';
+                    << '}'; // project.frameSize
             }
-            file << '}';
+            file << '}'; // project
             file.close();
             return true;
         }
