@@ -92,7 +92,7 @@ namespace HMP::Gui::Widgets
                             {
                                 file
                                     << JProp{ "kind" } << '"' << "perspective" << '"' << ','
-                                    << JProp{ "fieldOfViewDegrees" } << camera.projection.verticalFieldOfView;  // project.keyframes[k].scene.camera.projection
+                                    << JProp{ "fov" } << camera.projection.verticalFieldOfView;  // project.keyframes[k].scene.camera.projection
                             }
                             else
                             {
