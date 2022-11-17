@@ -86,8 +86,8 @@ namespace HMP::Gui::Widgets
 		Utils::Transform& transform();
 		const Utils::Transform& transform() const;
 
-		void identity(bool _center = true, bool _rotation = true, bool _scale = true);
-		void fit(bool _center = true, bool _scale = true);
+		void identity(bool _origin = true, bool _translation = true, bool _rotation = true, bool _scale = true);
+		void fit(bool _origin = true, bool _translation = true, bool _scale = true);
 
 		void updateTransform();
 		void updateVisibility();

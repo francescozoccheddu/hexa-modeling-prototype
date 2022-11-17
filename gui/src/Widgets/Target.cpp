@@ -160,12 +160,15 @@ namespace HMP::Gui::Widgets
 		return m_transform;
 	}
 
-	void Target::identity(bool _center, bool _rotation, bool _scale)
+	void Target::identity(bool _origin, bool _translation, bool _rotation, bool _scale)
 	{
-		m_transform.origin = m_mesh ? m_mesh->bbox().center() : Vec{};
-		if (_center)
+		if (_origin)
 		{
-			m_transform.translation = -m_transform.origin;
+			m_transform.origin = Vec{};
+		}
+		if (_translation)
+		{
+			m_transform.translation = Vec{};
 		}
 		if (_rotation)
 		{
@@ -181,13 +184,16 @@ namespace HMP::Gui::Widgets
 		}
 	}
 
-	void Target::fit(bool _center, bool _scale)
+	void Target::fit(bool _origin, bool _translation, bool _scale)
 	{
 		ensureHasMesh();
-		m_transform.origin = m_mesh->bbox().center();
-		if (_center)
+		if (_origin)
 		{
-			m_transform.translation = -m_mesh->bbox().center() + m_sourceMesh.bbox().center();
+			m_transform.origin = m_mesh->bbox().center();
+		}
+		if (_translation)
+		{
+			m_transform.translation = -m_transform.origin + m_sourceMesh.bbox().center();
 		}
 		if (_scale)
 		{
@@ -331,27 +337,44 @@ namespace HMP::Gui::Widgets
 			}
 			{
 				ImGui::PushID(1);
-				const float sourceMeshSize{ static_cast<float>(m_sourceMesh.bbox().diag()) * 2 };
-				Vec center{ m_transform.translation + m_mesh->bbox().center() };
-				if (Utils::Controls::dragTranslationVec("Center", center, sourceMeshSize))
+				const float targetMeshSize{ static_cast<float>(m_mesh->bbox().diag()) * 2 };
+				if (Utils::Controls::dragTranslationVec("Origin", m_transform.origin, targetMeshSize))
 				{
-					m_transform.translation = center - m_mesh->bbox().center();
 					updateTransform();
 				}
 				ImGui::SameLine();
 				if (ImGui::SmallButton("Identity"))
 				{
-					identity(true, false, false);
+					identity(true, false, false, false);
 				}
 				ImGui::SameLine();
-				if (ImGui::SmallButton("Fit"))
+				if (ImGui::SmallButton("Center"))
 				{
-					fit(true, false);
+					fit(true, false, false);
 				}
 				ImGui::PopID();
 			}
 			{
 				ImGui::PushID(2);
+				const float sourceMeshSize{ static_cast<float>(m_sourceMesh.bbox().diag()) * 2 };
+				if (Utils::Controls::dragTranslationVec("Translation", m_transform.translation, sourceMeshSize))
+				{
+					updateTransform();
+				}
+				ImGui::SameLine();
+				if (ImGui::SmallButton("Identity"))
+				{
+					identity(false, true, false, false);
+				}
+				ImGui::SameLine();
+				if (ImGui::SmallButton("Fit"))
+				{
+					fit(false, true, false);
+				}
+				ImGui::PopID();
+			}
+			{
+				ImGui::PushID(3);
 				if (Utils::Controls::dragRotation("Rotation", m_transform.rotation))
 				{
 					updateTransform();
@@ -359,12 +382,12 @@ namespace HMP::Gui::Widgets
 				ImGui::SameLine();
 				if (ImGui::SmallButton("Identity"))
 				{
-					identity(false, true, false);
+					identity(false, false, true, false);
 				}
 				ImGui::PopID();
 			}
 			{
-				ImGui::PushID(3);
+				ImGui::PushID(4);
 				const Real sourceAndTargetMeshScaleRatio{ m_sourceMesh.bbox().diag() / m_mesh->bbox().diag() * 3 };
 				Real scale{ m_transform.avgScale() };
 				if (Utils::Controls::dragScale("Scale", scale, sourceAndTargetMeshScaleRatio))
@@ -375,12 +398,12 @@ namespace HMP::Gui::Widgets
 				ImGui::SameLine();
 				if (ImGui::SmallButton("Identity"))
 				{
-					identity(false, false, true);
+					identity(false, false, false, true);
 				}
 				ImGui::SameLine();
 				if (ImGui::SmallButton("Fit"))
 				{
-					fit(false, true);
+					fit(false, false, true);
 				}
 				ImGui::PopID();
 			}
