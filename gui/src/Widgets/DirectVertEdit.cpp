@@ -88,10 +88,7 @@ namespace HMP::Gui::Widgets
                 {
                     const Real t = (transform.origin - ray.begin()).dot(forward) / denom;
                     const Vec newCentroid3d{ ray.begin() + ray.dir() * t };
-                    if (t > 0)
-                    {
-                        transform.translation = newCentroid3d - transform.origin;
-                    }
+                    transform.translation = newCentroid3d - transform.origin;
                 }
             }
             break;
