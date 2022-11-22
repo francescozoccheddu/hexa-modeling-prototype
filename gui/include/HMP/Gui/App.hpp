@@ -64,8 +64,9 @@ namespace HMP::Gui
 		static constexpr cinolib::KeyBinding c_kbPrintDebugInfo{ GLFW_KEY_COMMA };
 		static constexpr cinolib::KeyBinding c_kbSelectVertex{ GLFW_KEY_1 };
 		static constexpr cinolib::KeyBinding c_kbSelectEdge{ GLFW_KEY_2 };
-		static constexpr cinolib::KeyBinding c_kbSelectUpFace{ GLFW_KEY_3, GLFW_MOD_ALT };
+		static constexpr cinolib::KeyBinding c_kbSelectUpEdge{ GLFW_KEY_2, GLFW_MOD_ALT };
 		static constexpr cinolib::KeyBinding c_kbSelectFace{ GLFW_KEY_3 };
+		static constexpr cinolib::KeyBinding c_kbSelectUpFace{ GLFW_KEY_3, GLFW_MOD_ALT };
 		static constexpr cinolib::KeyBinding c_kbSelectPoly{ GLFW_KEY_4 };
 		static constexpr cinolib::KeyBinding c_kbDeselectAll{ GLFW_KEY_A, GLFW_MOD_CONTROL };
 		static constexpr int c_kmodSelectAdd{ GLFW_MOD_SHIFT };
@@ -78,7 +79,7 @@ namespace HMP::Gui
 
 		enum class ESelectionSource
 		{
-			Vertex, Edge, Face, Poly, UpFace
+			Vertex, Edge, Face, Poly, UpFace, UpEdge
 		};
 
 		enum class ESelectionMode
