@@ -16,6 +16,7 @@
 #include <HMP/Gui/Widgets/Target.hpp>
 #include <HMP/Gui/Widgets/VertEdit.hpp>
 #include <HMP/Gui/Widgets/DirectVertEdit.hpp>
+#include <HMP/Gui/Widgets/Save.hpp>
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 #include <HMP/Gui/DagViewer/Widget.hpp>
@@ -55,7 +56,7 @@ namespace HMP::Gui
 		static constexpr cinolib::KeyBinding c_kbDoubleRefine{ GLFW_KEY_H, GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbFaceRefine{ GLFW_KEY_F };
 		static constexpr cinolib::KeyBinding c_kbSave{ GLFW_KEY_S, GLFW_MOD_CONTROL };
-		static constexpr cinolib::KeyBinding c_kbSaveMesh{ GLFW_KEY_S, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT };
+		static constexpr cinolib::KeyBinding c_kbSaveNew{ GLFW_KEY_S, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbOpen{ GLFW_KEY_O, GLFW_MOD_CONTROL };
 		static constexpr cinolib::KeyBinding c_kbLoadTarget{ GLFW_KEY_L, GLFW_MOD_CONTROL };
 		static constexpr cinolib::KeyBinding c_kbDelete{ GLFW_KEY_D };
@@ -122,6 +123,7 @@ namespace HMP::Gui
 		Widgets::VertEdit m_vertEditWidget;
 		Widgets::Commander m_commanderWidget;
 		Widgets::DirectVertEdit m_directVertEditWidget;
+		Widgets::Save m_saveWidget;
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		bool m_dagViewerNeedsUpdate;
@@ -165,6 +167,11 @@ namespace HMP::Gui
 		void onDagViewerDraw();
 		void updateMouse();
 
+		// save events
+		void onSaveState(const std::string& _filename);
+		void onLoadState(const std::string& _filename);
+		void onExportMesh(const std::string& _filename);
+
 		// user operation
 		std::string getDebugInfo() const;
 		void onPrintDebugInfo() const;
@@ -177,9 +184,9 @@ namespace HMP::Gui
 		void onRotate();
 		void onRefineFace();
 		void onMakeConformant();
-		void onSaveMesh();
+		void onExportMesh();
 		void onSaveState();
-		void onSaveState(const std::string& _filename);
+		void onSaveNewState();
 		void onLoadState();
 		void onLoadTargetMesh();
 		void onToggleTargetVisibility();
