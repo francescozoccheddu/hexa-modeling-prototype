@@ -1,4 +1,4 @@
-#include <HMP/Gui/Dag/createLayout.hpp>
+#include <HMP/Gui/DagViewer/createLayout.hpp>
 
 #include <deque>
 #include <ogdf/basic/Logger.h>
@@ -14,10 +14,8 @@
 #include <HMP/Dag/Utils.hpp>
 #include <HMP/Meshing/types.hpp>
 
-namespace HMP::Gui::Dag
+namespace HMP::Gui::DagViewer
 {
-
-	using namespace HMP::Dag;
 
 	constexpr Real c_nodeRadius{ 1.0 };
 	constexpr Real c_lineThickness{ c_nodeRadius / 20.0 };

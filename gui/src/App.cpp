@@ -9,7 +9,6 @@
 #include <GLFW/glfw3.h>
 #include <cinolib/gl/file_dialog_open.h>
 #include <cinolib/gl/file_dialog_save.h>
-#include <HMP/Gui/Dag/createLayout.hpp>
 #include <utility>
 #include <HMP/Dag/Operation.hpp>
 #include <HMP/Actions/Clear.hpp>
@@ -31,6 +30,10 @@
 #include <iomanip>
 #include <filesystem>
 #include <ctime>
+
+#ifdef HMP_GUI_ENABLE_DAG_VIEWER
+#include <HMP/Gui/DagViewer/createLayout.hpp>
+#endif
 
 namespace HMP::Gui
 {
@@ -75,6 +78,11 @@ namespace HMP::Gui
 		cinolib::print_binding(c_kbPrintDebugInfo.name(), "print debug info");
 		std::cout << "-------------------------------\n";
 	}
+
+	// dag viewer
+
+#ifdef HMP_GUI_ENABLE_DAG_VIEWER
+#endif
 
 	// markers
 
@@ -196,7 +204,9 @@ namespace HMP::Gui
 
 	void App::requestDagViewerUpdate()
 	{
+#ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		m_dagViewerNeedsUpdate = true;
+#endif
 	}
 
 	// mesher events
@@ -587,15 +597,17 @@ namespace HMP::Gui
 
 	void App::onDagViewerDraw()
 	{
+#ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		if (m_dagViewerNeedsUpdate)
 		{
 			m_dagViewerNeedsUpdate = false;
 			if (m_project.root())
 			{
-				m_dagViewer.layout() = Dag::createLayout(*m_project.root());
+				m_dagViewerWidget.layout() = DagViewer::createLayout(*m_project.root());
 			}
-			m_dagViewer.resetView();
+			m_dagViewerWidget.resetView();
 		}
+#endif
 	}
 
 	void App::updateMouse()
@@ -617,7 +629,9 @@ namespace HMP::Gui
 				m_mouse.vertOffset = m_mesh.poly_vert_offset(pid, vid);
 			}
 		}
-		m_dagViewer.highlight = m_mouse.element;
+#ifdef HMP_GUI_ENABLE_DAG_VIEWER
+		m_dagViewerWidget.highlight = m_mouse.element;
+#endif
 		if (m_mouse.element != lastElement)
 		{
 			m_mesher.polyMarkerSet().clear();
@@ -999,9 +1013,11 @@ namespace HMP::Gui
 
 	App::App() :
 		m_project{}, m_canvas{ 700, 600, 13, 1.0f }, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() },
-		m_dagNamer{}, m_dagViewer{ m_mesher, m_dagNamer }, m_menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh controls" },
-		m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{ m_canvas.camera }, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher }, m_directVertEditWidget{ m_vertEditWidget, m_canvas }, m_ae3d2ShapeExporter{ m_mesh, m_canvas.camera },
-		m_dagViewerNeedsUpdate{ true }
+		m_dagNamer{}, m_menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh controls" },
+		m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{ m_canvas.camera }, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher }, m_directVertEditWidget{ m_vertEditWidget, m_canvas }, m_ae3d2ShapeExporter{ m_mesh, m_canvas.camera }
+#ifdef HMP_GUI_ENABLE_DAG_VIEWER
+		, m_dagViewerWidget{ m_mesher, m_dagNamer }, m_dagViewerNeedsUpdate{ true }
+#endif
 	{
 
 		glfwSetWindowTitle(m_canvas.window, "hexa-modeling-prototype");
@@ -1032,7 +1048,10 @@ namespace HMP::Gui
 		m_canvas.push(&m_targetWidget);
 		m_canvas.push(&m_menu);
 		m_canvas.push(&m_ae3d2ShapeExporter);
-		m_canvas.push(&m_dagViewer);
+
+#ifdef HMP_GUI_ENABLE_DAG_VIEWER
+		m_canvas.push(&m_dagViewerWidget);
+#endif
 
 		m_targetWidget.onProjectRequest += [this]() { onProjectToTarget(); };
 		m_targetWidget.onMeshLoad += [this]() { m_canvas.push(&m_targetWidget.mesh(), false); };
@@ -1060,7 +1079,9 @@ namespace HMP::Gui
 		m_canvas.callback_custom_gui = [this](auto && ..._args) { return onDrawCustomGui(_args...); };
 		m_canvas.marker_sets.resize(c_markerSetCount);
 
-		m_dagViewer.onDraw += [this]() { onDagViewerDraw(); };
+#ifdef HMP_GUI_ENABLE_DAG_VIEWER
+		m_dagViewerWidget.onDraw += [this]() { onDagViewerDraw(); };
+#endif
 		requestDagViewerUpdate();
 	}
 

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <HMP/Project.hpp>
-#include <HMP/Gui/Dag/Viewer.hpp>
 #include <HMP/Dag/Element.hpp>
 #include <HMP/Dag/Extrude.hpp>
 #include <cinolib/gl/glcanvas.h>
@@ -18,6 +17,10 @@
 #include <HMP/Gui/Widgets/VertEdit.hpp>
 #include <HMP/Gui/Widgets/DirectVertEdit.hpp>
 #include <HMP/Gui/Widgets/Ae3d2ShapeExporter.hpp>
+
+#ifdef HMP_GUI_ENABLE_DAG_VIEWER
+#include <HMP/Gui/DagViewer/Widget.hpp>
+#endif
 
 namespace HMP::Gui
 {
@@ -110,7 +113,6 @@ namespace HMP::Gui
 		const Meshing::Mesher::Mesh& m_mesh;
 		Commander& m_commander;
 		cpputils::collections::SetNamer<const HMP::Dag::Node*> m_dagNamer;
-		Dag::Viewer m_dagViewer;
 		cinolib::VolumeMeshControls<Meshing::Mesher::Mesh> m_menu;
 		Widgets::Axes m_axesWidget;
 		Widgets::Target m_targetWidget;
@@ -118,7 +120,11 @@ namespace HMP::Gui
 		Widgets::Commander m_commanderWidget;
 		Widgets::DirectVertEdit m_directVertEditWidget;
 		Widgets::Ae3d2ShapeExporter m_ae3d2ShapeExporter;
+
+#ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		bool m_dagViewerNeedsUpdate;
+		DagViewer::Widget m_dagViewerWidget;
+#endif
 
 		// markers
 		void updateMouseMarkers();

@@ -1,4 +1,4 @@
-#include <HMP/Gui/Dag/Viewer.hpp>
+#include <HMP/Gui/DagViewer/Widget.hpp>
 
 #include <HMP/Dag/Node.hpp>
 #include <HMP/Dag/Operation.hpp>
@@ -16,12 +16,10 @@
 #include <limits>
 
 
-namespace HMP::Gui::Dag
+namespace HMP::Gui::DagViewer
 {
 
-	using namespace HMP::Dag;
-
-	void Viewer::initFonts()
+	void Widget::initFonts()
 	{
 		static constexpr float c_minFontSize{ 100.0f };
 		ImGuiIO& io{ ImGui::GetIO() };
@@ -40,39 +38,39 @@ namespace HMP::Gui::Dag
 		}
 	}
 
-	Viewer::Viewer(const Meshing::Mesher& _mesher, cpputils::collections::Namer<const HMP::Dag::Node*>& _namer)
-		: m_center_nl{ 0.5, 0.5 }, m_windowHeight_n{ 1.0 }, m_mesher{ _mesher }, m_namer{ _namer }, cinolib::SideBarItem{ "HMP Dag Viewer" }
+	Widget::Widget(const Meshing::Mesher& _mesher, cpputils::collections::Namer<const Dag::Node*>& _namer)
+		: m_center_nl{ 0.5, 0.5 }, m_windowHeight_n{ 1.0 }, m_mesher{ _mesher }, m_namer{ _namer }, cinolib::SideBarItem{ "HMP Dag Widget" }
 	{
 		initFonts();
 	}
 
-	const Meshing::Mesher& Viewer::mesher() const
+	const Meshing::Mesher& Widget::mesher() const
 	{
 		return m_mesher;
 	}
 
-	const cpputils::collections::Namer<const HMP::Dag::Node*>& Viewer::namer() const
+	const cpputils::collections::Namer<const Dag::Node*>& Widget::namer() const
 	{
 		return m_namer;
 	}
 
-	Layout& Viewer::layout()
+	Layout& Widget::layout()
 	{
 		return m_layout;
 	}
 
-	const Layout& Viewer::layout() const
+	const Layout& Widget::layout() const
 	{
 		return m_layout;
 	}
 
-	void Viewer::resetView()
+	void Widget::resetView()
 	{
 		m_center_nl = Vec2{ m_layout.aspectRatio(), 1.0 } / 2;
 		m_windowHeight_n = std::numeric_limits<Real>::infinity();
 	}
 
-	void Viewer::draw()
+	void Widget::draw()
 	{
 
 		onDraw();

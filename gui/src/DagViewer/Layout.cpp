@@ -1,19 +1,19 @@
-#include <HMP/Gui/Dag/Layout.hpp>
+#include <HMP/Gui/DagViewer/Layout.hpp>
 
 #include <utility>
 #include <algorithm>
 #include <stdexcept>
 
-namespace HMP::Gui::Dag
+namespace HMP::Gui::DagViewer
 {
 
 	// Layout::Node
 
-	Layout::Node::Node(const Vec2& _center, const HMP::Dag::Node& _node)
+	Layout::Node::Node(const Vec2& _center, const Dag::Node& _node)
 		: m_center(_center), m_node{ &_node }
 	{}
 
-	const HMP::Dag::Node& Layout::Node::node() const
+	const Dag::Node& Layout::Node::node() const
 	{
 		return *m_node;
 	}

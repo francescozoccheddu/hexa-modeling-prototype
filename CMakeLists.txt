@@ -5,6 +5,8 @@ set (FETCHCONTENT_QUIET FALSE)
 
 project ("hexa-modeling-prototype")
 
+option (HMP_GUI_ENABLE_DAG_VIEWER "Enable dag viewer widget" OFF)
+
 # cinolib
 set (CINOLIB_HEADER_ONLY OFF)
 set (CINOLIB_USES_OPENGL_GLFW_IMGUI ON)
@@ -18,14 +20,16 @@ FetchContent_Declare (
 FetchContent_MakeAvailable (cinolib)
 
 # ogdf
-FetchContent_Declare (
-    ogdf
-    GIT_REPOSITORY "https://github.com/ogdf/ogdf.git"
-    GIT_TAG dogwood-202202
-    GIT_SHALLOW TRUE
-    GIT_PROGRESS TRUE
-)
-FetchContent_MakeAvailable (ogdf)
+if (HMP_GUI_ENABLE_DAG_VIEWER)
+    FetchContent_Declare (
+        ogdf
+        GIT_REPOSITORY "https://github.com/ogdf/ogdf.git"
+        GIT_TAG dogwood-202202
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+    )
+    FetchContent_MakeAvailable (ogdf)
+endif()
 
 # cpputils
 FetchContent_Declare (
