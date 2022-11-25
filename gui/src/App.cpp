@@ -69,8 +69,8 @@ namespace HMP::Gui
 		cinolib::print_binding(c_kbDirectRotation.name(), "rotate selected vertices");
 		cinolib::print_binding(c_kbCancelDirectEdit.name(), "cancel direct edit");
 		cinolib::print_binding(c_kbSave.name(), "save");
+		cinolib::print_binding(c_kbSaveNew.name(), "save new");
 		cinolib::print_binding(c_kbOpen.name(), "open");
-		cinolib::print_binding(c_kbSaveMesh.name(), "save mesh");
 		cinolib::print_binding(c_kbLoadTarget.name(), "load target mesh");
 		cinolib::print_binding(c_kbToggleTargetVisibility.name(), "toggle target visibility");
 		cinolib::print_binding(c_kbUndo.name(), "undo");
@@ -277,6 +277,35 @@ namespace HMP::Gui
 		m_canvas.refit_scene();
 	}
 
+	// save events
+
+	void App::onExportMesh(const std::string& _filename)
+	{
+		m_mesh.save(_filename.c_str());
+	}
+
+	void App::onSaveState(const std::string& _filename)
+	{
+		std::ofstream file;
+		file.open(_filename);
+		HMP::Utils::Serialization::Serializer serializer{ file };
+		HMP::Dag::Utils::serialize(serializer, *m_project.root());
+		m_targetWidget.serialize(serializer);
+		file.close();
+	}
+
+	void App::onLoadState(const std::string& _filename)
+	{
+		std::ifstream file;
+		file.open(_filename);
+		HMP::Utils::Serialization::Deserializer deserializer{ file };
+		HMP::Dag::Element& root = HMP::Dag::Utils::deserialize(deserializer).element();
+		m_targetWidget.deserialize(deserializer);
+		file.close();
+		applyAction(*new Actions::Load{ root });
+		m_canvas.reset_camera();
+	}
+
 	// canvas events
 
 	void App::onCameraChanged()
@@ -369,9 +398,9 @@ namespace HMP::Gui
 			onSaveState();
 		}
 		// save mesh
-		else if (key == c_kbSaveMesh)
+		else if (key == c_kbSaveNew)
 		{
-			onSaveMesh();
+			onSaveNewState();
 		}
 		// load tree
 		else if (key == c_kbOpen)
@@ -850,48 +879,19 @@ namespace HMP::Gui
 		applyAction(*new Actions::MakeConforming());
 	}
 
-	void App::onSaveMesh()
-	{
-		const std::string filename{ cinolib::file_dialog_save() };
-		if (!filename.empty())
-		{
-			m_mesh.save(filename.c_str());
-		}
-	}
-
 	void App::onSaveState()
 	{
-		const std::string filename{ cinolib::file_dialog_save() };
-		if (!filename.empty())
-		{
-			onSaveState(filename);
-		}
+		m_saveWidget.requestSave();
 	}
 
-	void App::onSaveState(const std::string& _filename)
+	void App::onSaveNewState()
 	{
-		std::ofstream file;
-		file.open(_filename);
-		HMP::Utils::Serialization::Serializer serializer{ file };
-		HMP::Dag::Utils::serialize(serializer, *m_project.root());
-		m_targetWidget.serialize(serializer);
-		file.close();
+		m_saveWidget.requestSaveNew();
 	}
 
 	void App::onLoadState()
 	{
-		const std::string filename{ cinolib::file_dialog_open() };
-		if (!filename.empty())
-		{
-			std::ifstream file;
-			file.open(filename);
-			HMP::Utils::Serialization::Deserializer deserializer{ file };
-			HMP::Dag::Element& root = HMP::Dag::Utils::deserialize(deserializer).element();
-			m_targetWidget.deserialize(deserializer);
-			file.close();
-			applyAction(*new Actions::Load{ root });
-			m_canvas.reset_camera();
-		}
+		m_saveWidget.requestLoad();
 	}
 
 	void App::onLoadTargetMesh()
@@ -1016,7 +1016,7 @@ namespace HMP::Gui
 	App::App() :
 		m_project{}, m_canvas{ 700, 600, 13, 1.0f }, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() },
 		m_dagNamer{}, m_menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh controls" },
-		m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{ m_canvas.camera }, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher }, m_directVertEditWidget{ m_vertEditWidget, m_canvas }
+		m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{ m_canvas.camera }, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher }, m_directVertEditWidget{ m_vertEditWidget, m_canvas }, m_saveWidget{}
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		, m_dagViewerWidget{ m_mesher, m_dagNamer }, m_dagViewerNeedsUpdate{ true }
 #endif
@@ -1048,6 +1048,7 @@ namespace HMP::Gui
 		m_canvas.push(&m_directVertEditWidget);
 		m_canvas.push(&m_axesWidget);
 
+		m_canvas.push(&m_saveWidget);
 		m_canvas.push(&m_commanderWidget);
 		m_canvas.push(&m_vertEditWidget);
 		m_canvas.push(&m_targetWidget);
@@ -1060,6 +1061,10 @@ namespace HMP::Gui
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		m_canvas.push(&m_dagViewerWidget);
 #endif
+
+		m_saveWidget.onExportMesh += [this](const std::string& _filename) { onExportMesh(_filename); };
+		m_saveWidget.onSave += [this](const std::string& _filename) { onSaveState(_filename); };
+		m_saveWidget.onLoad += [this](const std::string& _filename) { onLoadState(_filename); };
 
 		m_targetWidget.onProjectRequest += [this]() { onProjectToTarget(); };
 		m_targetWidget.onMeshLoad += [this]() { m_canvas.push(&m_targetWidget.mesh(), false); m_canvas.refit_scene(); };
