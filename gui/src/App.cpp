@@ -558,6 +558,10 @@ namespace HMP::Gui
 				updateElementsMarkers();
 			}
 		}
+		if (ImGui::Button("Crash me!"))
+		{
+			throw std::runtime_error{ "user requested crash" };
+		}
 	}
 
 	void App::onDrawCustomGui()
@@ -1115,7 +1119,7 @@ namespace HMP::Gui
 			{
 				const std::string filename{ basename.str() + "_dag.hmp" };
 				onSaveState(filename);
-				std::cout << "Wrote dag to " << std::filesystem::absolute(filename) << std::endl;
+				std::cout << "Wrote state to " << std::filesystem::absolute(filename) << std::endl;
 			}
 			{
 				const std::string filename{ basename.str() + "_mesh_debug.txt" };
