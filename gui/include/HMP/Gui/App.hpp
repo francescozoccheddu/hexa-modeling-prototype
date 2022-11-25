@@ -16,10 +16,13 @@
 #include <HMP/Gui/Widgets/Target.hpp>
 #include <HMP/Gui/Widgets/VertEdit.hpp>
 #include <HMP/Gui/Widgets/DirectVertEdit.hpp>
-#include <HMP/Gui/Widgets/Ae3d2ShapeExporter.hpp>
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 #include <HMP/Gui/DagViewer/Widget.hpp>
+#endif
+
+#ifdef HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER
+#include <HMP/Gui/Widgets/Ae3d2ShapeExporter.hpp>
 #endif
 
 namespace HMP::Gui
@@ -119,11 +122,14 @@ namespace HMP::Gui
 		Widgets::VertEdit m_vertEditWidget;
 		Widgets::Commander m_commanderWidget;
 		Widgets::DirectVertEdit m_directVertEditWidget;
-		Widgets::Ae3d2ShapeExporter m_ae3d2ShapeExporter;
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		bool m_dagViewerNeedsUpdate;
 		DagViewer::Widget m_dagViewerWidget;
+#endif
+
+#ifdef HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER
+		Widgets::Ae3d2ShapeExporter m_ae3d2ShapeExporter;
 #endif
 
 		// markers
