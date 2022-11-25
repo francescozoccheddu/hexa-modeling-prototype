@@ -12,6 +12,7 @@
 #include <cpputils/collections/Event.hpp>
 #include <HMP/Gui/Utils/Transform.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
+#include <HMP/Utils/Serialization.hpp>
 #include <utility>
 #include <unordered_map>
 
@@ -34,6 +35,7 @@ namespace HMP::Gui::Widgets
 		cinolib::DrawableSegmentSoup m_projectLines;
 		Real m_vertInterpProgress;
 		float m_sliderVertInterpProgress;
+		bool m_missingMeshFile;
 
 		void ensureHasMesh() const;
 
@@ -93,13 +95,16 @@ namespace HMP::Gui::Widgets
 		void updateVisibility();
 		void updateColor(bool _face = true, bool _edge = true);
 
-		bool load();
-		void load(const std::string& _filename);
+		bool load(bool _keepTransform = false);
+		void load(const std::string& _filename, bool _keepTransform = false);
 		void clearMesh();
 		void requestProjection();
 		void requestApplyTransformToSource();
 
 		void draw() override;
+
+		void serialize(HMP::Utils::Serialization::Serializer& _serializer) const;
+		void deserialize(HMP::Utils::Serialization::Deserializer& _deserializer);
 
 	};
 

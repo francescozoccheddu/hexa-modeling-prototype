@@ -6,6 +6,7 @@
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <vector>
 #include <stdexcept>
+#include <filesystem>
 
 namespace HMP::Gui::Widgets
 {
@@ -16,7 +17,8 @@ namespace HMP::Gui::Widgets
 		onProjectRequest{}, onMeshLoad{}, onMeshClear{}, onApplyTransformToSource{}, onVertsInterpolationChanged{},
 		m_visible{ true }, m_faceColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.15f} }, m_edgeColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.4f} },
 		m_transform{}, m_verts{}, m_vertInterpProgress{ 1.0 }, m_sliderVertInterpProgress{ 100.0f },
-		m_projectLines{}, m_showProjectLines{}
+		m_projectLines{}, m_showProjectLines{},
+		m_missingMeshFile{ false }
 	{
 		m_projectLines.set_color(cinolib::Color::hsv2rgb(0.0f, 1.0f, 1.0f));
 		m_projectLines.set_thickness(1.0f);
@@ -228,39 +230,54 @@ namespace HMP::Gui::Widgets
 		}
 	}
 
-	bool Target::load()
+	bool Target::load(bool _keepTransform)
 	{
 		const std::string filename{ cinolib::file_dialog_open() };
 		if (!filename.empty())
 		{
 			m_visible = true;
-			load(filename);
+			load(filename, _keepTransform);
 			return true;
 		}
 		return false;
 	}
 
-	void Target::load(const std::string& _filename)
+	void Target::load(const std::string& _filename, bool _keepTransform)
 	{
 		clearMesh();
-		m_visible = true;
 		m_filename = _filename;
-		m_mesh = new cinolib::DrawableTrimesh<>(m_filename.c_str());
-		m_mesh->draw_back_faces = false;
-		fit();
-		updateVisibility();
-		updateColor();
-		onMeshLoad();
+		if (std::filesystem::exists(_filename))
+		{
+			m_visible = true;
+			m_mesh = new cinolib::DrawableTrimesh<>(m_filename.c_str());
+			m_mesh->draw_back_faces = false;
+			if (!_keepTransform)
+			{
+				fit();
+			}
+			else
+			{
+				updateTransform();
+			}
+			updateVisibility();
+			updateColor();
+			onMeshLoad();
+		}
+		else
+		{
+			m_missingMeshFile = true;
+		}
 	}
 
 	void Target::clearMesh()
 	{
+		m_missingMeshFile = false;
+		m_filename = "";
 		if (m_mesh)
 		{
 			onMeshClear();
 			delete m_mesh;
 			m_mesh = nullptr;
-			m_filename = "";
 		}
 	}
 
@@ -312,6 +329,14 @@ namespace HMP::Gui::Widgets
 				{
 					clearMesh();
 					return;
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Replace"))
+				{
+					if (!load(true))
+					{
+						return;
+					}
 				}
 				ImGui::SameLine();
 				if (ImGui::Checkbox("Visible", &m_visible))
@@ -466,10 +491,51 @@ namespace HMP::Gui::Widgets
 		}
 		else
 		{
+			if (m_missingMeshFile)
+			{
+				ImGui::Text("Missing mesh file");
+				ImGui::TextDisabled("%s", m_filename.c_str());
+				if (ImGui::Button("Clear"))
+				{
+					clearMesh();
+				}
+				ImGui::SameLine();
+				if (ImGui::Button("Replace"))
+				{
+					load(true);
+				}
+			}
 			if (ImGui::Button("Load"))
 			{
 				load();
 			}
+		}
+	}
+
+	void Target::serialize(HMP::Utils::Serialization::Serializer& _serializer) const
+	{
+		_serializer << hasMesh();
+		if (hasMesh())
+		{
+			_serializer << m_filename;
+			_serializer << m_transform.origin;
+			_serializer << m_transform.translation;
+			_serializer << m_transform.scale;
+			_serializer << m_transform.rotation;
+		}
+	}
+
+	void Target::deserialize(HMP::Utils::Serialization::Deserializer& _deserializer)
+	{
+		clearMesh();
+		if (_deserializer.get<bool>())
+		{
+			const std::string filename{ _deserializer.get<std::string>() };
+			_deserializer >> m_transform.origin;
+			_deserializer >> m_transform.translation;
+			_deserializer >> m_transform.scale;
+			_deserializer >> m_transform.rotation;
+			load(filename, true);
 		}
 	}
 

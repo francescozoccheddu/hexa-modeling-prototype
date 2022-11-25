@@ -366,7 +366,7 @@ namespace HMP::Gui
 		// save tree
 		else if (key == c_kbSave)
 		{
-			onSaveTree();
+			onSaveState();
 		}
 		// save mesh
 		else if (key == c_kbSaveMesh)
@@ -376,7 +376,7 @@ namespace HMP::Gui
 		// load tree
 		else if (key == c_kbOpen)
 		{
-			onLoadTree();
+			onLoadState();
 		}
 		// toggle target visibility
 		else if (key == c_kbToggleTargetVisibility)
@@ -859,20 +859,26 @@ namespace HMP::Gui
 		}
 	}
 
-	void App::onSaveTree()
+	void App::onSaveState()
 	{
 		const std::string filename{ cinolib::file_dialog_save() };
 		if (!filename.empty())
 		{
-			std::ofstream file;
-			file.open(filename);
-			HMP::Utils::Serialization::Serializer serializer{ file };
-			HMP::Dag::Utils::serialize(serializer, *m_project.root());
-			file.close();
+			onSaveState(filename);
 		}
 	}
 
-	void App::onLoadTree()
+	void App::onSaveState(const std::string& _filename)
+	{
+		std::ofstream file;
+		file.open(_filename);
+		HMP::Utils::Serialization::Serializer serializer{ file };
+		HMP::Dag::Utils::serialize(serializer, *m_project.root());
+		m_targetWidget.serialize(serializer);
+		file.close();
+	}
+
+	void App::onLoadState()
 	{
 		const std::string filename{ cinolib::file_dialog_open() };
 		if (!filename.empty())
@@ -881,6 +887,7 @@ namespace HMP::Gui
 			file.open(filename);
 			HMP::Utils::Serialization::Deserializer deserializer{ file };
 			HMP::Dag::Element& root = HMP::Dag::Utils::deserialize(deserializer).element();
+			m_targetWidget.deserialize(deserializer);
 			file.close();
 			applyAction(*new Actions::Load{ root });
 			m_canvas.reset_camera();
@@ -1055,7 +1062,7 @@ namespace HMP::Gui
 #endif
 
 		m_targetWidget.onProjectRequest += [this]() { onProjectToTarget(); };
-		m_targetWidget.onMeshLoad += [this]() { m_canvas.push(&m_targetWidget.mesh(), false); };
+		m_targetWidget.onMeshLoad += [this]() { m_canvas.push(&m_targetWidget.mesh(), false); m_canvas.refit_scene(); };
 		m_targetWidget.onMeshClear += [this]() { m_canvas.pop(&m_targetWidget.mesh()); };
 		m_targetWidget.onTransform += [this]() { m_canvas.refit_scene(); };
 		m_targetWidget.onApplyTransformToSource += [this](const Mat4& _transform) { onApplyTargetTransform(_transform); };
@@ -1101,12 +1108,8 @@ namespace HMP::Gui
 			std::ostringstream basename{};
 			basename << "crash_" << std::put_time(now, "%H-%M-%S_%d-%m-%y");
 			{
-				const std::string filename{ basename.str() + "_dag.txt" };
-				std::ofstream file;
-				file.open(filename);
-				HMP::Utils::Serialization::Serializer serializer{ file };
-				HMP::Dag::Utils::serialize(serializer, *m_project.root());
-				file.close();
+				const std::string filename{ basename.str() + "_dag.hmp" };
+				onSaveState(filename);
 				std::cout << "Wrote dag to " << std::filesystem::absolute(filename) << std::endl;
 			}
 			{

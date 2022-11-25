@@ -178,8 +178,9 @@ namespace HMP::Gui
 		void onRefineFace();
 		void onMakeConformant();
 		void onSaveMesh();
-		void onSaveTree();
-		void onLoadTree();
+		void onSaveState();
+		void onSaveState(const std::string& _filename);
+		void onLoadState();
 		void onLoadTargetMesh();
 		void onToggleTargetVisibility();
 		void onProjectToTarget();
