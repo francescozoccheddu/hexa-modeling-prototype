@@ -3,9 +3,6 @@
 add_executable (gui 
     "src/main.cpp" 
     "src/App.cpp"
-    "src/Dag/createLayout.cpp"
-    "src/Dag/Layout.cpp"
-    "src/Dag/Viewer.cpp"
     "src/Utils/HrDescriptions.cpp"
     "src/Utils/Transform.cpp"
     "src/Utils/Controls.cpp"
@@ -29,5 +26,22 @@ target_include_directories (gui
 
 target_link_libraries (gui 
     PRIVATE core
-    PRIVATE OGDF
 )
+
+if (HMP_GUI_ENABLE_DAG_VIEWER)
+
+    target_sources(gui
+        PRIVATE "src/DagViewer/createLayout.cpp"
+        PRIVATE "src/DagViewer/Layout.cpp"
+        PRIVATE "src/DagViewer/Widget.cpp"
+    )
+
+    target_link_libraries (gui 
+        PRIVATE OGDF
+    )
+
+    target_compile_definitions(gui 
+        PUBLIC HMP_GUI_ENABLE_DAG_VIEWER
+    )
+
+endif()

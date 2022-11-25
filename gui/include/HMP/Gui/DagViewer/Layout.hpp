@@ -7,7 +7,7 @@
 #include <HMP/Dag/Node.hpp>
 #include <HMP/Meshing/types.hpp>
 
-namespace HMP::Gui::Dag
+namespace HMP::Gui::DagViewer
 {
 
 	class Layout final
@@ -20,15 +20,15 @@ namespace HMP::Gui::Dag
 
 		private:
 
-			const HMP::Dag::Node* m_node{};
+			const Dag::Node* m_node{};
 			Vec2 m_center{};
 
 
 		public:
 
-			Node(const Vec2& _center, const HMP::Dag::Node& _node);
+			Node(const Vec2& _center, const Dag::Node& _node);
 
-			const HMP::Dag::Node& node() const;
+			const Dag::Node& node() const;
 			const Vec2& center() const;
 
 		};

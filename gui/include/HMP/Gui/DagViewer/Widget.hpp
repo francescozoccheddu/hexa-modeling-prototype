@@ -1,6 +1,6 @@
 #pragma once
 
-#include <HMP/Gui/Dag/Layout.hpp>
+#include <HMP/Gui/DagViewer/Layout.hpp>
 #include <HMP/Dag/Element.hpp>
 #include <HMP/Meshing/Mesher.hpp>
 #include <HMP/Meshing/types.hpp>
@@ -9,10 +9,10 @@
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <cpputils/collections/Event.hpp>
 
-namespace HMP::Gui::Dag
+namespace HMP::Gui::DagViewer
 {
 
-	class Viewer final : public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
+	class Widget final : public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
 	{
 
 	private:
@@ -20,7 +20,7 @@ namespace HMP::Gui::Dag
 		static void initFonts();
 
 		const Meshing::Mesher& m_mesher;
-		cpputils::collections::Namer<const HMP::Dag::Node*>& m_namer;
+		cpputils::collections::Namer<const Dag::Node*>& m_namer;
 
 		Layout m_layout;
 		Vec2 m_center_nl{ 0.5, 0.5 };
@@ -32,18 +32,18 @@ namespace HMP::Gui::Dag
 
 	public:
 
-		cpputils::collections::Event<Viewer> onDraw{};
+		cpputils::collections::Event<Widget> onDraw{};
 
-		Viewer(const Meshing::Mesher& _mesher, cpputils::collections::Namer<const HMP::Dag::Node*>& _namer);
+		Widget(const Meshing::Mesher& _mesher, cpputils::collections::Namer<const Dag::Node*>& _namer);
 
-		const HMP::Dag::Element* highlight{};
+		const Dag::Element* highlight{};
 
 		const Meshing::Mesher& mesher() const;
 
 		Layout& layout();
 		const Layout& layout() const;
 
-		const cpputils::collections::Namer<const HMP::Dag::Node*>& namer() const;
+		const cpputils::collections::Namer<const Dag::Node*>& namer() const;
 
 		void resetView();
 
