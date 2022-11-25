@@ -11,7 +11,6 @@ add_executable (gui
     "src/Widgets/Target.cpp"
     "src/Widgets/VertEdit.cpp"
     "src/Widgets/DirectVertEdit.cpp"
-    "src/Widgets/Ae3d2ShapeExporter.cpp"
 )
 
 set_target_properties (gui PROPERTIES
@@ -42,6 +41,18 @@ if (HMP_GUI_ENABLE_DAG_VIEWER)
 
     target_compile_definitions(gui 
         PUBLIC HMP_GUI_ENABLE_DAG_VIEWER
+    )
+
+endif()
+
+if (HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER)
+
+    target_sources(gui
+        PRIVATE "src/Widgets/Ae3d2ShapeExporter.cpp"
+    )
+
+    target_compile_definitions(gui 
+        PUBLIC HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER
     )
 
 endif()
