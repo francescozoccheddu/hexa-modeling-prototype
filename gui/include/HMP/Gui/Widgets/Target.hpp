@@ -6,16 +6,12 @@
 #include <cinolib/meshes/drawable_polygonmesh.h>
 #include <cinolib/meshes/polygonmesh.h>
 #include <HMP/Meshing/Mesher.hpp>
-#include <cinolib/geometry/aabb.h>
 #include <cinolib/color.h>
-#include <cinolib/drawable_segment_soup.h>
 #include <string>
 #include <cpputils/collections/Event.hpp>
 #include <HMP/Gui/Utils/Transform.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <HMP/Utils/Serialization.hpp>
-#include <utility>
-#include <unordered_map>
 
 namespace HMP::Gui::Widgets
 {
@@ -31,11 +27,6 @@ namespace HMP::Gui::Widgets
 		std::string m_filename;
 		Utils::Transform m_transform;
 		cinolib::Color m_faceColor, m_edgeColor;
-		bool m_showProjectLines;
-		std::vector<std::pair<Vec, Vec>> m_verts;
-		cinolib::DrawableSegmentSoup m_projectLines;
-		Real m_vertInterpProgress;
-		float m_sliderVertInterpProgress;
 		bool m_missingMeshFile;
 
 		void ensureHasMesh() const;
@@ -47,7 +38,6 @@ namespace HMP::Gui::Widgets
 		cpputils::collections::Event<Target> onProjectRequest, onMeshLoad, onMeshClear;
 		cpputils::collections::Event<Target> onTransform;
 		cpputils::collections::Event<Target, const Mat4&> onApplyTransformToSource;
-		cpputils::collections::Event<Target, const std::unordered_map<Id, Vec>&> onVertsInterpolationChanged;
 
 		const Meshing::Mesher::Mesh& sourceMesh() const;
 
@@ -56,31 +46,9 @@ namespace HMP::Gui::Widgets
 
 		cinolib::Polygonmesh<> meshForProjection() const;
 
-		const std::vector<std::pair<Vec, Vec>>& verts() const;
-
-		Real vertInterpolationProgress() const;
-
-		void interpolateVerts(Real _progress);
-
-		void cancelVertInterpolation();
-
-		bool interpolatingVerts() const;
-
-		void clearDebugInfo();
-
 		void show(bool _visible);
 		bool visible() const;
 		bool& visible();
-
-		void showProjectLines(bool _visible);
-
-		void setProjectLinesColor(const cinolib::Color& _color);
-
-		void setProjectLinesThickness(float _thickness);
-
-		void setProjectLinesAlwaysOnFront(bool _alwaysInFront);
-
-		const cinolib::DrawableSegmentSoup& projectLines() const;
 
 		cinolib::Color& faceColor();
 		const cinolib::Color& faceColor() const;
