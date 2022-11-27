@@ -11,6 +11,7 @@ add_executable (gui
     "src/Widgets/Target.cpp"
     "src/Widgets/VertEdit.cpp"
     "src/Widgets/DirectVertEdit.cpp"
+    "src/Widgets/Projection.cpp"
     "src/Widgets/Save.cpp"
 )
 

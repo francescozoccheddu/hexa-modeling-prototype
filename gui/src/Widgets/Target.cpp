@@ -1,7 +1,6 @@
 #include <HMP/Gui/Widgets/Target.hpp>
 
 #include <cinolib/gl/file_dialog_open.h>
-#include <cinolib/geometry/lerp.hpp>
 #include <imgui.h>
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <vector>
@@ -14,7 +13,7 @@ namespace HMP::Gui::Widgets
 	Target::Target(const Meshing::Mesher::Mesh& _sourceMesh) :
 		cinolib::SideBarItem{ "Target mesh" },
 		m_mesh{}, m_sourceMesh{ _sourceMesh },
-		onProjectRequest{}, onMeshLoad{}, onMeshClear{}, onApplyTransformToSource{},
+		onMeshLoad{}, onMeshClear{}, onApplyTransformToSource{},
 		m_visible{ true }, m_faceColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.15f} }, m_edgeColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.4f} },
 		m_transform{},
 		m_missingMeshFile{ false }
@@ -224,12 +223,6 @@ namespace HMP::Gui::Widgets
 		}
 	}
 
-	void Target::requestProjection()
-	{
-		ensureHasMesh();
-		onProjectRequest();
-	}
-
 	void Target::requestApplyTransformToSource()
 	{
 		ensureHasMesh();
@@ -367,11 +360,6 @@ namespace HMP::Gui::Widgets
 				}
 			}
 			ImGui::Spacing();
-			if (ImGui::Button("Project"))
-			{
-				requestProjection();
-			}
-			ImGui::SameLine();
 			if (ImGui::Button("Apply transform to source"))
 			{
 				requestApplyTransformToSource();

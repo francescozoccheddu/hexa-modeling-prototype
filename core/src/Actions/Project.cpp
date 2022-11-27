@@ -18,7 +18,7 @@ namespace HMP::Actions
 			cinolib::Polygonmesh<> sourceSurf;
 			std::unordered_map<Id, Id> sourceSurf2Source, source2SourceSurf;
 			cinolib::export_surface(source, sourceSurf, source2SourceSurf, sourceSurf2Source);
-			const std::vector<Vec> newSourceSurfVerts{ Algorithms::Projection::project(sourceSurf, m_target) };
+			const std::vector<Vec> newSourceSurfVerts{ Algorithms::Projection::project(sourceSurf, m_target, m_options) };
 			m_vertMoves.resize(newSourceSurfVerts.size());
 			for (std::size_t sourceSurfVi{}; sourceSurfVi < newSourceSurfVerts.size(); sourceSurfVi++)
 			{
@@ -51,17 +51,22 @@ namespace HMP::Actions
 		apply();
 	}
 
-	Project::Project(TargetMesh&& _target)
-		: m_target{ std::move(_target) }, m_vertMoves{}, m_prepared{ false }
+	Project::Project(TargetMesh&& _target, const Algorithms::Projection::Options& _options)
+		: m_target{ std::move(_target) }, m_vertMoves{}, m_prepared{ false }, m_options{ _options }
 	{}
 
-	Project::Project(const TargetMesh& _target)
-		: m_target{ _target }, m_vertMoves{}, m_prepared{ false }
+	Project::Project(const TargetMesh& _target, const Algorithms::Projection::Options& _options)
+		: m_target{ _target }, m_vertMoves{}, m_prepared{ false }, m_options{ _options }
 	{}
 
 	const Project::TargetMesh& Project::target() const
 	{
 		return m_target;
+	}
+
+	const Algorithms::Projection::Options Project::options() const
+	{
+		return m_options;
 	}
 
 }

@@ -35,7 +35,7 @@ namespace HMP::Gui::Widgets
 
 		Target(const Meshing::Mesher::Mesh& _sourceMesh);
 
-		cpputils::collections::Event<Target> onProjectRequest, onMeshLoad, onMeshClear;
+		cpputils::collections::Event<Target> onMeshLoad, onMeshClear;
 		cpputils::collections::Event<Target> onTransform;
 		cpputils::collections::Event<Target, const Mat4&> onApplyTransformToSource;
 
@@ -69,7 +69,6 @@ namespace HMP::Gui::Widgets
 		bool load(bool _keepTransform = false);
 		void load(const std::string& _filename, bool _keepTransform = false);
 		void clearMesh();
-		void requestProjection();
 		void requestApplyTransformToSource();
 
 		void draw() override;

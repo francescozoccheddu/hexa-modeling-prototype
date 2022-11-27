@@ -896,9 +896,9 @@ namespace HMP::Gui
 		}
 	}
 
-	void App::onProjectToTarget()
+	void App::onProjectToTarget(const Algorithms::Projection::Options& _options)
 	{
-		applyAction(*new Actions::Project{ std::move(m_targetWidget.meshForProjection()) });
+		applyAction(*new Actions::Project{ std::move(m_targetWidget.meshForProjection()), _options });
 	}
 
 	void App::onApplyTargetTransform(const Mat4& _transform)
@@ -996,7 +996,8 @@ namespace HMP::Gui
 	App::App() :
 		m_project{}, m_canvas{ 700, 600, 13, 1.0f }, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() },
 		m_dagNamer{}, m_menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh controls" },
-		m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{ m_canvas.camera }, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher }, m_directVertEditWidget{ m_vertEditWidget, m_canvas }, m_saveWidget{}
+		m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{ m_canvas.camera }, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher }
+		, m_directVertEditWidget{ m_vertEditWidget, m_canvas }, m_saveWidget{}, m_projectionWidget{ m_targetWidget }
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		, m_dagViewerWidget{ m_mesher, m_dagNamer }, m_dagViewerNeedsUpdate{ true }
 #endif
@@ -1031,6 +1032,7 @@ namespace HMP::Gui
 		m_canvas.push(&m_commanderWidget);
 		m_canvas.push(&m_vertEditWidget);
 		m_canvas.push(&m_targetWidget);
+		m_canvas.push(&m_projectionWidget);
 		m_canvas.push(&m_menu);
 
 #ifdef HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER
@@ -1045,7 +1047,7 @@ namespace HMP::Gui
 		m_saveWidget.onSave += [this](const std::string& _filename) { onSaveState(_filename); };
 		m_saveWidget.onLoad += [this](const std::string& _filename) { onLoadState(_filename); };
 
-		m_targetWidget.onProjectRequest += [this]() { onProjectToTarget(); };
+		m_projectionWidget.onProjectRequest += [this](auto && ..._args) { onProjectToTarget(_args ...); };
 		m_targetWidget.onMeshLoad += [this]() { m_canvas.push(&m_targetWidget.mesh(), false); m_canvas.refit_scene(); };
 		m_targetWidget.onMeshClear += [this]() { m_canvas.pop(&m_targetWidget.mesh()); };
 		m_targetWidget.onTransform += [this]() { m_canvas.refit_scene(); };

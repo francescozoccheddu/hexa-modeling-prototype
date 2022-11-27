@@ -41,6 +41,16 @@ namespace HMP::Algorithms::Projection
         }
     }
 
+    Real Tweak::min() const
+    {
+        return m_min;
+    }
+
+    Real Tweak::power() const
+    {
+        return m_power;
+    }
+
     bool Tweak::shouldSkip(Real _value) const
     {
         return _value < m_min;
