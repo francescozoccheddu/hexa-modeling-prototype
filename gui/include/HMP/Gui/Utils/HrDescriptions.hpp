@@ -25,7 +25,6 @@ namespace HMP::Gui::Utils::HrDescriptions
 {
 
 	using DagNamer = cpputils::collections::Namer<const HMP::Dag::Node*>;
-	using ProjectAction = Actions::Project<cinolib::Mesh_std_attributes, cinolib::Vert_std_attributes, cinolib::Edge_std_attributes, cinolib::Polygon_std_attributes>;
 
 	std::string name(const HMP::Dag::Node& _node, DagNamer& _dagNamer);
 	std::string describe(Meshing::ERefinementScheme _scheme);
@@ -49,7 +48,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 	std::string describe(const Actions::Load& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::MakeConforming& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::Paste& _action, DagNamer& _dagNamer);
-	std::string describe(const ProjectAction& _action, DagNamer& _dagNamer);
+	std::string describe(const Actions::Project& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::Refine& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::Rotate& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::TransformVerts& _action, DagNamer& _dagNamer);

@@ -914,13 +914,7 @@ namespace HMP::Gui
 
 	void App::onProjectToTarget()
 	{
-		cinolib::DrawableTrimesh<> target{ m_targetWidget.mesh() };
-		for (Id vid{}; vid < target.num_verts(); vid++)
-		{
-			Vec& vert{ target.vert(vid) };
-			vert = target.transform * vert;
-		}
-		applyAction(*new Actions::Project{ std::move(target) });
+		applyAction(*new Actions::Project{ std::move(m_targetWidget.meshForProjection()) });
 	}
 
 	void App::onApplyTargetTransform(const Mat4& _transform)
@@ -1131,6 +1125,6 @@ namespace HMP::Gui
 			}
 			throw;
 		}
-	}
+}
 
 }

@@ -3,7 +3,8 @@
 #include <HMP/Meshing/types.hpp>
 #include <cinolib/geometry/vec_mat.h>
 #include <cinolib/gl/side_bar_item.h>
-#include <cinolib/meshes/drawable_trimesh.h>
+#include <cinolib/meshes/drawable_polygonmesh.h>
+#include <cinolib/meshes/polygonmesh.h>
 #include <HMP/Meshing/Mesher.hpp>
 #include <cinolib/geometry/aabb.h>
 #include <cinolib/color.h>
@@ -24,7 +25,7 @@ namespace HMP::Gui::Widgets
 
 	private:
 
-		cinolib::DrawableTrimesh<>* m_mesh;
+		cinolib::DrawablePolygonmesh<>* m_mesh;
 		const Meshing::Mesher::Mesh& m_sourceMesh;
 		bool m_visible;
 		std::string m_filename;
@@ -51,7 +52,9 @@ namespace HMP::Gui::Widgets
 		const Meshing::Mesher::Mesh& sourceMesh() const;
 
 		bool hasMesh() const;
-		const cinolib::DrawableTrimesh<>& mesh() const;
+		const cinolib::DrawablePolygonmesh<>& mesh() const;
+
+		cinolib::Polygonmesh<> meshForProjection() const;
 
 		const std::vector<std::pair<Vec, Vec>>& verts() const;
 

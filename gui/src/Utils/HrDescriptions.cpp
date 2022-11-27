@@ -275,7 +275,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return stream.str();
 	}
 
-	std::string describe(const ProjectAction& _action, DagNamer& _dagNamer)
+	std::string describe(const Actions::Project& _action, DagNamer& _dagNamer)
 	{
 		std::ostringstream stream{};
 		stream
@@ -338,7 +338,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 		{
 			return describe(*action, _dagNamer);
 		}
-		if (const ProjectAction* action{ dynamic_cast<const ProjectAction*>(&_action) }; action)
+		if (const Actions::Project* action{ dynamic_cast<const Actions::Project*>(&_action) }; action)
 		{
 			return describe(*action, _dagNamer);
 		}
