@@ -19,6 +19,9 @@ namespace HMP::Algorithms::Projection
 
         Tweak(Real _min, Real _power = 1.0);
 
+        Real min() const;
+        Real power() const;
+
         bool shouldSkip(Real _value) const;
         Real apply(Real _value) const;
 

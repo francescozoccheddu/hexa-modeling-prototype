@@ -16,6 +16,7 @@
 #include <HMP/Gui/Widgets/Target.hpp>
 #include <HMP/Gui/Widgets/VertEdit.hpp>
 #include <HMP/Gui/Widgets/DirectVertEdit.hpp>
+#include <HMP/Gui/Widgets/Projection.hpp>
 #include <HMP/Gui/Widgets/Save.hpp>
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
@@ -124,6 +125,7 @@ namespace HMP::Gui
 		Widgets::Commander m_commanderWidget;
 		Widgets::DirectVertEdit m_directVertEditWidget;
 		Widgets::Save m_saveWidget;
+		Widgets::Projection m_projectionWidget;
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		bool m_dagViewerNeedsUpdate;
@@ -189,7 +191,7 @@ namespace HMP::Gui
 		void onLoadState();
 		void onLoadTargetMesh();
 		void onToggleTargetVisibility();
-		void onProjectToTarget();
+		void onProjectToTarget(const Algorithms::Projection::Options& _options);
 		void onApplyTargetTransform(const Mat4& _transform);
 		void onUndo();
 		void onRedo();
