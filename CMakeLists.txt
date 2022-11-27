@@ -32,6 +32,15 @@ if (HMP_GUI_ENABLE_DAG_VIEWER)
     FetchContent_MakeAvailable (ogdf)
 endif()
 
+# updatable_priority_queue
+FetchContent_Declare (
+    updatable_priority_queue
+    GIT_REPOSITORY "https://github.com/Ten0/updatable_priority_queue.git"
+    GIT_TAG master
+    GIT_PROGRESS TRUE
+)
+FetchContent_MakeAvailable (updatable_priority_queue)
+
 # cpputils
 FetchContent_Declare (
     cpputils

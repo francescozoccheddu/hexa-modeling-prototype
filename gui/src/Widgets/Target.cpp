@@ -107,10 +107,22 @@ namespace HMP::Gui::Widgets
 		return m_mesh;
 	}
 
-	const cinolib::DrawableTrimesh<>& Target::mesh() const
+	const cinolib::DrawablePolygonmesh<>& Target::mesh() const
 	{
 		ensureHasMesh();
 		return *m_mesh;
+	}
+
+	cinolib::Polygonmesh<> Target::meshForProjection() const
+	{
+		ensureHasMesh();
+		cinolib::Polygonmesh<> mesh{ *m_mesh };
+		for (Id vid{}; vid < mesh.num_verts(); vid++)
+		{
+			Vec& vert{ mesh.vert(vid) };
+			vert = m_mesh->transform * vert;
+		}
+		return mesh;
 	}
 
 	void Target::show(bool _visible)
@@ -249,7 +261,7 @@ namespace HMP::Gui::Widgets
 		if (std::filesystem::exists(_filename))
 		{
 			m_visible = true;
-			m_mesh = new cinolib::DrawableTrimesh<>(m_filename.c_str());
+			m_mesh = new cinolib::DrawablePolygonmesh<>(m_filename.c_str());
 			m_mesh->draw_back_faces = false;
 			if (!_keepTransform)
 			{

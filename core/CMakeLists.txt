@@ -7,11 +7,13 @@ add_library (core STATIC
     "src/Actions/Load.cpp"
     "src/Actions/MakeConforming.cpp"
     "src/Actions/Paste.cpp"
+    "src/Actions/Project.cpp"
     "src/Actions/Refine.cpp"
     "src/Actions/Rotate.cpp"
     "src/Actions/TransformVerts.cpp"
     "src/Actions/TransformAll.cpp"
     "src/Actions/Utils.cpp"
+    "src/Algorithms/Projection.cpp"
     "src/Dag/Delete.cpp"
     "src/Dag/Element.cpp"
     "src/Dag/Extrude.cpp"
@@ -42,6 +44,7 @@ endif()
 
 target_include_directories (core
     PUBLIC "include"
+    PRIVATE ${updatable_priority_queue_SOURCE_DIR}
 )
 
 target_link_libraries (core 
