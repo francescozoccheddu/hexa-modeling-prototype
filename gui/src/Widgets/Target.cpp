@@ -14,80 +14,11 @@ namespace HMP::Gui::Widgets
 	Target::Target(const Meshing::Mesher::Mesh& _sourceMesh) :
 		cinolib::SideBarItem{ "Target mesh" },
 		m_mesh{}, m_sourceMesh{ _sourceMesh },
-		onProjectRequest{}, onMeshLoad{}, onMeshClear{}, onApplyTransformToSource{}, onVertsInterpolationChanged{},
+		onProjectRequest{}, onMeshLoad{}, onMeshClear{}, onApplyTransformToSource{},
 		m_visible{ true }, m_faceColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.15f} }, m_edgeColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.4f} },
-		m_transform{}, m_verts{}, m_vertInterpProgress{ 1.0 }, m_sliderVertInterpProgress{ 100.0f },
-		m_projectLines{}, m_showProjectLines{},
+		m_transform{},
 		m_missingMeshFile{ false }
-	{
-		m_projectLines.set_color(cinolib::Color::hsv2rgb(0.0f, 1.0f, 1.0f));
-		m_projectLines.set_thickness(1.0f);
-		m_projectLines.set_cheap_rendering(true);
-		m_projectLines.set_always_in_front(false);
-		m_projectLines.show = false;
-	}
-
-	const std::vector<std::pair<Vec, Vec>>& Target::verts() const
-	{
-		return m_verts;
-	}
-
-	Real Target::vertInterpolationProgress() const
-	{
-		return m_vertInterpProgress;
-	}
-
-	void Target::interpolateVerts(Real _progress)
-	{
-		if (_progress != m_vertInterpProgress)
-		{
-			m_vertInterpProgress = _progress;
-			m_sliderVertInterpProgress = static_cast<float>(_progress) * 100.0f;
-			std::unordered_map<Id, Vec> move{};
-			move.reserve(m_verts.size());
-			Id vid{};
-			for (const auto& [a, b] : m_verts)
-			{
-				move.insert({ vid++, cinolib::lerp1(std::array<Vec,2>{a, b}, _progress) });
-			}
-			onVertsInterpolationChanged(move);
-		}
-	}
-
-	void Target::cancelVertInterpolation()
-	{
-		interpolateVerts(1.0);
-	}
-
-	bool Target::interpolatingVerts() const
-	{
-		return m_vertInterpProgress != 1.0;
-	}
-
-	void Target::showProjectLines(bool _visible)
-	{
-		m_projectLines.show = _visible;
-	}
-
-	void Target::setProjectLinesColor(const cinolib::Color& _color)
-	{
-		m_projectLines.set_color(_color);
-	}
-
-	void Target::setProjectLinesThickness(float _thickness)
-	{
-		m_projectLines.set_thickness(_thickness);
-	}
-
-	void Target::setProjectLinesAlwaysOnFront(bool _alwaysInFront)
-	{
-		m_projectLines.set_always_in_front(_alwaysInFront);
-	}
-
-	const cinolib::DrawableSegmentSoup& Target::projectLines() const
-	{
-		return m_projectLines;
-	}
+	{}
 
 	void Target::ensureHasMesh() const
 	{
@@ -296,24 +227,7 @@ namespace HMP::Gui::Widgets
 	void Target::requestProjection()
 	{
 		ensureHasMesh();
-		std::vector<std::pair<Vec, Vec>> verts{};
-		verts.resize(m_sourceMesh.num_verts());
-		for (std::size_t vid{}; vid < m_sourceMesh.num_verts(); vid++)
-		{
-			verts[vid].first = m_sourceMesh.vert(static_cast<Id>(vid));
-		}
 		onProjectRequest();
-		m_vertInterpProgress = 1.0;
-		m_sliderVertInterpProgress = 100.0f;
-		m_projectLines.clear();
-		m_projectLines.reserve(verts.size() * 2);
-		for (std::size_t vid{}; vid < m_sourceMesh.num_verts(); vid++)
-		{
-			verts[vid].second = m_sourceMesh.vert(static_cast<Id>(vid));
-			m_projectLines.push_seg(verts[vid].first, verts[vid].second);
-		}
-		m_verts.swap(verts);
-		m_projectLines.update_bbox();
 	}
 
 	void Target::requestApplyTransformToSource()
@@ -322,13 +236,6 @@ namespace HMP::Gui::Widgets
 		updateTransform();
 		onApplyTransformToSource(m_mesh->transform.inverse());
 		identity();
-	}
-
-	void Target::clearDebugInfo()
-	{
-		cancelVertInterpolation();
-		m_projectLines.clear();
-		m_verts.clear();
 	}
 
 	void Target::draw()
@@ -468,37 +375,6 @@ namespace HMP::Gui::Widgets
 			if (ImGui::Button("Apply transform to source"))
 			{
 				requestApplyTransformToSource();
-			}
-			if (!m_projectLines.empty())
-			{
-				ImGui::Checkbox("Show lines", &m_projectLines.show);
-				if (m_projectLines.show)
-				{
-					ImGui::SameLine();
-					ImGui::Checkbox("On top", &m_projectLines.no_depth_test);
-				}
-			}
-			if (!m_verts.empty())
-			{
-				ImGui::SliderFloat("Interpolate", &m_sliderVertInterpProgress, 0.0f, 100.0f, "%.2f%%", ImGuiSliderFlags_AlwaysClamp);
-				Real desiredProgress{ static_cast<Real>(m_sliderVertInterpProgress / 100.0f) };
-				if (!Utils::Transform::isNull(desiredProgress - m_vertInterpProgress))
-				{
-					ImGui::SameLine();
-					if (ImGui::SmallButton("Apply"))
-					{
-						interpolateVerts(desiredProgress);
-					}
-				}
-				if (interpolatingVerts() || m_sliderVertInterpProgress != 100.0f)
-				{
-					ImGui::SameLine();
-					if (ImGui::SmallButton("Reset"))
-					{
-						m_sliderVertInterpProgress = 100.0f;
-						cancelVertInterpolation();
-					}
-				}
 			}
 		}
 		else

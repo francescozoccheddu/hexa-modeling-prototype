@@ -154,7 +154,6 @@ namespace HMP::Gui
 		void onVertEditMeshUpdated();
 		void onApplyVertEdit(const std::vector<Id>& _vids, const Mat4& _transform);
 		void onVertEditPendingActionChanged();
-		void onTargetVertInterpolationChanged(const std::unordered_map<Id, Vec>& _moves);
 
 		// canvas events
 		void onCameraChanged();
