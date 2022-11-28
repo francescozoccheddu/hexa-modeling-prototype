@@ -14,7 +14,12 @@ namespace HMP::Gui::Widgets
 		cinolib::SideBarItem{ "Target mesh" },
 		m_mesh{}, m_sourceMesh{ _sourceMesh },
 		onMeshLoad{}, onMeshClear{}, onApplyTransformToSource{},
-		m_visible{ true }, m_faceColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.1f} }, m_edgeColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.3f} },
+		m_visible{ true },
+#ifdef HMP_GUI_LIGHT_THEME
+		m_faceColor{ cinolib::Color{0.0f,0.0f,0.0f, 0.1f} }, m_edgeColor{ cinolib::Color{0.0f,0.0f,0.0f, 0.3f} },
+#else
+		m_faceColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.1f} }, m_edgeColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.3f} },
+#endif
 		m_transform{},
 		m_missingMeshFile{ false }
 	{}

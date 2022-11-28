@@ -49,17 +49,12 @@ namespace HMP::Gui::Widgets
 	void Projection::draw()
 	{
 		static constexpr auto tweak{ [](Algorithms::Projection::Tweak& _tweak, const char* _header) {
-			ImGui::TextDisabled("%s", _header);
+			ImGui::Text("%s", _header);
 			float min{static_cast<float>(_tweak.min())};
 			ImGui::SliderFloat("Min", &min, -2.0f, 1.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
 			float power{static_cast<float>(_tweak.power())};
 			ImGui::SliderFloat("Power", &power, 0.0f, 4.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_Logarithmic);
 			_tweak = { min, power };
-		} };
-		static constexpr auto space{ []() {
-			ImGui::Spacing();
-			ImGui::Separator();
-			ImGui::Spacing();
 		} };
 		{
 			int iterations{ static_cast<int>(m_options.iterations) };
@@ -68,7 +63,7 @@ namespace HMP::Gui::Widgets
 				m_options.iterations = static_cast<std::size_t>(iterations);
 			}
 		}
-		space();
+		ImGui::Spacing();
 		{
 			int invertMode{ static_cast<int>(m_options.invertMode) };
 			if (ImGui::Combo("Invert mode", &invertMode, "Distance\0BarycentricCoords\0"))
@@ -81,13 +76,13 @@ namespace HMP::Gui::Widgets
 				m_options.displaceMode = static_cast<Algorithms::Projection::EDisplaceMode>(displaceMode);
 			}
 		}
-		space();
+		ImGui::Spacing();
 		tweak(m_options.weightTweak, "Weight factor");
-		space();
+		ImGui::Spacing();
 		tweak(m_options.normalDotTweak, "Normal dot factor");
-		space();
+		ImGui::Spacing();
 		tweak(m_options.unsetVertsDistWeightTweak, "Unset verts distance factor");
-		space();
+		ImGui::Spacing();
 		{
 			float advancePercentile{ static_cast<float>(m_options.advancePercentile) };
 			if (ImGui::SliderFloat("Advance percentile", &advancePercentile, 0.0f, 100.0f, "%.2f%%", ImGuiSliderFlags_AlwaysClamp))
@@ -95,11 +90,10 @@ namespace HMP::Gui::Widgets
 				m_options.advancePercentile = advancePercentile;
 			}
 		}
-		space();
 		ImGui::Checkbox("Smooth", &m_options.smooth);
+		ImGui::Spacing();
 		if (m_targetWidget.hasMesh())
 		{
-			space();
 			if (ImGui::Button("Project"))
 			{
 				requestProjection();

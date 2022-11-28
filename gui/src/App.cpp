@@ -1006,6 +1006,26 @@ namespace HMP::Gui
 #endif
 	{
 
+		{
+#ifdef HMP_GUI_LIGHT_THEME
+			ImGui::StyleColorsLight();
+			static constexpr float styleHue{ 213.0f / 360.0f };
+#else
+			ImGui::StyleColorsDark();
+			static constexpr float styleHue{ 213.0f / 360.0f };
+#endif
+			ImGuiStyle& style{ ImGui::GetStyle() };
+			for (ImVec4& color : style.Colors)
+			{
+				float h, s, v;
+				ImGui::ColorConvertRGBtoHSV(color.x, color.y, color.z, h, s, v);
+				h += c_hue - styleHue;
+				h = static_cast<float>(Utils::Transform::wrapAngle(static_cast<Real>(h * 360.0f))) / 360.0f;
+				ImGui::ColorConvertHSVtoRGB(h, s, v, color.x, color.y, color.z);
+			}
+		}
+
+
 		glfwSetWindowTitle(m_canvas.window, "hexa-modeling-prototype");
 
 		m_canvas.background = c_backgroundColor;
@@ -1014,6 +1034,8 @@ namespace HMP::Gui
 		m_canvas.key_bindings.restore_camera = cinolib::KeyBindings::no_key_binding();
 		m_mesher.polyMarkerSet().color() = c_selectedPolyColor;
 		m_mesher.faceMarkerSet().color() = c_selectedFaceColor;
+		m_mesher.polyColor() = c_polyColor;
+		m_mesher.edgeColor() = c_edgeColor;
 
 		m_mesher.onElementRemove += [this](const HMP::Dag::Element& _element) { onElementRemove(_element); };
 		m_mesher.onClear += [this]() { onClearElements(); };
@@ -1060,6 +1082,8 @@ namespace HMP::Gui
 		m_vertEditWidget.onPendingActionChanged += [this]() { onVertEditPendingActionChanged(); };
 
 		m_directVertEditWidget.onPendingChanged += [this]() { updateMouse(); };
+		m_directVertEditWidget.color = c_overlayColor;
+		m_directVertEditWidget.mutedColor = c_mutedOverlayColor;
 
 		m_canvas.depth_cull_markers = false;
 		m_canvas.callback_mouse_left_click = [this](auto && ..._args) { return onMouseLeftClicked(_args ...); };

@@ -52,11 +52,20 @@ namespace HMP::Gui::Widgets
 			return proj;
 		} };
 		origin = project(origin);
+#ifdef HMP_GUI_LIGHT_THEME
+#define HMP_GUI_WIDGETS_AXES_COL_VAL 240
+#define HMP_GUI_WIDGETS_AXES_COL_NVAL 100
+#else
+#define HMP_GUI_WIDGETS_AXES_COL_VAL 255
+#define HMP_GUI_WIDGETS_AXES_COL_NVAL 100
+#endif
 		std::array<std::pair<Vec, ImColor>, 3> tips{
-			std::pair<Vec, ImColor>{project(right), IM_COL32(255,100,100,255)},
-			std::pair<Vec, ImColor>{project(up), IM_COL32(100,255,100,255)},
-			std::pair<Vec, ImColor>{project(forward), IM_COL32(100,100,255,255)}
+			std::pair<Vec, ImColor>{project(right), IM_COL32(HMP_GUI_WIDGETS_AXES_COL_VAL,HMP_GUI_WIDGETS_AXES_COL_NVAL,HMP_GUI_WIDGETS_AXES_COL_NVAL,255)},
+			std::pair<Vec, ImColor>{project(up), IM_COL32(HMP_GUI_WIDGETS_AXES_COL_NVAL,HMP_GUI_WIDGETS_AXES_COL_VAL,HMP_GUI_WIDGETS_AXES_COL_NVAL,255)},
+			std::pair<Vec, ImColor>{project(forward), IM_COL32(HMP_GUI_WIDGETS_AXES_COL_NVAL,HMP_GUI_WIDGETS_AXES_COL_NVAL,HMP_GUI_WIDGETS_AXES_COL_VAL,255)}
 		};
+#undef HMP_GUI_WIDGETS_AXES_COL_VAL
+#undef HMP_GUI_WIDGETS_AXES_COL_NVAL
 		std::sort(tips.begin(), tips.end(), [](const std::pair<Vec, ImColor>& _a, const std::pair<Vec, ImColor>& _b) { return _a.first.z() > _b.first.z(); });
 		for (const auto& [tip, color] : tips)
 		{

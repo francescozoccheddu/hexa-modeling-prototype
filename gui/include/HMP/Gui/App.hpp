@@ -35,12 +35,27 @@ namespace HMP::Gui
 
 	private:
 
+		static constexpr float c_hue{ 0.1f };
+
+#ifdef HMP_GUI_LIGHT_THEME
+		static constexpr cinolib::Color c_warningTextColor{ cinolib::Color::hsv2rgb(0.1f, 1.0f, 0.75f) };
+		static constexpr cinolib::Color c_backgroundColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.95f) };
+		static constexpr cinolib::Color c_overlayColor{ cinolib::Color::hsv2rgb(c_hue, 0.8f, 1.0f) };
+		static constexpr cinolib::Color c_mutedOverlayColor{ cinolib::Color::hsv2rgb(c_hue, 0.0f, 0.0f, 0.25f) };
+		static constexpr cinolib::Color c_polyColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.75f) };
+		static constexpr cinolib::Color c_edgeColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.1f) };
+		static constexpr cinolib::Color c_selectedPolyColor{ cinolib::Color::hsv2rgb(c_hue, 0.3f, 0.85f) };
+		static constexpr cinolib::Color c_selectedFaceColor{ cinolib::Color::hsv2rgb(c_hue, 0.75f, 1.0f) };
+#else
 		static constexpr cinolib::Color c_warningTextColor{ cinolib::Color::hsv2rgb(0.2f, 0.6f, 0.6f) };
 		static constexpr cinolib::Color c_backgroundColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.1f) };
-		static constexpr cinolib::Color c_overlayColor{ cinolib::Color::hsv2rgb(0.1f, 0.5f, 1.0f) };
-		static constexpr cinolib::Color c_mutedOverlayColor{ cinolib::Color::hsv2rgb(0.1f, 0.0f, 1.0f, 0.25f) };
-		static constexpr cinolib::Color c_selectedPolyColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 0.5f) };
-		static constexpr cinolib::Color c_selectedFaceColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 1.0f) };
+		static constexpr cinolib::Color c_overlayColor{ cinolib::Color::hsv2rgb(c_hue, 0.5f, 1.0f) };
+		static constexpr cinolib::Color c_mutedOverlayColor{ cinolib::Color::hsv2rgb(c_hue, 0.0f, 1.0f, 0.25f) };
+		static constexpr cinolib::Color c_polyColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.35f) };
+		static constexpr cinolib::Color c_edgeColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.0f) };
+		static constexpr cinolib::Color c_selectedPolyColor{ cinolib::Color::hsv2rgb(c_hue, 0.75f, 0.5f) };
+		static constexpr cinolib::Color c_selectedFaceColor{ cinolib::Color::hsv2rgb(c_hue, 0.75f, 1.0f) };
+#endif
 
 		static constexpr std::size_t c_mouseMarkerSetInd{ 1 };
 		static constexpr std::size_t c_vertSelectionMarkerSetInd{ 2 };
