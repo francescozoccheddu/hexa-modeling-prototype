@@ -280,7 +280,9 @@ namespace HMP::Gui::Utils::HrDescriptions
 		std::ostringstream stream{};
 		stream
 			<< "Project to target"
-			<< " " << &_action.target();
+			<< " ("
+			<< _action.options().iterations
+			<< " iterations)";
 		return stream.str();
 	}
 
