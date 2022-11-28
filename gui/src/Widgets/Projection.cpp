@@ -2,12 +2,14 @@
 
 #include <imgui.h>
 #include <utility>
+#include <stdexcept>
+#include <HMP/Actions/Project.hpp>
 
 namespace HMP::Gui::Widgets
 {
 
-	Projection::Projection(const Widgets::Target& _targetWidget) :
-		cinolib::SideBarItem{ "Projection" }, m_targetWidget{ _targetWidget },
+	Projection::Projection(const Widgets::Target& _targetWidget, HMP::Commander& _commander) :
+		cinolib::SideBarItem{ "Projection" }, m_targetWidget{ _targetWidget }, m_commander{ _commander },
 		onProjectRequest{}, m_options{}
 	{}
 
@@ -18,7 +20,30 @@ namespace HMP::Gui::Widgets
 
 	void Projection::requestProjection()
 	{
+		if (!m_targetWidget.hasMesh())
+		{
+			throw std::logic_error{ "no target mesh" };
+		}
 		onProjectRequest(m_options);
+	}
+
+	bool Projection::canReproject() const
+	{
+		if (!m_commander.canUndo())
+		{
+			return false;
+		}
+		return dynamic_cast<const Actions::Project*>(&m_commander.applied().first());
+	}
+
+	void Projection::requestReprojection()
+	{
+		if (!canReproject())
+		{
+			throw std::logic_error{ "no projection to undo" };
+		}
+		m_commander.undo();
+		requestProjection();
 	}
 
 	void Projection::draw()
@@ -78,6 +103,14 @@ namespace HMP::Gui::Widgets
 			if (ImGui::Button("Project"))
 			{
 				requestProjection();
+			}
+			if (canReproject())
+			{
+				ImGui::SameLine();
+				if (ImGui::Button("Reproject"))
+				{
+					requestReprojection();
+				}
 			}
 		}
 	}
