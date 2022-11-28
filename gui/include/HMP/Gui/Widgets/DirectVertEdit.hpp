@@ -23,12 +23,6 @@ namespace HMP::Gui::Widgets
 
     private:
 
-        static constexpr cinolib::Color c_mutedColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 1.0f, 0.2f) };
-        static constexpr cinolib::Color c_color{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 1.0f, 0.7f) };
-        static constexpr float c_lineThickness{ 1.0f };
-        static constexpr float c_textSize{ 20.0f };
-        static constexpr Vec2 c_textMargin{ 10.0f };
-
         VertEdit& m_vertEdit;
         const cinolib::GLcanvas& m_canvas;
         bool m_pending;
@@ -41,6 +35,12 @@ namespace HMP::Gui::Widgets
         void ensurePending() const;
 
     public:
+
+        cinolib::Color mutedColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 1.0f, 0.2f) };
+        cinolib::Color color{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 1.0f, 0.7f) };
+        float lineThickness{ 1.0f };
+        float textSize{ 20.0f };
+        Vec2 textMargin{ 10.0f };
 
         cpputils::collections::Event<DirectVertEdit> onPendingChanged;
 

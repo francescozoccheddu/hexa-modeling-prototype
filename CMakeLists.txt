@@ -7,6 +7,7 @@ project ("hexa-modeling-prototype")
 
 option (HMP_GUI_ENABLE_DAG_VIEWER "Enable dag viewer widget" OFF)
 option (HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER "Enable ae-3d2shape exporter" OFF)
+option (HMP_GUI_LIGHT_THEME "Enable GUI light theme" OFF)
 
 # cinolib
 set (CINOLIB_HEADER_ONLY OFF)
