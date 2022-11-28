@@ -21,7 +21,7 @@ namespace HMP::Gui::Widgets
 
 	private:
 
-		cinolib::DrawablePolygonmesh<>* m_mesh;
+		cinolib::DrawablePolygonmesh<> m_mesh;
 		const Meshing::Mesher::Mesh& m_sourceMesh;
 		bool m_visible;
 		std::string m_filename;
@@ -35,14 +35,13 @@ namespace HMP::Gui::Widgets
 
 		Target(const Meshing::Mesher::Mesh& _sourceMesh);
 
-		cpputils::collections::Event<Target> onMeshLoad, onMeshClear;
-		cpputils::collections::Event<Target> onTransform;
+		cpputils::collections::Event<Target> onMeshChange;
 		cpputils::collections::Event<Target, const Mat4&> onApplyTransformToSource;
 
 		const Meshing::Mesher::Mesh& sourceMesh() const;
 
 		bool hasMesh() const;
-		const cinolib::DrawablePolygonmesh<>& mesh() const;
+		const cinolib::DrawablePolygonmesh<>& meshForDisplay() const;
 
 		cinolib::Polygonmesh<> meshForProjection() const;
 
