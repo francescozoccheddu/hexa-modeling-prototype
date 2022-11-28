@@ -1047,6 +1047,7 @@ namespace HMP::Gui
 		m_commander.unapplied().limit(100);
 
 		m_canvas.push(&m_mesh);
+		m_canvas.push(&m_targetWidget.meshForDisplay());
 		m_canvas.push(&m_directVertEditWidget);
 		m_canvas.push(&m_axesWidget);
 
@@ -1070,9 +1071,7 @@ namespace HMP::Gui
 		m_saveWidget.onLoad += [this](const std::string& _filename) { onLoadState(_filename); };
 
 		m_projectionWidget.onProjectRequest += [this](auto && ..._args) { onProjectToTarget(_args ...); };
-		m_targetWidget.onMeshLoad += [this]() { m_canvas.push(&m_targetWidget.mesh(), false); m_canvas.refit_scene(); };
-		m_targetWidget.onMeshClear += [this]() { m_canvas.pop(&m_targetWidget.mesh()); };
-		m_targetWidget.onTransform += [this]() { m_canvas.refit_scene(); };
+		m_targetWidget.onMeshChange += [this]() { m_canvas.refit_scene(); };
 		m_targetWidget.onApplyTransformToSource += [this](const Mat4& _transform) { onApplyTargetTransform(_transform); };
 
 		m_vertEditWidget.onApplyAction += [this](std::vector<Id> _vids, Mat4 _transform) { onApplyVertEdit(_vids, _transform); };

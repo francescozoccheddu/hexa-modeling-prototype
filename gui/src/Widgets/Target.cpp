@@ -13,7 +13,7 @@ namespace HMP::Gui::Widgets
 	Target::Target(const Meshing::Mesher::Mesh& _sourceMesh) :
 		cinolib::SideBarItem{ "Target mesh" },
 		m_mesh{}, m_sourceMesh{ _sourceMesh },
-		onMeshLoad{}, onMeshClear{}, onApplyTransformToSource{},
+		onApplyTransformToSource{},
 		m_visible{ true },
 #ifdef HMP_GUI_LIGHT_THEME
 		m_faceColor{ cinolib::Color{0.0f,0.0f,0.0f, 0.1f} }, m_edgeColor{ cinolib::Color{0.0f,0.0f,0.0f, 0.3f} },
@@ -26,7 +26,7 @@ namespace HMP::Gui::Widgets
 
 	void Target::ensureHasMesh() const
 	{
-		if (!m_mesh)
+		if (!hasMesh())
 		{
 			throw std::logic_error{ "no mesh" };
 		}
@@ -39,23 +39,22 @@ namespace HMP::Gui::Widgets
 
 	bool Target::hasMesh() const
 	{
-		return m_mesh;
+		return m_mesh.num_verts();
 	}
 
-	const cinolib::DrawablePolygonmesh<>& Target::mesh() const
+	const cinolib::DrawablePolygonmesh<>& Target::meshForDisplay() const
 	{
-		ensureHasMesh();
-		return *m_mesh;
+		return m_mesh;
 	}
 
 	cinolib::Polygonmesh<> Target::meshForProjection() const
 	{
 		ensureHasMesh();
-		cinolib::Polygonmesh<> mesh{ *m_mesh };
+		cinolib::Polygonmesh<> mesh{ m_mesh };
 		for (Id vid{}; vid < mesh.num_verts(); vid++)
 		{
 			Vec& vert{ mesh.vert(vid) };
-			vert = m_mesh->transform * vert;
+			vert = m_mesh.transform * vert;
 		}
 		return mesh;
 	}
@@ -138,7 +137,7 @@ namespace HMP::Gui::Widgets
 		ensureHasMesh();
 		if (_origin)
 		{
-			m_transform.origin = m_mesh->bbox().center();
+			m_transform.origin = m_mesh.bbox().center();
 		}
 		if (_translation)
 		{
@@ -146,7 +145,7 @@ namespace HMP::Gui::Widgets
 		}
 		if (_scale)
 		{
-			m_transform.scale = { m_sourceMesh.bbox().diag() / m_mesh->bbox().diag() };
+			m_transform.scale = { m_sourceMesh.bbox().diag() / m_mesh.bbox().diag() };
 		}
 		updateTransform();
 	}
@@ -154,14 +153,14 @@ namespace HMP::Gui::Widgets
 	void Target::updateTransform()
 	{
 		ensureHasMesh();
-		m_mesh->transform = m_transform.matrix();
-		onTransform();
+		m_mesh.transform = m_transform.matrix();
+		onMeshChange();
 	}
 
 	void Target::updateVisibility()
 	{
 		ensureHasMesh();
-		m_mesh->show_mesh(m_visible);
+		m_mesh.show_mesh(m_visible);
 	}
 
 	void Target::updateColor(bool _face, bool _edge)
@@ -169,11 +168,11 @@ namespace HMP::Gui::Widgets
 		ensureHasMesh();
 		if (_face)
 		{
-			m_mesh->poly_set_color(m_faceColor);
+			m_mesh.poly_set_color(m_faceColor);
 		}
 		if (_edge)
 		{
-			m_mesh->edge_set_color(m_edgeColor);
+			m_mesh.edge_set_color(m_edgeColor);
 		}
 	}
 
@@ -196,20 +195,17 @@ namespace HMP::Gui::Widgets
 		if (std::filesystem::exists(_filename))
 		{
 			m_visible = true;
-			m_mesh = new cinolib::DrawablePolygonmesh<>(m_filename.c_str());
-			m_mesh->show_marked_edge(false);
-			m_mesh->draw_back_faces = false;
+			m_mesh = cinolib::DrawablePolygonmesh<>{ m_filename.c_str() };
+			m_mesh.show_marked_edge(false);
+			m_mesh.draw_back_faces = false;
 			if (!_keepTransform)
 			{
+				m_transform = {};
 				fit();
-			}
-			else
-			{
-				updateTransform();
 			}
 			updateVisibility();
 			updateColor();
-			onMeshLoad();
+			updateTransform();
 		}
 		else
 		{
@@ -221,19 +217,16 @@ namespace HMP::Gui::Widgets
 	{
 		m_missingMeshFile = false;
 		m_filename = "";
-		if (m_mesh)
-		{
-			onMeshClear();
-			delete m_mesh;
-			m_mesh = nullptr;
-		}
+		m_mesh.clear();
+		m_mesh.updateGL();
+		onMeshChange();
 	}
 
 	void Target::requestApplyTransformToSource()
 	{
 		ensureHasMesh();
 		updateTransform();
-		onApplyTransformToSource(m_mesh->transform.inverse());
+		onApplyTransformToSource(m_mesh.transform.inverse());
 		identity();
 	}
 
@@ -280,7 +273,7 @@ namespace HMP::Gui::Widgets
 			}
 			{
 				ImGui::PushID(1);
-				const float targetMeshSize{ static_cast<float>(m_mesh->bbox().diag()) * 2 };
+				const float targetMeshSize{ static_cast<float>(m_mesh.bbox().diag()) * 2 };
 				if (Utils::Controls::dragTranslationVec("Origin", m_transform.origin, targetMeshSize))
 				{
 					updateTransform();
@@ -331,7 +324,7 @@ namespace HMP::Gui::Widgets
 			}
 			{
 				ImGui::PushID(4);
-				const Real sourceAndTargetMeshScaleRatio{ m_sourceMesh.bbox().diag() / m_mesh->bbox().diag() * 3 };
+				const Real sourceAndTargetMeshScaleRatio{ m_sourceMesh.bbox().diag() / m_mesh.bbox().diag() * 3 };
 				Real scale{ m_transform.avgScale() };
 				if (Utils::Controls::dragScale("Scale", scale, sourceAndTargetMeshScaleRatio))
 				{
