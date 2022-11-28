@@ -14,7 +14,7 @@ namespace HMP::Gui::Widgets
 		cinolib::SideBarItem{ "Target mesh" },
 		m_mesh{}, m_sourceMesh{ _sourceMesh },
 		onMeshLoad{}, onMeshClear{}, onApplyTransformToSource{},
-		m_visible{ true }, m_faceColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.15f} }, m_edgeColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.4f} },
+		m_visible{ true }, m_faceColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.1f} }, m_edgeColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.3f} },
 		m_transform{},
 		m_missingMeshFile{ false }
 	{}
@@ -192,6 +192,7 @@ namespace HMP::Gui::Widgets
 		{
 			m_visible = true;
 			m_mesh = new cinolib::DrawablePolygonmesh<>(m_filename.c_str());
+			m_mesh->show_marked_edge(false);
 			m_mesh->draw_back_faces = false;
 			if (!_keepTransform)
 			{
