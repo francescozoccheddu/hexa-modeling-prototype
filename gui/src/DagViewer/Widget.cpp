@@ -15,7 +15,6 @@
 #include <HMP/Gui/Utils/HrDescriptions.hpp>
 #include <limits>
 
-
 namespace HMP::Gui::DagViewer
 {
 
@@ -77,11 +76,11 @@ namespace HMP::Gui::DagViewer
 
 		// types
 
-		constexpr auto toVec{ [](const ImVec2& _vec) {
+		static constexpr auto toVec{ [](const ImVec2& _vec) {
 			return Vec2{_vec.x, _vec.y};
 		} };
 
-		constexpr auto toImVec{ [](const Vec2& _vec) {
+		static constexpr auto toImVec{ [](const Vec2& _vec) {
 			return ImVec2{static_cast<float>(_vec.x()), static_cast<float>(_vec.y())};
 		} };
 
@@ -186,15 +185,25 @@ namespace HMP::Gui::DagViewer
 
 		// drawing
 
-		constexpr auto toImCol{ [](const cinolib::Color& _color) {
+		static constexpr auto toImCol{ [](const cinolib::Color& _color) {
 			return IM_COL32(_color.r_uchar(), _color.g_uchar(), _color.b_uchar(), _color.a_uchar());
 		} };
 
 		{
 			ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-			constexpr ImU32 backgroundColor{ IM_COL32(40, 40, 40, 255) };
-			constexpr ImU32 borderColor{ IM_COL32(255, 255, 255, 255) };
+#ifdef HMP_GUI_LIGHT_THEME
+			static constexpr float backgroundColorVal{ 230 };
+			static constexpr ImU32 borderColor{ IM_COL32(20, 20, 20, 255) };
+			static constexpr ImU32 gridColor{ IM_COL32(210, 210, 210, 255) };
+			static constexpr ImU32 strokeColor{ IM_COL32(60, 60, 60, 255) };
+#else
+			static constexpr float backgroundColorVal{ 40 };
+			static constexpr ImU32 borderColor{ IM_COL32(255, 255, 255, 255) };
+			static constexpr ImU32 gridColor{ IM_COL32(60, 60, 60, 255) };
+			static constexpr ImU32 strokeColor{ IM_COL32(220, 220, 220, 255) };
+#endif
+			static constexpr ImU32 backgroundColor{ IM_COL32(backgroundColorVal, backgroundColorVal, backgroundColorVal, 255) };
 
 			drawList->AddRectFilled(toImVec(topLeft_sw), toImVec(bottomRight_sw), backgroundColor);
 			drawList->AddRect(toImVec(topLeft_sw), toImVec(bottomRight_sw), borderColor);
@@ -210,7 +219,6 @@ namespace HMP::Gui::DagViewer
 				// grid
 
 				{
-					constexpr ImU32 gridColor{ IM_COL32(60, 60, 60, 255) };
 					const int gridLevel{ static_cast<int>(-std::log2(m_windowHeight_n / 2.0)) };
 					const Real gridStep_s{ n2s / (std::pow(2, gridLevel) * 10) / m_windowHeight_n };
 					const Vec2 origin_ss{ sw2ss(nw2sw(nl2nw(Vec2{0,1}))) };
@@ -226,8 +234,6 @@ namespace HMP::Gui::DagViewer
 
 				// edges
 
-				constexpr ImU32 strokeColor{ IM_COL32(220, 220, 220, 255) };
-
 				for (const auto& [lineA, lineB] : m_layout.lines())
 				{
 					drawList->AddLine(toImVec(ll2ss(lineA)), toImVec(ll2ss(lineB)), strokeColor);
@@ -238,6 +244,14 @@ namespace HMP::Gui::DagViewer
 				const float nodeRadius_s{ static_cast<float>(m_layout.nodeRadius() * l2s) };
 				const Vec2 nodeHalfDiag_s{ nodeRadius_s, nodeRadius_s };
 
+				const ImU32 elementColor{ toImCol(m_mesher.polyColor()) };
+				const ImU32 inactiveElementColor{ toImCol(cinolib::Color(
+					m_mesher.polyColor().r() * 0.75f + backgroundColorVal * 0.25f,
+					m_mesher.polyColor().g() * 0.75f + backgroundColorVal * 0.25f,
+					m_mesher.polyColor().b() * 0.75f + backgroundColorVal * 0.25f,
+					m_mesher.polyColor().a())) };
+				const ImU32 highlightedElementColor{ toImCol(m_mesher.faceMarkerSet().color()) };
+
 				for (const Layout::Node& node : m_layout.nodes())
 				{
 					constexpr ImU32 textColor{ backgroundColor };
@@ -246,9 +260,6 @@ namespace HMP::Gui::DagViewer
 					{
 						case Dag::Node::EType::Element:
 						{
-							const ImU32 elementColor{ toImCol(m_mesher.polyColor()) };
-							const ImU32 inactiveElementColor{ toImCol(cinolib::Color(m_mesher.polyColor().r() * 0.75f, m_mesher.polyColor().g() * 0.75f, m_mesher.polyColor().b() * 0.75f, m_mesher.polyColor().a())) };
-							const ImU32 highlightedElementColor{ toImCol(m_mesher.faceMarkerSet().color()) };
 							const Dag::Element& element{ node.node().element() };
 							const ImU32 color{ highlight == &node.node()
 								? highlightedElementColor
