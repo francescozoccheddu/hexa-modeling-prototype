@@ -32,17 +32,12 @@ namespace HMP::Actions
 				};
 			}
 		}
-		std::unordered_map<Id, Vec> vertMovesMap{};
-		vertMovesMap.reserve(m_vertMoves.size());
 		for (VertMove& move : m_vertMoves)
 		{
 			const Id pid{ mesher.elementToPid(*move.element) };
 			const Id vid{ source.poly_vert_id(pid, move.vertOffset) };
-			const Vec oldPosition{ source.vert(vid) };
-			vertMovesMap.insert({ vid, move.position });
-			move.position = oldPosition;
+			mesher.moveVert(vid, move.position);
 		}
-		mesher.moveVerts(vertMovesMap);
 		mesher.updateMesh();
 	}
 

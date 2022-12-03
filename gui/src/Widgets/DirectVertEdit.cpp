@@ -103,7 +103,7 @@ namespace HMP::Gui::Widgets
                         const Real dd{diff[_dim]}, dsd{startDiff[_dim]};
                         return Utils::Transform::isNull(dsd) ? 1.0 : std::abs(dd / dsd);
                     } };
-                    transform.scale = right * scaleDim(0) + up * scaleDim(1);
+                    transform.scale = right * scaleDim(0) + up * scaleDim(1) + forward;
                     transform.scale.x() = std::abs(transform.scale.x());
                     transform.scale.y() = std::abs(transform.scale.y());
                     transform.scale.z() = std::abs(transform.scale.z());

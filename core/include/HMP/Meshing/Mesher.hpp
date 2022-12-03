@@ -179,8 +179,6 @@ namespace HMP::Meshing
 
 		Id getOrAddVert(const Vec& _vert);
 
-		bool areVerticesCollidingAt(const Vec& _vert) const;
-
 	public:
 
 		Mesher();
@@ -201,8 +199,6 @@ namespace HMP::Meshing
 		//void add(Dag::Element& _element);
 		void remove(Dag::Element& _element);
 		void moveVert(Id _vid, const Vec& _position);
-		bool tryMoveVerts(const std::unordered_map<Id, Vec>& _verts);
-		void moveVerts(const std::unordered_map<Id, Vec>& _verts);
 		void clear();
 
 		PolyMarkerSet& polyMarkerSet();

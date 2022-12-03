@@ -200,27 +200,6 @@ namespace HMP::Meshing
 		return m_mesh;
 	}
 
-	bool Mesher::areVerticesCollidingAt(const Vec& _vert) const
-	{
-		if (!m_mesh.num_verts())
-		{
-			return true;
-		}
-		bool pickedSome{ false };
-		for (Id vid{}; vid < m_mesh.num_verts(); vid++)
-		{
-			if (m_mesh.vert(vid).dist(_vert) < c_maxVertDistance)
-			{
-				if (pickedSome)
-				{
-					return true;
-				}
-				pickedSome = true;
-			}
-		}
-		return false;
-	}
-
 	Id Mesher::getVert(const Vec& _vert) const
 	{
 		if (!m_mesh.num_verts())
@@ -301,11 +280,6 @@ namespace HMP::Meshing
 
 	void Mesher::moveVert(Id _vid, const Vec& _position)
 	{
-		const Id oldVid{ getVert(_position) };
-		if (oldVid != noId && oldVid != _vid)
-		{
-			throw std::logic_error{ "move would result in merge" };
-		}
 		if (m_mesh.vert(_vid) != _position)
 		{
 			m_mesh.vert(_vid) = _position;
@@ -314,53 +288,6 @@ namespace HMP::Meshing
 				pidToElement(pid).vertices()[m_mesh.poly_vert_offset(pid, _vid)] = _position;
 			}
 			m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
-		}
-	}
-
-	bool Mesher::tryMoveVerts(const std::unordered_map<Id, Vec>& _verts)
-	{
-		std::vector<std::pair<Id, Vec>> backup{};
-		backup.reserve(_verts.size());
-		for (const auto& [vid, pos] : _verts)
-		{
-			backup.push_back({ vid, m_mesh.vert(vid) });
-			m_mesh.vert(vid) = pos;
-		}
-		bool ok{ true };
-		for (const auto& [vid, pos] : _verts)
-		{
-			if (areVerticesCollidingAt(pos))
-			{
-				ok = false;
-				break;
-			}
-		}
-		if (!ok)
-		{
-			for (const auto& [vid, oldPos] : backup)
-			{
-				m_mesh.vert(vid) = oldPos;
-			}
-		}
-		if (ok && !_verts.empty())
-		{
-			for (const auto& [vid, pos] : _verts)
-			{
-				for (const Id pid : m_mesh.adj_v2p(vid))
-				{
-					pidToElement(pid).vertices()[m_mesh.poly_vert_offset(pid, vid)] = pos;
-				}
-			}
-			m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
-		}
-		return ok;
-	}
-
-	void Mesher::moveVerts(const std::unordered_map<Id, Vec>& _verts)
-	{
-		if (!tryMoveVerts(_verts))
-		{
-			throw std::logic_error{ "move would result in merge" };
 		}
 	}
 

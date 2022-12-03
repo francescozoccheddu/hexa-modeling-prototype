@@ -38,15 +38,12 @@ namespace HMP::Actions
 	{
 		Meshing::Mesher& mesher{ this->mesher() };
 		const Meshing::Mesher::Mesh& mesh{ mesher.mesh() };
-		std::unordered_map<Id, Vec> verts{};
-		verts.reserve(m_verts.size());
 		for (Vert& vert : m_verts)
 		{
 			const Id pid{ mesher.elementToPid(vert.element()) };
 			const Id vid{ mesh.poly_vert_id(pid, vert.vertOffset()) };
-			verts.insert({ vid, _transform * mesh.vert(vid) });
+			mesher.moveVert(vid, _transform * mesh.vert(vid));
 		}
-		mesher.moveVerts(verts);
 		mesher.updateMesh();
 	}
 
