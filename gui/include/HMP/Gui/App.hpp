@@ -92,6 +92,7 @@ namespace HMP::Gui
 		static constexpr cinolib::KeyBinding c_kbSelectUpFace{ GLFW_KEY_3, GLFW_MOD_ALT };
 		static constexpr cinolib::KeyBinding c_kbSelectPoly{ GLFW_KEY_4 };
 		static constexpr cinolib::KeyBinding c_kbDeselectAll{ GLFW_KEY_A, GLFW_MOD_CONTROL };
+		static constexpr cinolib::KeyBinding c_kbSelectAll{ GLFW_KEY_A, GLFW_MOD_SHIFT };
 		static constexpr int c_kmodSelectAdd{ GLFW_MOD_SHIFT };
 		static constexpr int c_kmodSelectRemove{ GLFW_MOD_CONTROL };
 		static constexpr int c_kbDirectEditX{ GLFW_KEY_LEFT_CONTROL };
@@ -212,7 +213,7 @@ namespace HMP::Gui
 		void onRedo();
 		void onClear();
 		void onSelect(ESelectionSource _source, ESelectionMode _mode);
-		void onClearSelection();
+		void onSelectAll(bool _selected);
 
 	public:
 

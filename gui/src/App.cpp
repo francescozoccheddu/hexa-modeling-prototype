@@ -60,6 +60,7 @@ namespace HMP::Gui
 		cinolib::print_binding(c_kbSelectPoly.name(), "select poly vertices");
 		cinolib::print_binding(cinolib::KeyBinding::mod_names(c_kmodSelectAdd), "remove from selection (hold down)");
 		cinolib::print_binding(cinolib::KeyBinding::mod_names(c_kmodSelectRemove), "add to selection (hold down)");
+		cinolib::print_binding(c_kbSelectAll.name(), "select all vertices");
 		cinolib::print_binding(c_kbDeselectAll.name(), "deselect all vertices");
 		cinolib::print_binding(c_kbDirectTranslation.name(), "translate selected vertices");
 		cinolib::print_binding(c_kbDirectScale.name(), "scale selected vertices");
@@ -512,7 +513,11 @@ namespace HMP::Gui
 		}
 		else if (key == c_kbDeselectAll)
 		{
-			onClearSelection();
+			onSelectAll(false);
+		}
+		else if (key == c_kbSelectAll)
+		{
+			onSelectAll(true);
 		}
 		else
 		{
@@ -986,9 +991,21 @@ namespace HMP::Gui
 		}
 	}
 
-	void App::onClearSelection()
+	void App::onSelectAll(bool _selected)
 	{
-		m_vertEditWidget.clear();
+		if (_selected)
+		{
+			std::vector<Id> vids(id2i(m_mesh.num_verts()));
+			for (I i{}; i < vids.size(); i++)
+			{
+				vids[i] = i2id(i);
+			}
+			m_vertEditWidget.add(vids);
+		}
+		else
+		{
+			m_vertEditWidget.clear();
+		}
 	}
 
 	// launch
