@@ -15,18 +15,18 @@ namespace HMP::Actions
 
 		Dag::Element& m_element;
 		Dag::NodeHandle<Dag::Refine> m_operation;
-		std::size_t m_depth;
+		I m_depth;
 
 		void apply() override;
 		void unapply() override;
 
 	public:
 
-		Refine(Dag::Element& _element, Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme, std::size_t _depth = 1);
+		Refine(Dag::Element& _element, Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme, I _depth = 1);
 
 		const Dag::Element& element() const;
 		const Dag::Refine& operation() const;
-		std::size_t depth() const;
+		I depth() const;
 
 	};
 

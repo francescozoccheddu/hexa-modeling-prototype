@@ -255,7 +255,7 @@ namespace HMP::Meshing
 	void Mesher::add(Dag::Element& _element)
 	{
 		PolyVertIds vids;
-		for (std::size_t i{ 0 }; i < 8; i++)
+		for (I i{ 0 }; i < 8; i++)
 		{
 			vids[i] = getOrAddVert(_element.vertices()[i]);
 		}
@@ -267,7 +267,7 @@ namespace HMP::Meshing
 		{
 			m_mesh.edge_data(eid).color = m_edgeColor;
 		}
-		for (std::size_t vo{}; vo < 8; vo++)
+		for (I vo{}; vo < 8; vo++)
 		{
 			_element.vertices()[vo] = m_mesh.vert(m_mesh.poly_vert_id(pid, vo));
 		}
@@ -455,13 +455,13 @@ namespace HMP::Meshing
 	{
 		double minT{ std::numeric_limits<double>::infinity() };
 		_fid = noId;
-		for (std::size_t fid{}; fid < m_mesh.num_faces(); fid++)
+		for (I fid{}; fid < m_mesh.num_faces(); fid++)
 		{
 			Id facePid;
 			if (m_mesh.face_is_visible(fid, facePid))
 			{
 				const bool cw{ m_mesh.poly_face_is_CW(facePid, fid) };
-				for (std::size_t ti{}; ti < 2; ti++)
+				for (I ti{}; ti < 2; ti++)
 				{
 					bool back, coplanar;
 					double t;

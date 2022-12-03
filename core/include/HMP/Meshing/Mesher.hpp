@@ -44,7 +44,7 @@ namespace HMP::Meshing
 
 		struct FaceMarkerHasher final
 		{
-			std::size_t operator () (const std::pair<const Dag::Element*, Id>& _faceMarker) const
+			I operator () (const std::pair<const Dag::Element*, Id>& _faceMarker) const
 			{
 				return std::hash<const Dag::Element*>{}(_faceMarker.first);
 			}

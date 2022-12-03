@@ -29,7 +29,7 @@ namespace HMP::Gui::Widgets
 		Vec m_centroid;
 		bool m_pendingAction;
 
-		void addOrRemove(const Id* _vids, std::size_t _count, bool _add);
+		void addOrRemove(const Id* _vids, I _count, bool _add);
 
 	public:
 
@@ -61,7 +61,7 @@ namespace HMP::Gui::Widgets
 
 		const Vec& centroid() const;
 
-		Utils::Transform& transform() ;
+		Utils::Transform& transform();
 
 		const Utils::Transform& transform() const;
 

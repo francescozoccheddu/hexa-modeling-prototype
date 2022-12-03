@@ -64,7 +64,7 @@ namespace HMP::Gui::Widgets
 			file << ','; // project
 			{
 				file << JProp{ "keyframes" } << '['; // project.keyframes
-				for (std::size_t k{}; k < keyframeCount(); k++)
+				for (I k{}; k < keyframeCount(); k++)
 				{
 					if (k > 0)
 					{
@@ -111,7 +111,7 @@ namespace HMP::Gui::Widgets
 							<< '{'
 							<< JProp{ "kind" } << '"' << "directional" << '"' << ','
 							<< JProp{ "direction" } << JVec{ camera.view.forward }
-							<< '}' << ']'; // project.keyframes[k].scene.lights
+						<< '}' << ']'; // project.keyframes[k].scene.lights
 					}
 					file << ','; // project.keyframes[k].scene
 					{
@@ -197,7 +197,7 @@ namespace HMP::Gui::Widgets
 		m_sampleError = std::nullopt;
 	}
 
-	std::size_t Ae3d2ShapeExporter::keyframeCount() const
+	I Ae3d2ShapeExporter::keyframeCount() const
 	{
 		return m_keyframes.size();
 	}

@@ -63,14 +63,14 @@ namespace HMP::Gui::Utils::HrDescriptions
 		stream
 			<< std::fixed << std::setprecision(3)
 			<< "{";
-		for (std::size_t r{ 0 }; r < 4; r++)
+		for (I r{ 0 }; r < 4; r++)
 		{
 			if (r)
 			{
 				stream << ",";
 			}
 			stream << "{";
-			for (std::size_t c{ 0 }; c < 4; c++)
+			for (I c{ 0 }; c < 4; c++)
 			{
 				if (c)
 				{
@@ -91,7 +91,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 		if (!_ids.empty())
 		{
 			stream << _ids[0];
-			for (std::size_t i{ 1 }; i < _ids.size(); i++)
+			for (I i{ 1 }; i < _ids.size(); i++)
 			{
 				stream << "," << _ids[i];
 			}
@@ -107,7 +107,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 		if (!_flags.empty())
 		{
 			stream << (_flags[0] ? '+' : '-');
-			for (std::size_t i{ 1 }; i < _flags.size(); i++)
+			for (I i{ 1 }; i < _flags.size(); i++)
 			{
 				stream << "," << (_flags[i] ? '+' : '-');
 			}
@@ -123,7 +123,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 		if (!_locs.empty())
 		{
 			stream << describe(_locs[0]);
-			for (std::size_t i{ 1 }; i < _locs.size(); i++)
+			for (I i{ 1 }; i < _locs.size(); i++)
 			{
 				stream << "," << describe(_locs[i]);
 			}

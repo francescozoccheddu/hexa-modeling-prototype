@@ -97,7 +97,7 @@ namespace HMP::Dag::Utils
 			}
 		}
 		{
-			std::unordered_map<const Node*, std::size_t> nodeMap{};
+			std::unordered_map<const Node*, I> nodeMap{};
 			{
 				nodeMap.reserve(nodes.size());
 				Id i{ 0 };
@@ -120,10 +120,10 @@ namespace HMP::Dag::Utils
 	Node& deserialize(HMP::Utils::Serialization::Deserializer& _deserializer)
 	{
 		std::vector<Node*> nodes{};
-		std::size_t nodesCount{};
+		I nodesCount{};
 		_deserializer >> nodesCount;
 		nodes.reserve(nodesCount);
-		for (std::size_t i{ 0 }; i < nodesCount; i++)
+		for (I i{ 0 }; i < nodesCount; i++)
 		{
 			Node::EType nodeType;
 			_deserializer >> nodeType;
@@ -179,11 +179,11 @@ namespace HMP::Dag::Utils
 		}
 		for (Node* node : nodes)
 		{
-			std::size_t parentsCount;
+			I parentsCount;
 			_deserializer >> parentsCount;
-			for (std::size_t i{ 0 }; i < parentsCount; i++)
+			for (I i{ 0 }; i < parentsCount; i++)
 			{
-				std::size_t parentIndex;
+				I parentIndex;
 				_deserializer >> parentIndex;
 				node->parents().attach(*nodes[parentIndex]);
 			}
@@ -250,7 +250,7 @@ namespace HMP::Dag::Utils
 		}
 		throw std::domain_error{ "unknown node" };
 	}
-	
+
 	Node& clone(const Node& _root)
 	{
 		std::vector<const Node*> sources{ descendants(_root) };

@@ -15,7 +15,7 @@
 namespace HMP::Actions::Utils
 {
 
-	Dag::Refine& prepareRefine(Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme, std::size_t _depth = 1);
+	Dag::Refine& prepareRefine(Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme, I _depth = 1);
 	std::vector<PolyVerts> previewRefine(const Meshing::Mesher& _mesher, const Dag::Refine& _refine);
 	void applyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine);
 	void applyRefineRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine);

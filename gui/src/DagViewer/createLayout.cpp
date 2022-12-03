@@ -80,7 +80,7 @@ namespace HMP::Gui::DagViewer
 	std::vector<Layout::Node> createLayoutNodes(const std::vector<std::pair<const Dag::Node*, ogdf::node>>& _dagToGraphNodePairs, const ogdf::GraphAttributes& _graphAttributes)
 	{
 		std::vector<Layout::Node> nodes{ };
-		nodes.reserve(static_cast<size_t>(_graphAttributes.constGraph().numberOfNodes()));
+		nodes.reserve(static_cast<I>(_graphAttributes.constGraph().numberOfNodes()));
 		for (auto const& [dagNode, graphNode] : _dagToGraphNodePairs)
 		{
 			const Vec2 center{ _graphAttributes.x(graphNode), -_graphAttributes.y(graphNode) };

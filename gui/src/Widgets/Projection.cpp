@@ -60,7 +60,7 @@ namespace HMP::Gui::Widgets
 			int iterations{ static_cast<int>(m_options.iterations) };
 			if (ImGui::SliderInt("Iterations", &iterations, 1, 10, "%d", ImGuiSliderFlags_AlwaysClamp))
 			{
-				m_options.iterations = static_cast<std::size_t>(iterations);
+				m_options.iterations = static_cast<I>(iterations);
 			}
 		}
 		ImGui::Spacing();

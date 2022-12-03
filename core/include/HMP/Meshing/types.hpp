@@ -15,7 +15,12 @@ namespace HMP
 	using Mat3 = cinolib::mat3d;
 
 	using Id = unsigned int;
+	using I = std::size_t;
+
 	constexpr Id noId{ static_cast<Id>(-1) };
+
+	inline constexpr Id i2id(I _i) { return static_cast<Id>(_i); }
+	inline constexpr I id2i(Id _id) { return static_cast<I>(_id); }
 
 	template<typename TData>
 	using PolyFaceData = std::array<TData, 6>;

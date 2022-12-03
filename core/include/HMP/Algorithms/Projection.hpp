@@ -47,7 +47,7 @@ namespace HMP::Algorithms::Projection
         Tweak unsetVertsDistWeightTweak{ 0.0, 0.0 };
         double advancePercentile{ 0.5 };
         bool smooth{ true };
-        std::size_t iterations{ 5 };
+        I iterations{ 5 };
 
     };
 
