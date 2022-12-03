@@ -65,7 +65,7 @@ namespace HMP::Gui::Widgets
 
 		const Utils::Transform& transform() const;
 
-		bool applyTransform();
+		void applyTransform();
 
 		bool pendingAction() const;
 

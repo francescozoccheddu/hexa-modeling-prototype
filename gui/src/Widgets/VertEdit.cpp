@@ -138,42 +138,29 @@ namespace HMP::Gui::Widgets
 		return m_unappliedTransform;
 	}
 
-	bool VertEdit::applyTransform()
+	void VertEdit::applyTransform()
 	{
 		const Mat4 transform{ m_unappliedTransform.matrix() };
-		std::unordered_map<Id, Vec> movedVerts{ m_verts };
-		for (auto& [vid, pos] : movedVerts)
+		for (const auto& [vid, pos] : m_verts)
 		{
-			pos = transform * pos;
+			m_mesher.moveVert(vid, transform * pos);
 		}
-		const bool succeeded{ m_mesher.tryMoveVerts(movedVerts) };
-		if (succeeded)
+		m_appliedTransform = m_unappliedTransform;
+		m_mesher.updateMesh();
+		onMeshUpdated();
+		updateCentroid();
+		const bool hadPendingAction{ m_pendingAction };
+		m_pendingAction = !m_appliedTransform.isIdentity();
+		if (m_pendingAction != hadPendingAction)
 		{
-			m_appliedTransform = m_unappliedTransform;
-			m_mesher.updateMesh();
-			onMeshUpdated();
-			updateCentroid();
-			const bool hadPendingAction{ m_pendingAction };
-			m_pendingAction = !m_appliedTransform.isIdentity();
-			if (m_pendingAction != hadPendingAction)
-			{
-				onPendingActionChanged();
-			}
+			onPendingActionChanged();
 		}
-		else
-		{
-			m_unappliedTransform = m_appliedTransform;
-		}
-		return succeeded;
 	}
 
 	void VertEdit::cancel()
 	{
 		m_unappliedTransform = {};
-		if (!applyTransform())
-		{
-			throw std::logic_error{ "cannot revert transform" };
-		}
+		applyTransform();
 	}
 
 	void VertEdit::updateCentroid()
