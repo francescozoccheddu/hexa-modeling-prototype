@@ -12,7 +12,7 @@
 namespace HMP::Actions::Utils
 {
 
-	Dag::Refine& prepareRefine(Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme, std::size_t _depth)
+	Dag::Refine& prepareRefine(Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme, I _depth)
 	{
 		if (_depth < 1 || _depth > 3)
 		{
@@ -23,7 +23,7 @@ namespace HMP::Actions::Utils
 		refine.forwardFaceOffset() = _forwardFaceOffset;
 		refine.upFaceOffset() = _upFaceOffset;
 		const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(_scheme) };
-		for (std::size_t i{ 0 }; i < refinement.polyCount(); i++)
+		for (I i{ 0 }; i < refinement.polyCount(); i++)
 		{
 			Dag::Element& child{ *new Dag::Element{} };
 			if (_depth > 1)

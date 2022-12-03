@@ -152,7 +152,7 @@ namespace HMP::Meshing::Utils
 	FaceVerts verts(const Meshing::Mesher::Mesh& _mesh, const FaceVertIds& _vids)
 	{
 		FaceVerts verts;
-		for (std::size_t i{}; i < 4; i++)
+		for (I i{}; i < 4; i++)
 		{
 			verts[i] = _mesh.vert(_vids[i]);
 		}
@@ -162,7 +162,7 @@ namespace HMP::Meshing::Utils
 	PolyVerts verts(const Meshing::Mesher::Mesh& _mesh, const PolyVertIds& _vids)
 	{
 		PolyVerts verts;
-		for (std::size_t i{}; i < 8; i++)
+		for (I i{}; i < 8; i++)
 		{
 			verts[i] = _mesh.vert(_vids[i]);
 		}
@@ -198,14 +198,14 @@ namespace HMP::Meshing::Utils
 	PolyVertIds sortVids(const Meshing::Mesher::Mesh& _mesh, const PolyVertIds& _vids)
 	{
 		PolyVertData<char> indices{};
-		for (std::size_t i{ 0 }; i < 8; i++)
+		for (I i{ 0 }; i < 8; i++)
 		{
 			indices[sortedPolyVertLocs[i].bits()] = static_cast<char>(i);
 		}
 		PolyVertIds sortedVids{};
 		const PolyVerts verts{ Utils::verts(_mesh, _vids) };
 		const Vec centroid(Utils::centroid(verts));
-		for (std::size_t i{ 0 }; i < 8; i++)
+		for (I i{ 0 }; i < 8; i++)
 		{
 			sortedVids[indices[polyVertLoc(verts[i], centroid).bits()]] = _vids[i];
 		}

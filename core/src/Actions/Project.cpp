@@ -20,9 +20,9 @@ namespace HMP::Actions
 			cinolib::export_surface(source, sourceSurf, source2SourceSurf, sourceSurf2Source);
 			const std::vector<Vec> newSourceSurfVerts{ Algorithms::Projection::project(sourceSurf, m_target, m_options) };
 			m_vertMoves.resize(newSourceSurfVerts.size());
-			for (std::size_t sourceSurfVi{}; sourceSurfVi < newSourceSurfVerts.size(); sourceSurfVi++)
+			for (I sourceSurfVi{}; sourceSurfVi < newSourceSurfVerts.size(); sourceSurfVi++)
 			{
-				const Id sourceVid{ sourceSurf2Source[static_cast<Id>(sourceSurfVi)] };
+				const Id sourceVid{ sourceSurf2Source[i2id(sourceSurfVi)] };
 				const Id sourcePid{ source.adj_v2p(sourceVid).front() };
 				const Id sourceVertOffset{ source.poly_vert_offset(sourcePid, sourceVid) };
 				m_vertMoves[sourceSurfVi] = VertMove{

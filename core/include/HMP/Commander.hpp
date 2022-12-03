@@ -39,7 +39,7 @@ namespace HMP
 		protected:
 
 			virtual ~ActionBase() = default;
-			
+
 			Meshing::Mesher& mesher();
 			const Meshing::Mesher& mesher() const;
 
@@ -66,7 +66,7 @@ namespace HMP
 			friend class Stack;
 
 			std::deque<Action*> m_data;
-			std::size_t m_limit;
+			I m_limit;
 
 			StackBase();
 
@@ -75,10 +75,10 @@ namespace HMP
 
 		public:
 
-			std::size_t limit() const;
-			void limit(std::size_t _count);
-			void removeOldest(std::size_t _count);
-			void keepLatest(std::size_t _count);
+			I limit() const;
+			void limit(I _count);
+			void removeOldest(I _count);
+			void keepLatest(I _count);
 			void clear();
 
 		};

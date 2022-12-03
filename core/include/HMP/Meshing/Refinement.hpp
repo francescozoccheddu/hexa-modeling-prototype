@@ -22,7 +22,7 @@ namespace HMP::Meshing
 
 		std::vector<PolyVerts> apply(const PolyVerts& _source) const;
 
-		std::size_t polyCount() const;
+		I polyCount() const;
 
 	};
 

@@ -26,7 +26,7 @@ namespace HMP::Actions
 		mesher().updateMesh();
 	}
 
-	Refine::Refine(Dag::Element& _element, Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme, std::size_t _depth)
+	Refine::Refine(Dag::Element& _element, Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme, I _depth)
 		: m_element{ _element }, m_operation{ Utils::prepareRefine(_forwardFaceOffset, _upFaceOffset, _scheme, _depth) }, m_depth{ _depth }
 	{
 		if (_depth < 1 || _depth > 3)
@@ -45,7 +45,7 @@ namespace HMP::Actions
 		return *m_operation;
 	}
 
-	std::size_t Refine::depth() const
+	I Refine::depth() const
 	{
 		return m_depth;
 	}

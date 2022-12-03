@@ -109,18 +109,18 @@ namespace HMP
 		keepLatest(m_limit);
 	}
 
-	std::size_t Commander::StackBase::limit() const
+	I Commander::StackBase::limit() const
 	{
 		return m_limit;
 	}
 
-	void Commander::StackBase::limit(std::size_t _count)
+	void Commander::StackBase::limit(I _count)
 	{
 		m_limit = _count;
 		keepLatest(m_limit);
 	}
 
-	void Commander::StackBase::removeOldest(std::size_t _count)
+	void Commander::StackBase::removeOldest(I _count)
 	{
 		while (!m_data.empty() && _count > 0)
 		{
@@ -131,7 +131,7 @@ namespace HMP
 		}
 	}
 
-	void Commander::StackBase::keepLatest(std::size_t _count)
+	void Commander::StackBase::keepLatest(I _count)
 	{
 		while (m_data.size() > _count)
 		{

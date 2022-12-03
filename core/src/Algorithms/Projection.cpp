@@ -17,9 +17,6 @@
 namespace HMP::Algorithms::Projection
 {
 
-    constexpr Id i2id(std::size_t _i) { return static_cast<Id>(_i); }
-    constexpr std::size_t id2i(Id _id) { return static_cast<std::size_t>(_id); }
-
     struct TargetToSourceMatch final
     {
         Vec pos;
@@ -83,7 +80,7 @@ namespace HMP::Algorithms::Projection
     std::vector<std::vector<SourceToTargetMatch>> invertTargetToSourceMatches(const cinolib::Polygonmesh<>& _source, const cinolib::Polygonmesh<>& _target, const std::vector<TargetToSourceMatch>& _matches, EInvertMode _mode)
     {
         std::vector<std::vector<SourceToTargetMatch>> invMatches(id2i(_source.num_verts()));
-        for (std::size_t targetVi{}; targetVi < _matches.size(); targetVi++)
+        for (I targetVi{}; targetVi < _matches.size(); targetVi++)
         {
             const Id targetVid{ i2id(targetVi) };
             const Vec& targetVert{ _target.vert(targetVid) };
@@ -232,14 +229,14 @@ namespace HMP::Algorithms::Projection
 
     std::vector<Vec> processSkippedVerts(const cinolib::Polygonmesh<>& _source, const std::vector<std::optional<Vec>>& _newSourceVerts, const Tweak& _distWeightTweak)
     {
-        better_priority_queue::updatable_priority_queue<std::size_t, std::size_t> skippedVisQueue{};
+        better_priority_queue::updatable_priority_queue<I, I> skippedVisQueue{};
         std::vector<std::optional<Vec>> newVerts{ _newSourceVerts };
 
-        for (std::size_t vi{}; vi < newVerts.size(); vi++)
+        for (I vi{}; vi < newVerts.size(); vi++)
         {
             if (!newVerts[vi])
             {
-                std::size_t count{};
+                I count{};
                 for (const Id adjVid : _source.adj_v2v(i2id(vi)))
                 {
                     if (!newVerts[id2i(adjVid)])
@@ -247,13 +244,13 @@ namespace HMP::Algorithms::Projection
                         count++;
                     }
                 }
-                skippedVisQueue.push(vi, std::numeric_limits<std::size_t>::max() - count);
+                skippedVisQueue.push(vi, std::numeric_limits<I>::max() - count);
             }
         }
 
         while (!skippedVisQueue.empty())
         {
-            const std::size_t vi{ skippedVisQueue.pop_value(false).key };
+            const I vi{ skippedVisQueue.pop_value(false).key };
             const Id vid{ i2id(vi) };
             const Vec vert{ _source.vert(vid) };
             Real minOldDist{ std::numeric_limits<Real>::infinity() };
@@ -289,7 +286,7 @@ namespace HMP::Algorithms::Projection
             {
                 if (!newVerts[id2i(adjVid)])
                 {
-                    const std::size_t oldCount{ skippedVisQueue.get_priority(id2i(adjVid)).second };
+                    const I oldCount{ skippedVisQueue.get_priority(id2i(adjVid)).second };
                     skippedVisQueue.update(id2i(adjVid), oldCount + 1);
                 }
             }
@@ -307,12 +304,12 @@ namespace HMP::Algorithms::Projection
         Real maxLength{};
         {
             std::vector<Real> lengths(_newSourceVerts.size());
-            for (std::size_t vi{}; vi < _newSourceVerts.size(); vi++)
+            for (I vi{}; vi < _newSourceVerts.size(); vi++)
             {
                 lengths[vi] = (_newSourceVerts[vi] - _source.vert(i2id(vi))).norm();
             }
             std::sort(lengths.begin(), lengths.end());
-            std::size_t medianI{ static_cast<std::size_t>(std::round(static_cast<double>(lengths.size() - 1) * _percentile)) };
+            I medianI{ static_cast<I>(std::round(static_cast<double>(lengths.size() - 1) * _percentile)) };
             if (medianI <= lengths.size())
             {
                 maxLength = lengths[medianI];
@@ -322,7 +319,7 @@ namespace HMP::Algorithms::Projection
                 maxLength = std::numeric_limits<Real>::infinity();
             }
         }
-        for (std::size_t vi{}; vi < _newSourceVerts.size(); vi++)
+        for (I vi{}; vi < _newSourceVerts.size(); vi++)
         {
             const Vec sourceVert{ _source.vert(i2id(vi)) };
             const Vec offset{ _newSourceVerts[vi] - sourceVert };
@@ -335,7 +332,7 @@ namespace HMP::Algorithms::Projection
     std::vector<Vec> smooth(const cinolib::Polygonmesh<>& _source, const std::vector<Vec>& _newSourceVerts)
     {
         std::vector<Vec> newVerts(_newSourceVerts.size());
-        for (std::size_t vi{}; vi < _newSourceVerts.size(); vi++)
+        for (I vi{}; vi < _newSourceVerts.size(); vi++)
         {
             Vec vertSum{};
             Real weightSum{};
@@ -353,7 +350,7 @@ namespace HMP::Algorithms::Projection
     std::vector<Vec> project(const cinolib::Polygonmesh<>& _source, const cinolib::Polygonmesh<>& _target, const Options& _options)
     {
         cinolib::Polygonmesh<> source{ _source };
-        for (std::size_t i{}; i < _options.iterations; i++)
+        for (I i{}; i < _options.iterations; i++)
         {
             const bool lastIteration{ i + 1 == _options.iterations };
             if (i > 0)
@@ -366,7 +363,7 @@ namespace HMP::Algorithms::Projection
             const std::vector<Vec> displaceAndFillVerts{ processSkippedVerts(source, displaceVerts, _options.unsetVertsDistWeightTweak) };
             const std::vector<Vec> displaceAndFillAndAdvanceVerts{ defensiveAdvance(source, displaceAndFillVerts, lastIteration ? 1.0 : _options.advancePercentile) };
             const std::vector<Vec> displaceAndFillAndAdvanceAndSmoothVerts{ (lastIteration && _options.smooth) ? smooth(source, displaceAndFillAndAdvanceVerts) : displaceAndFillAndAdvanceVerts };
-            for (std::size_t vi{}; vi < displaceAndFillAndAdvanceAndSmoothVerts.size(); vi++)
+            for (I vi{}; vi < displaceAndFillAndAdvanceAndSmoothVerts.size(); vi++)
             {
                 source.vert(i2id(vi)) = displaceAndFillAndAdvanceAndSmoothVerts[vi];
             }

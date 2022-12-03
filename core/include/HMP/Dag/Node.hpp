@@ -3,6 +3,7 @@
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <cpputils/concepts.hpp>
 #include <HMP/Dag/NodeSet.hpp>
+#include <HMP/Meshing/types.hpp>
 #include <type_traits>
 #include <queue>
 
@@ -37,7 +38,7 @@ namespace HMP::Dag
 		Internal::NodeSetData m_parentsImpl, m_childrenImpl;
 		Set m_parents, m_children;
 
-		std::size_t m_handles;
+		I m_handles;
 
 		static void deleteDangling(std::queue<Node*>& _dangling, bool _descending);
 		bool onAttach(Node& _node, bool _descending);

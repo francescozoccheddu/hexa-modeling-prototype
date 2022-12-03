@@ -45,7 +45,7 @@ namespace HMP::Utils::Geometry
 		_times %= revolution;
 		while (_times-- > 0)
 		{
-			_element = map[static_cast<std::size_t>(_element)];
+			_element = map[static_cast<I>(_element)];
 		}
 
 		return _element;

@@ -7,7 +7,7 @@
 namespace HMP::Gui::Widgets
 {
 
-	void VertEdit::addOrRemove(const Id* _vids, std::size_t _count, bool _add)
+	void VertEdit::addOrRemove(const Id* _vids, I _count, bool _add)
 	{
 		bool changed{ false };
 		for (const Id* vidp{ _vids }; vidp < _vids + _count; vidp++)

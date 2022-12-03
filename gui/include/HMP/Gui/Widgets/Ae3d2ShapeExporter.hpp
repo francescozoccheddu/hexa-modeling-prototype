@@ -38,7 +38,7 @@ namespace HMP::Gui::Widgets
 
         void clear();
 
-        std::size_t keyframeCount() const;
+        I keyframeCount() const;
 
         bool empty() const;
 
