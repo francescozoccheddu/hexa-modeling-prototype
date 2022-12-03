@@ -141,12 +141,15 @@ namespace HMP::Gui::Widgets
 	void VertEdit::applyTransform()
 	{
 		const Mat4 transform{ m_unappliedTransform.matrix() };
+		std::unordered_set<Id> vids{};
+		vids.reserve(m_verts.size());
 		for (const auto& [vid, pos] : m_verts)
 		{
 			m_mesher.moveVert(vid, transform * pos);
+			vids.insert(vid);
 		}
 		m_appliedTransform = m_unappliedTransform;
-		m_mesher.updateMesh();
+		m_mesher.updateMeshTemp(vids);
 		onMeshUpdated();
 		updateCentroid();
 		const bool hadPendingAction{ m_pendingAction };
