@@ -10,7 +10,8 @@
 #include <cpputils/collections/DereferenceIterable.hpp>
 #include <utility>
 #include <functional>
-#include <unordered_map>
+#include <unordered_set>
+#include <vector>
 
 namespace HMP::Meshing
 {
@@ -176,6 +177,7 @@ namespace HMP::Meshing
 		PolyMarkerSet m_polyMarkerSet;
 		bool m_dirty;
 		cinolib::Color m_polyColor, m_edgeColor;
+		std::vector<Id> m_visibleFaceIndices, m_visibleEdgeIndices;
 
 		Id getOrAddVert(const Vec& _vert);
 
@@ -215,6 +217,7 @@ namespace HMP::Meshing
 		void updateColors(bool _poly = true, bool _edge = true);
 
 		void updateMesh();
+		void updateMeshTemp(const std::unordered_set<Id>& _changedVids);
 		void updateMeshMarkers();
 
 		bool pick(const Vec& _from, const Vec& _dir, Id& _pid, Id& _fid, Id& _eid, Id& _vid) const;

@@ -183,7 +183,7 @@ namespace HMP::Meshing
 		: m_mesh(), m_elementToPid{}, Internal::ElementToPidIterable{ m_elementToPid },
 		m_polyMarkerSet{ *this }, m_faceMarkerSet{ *this },
 		m_polyColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.35f) }, m_edgeColor{ cinolib::Color::BLACK() },
-		m_dirty{ false }
+		m_dirty{ false }, m_visibleFaceIndices{}, m_visibleEdgeIndices{}
 	{
 		m_polyMarkerSet.color() = cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.5f);
 		m_faceMarkerSet.color() = cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.7f);
@@ -358,12 +358,90 @@ namespace HMP::Meshing
 	{
 		if (m_dirty)
 		{
+			{
+				m_visibleFaceIndices.resize(id2i(m_mesh.num_faces()));
+				Id lastI{};
+				for (std::size_t fi{}; fi < m_visibleFaceIndices.size(); fi++)
+				{
+					const Id fid{ i2id(fi) };
+					Id pid;
+					m_visibleFaceIndices[fi] = (m_mesh.face_is_on_srf(fid) && m_mesh.face_is_visible(fid, pid)) ? lastI++ : noId;
+				}
+			}
+			{
+				m_visibleEdgeIndices.resize(id2i(m_mesh.num_edges()));
+				Id lastI{};
+				for (std::size_t ei{}; ei < m_visibleEdgeIndices.size(); ei++)
+				{
+					const Id eid{ i2id(ei) };
+					bool visible{ false };
+					if (m_mesh.edge_is_on_srf(eid))
+					{
+						for (const Id pid : m_mesh.adj_e2p(eid))
+						{
+							if (!m_mesh.poly_data(pid).flags[cinolib::HIDDEN])
+							{
+								visible = true;
+								break;
+							}
+						}
+					}
+					m_visibleEdgeIndices[ei] = visible ? lastI++ : noId;
+				}
+			}
 			m_mesh.update_normals();
-			//m_mesh.updateGL_in();
 			m_mesh.update_bbox();
 			m_mesh.updateGL_out();
 			updateMeshMarkers();
 			m_dirty = false;
+		}
+	}
+
+	void Mesher::updateMeshTemp(const std::unordered_set<Id>& _changedVids)
+	{
+		if (m_dirty)
+		{
+			static constexpr double c_threshold{ 0.5 };
+			if (_changedVids.size() >= static_cast<I>(id2i(m_mesh.num_polys()) * c_threshold))
+			{
+				m_mesh.update_normals();
+				m_mesh.updateGL_out();
+			}
+			else
+			{
+				std::unordered_set<Id> changedFids{}, changedEids{};
+				for (const Id vid : _changedVids)
+				{
+					const std::vector<Id>& fids{ m_mesh.adj_v2f(vid) };
+					changedFids.insert(fids.begin(), fids.end());
+					const std::vector<Id>& eids{ m_mesh.adj_v2e(vid) };
+					changedEids.insert(eids.begin(), eids.end());
+				}
+				for (const Id fid : changedFids)
+				{
+					m_mesh.update_f_normal(fid);
+				}
+				for (const Id vid : _changedVids)
+				{
+					m_mesh.update_v_normal(vid);
+				}
+				for (const Id fid : changedFids)
+				{
+					const Id visibleFaceId{ m_visibleFaceIndices[id2i(fid)] };
+					if (visibleFaceId != noId)
+					{
+						m_mesh.updateGL_out_f(fid, visibleFaceId * 2);
+					}
+				}
+				for (const Id eid : changedEids)
+				{
+					const Id visibleEdgeId{ m_visibleEdgeIndices[id2i(eid)] };
+					if (visibleEdgeId != noId)
+					{
+						m_mesh.updateGL_out_e(eid, visibleEdgeId);
+					}
+				}
+			}
 		}
 	}
 
