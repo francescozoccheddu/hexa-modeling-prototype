@@ -22,7 +22,7 @@ namespace HMP::Actions
 			m_vertMoves.resize(newSourceSurfVerts.size());
 			for (I sourceSurfVi{}; sourceSurfVi < newSourceSurfVerts.size(); sourceSurfVi++)
 			{
-				const Id sourceVid{ sourceSurf2Source[i2id(sourceSurfVi)] };
+				const Id sourceVid{ sourceSurf2Source[toId(sourceSurfVi)] };
 				const Id sourcePid{ source.adj_v2p(sourceVid).front() };
 				const Id sourceVertOffset{ source.poly_vert_offset(sourcePid, sourceVid) };
 				m_vertMoves[sourceSurfVi] = VertMove{

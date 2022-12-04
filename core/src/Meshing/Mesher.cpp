@@ -359,21 +359,21 @@ namespace HMP::Meshing
 		if (m_dirty)
 		{
 			{
-				m_visibleFaceIndices.resize(id2i(m_mesh.num_faces()));
+				m_visibleFaceIndices.resize(toI(m_mesh.num_faces()));
 				Id lastI{};
-				for (std::size_t fi{}; fi < m_visibleFaceIndices.size(); fi++)
+				for (I fi{}; fi < m_visibleFaceIndices.size(); fi++)
 				{
-					const Id fid{ i2id(fi) };
+					const Id fid{ toId(fi) };
 					Id pid;
 					m_visibleFaceIndices[fi] = (m_mesh.face_is_on_srf(fid) && m_mesh.face_is_visible(fid, pid)) ? lastI++ : noId;
 				}
 			}
 			{
-				m_visibleEdgeIndices.resize(id2i(m_mesh.num_edges()));
+				m_visibleEdgeIndices.resize(toI(m_mesh.num_edges()));
 				Id lastI{};
-				for (std::size_t ei{}; ei < m_visibleEdgeIndices.size(); ei++)
+				for (I ei{}; ei < m_visibleEdgeIndices.size(); ei++)
 				{
-					const Id eid{ i2id(ei) };
+					const Id eid{ toId(ei) };
 					bool visible{ false };
 					if (m_mesh.edge_is_on_srf(eid))
 					{
@@ -402,7 +402,7 @@ namespace HMP::Meshing
 		if (m_dirty)
 		{
 			static constexpr double c_threshold{ 0.5 };
-			if (_changedVids.size() >= static_cast<I>(id2i(m_mesh.num_polys()) * c_threshold))
+			if (_changedVids.size() >= static_cast<I>(toI(m_mesh.num_polys()) * c_threshold))
 			{
 				m_mesh.update_normals();
 				m_mesh.updateGL_out();
@@ -427,7 +427,7 @@ namespace HMP::Meshing
 				}
 				for (const Id fid : changedFids)
 				{
-					const Id visibleFaceId{ m_visibleFaceIndices[id2i(fid)] };
+					const Id visibleFaceId{ m_visibleFaceIndices[toI(fid)] };
 					if (visibleFaceId != noId)
 					{
 						m_mesh.updateGL_out_f(fid, visibleFaceId * 2);
@@ -435,7 +435,7 @@ namespace HMP::Meshing
 				}
 				for (const Id eid : changedEids)
 				{
-					const Id visibleEdgeId{ m_visibleEdgeIndices[id2i(eid)] };
+					const Id visibleEdgeId{ m_visibleEdgeIndices[toI(eid)] };
 					if (visibleEdgeId != noId)
 					{
 						m_mesh.updateGL_out_e(eid, visibleEdgeId);

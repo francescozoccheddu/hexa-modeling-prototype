@@ -995,10 +995,10 @@ namespace HMP::Gui
 	{
 		if (_selected)
 		{
-			std::vector<Id> vids(id2i(m_mesh.num_verts()));
+			std::vector<Id> vids(toI(m_mesh.num_verts()));
 			for (I i{}; i < vids.size(); i++)
 			{
-				vids[i] = i2id(i);
+				vids[i] = toId(i);
 			}
 			m_vertEditWidget.add(vids);
 		}
