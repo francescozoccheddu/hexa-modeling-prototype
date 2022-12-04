@@ -60,7 +60,7 @@ namespace HMP::Algorithms::Projection
 
     std::vector<TargetToSourceMatch> matchTargetToSource(const cinolib::Polygonmesh<>& _source, const cinolib::Polygonmesh<>& _target)
     {
-        std::vector<TargetToSourceMatch> matches(id2i(_target.num_verts()));
+        std::vector<TargetToSourceMatch> matches(toI(_target.num_verts()));
         cinolib::Octree sourceOctree{};
         sourceOctree.build_from_mesh_polys(_source);
         cinolib::PARALLEL_FOR(0, _target.num_verts(), 64, [&_target, &sourceOctree, &matches](Id _targetVid) {
@@ -69,7 +69,7 @@ namespace HMP::Algorithms::Projection
             Id sourceFid;
             Real dist;
             sourceOctree.closest_point(targetVert, sourceFid, sourceVert, dist);
-            matches[id2i(_targetVid)] = {
+            matches[toI(_targetVid)] = {
                 .pos = sourceVert,
                 .sourceFid = sourceFid
             };
@@ -79,10 +79,10 @@ namespace HMP::Algorithms::Projection
 
     std::vector<std::vector<SourceToTargetMatch>> invertTargetToSourceMatches(const cinolib::Polygonmesh<>& _source, const cinolib::Polygonmesh<>& _target, const std::vector<TargetToSourceMatch>& _matches, EInvertMode _mode)
     {
-        std::vector<std::vector<SourceToTargetMatch>> invMatches(id2i(_source.num_verts()));
+        std::vector<std::vector<SourceToTargetMatch>> invMatches(toI(_source.num_verts()));
         for (I targetVi{}; targetVi < _matches.size(); targetVi++)
         {
-            const Id targetVid{ i2id(targetVi) };
+            const Id targetVid{ toId(targetVi) };
             const Vec& targetVert{ _target.vert(targetVid) };
             const TargetToSourceMatch& match{ _matches[targetVi] };
             SourceToTargetMatch invMatch;
@@ -119,7 +119,7 @@ namespace HMP::Algorithms::Projection
                         break;
                     }
                 }
-                invMatches[id2i(sourceVid)].push_back(invMatch);
+                invMatches[toI(sourceVid)].push_back(invMatch);
             }
         }
 
@@ -165,13 +165,13 @@ namespace HMP::Algorithms::Projection
 
     std::vector<std::optional<Vec>> displace(const cinolib::Polygonmesh<>& _source, const cinolib::Polygonmesh<>& _target, const std::vector<std::vector<SourceToTargetMatch>>& _matches, EDisplaceMode _mode, const Tweak& _weightTweak, const Tweak& _normDotTweak)
     {
-        std::vector<std::optional<Vec>> newSourceVerts(id2i(_source.num_verts()), std::nullopt);
+        std::vector<std::optional<Vec>> newSourceVerts(toI(_source.num_verts()), std::nullopt);
 
         for (Id sourceVid{}; sourceVid < _source.num_verts(); sourceVid++)
         {
             const Vec sourceNorm{ _source.vert_data(sourceVid).normal };
             Real maxWeight{};
-            for (const SourceToTargetMatch& match : _matches[id2i(sourceVid)])
+            for (const SourceToTargetMatch& match : _matches[toI(sourceVid)])
             {
                 maxWeight = std::max(match.weight, maxWeight);
             }
@@ -184,7 +184,7 @@ namespace HMP::Algorithms::Projection
             Vec normDirSum{};
             Real dirLengthSum{};
             Real weightSum{};
-            for (const SourceToTargetMatch& match : _matches[id2i(sourceVid)])
+            for (const SourceToTargetMatch& match : _matches[toI(sourceVid)])
             {
                 const Real normMatchWeight{ match.weight / maxWeight };
                 if (_weightTweak.shouldSkip(normMatchWeight))
@@ -206,7 +206,7 @@ namespace HMP::Algorithms::Projection
             }
             if (weightSum != 0)
             {
-                std::optional<Vec>& vert{ newSourceVerts[id2i(sourceVid)] };
+                std::optional<Vec>& vert{ newSourceVerts[toI(sourceVid)] };
                 switch (_mode)
                 {
                     case EDisplaceMode::VertAvg:
@@ -237,9 +237,9 @@ namespace HMP::Algorithms::Projection
             if (!newVerts[vi])
             {
                 I count{};
-                for (const Id adjVid : _source.adj_v2v(i2id(vi)))
+                for (const Id adjVid : _source.adj_v2v(toId(vi)))
                 {
-                    if (!newVerts[id2i(adjVid)])
+                    if (!newVerts[toI(adjVid)])
                     {
                         count++;
                     }
@@ -251,7 +251,7 @@ namespace HMP::Algorithms::Projection
         while (!skippedVisQueue.empty())
         {
             const I vi{ skippedVisQueue.pop_value(false).key };
-            const Id vid{ i2id(vi) };
+            const Id vid{ toId(vi) };
             const Vec vert{ _source.vert(vid) };
             Real minOldDist{ std::numeric_limits<Real>::infinity() };
             for (const Id adjVid : _source.adj_v2v(vid))
@@ -274,8 +274,8 @@ namespace HMP::Algorithms::Projection
                 }
                 const Real weight{ _distWeightTweak.apply(normWeight) };
                 const Vec adjVert{
-                    newVerts[id2i(adjVid)]
-                    ? *newVerts[id2i(adjVid)]
+                    newVerts[toI(adjVid)]
+                    ? *newVerts[toI(adjVid)]
                     : _source.vert(adjVid)
                 };
                 weightSum += weight;
@@ -284,10 +284,10 @@ namespace HMP::Algorithms::Projection
             newVerts[vi] = adjVertSum / weightSum;
             for (const Id adjVid : _source.adj_v2v(vid))
             {
-                if (!newVerts[id2i(adjVid)])
+                if (!newVerts[toI(adjVid)])
                 {
-                    const I oldCount{ skippedVisQueue.get_priority(id2i(adjVid)).second };
-                    skippedVisQueue.update(id2i(adjVid), oldCount + 1);
+                    const I oldCount{ skippedVisQueue.get_priority(toI(adjVid)).second };
+                    skippedVisQueue.update(toI(adjVid), oldCount + 1);
                 }
             }
         }
@@ -306,7 +306,7 @@ namespace HMP::Algorithms::Projection
             std::vector<Real> lengths(_newSourceVerts.size());
             for (I vi{}; vi < _newSourceVerts.size(); vi++)
             {
-                lengths[vi] = (_newSourceVerts[vi] - _source.vert(i2id(vi))).norm();
+                lengths[vi] = (_newSourceVerts[vi] - _source.vert(toId(vi))).norm();
             }
             std::sort(lengths.begin(), lengths.end());
             I medianI{ static_cast<I>(std::round(static_cast<double>(lengths.size() - 1) * _percentile)) };
@@ -321,7 +321,7 @@ namespace HMP::Algorithms::Projection
         }
         for (I vi{}; vi < _newSourceVerts.size(); vi++)
         {
-            const Vec sourceVert{ _source.vert(i2id(vi)) };
+            const Vec sourceVert{ _source.vert(toId(vi)) };
             const Vec offset{ _newSourceVerts[vi] - sourceVert };
             const Vec clampedOffset{ offset.norm() <= maxLength ? offset : (offset.normalized() * maxLength) };
             newVerts[vi] = sourceVert + clampedOffset;
@@ -336,10 +336,10 @@ namespace HMP::Algorithms::Projection
         {
             Vec vertSum{};
             Real weightSum{};
-            for (const Id& adjVid : _source.adj_v2v(i2id(vi)))
+            for (const Id& adjVid : _source.adj_v2v(toId(vi)))
             {
                 const Real weight = 1.0;
-                vertSum += _newSourceVerts[i2id(adjVid)] * weight;
+                vertSum += _newSourceVerts[toId(adjVid)] * weight;
                 weightSum += weight;
             }
             newVerts[vi] = vertSum / weightSum;
@@ -365,13 +365,13 @@ namespace HMP::Algorithms::Projection
             const std::vector<Vec> displaceAndFillAndAdvanceAndSmoothVerts{ (lastIteration && _options.smooth) ? smooth(source, displaceAndFillAndAdvanceVerts) : displaceAndFillAndAdvanceVerts };
             for (I vi{}; vi < displaceAndFillAndAdvanceAndSmoothVerts.size(); vi++)
             {
-                source.vert(i2id(vi)) = displaceAndFillAndAdvanceAndSmoothVerts[vi];
+                source.vert(toId(vi)) = displaceAndFillAndAdvanceAndSmoothVerts[vi];
             }
         }
-        std::vector<Vec> verts(id2i(source.num_verts()));
+        std::vector<Vec> verts(toI(source.num_verts()));
         for (Id vid{}; vid < source.num_verts(); vid++)
         {
-            verts[id2i(vid)] = source.vert(vid);
+            verts[toI(vid)] = source.vert(vid);
         }
         return verts;
     }

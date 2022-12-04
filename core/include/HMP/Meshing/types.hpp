@@ -19,8 +19,8 @@ namespace HMP
 
 	constexpr Id noId{ static_cast<Id>(-1) };
 
-	inline constexpr Id i2id(I _i) { return static_cast<Id>(_i); }
-	inline constexpr I id2i(Id _id) { return static_cast<I>(_id); }
+	inline constexpr Id toId(I _i) { return static_cast<Id>(_i); }
+	inline constexpr I toI(Id _id) { return static_cast<I>(_id); }
 
 	template<typename TData>
 	using PolyFaceData = std::array<TData, 6>;
