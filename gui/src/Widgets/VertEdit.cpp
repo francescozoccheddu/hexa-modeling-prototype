@@ -7,7 +7,7 @@
 namespace HMP::Gui::Widgets
 {
 
-	void VertEdit::addOrRemove(const Id* _vids, I _count, bool _add)
+	bool VertEdit::addOrRemove(const Id* _vids, I _count, bool _add, bool _update)
 	{
 		bool changed{ false };
 		for (const Id* vidp{ _vids }; vidp < _vids + _count; vidp++)
@@ -32,11 +32,12 @@ namespace HMP::Gui::Widgets
 				}
 			}
 		}
-		if (changed)
+		if (changed && _update)
 		{
 			onVidsChanged();
 			updateCentroid();
 		}
+		return changed;
 	}
 
 	VertEdit::VertEdit(Meshing::Mesher& _mesher) :
@@ -45,30 +46,44 @@ namespace HMP::Gui::Widgets
 		m_unappliedTransform{}, m_appliedTransform{}, m_centroid{}
 	{ }
 
-	void VertEdit::add(Id _vid)
+	bool VertEdit::add(Id _vid, bool _update)
 	{
-		addOrRemove(&_vid, 1, true);
+		return addOrRemove(&_vid, 1, true, _update);
 	}
 
-	void VertEdit::remove(Id _vid)
+	bool VertEdit::remove(Id _vid, bool _update)
 	{
-		addOrRemove(&_vid, 1, false);
+		return addOrRemove(&_vid, 1, false, _update);
 	}
 
-	void VertEdit::add(const std::vector<Id>& _vids)
+	bool VertEdit::add(const std::vector<Id>& _vids, bool _update)
 	{
 		if (!_vids.empty())
 		{
-			addOrRemove(&_vids[0], _vids.size(), true);
+			return addOrRemove(&_vids[0], _vids.size(), true, _update);
 		}
+		return false;
 	}
 
-	void VertEdit::remove(const std::vector<Id>& _vids)
+	bool VertEdit::remove(const std::vector<Id>& _vids, bool _update)
 	{
 		if (!_vids.empty())
 		{
-			addOrRemove(&_vids[0], _vids.size(), false);
+			return addOrRemove(&_vids[0], _vids.size(), false, _update);
 		}
+		return false;
+	}
+
+	bool VertEdit::replace(Id _oldVid, Id _newVid)
+	{
+		auto node = m_verts.extract(_oldVid);
+		if (!node.empty())
+		{
+			node.key() = _newVid;
+			m_verts.insert(std::move(node));
+			return true;
+		}
+		return false;
 	}
 
 	bool VertEdit::has(Id _vid) const

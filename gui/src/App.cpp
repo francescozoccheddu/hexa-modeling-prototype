@@ -206,21 +206,23 @@ namespace HMP::Gui
 
 	// mesher events
 
-	void App::onElementRemove(const HMP::Dag::Element& _element)
+	void App::onElementRemove(const HMP::Dag::Element& _element, const std::vector<Id>& _removedVids)
 	{
 		if (m_mouse.element == &_element)
 		{
 			m_mouse.element = nullptr;
 		}
-		std::vector<Id> vids{};
-		for (const Id vid : m_mesh.poly_verts_id(m_mesher.elementToPid(_element)))
+		m_vertEditWidget.remove(_removedVids);
+	}
+
+	void App::onElementRemoved(const HMP::Dag::Element& _element, const std::vector<Id>& _removedVids)
+	{
+		Id meshVertCount{ m_mesh.num_verts() + toId(_removedVids.size()) };
+		for (const Id vid : _removedVids)
 		{
-			if (m_mesh.adj_v2p(vid).size() == 1)
-			{
-				vids.push_back(vid);
-			}
+			m_vertEditWidget.replace(--meshVertCount, vid);
 		}
-		m_vertEditWidget.remove(vids);
+		onVertEditVidsOrCentroidChanged();
 	}
 
 	void App::onClearElements()
@@ -1054,7 +1056,8 @@ namespace HMP::Gui
 		m_mesher.polyColor() = c_polyColor;
 		m_mesher.edgeColor() = c_edgeColor;
 
-		m_mesher.onElementRemove += [this](const HMP::Dag::Element& _element) { onElementRemove(_element); };
+		m_mesher.onElementRemove += [this](const HMP::Dag::Element& _element, const std::vector<Id>& _removedVids) { onElementRemove(_element, _removedVids); };
+		m_mesher.onElementRemoved += [this](const HMP::Dag::Element& _element, const std::vector<Id>& _removedVids) { onElementRemoved(_element, _removedVids); };
 		m_mesher.onClear += [this]() { onClearElements(); };
 
 		m_commander.apply(*new Actions::Clear());

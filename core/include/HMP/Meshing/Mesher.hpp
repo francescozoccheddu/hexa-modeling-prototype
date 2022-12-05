@@ -178,6 +178,7 @@ namespace HMP::Meshing
 		bool m_dirty;
 		cinolib::Color m_polyColor, m_edgeColor;
 		std::vector<Id> m_visibleFaceIndices, m_visibleEdgeIndices;
+		std::vector<Id> m_removedVids;
 
 		Id getOrAddVert(const Vec& _vert);
 
@@ -185,8 +186,8 @@ namespace HMP::Meshing
 
 		Mesher();
 
-		cpputils::collections::Event<Mesher, const Dag::Element&> onElementRemove;
-		cpputils::collections::Event<Mesher, const Dag::Element&> onElementRemoved;
+		cpputils::collections::Event<Mesher, const Dag::Element&, const std::vector<Id>&> onElementRemove;
+		cpputils::collections::Event<Mesher, const Dag::Element&, const std::vector<Id>&> onElementRemoved;
 		cpputils::collections::Event<Mesher> onClear;
 		cpputils::collections::Event<Mesher> onCleared;
 
