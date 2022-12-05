@@ -49,12 +49,14 @@ namespace HMP::Gui::Widgets
 	void Projection::draw()
 	{
 		static constexpr auto tweak{ [](Algorithms::Projection::Tweak& _tweak, const char* _header) {
+			ImGui::PushID(&_tweak);
 			ImGui::Text("%s", _header);
 			float min{static_cast<float>(_tweak.min())};
 			ImGui::SliderFloat("Min", &min, -2.0f, 1.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
 			float power{static_cast<float>(_tweak.power())};
 			ImGui::SliderFloat("Power", &power, 0.0f, 4.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_Logarithmic);
 			_tweak = { min, power };
+			ImGui::PopID();
 		} };
 		{
 			int iterations{ static_cast<int>(m_options.iterations) };
@@ -84,10 +86,10 @@ namespace HMP::Gui::Widgets
 		tweak(m_options.unsetVertsDistWeightTweak, "Unset verts distance factor");
 		ImGui::Spacing();
 		{
-			float advancePercentile{ static_cast<float>(m_options.advancePercentile) };
+			float advancePercentile{ static_cast<float>(m_options.advancePercentile) * 100.0f };
 			if (ImGui::SliderFloat("Advance percentile", &advancePercentile, 0.0f, 100.0f, "%.2f%%", ImGuiSliderFlags_AlwaysClamp))
 			{
-				m_options.advancePercentile = advancePercentile;
+				m_options.advancePercentile = advancePercentile / 100.0f;
 			}
 		}
 		ImGui::Checkbox("Smooth", &m_options.smooth);
