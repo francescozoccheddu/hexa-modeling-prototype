@@ -183,10 +183,11 @@ namespace HMP::Meshing
 		: m_mesh(), m_elementToPid{}, Internal::ElementToPidIterable{ m_elementToPid },
 		m_polyMarkerSet{ *this }, m_faceMarkerSet{ *this },
 		m_polyColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.35f) }, m_edgeColor{ cinolib::Color::BLACK() },
-		m_dirty{ false }, m_visibleFaceIndices{}, m_visibleEdgeIndices{}
+		m_dirty{ false }, m_visibleFaceIndices{}, m_visibleEdgeIndices{}, m_removedVids{}
 	{
 		m_polyMarkerSet.color() = cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.5f);
 		m_faceMarkerSet.color() = cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.7f);
+		m_removedVids.reserve(8);
 		m_mesh.draw_back_faces = false;
 		m_mesh.show_mesh(true);
 		m_mesh.show_mesh_flat();
@@ -261,7 +262,16 @@ namespace HMP::Meshing
 		{
 			throw std::logic_error{ "not an element" };
 		}
-		onElementRemove(_element);
+		m_removedVids.clear();
+		for (const Id vid : m_mesh.adj_p2v(pid))
+		{
+			if (m_mesh.adj_v2p(vid).size() == 1)
+			{
+				m_removedVids.push_back(vid);
+			}
+		}
+		std::sort(m_removedVids.begin(), m_removedVids.end(), std::greater<Id>{});
+		onElementRemove(_element, m_removedVids);
 		m_elementToPid.erase(&_element);
 		const Id lastPid{ m_mesh.num_polys() - 1 };
 		if (pid != lastPid)
@@ -275,7 +285,7 @@ namespace HMP::Meshing
 			m_faceMarkerSet.m_data.erase({ &_element, o });
 		}
 		m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
-		onElementRemoved(_element);
+		onElementRemoved(_element, m_removedVids);
 	}
 
 	void Mesher::moveVert(Id _vid, const Vec& _position)

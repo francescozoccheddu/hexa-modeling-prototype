@@ -29,7 +29,7 @@ namespace HMP::Gui::Widgets
 		Vec m_centroid;
 		bool m_pendingAction;
 
-		void addOrRemove(const Id* _vids, I _count, bool _add);
+		bool addOrRemove(const Id* _vids, I _count, bool _add, bool _update);
 
 	public:
 
@@ -43,13 +43,15 @@ namespace HMP::Gui::Widgets
 
 		VertEdit(Meshing::Mesher& _mesher);
 
-		void add(Id _vid);
+		bool add(Id _vid, bool _update = true);
 
-		void remove(Id _vid);
+		bool remove(Id _vid, bool _update = true);
 
-		void add(const std::vector<Id>& _vids);
+		bool add(const std::vector<Id>& _vids, bool _update = true);
 
-		void remove(const std::vector<Id>& _vids);
+		bool remove(const std::vector<Id>& _vids, bool _update = true);
+
+		bool replace(Id _oldVid, Id _newVid);
 
 		bool has(Id _vid) const;
 
