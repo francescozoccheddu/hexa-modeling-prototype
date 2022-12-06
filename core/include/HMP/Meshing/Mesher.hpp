@@ -73,6 +73,14 @@ namespace HMP::Meshing
 
 		void add(Dag::Element& _element);
 
+		struct RemovedIds final
+		{
+			std::vector<Id> vids;
+			std::vector<Id> eids;
+			std::vector<Id> fids;
+			Id pid;
+		};
+
 		class PolyAttributes final : public cinolib::Polyhedron_std_attributes
 		{
 
@@ -178,7 +186,7 @@ namespace HMP::Meshing
 		bool m_dirty;
 		cinolib::Color m_polyColor, m_edgeColor;
 		std::vector<Id> m_visibleFaceIndices, m_visibleEdgeIndices;
-		std::vector<Id> m_removedVids;
+		RemovedIds m_removedIds;
 
 		Id getOrAddVert(const Vec& _vert);
 
@@ -186,8 +194,10 @@ namespace HMP::Meshing
 
 		Mesher();
 
-		cpputils::collections::Event<Mesher, const Dag::Element&, const std::vector<Id>&> onElementRemove;
-		cpputils::collections::Event<Mesher, const Dag::Element&, const std::vector<Id>&> onElementRemoved;
+		cpputils::collections::Event<Mesher, const Dag::Element&, const RemovedIds&> onElementRemove;
+		cpputils::collections::Event<Mesher, const Dag::Element&, const RemovedIds&> onElementRemoved;
+		cpputils::collections::Event<Mesher, const Dag::Element&> onElementAdd;
+		cpputils::collections::Event<Mesher, const Dag::Element&> onElementAdded;
 		cpputils::collections::Event<Mesher> onClear;
 		cpputils::collections::Event<Mesher> onCleared;
 
@@ -203,6 +213,8 @@ namespace HMP::Meshing
 		void remove(Dag::Element& _element);
 		void moveVert(Id _vid, const Vec& _position);
 		void clear();
+
+		void paintEdge(Id _eid, const cinolib::Color& _color);
 
 		PolyMarkerSet& polyMarkerSet();
 		const PolyMarkerSet& polyMarkerSet() const;

@@ -1016,7 +1016,7 @@ namespace HMP::Gui
 		m_project{}, m_canvas{ 700, 600, 13, 1.0f }, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() },
 		m_dagNamer{}, m_menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh controls" },
 		m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{ m_canvas.camera }, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher }
-		, m_directVertEditWidget{ m_vertEditWidget, m_canvas }, m_saveWidget{}, m_projectionWidget{ m_targetWidget, m_commander }
+		, m_directVertEditWidget{ m_vertEditWidget, m_canvas }, m_saveWidget{}, m_projectionWidget{ m_targetWidget, m_commander, m_mesher, m_vertEditWidget }
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		, m_dagViewerWidget{ m_mesher, m_dagNamer }, m_dagViewerNeedsUpdate{ true }
 #endif
@@ -1056,8 +1056,8 @@ namespace HMP::Gui
 		m_mesher.polyColor() = c_polyColor;
 		m_mesher.edgeColor() = c_edgeColor;
 
-		m_mesher.onElementRemove += [this](const HMP::Dag::Element& _element, const std::vector<Id>& _removedVids) { onElementRemove(_element, _removedVids); };
-		m_mesher.onElementRemoved += [this](const HMP::Dag::Element& _element, const std::vector<Id>& _removedVids) { onElementRemoved(_element, _removedVids); };
+		m_mesher.onElementRemove += [this](const HMP::Dag::Element& _element, const Meshing::Mesher::RemovedIds& _removedIds) { onElementRemove(_element, _removedIds.vids); };
+		m_mesher.onElementRemoved += [this](const HMP::Dag::Element& _element, const Meshing::Mesher::RemovedIds& _removedIds) { onElementRemoved(_element, _removedIds.vids); };
 		m_mesher.onClear += [this]() { onClearElements(); };
 
 		m_commander.apply(*new Actions::Clear());
@@ -1091,7 +1091,7 @@ namespace HMP::Gui
 		m_saveWidget.onLoad += [this](const std::string& _filename) { onLoadState(_filename); };
 
 		m_projectionWidget.onProjectRequest += [this](auto && ..._args) { onProjectToTarget(_args ...); };
-		m_targetWidget.onMeshChange += [this]() { m_canvas.refit_scene(); };
+		m_targetWidget.onMeshChanged += [this]() { m_canvas.refit_scene(); };
 		m_targetWidget.onApplyTransformToSource += [this](const Mat4& _transform) { onApplyTargetTransform(_transform); };
 
 		m_vertEditWidget.onApplyAction += [this](std::vector<Id> _vids, Mat4 _transform) { onApplyVertEdit(_vids, _transform); };
