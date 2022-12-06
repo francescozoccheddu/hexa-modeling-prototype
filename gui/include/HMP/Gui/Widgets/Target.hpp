@@ -35,13 +35,14 @@ namespace HMP::Gui::Widgets
 
 		Target(const Meshing::Mesher::Mesh& _sourceMesh);
 
-		cpputils::collections::Event<Target> onMeshChange;
+		cpputils::collections::Event<Target> onMeshChanged;
 		cpputils::collections::Event<Target, const Mat4&> onApplyTransformToSource;
 
 		const Meshing::Mesher::Mesh& sourceMesh() const;
 
 		bool hasMesh() const;
 		const cinolib::DrawablePolygonmesh<>& meshForDisplay() const;
+		cinolib::DrawablePolygonmesh<>& meshForDisplay();
 
 		cinolib::Polygonmesh<> meshForProjection() const;
 

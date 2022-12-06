@@ -47,6 +47,11 @@ namespace HMP::Gui::Widgets
 		return m_mesh;
 	}
 
+	cinolib::DrawablePolygonmesh<>& Target::meshForDisplay()
+	{
+		return m_mesh;
+	}
+
 	cinolib::Polygonmesh<> Target::meshForProjection() const
 	{
 		ensureHasMesh();
@@ -154,7 +159,7 @@ namespace HMP::Gui::Widgets
 	{
 		ensureHasMesh();
 		m_mesh.transform = m_transform.matrix();
-		onMeshChange();
+		onMeshChanged();
 	}
 
 	void Target::updateVisibility()
@@ -219,7 +224,7 @@ namespace HMP::Gui::Widgets
 		m_filename = "";
 		m_mesh.clear();
 		m_mesh.updateGL();
-		onMeshChange();
+		onMeshChanged();
 	}
 
 	void Target::requestApplyTransformToSource()
