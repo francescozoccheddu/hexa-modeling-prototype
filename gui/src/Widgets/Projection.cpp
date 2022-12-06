@@ -7,6 +7,7 @@
 #include <cinolib/export_surface.h>
 #include <limits>
 #include <algorithm>
+#include <set>
 
 namespace HMP::Gui::Widgets
 {
@@ -224,6 +225,27 @@ namespace HMP::Gui::Widgets
 			{
 				return;
 			}
+			if (has2)
+			{
+				std::set<Id> invalidVids;
+				if (has3)
+				{
+					for (I i{ 1 }; i < lastI; i++)
+					{
+						const Id eid{ crease[i] };
+						invalidVids.insert(mesh.edge_vert_id(eid, 0));
+						invalidVids.insert(mesh.edge_vert_id(eid, 1));
+					}
+				}
+				else
+				{
+					invalidVids.insert(mesh.vert_shared(endEids[0], endEids[1]));
+				}
+				if (invalidVids.contains(mesh.edge_vert_id(closestEid, 0)) || invalidVids.contains(mesh.edge_vert_id(closestEid, 1)))
+				{
+					return;
+				}
+			}
 			crease.push_back(closestEid);
 			m_targetWidget.paintEdge(closestEid, cinolib::Color::hsv2rgb(static_cast<float>(m_currentCrease) / static_cast<float>(m_creases.size()), 1.0f, 1.0f));
 		}
@@ -245,8 +267,9 @@ namespace HMP::Gui::Widgets
 			{
 				return;
 			}
-			const I i{ static_cast<I>(std::distance(crease.begin(), std::find(crease.begin(), crease.end(), closestEid))) };
-			std::shift_right(crease.begin(), crease.end(), crease.size() - 1 - i);
+			const I i{ static_cast<I>(std::find(crease.begin(), crease.end(), closestEid) - crease.begin()) };
+			const I nextI{ (i + 1) % crease.size() };
+			std::rotate(crease.begin(), crease.begin() + nextI, crease.end());
 			crease.pop_back();
 			m_targetWidget.paintEdge(closestEid, m_targetWidget.edgeColor());
 		}
