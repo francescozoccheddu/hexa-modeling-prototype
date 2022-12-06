@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <HMP/Actions/Project.hpp>
 #include <cinolib/export_surface.h>
+#include <limits>
+#include <algorithm>
 
 namespace HMP::Gui::Widgets
 {
@@ -14,12 +16,10 @@ namespace HMP::Gui::Widgets
 		onProjectRequest{}, m_options{}
 	{
 		m_targetWidget.onMeshChanged += [this]() {
-			I i{};
+			updateTargetMeshEdges(0, m_creases.size(), false);
 			for (EdgeChainPair& pair : m_creases)
 			{
-				updateTargetMeshEdges(i, i + 1, false);
 				pair.target.clear();
-				i++;
 			}
 		};
 		m_mesher.onElementAdd += [this](const Dag::Element& _element) {
@@ -100,7 +100,7 @@ namespace HMP::Gui::Widgets
 
 	void Projection::matchCreases(I _first, I _lastEx, bool _fromSource)
 	{
-
+		// TODO Fix findCreases first
 	}
 
 	void Projection::findCreases(bool _inSource)
@@ -108,15 +108,27 @@ namespace HMP::Gui::Widgets
 		std::vector<std::vector<Id>> network{};
 		if (_inSource)
 		{
+			updateSourceMeshEdges(0, m_creases.size(), false);
+			for (EdgeChainPair& pair : m_creases)
+			{
+				pair.source.clear();
+			}
 			cinolib::Polygonmesh<> surface{};
 			cinolib::export_surface(m_mesher.mesh(), surface);
 			cinolib::feature_network(surface, network, m_featureFinderOptions);
 		}
 		else
 		{
+			updateTargetMeshEdges(0, m_creases.size(), false);
+			for (EdgeChainPair& pair : m_creases)
+			{
+				pair.target.clear();
+			}
 			cinolib::feature_network(m_targetWidget.meshForDisplay(), network, m_featureFinderOptions);
 		}
 		std::cout << network.size() << std::endl;
+		// FIXME Why network is empty?
+		// TODO Clear
 	}
 
 	void Projection::updateMeshEdges(I _first, I _lastEx, bool _show)
@@ -148,10 +160,9 @@ namespace HMP::Gui::Widgets
 				? cinolib::Color::hsv2rgb(static_cast<float>(i) / static_cast<float>(m_creases.size()), 1.0f, 1.0f)
 				: m_targetWidget.edgeColor()
 			};
-			for (const Id eid : m_creases[i].source)
+			for (const Id eid : m_creases[i].target)
 			{
-				m_targetWidget.meshForDisplay().edge_data(eid).color = color;
-				// TODO update
+				m_targetWidget.paintEdge(eid, color);
 			}
 		}
 	}
@@ -161,12 +172,84 @@ namespace HMP::Gui::Widgets
 		updateSourceMeshEdges(_crease, _crease + 1, false);
 		EdgeChain& crease{ m_creases[_crease].source };
 		crease.clear();
-
+		// TODO 
+		updateSourceMeshEdges(_crease, _crease + 1, true);
 	}
 
-	void Projection::setTargetCreaseEdgeAtPoint(const Vec& _point)
+	void Projection::setTargetCreaseEdgeAtPoint(const Vec& _point, bool _add)
 	{
-
+		if (!m_showCreases || m_showAllCreases || m_creases.empty())
+		{
+			return;
+		}
+		const cinolib::DrawablePolygonmesh<>& mesh{ m_targetWidget.meshForDisplay() };
+		const Vec untransfPoint{ mesh.transform.inverse() * _point };
+		EdgeChain& crease{ m_creases[m_currentCrease].target };
+		const bool has1{ crease.size() > 0 }, has2{ crease.size() > 1 }, has3{ crease.size() > 2 };
+		const I lastI{ crease.size() - 1 };
+		const std::vector<Id> endEids{ has1 ? has2 ? std::vector<Id>{crease[0], crease[lastI]} : std::vector<Id>{ crease[0] } : std::vector<Id>{} };
+		const bool closed{ has3 && mesh.edges_are_adjacent(endEids[0], endEids[1]) };
+		if (_add)
+		{
+			if (closed)
+			{
+				return;
+			}
+			Id closestEid{ noId };
+			if (!has1)
+			{
+				closestEid = mesh.pick_edge(untransfPoint);
+			}
+			else
+			{
+				Real closestDist{ std::numeric_limits<Real>::infinity() };
+				for (const Id endEid : endEids)
+				{
+					for (const Id eid : mesh.adj_e2e(endEid))
+					{
+						if (has2 && (eid == crease[1] || eid == crease[lastI - 1]))
+						{
+							continue;
+						}
+						const Real dist{ untransfPoint.dist_sqrd(mesh.edge_sample_at(eid, 0.5)) };
+						if (dist < closestDist)
+						{
+							closestDist = dist;
+							closestEid = eid;
+						}
+					}
+				}
+			}
+			if (closestEid == noId)
+			{
+				return;
+			}
+			crease.push_back(closestEid);
+			m_targetWidget.paintEdge(closestEid, cinolib::Color::hsv2rgb(static_cast<float>(m_currentCrease) / static_cast<float>(m_creases.size()), 1.0f, 1.0f));
+		}
+		else
+		{
+			const std::vector<Id>& candidates{ closed ? crease : endEids };
+			Real closestDist{ std::numeric_limits<Real>::infinity() };
+			Id closestEid{ noId };
+			for (const Id eid : candidates)
+			{
+				const Real dist{ untransfPoint.dist_sqrd(mesh.edge_sample_at(eid, 0.5)) };
+				if (dist < closestDist)
+				{
+					closestDist = dist;
+					closestEid = eid;
+				}
+			}
+			if (closestEid == noId)
+			{
+				return;
+			}
+			const I i{ static_cast<I>(std::distance(crease.begin(), std::find(crease.begin(), crease.end(), closestEid))) };
+			std::shift_right(crease.begin(), crease.end(), crease.size() - 1 - i);
+			crease.pop_back();
+			m_targetWidget.paintEdge(closestEid, m_targetWidget.edgeColor());
+		}
 	}
 
 	void Projection::clearCreases()
@@ -187,7 +270,7 @@ namespace HMP::Gui::Widgets
 		updateMeshEdges(_index, _index + 1, false);
 		std::swap(m_creases[_index], m_creases[m_creases.size() - 1]);
 		m_creases.pop_back();
-		if (_index == static_cast<I>(m_currentCrease))
+		if (_index == m_currentCrease)
 		{
 			m_currentCrease = 0;
 		}
@@ -262,7 +345,7 @@ namespace HMP::Gui::Widgets
 				if (m_targetWidget.hasMesh())
 				{
 					ImGui::SameLine();
-					if (ImGui::SmallButton("Find in target"))
+					if (ImGui::Button("Find in target"))
 					{
 						findCreases(false);
 					}
@@ -280,16 +363,17 @@ namespace HMP::Gui::Widgets
 				ImGui::Spacing();
 				ImGui::Separator();
 				ImGui::Spacing();
-				for (int i{}; i < static_cast<int>(m_creases.size()); i++)
+				for (I i{}; i < m_creases.size(); i++)
 				{
-					ImGui::PushID(i);
+					ImGui::PushID(static_cast<int>(i));
 					if (!m_showAllCreases)
 					{
-						const I oldCurrentCrease{ static_cast<I>(m_currentCrease) };
-						if (ImGui::RadioButton("", &m_currentCrease, i))
+						int currentCrease = static_cast<int>(m_currentCrease);
+						if (ImGui::RadioButton("", &currentCrease, static_cast<int>(i)))
 						{
-							updateMeshEdges(oldCurrentCrease, oldCurrentCrease + 1, false);
-							updateMeshEdges(static_cast<I>(m_currentCrease), static_cast<I>(m_currentCrease) + 1, true);
+							updateMeshEdges(m_currentCrease, m_currentCrease + 1, false);
+							m_currentCrease = static_cast<I>(currentCrease);
+							updateMeshEdges(m_currentCrease, m_currentCrease + 1, true);
 						}
 						ImGui::SameLine();
 					}
@@ -300,19 +384,19 @@ namespace HMP::Gui::Widgets
 					ImGui::SameLine();
 					if (ImGui::Button("Remove"))
 					{
-						removeCrease(static_cast<I>(i));
+						removeCrease(i);
 					}
 					ImGui::SameLine();
 					if (ImGui::SmallButton("Source from selection"))
 					{
-						setSourceCreaseFromSelection(static_cast<I>(i));
+						setSourceCreaseFromSelection(i);
 					}
 					ImGui::SameLine();
 					if (ImGui::SmallButton("Source to selection"))
 					{
 						m_vertEditWidget.clear();
 						std::vector<Id> vids{};
-						const EdgeChain& chain{ m_creases[static_cast<I>(i)].source };
+						const EdgeChain& chain{ m_creases[i].source };
 						vids.reserve(chain.size() * 2);
 						for (const Id eid : chain)
 						{
@@ -324,14 +408,20 @@ namespace HMP::Gui::Widgets
 					if (m_targetWidget.hasMesh())
 					{
 						ImGui::SameLine();
-						if (ImGui::SmallButton("Match source to target"))
+						if (ImGui::SmallButton("Clear target"))
 						{
-							matchCreases(static_cast<I>(i), static_cast<I>(i + 1), true);
+							updateTargetMeshEdges(i, i + 1, false);
+							m_creases[i].target.clear();
 						}
 						ImGui::SameLine();
-						if (ImGui::SmallButton("Match target to source"))
+						if (ImGui::SmallButton("Match source"))
 						{
-							matchCreases(static_cast<I>(i), static_cast<I>(i + 1), false);
+							matchCreases(i, i + 1, true);
+						}
+						ImGui::SameLine();
+						if (ImGui::SmallButton("Match target"))
+						{
+							matchCreases(i, i + 1, false);
 						}
 					}
 					ImGui::PopID();
@@ -355,15 +445,13 @@ namespace HMP::Gui::Widgets
 				if (m_targetWidget.hasMesh())
 				{
 					ImGui::SameLine();
-					ImGui::Text("Match all starting from");
-					ImGui::SameLine();
-					if (ImGui::SmallButton("source"))
+					if (ImGui::SmallButton("Match all source"))
 					{
 						matchCreases(0, m_creases.size(), true);
 					}
 					ImGui::SameLine();
 					matchCreases(0, m_creases.size(), true);
-					if (ImGui::SmallButton("target"))
+					if (ImGui::SmallButton("Match all target"))
 					{
 						matchCreases(0, m_creases.size(), false);
 					}

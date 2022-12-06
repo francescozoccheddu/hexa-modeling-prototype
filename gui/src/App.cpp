@@ -76,6 +76,9 @@ namespace HMP::Gui
 		cinolib::print_binding(c_kbToggleTargetVisibility.name(), "toggle target visibility");
 		cinolib::print_binding(c_kbUndo.name(), "undo");
 		cinolib::print_binding(c_kbRedo.name(), "redo");
+		cinolib::print_binding(c_kbAddTargetCreaseEdge.name(), "add target crease edge");
+		cinolib::print_binding(c_kbRemoveTargetCreaseEdge.name(), "remove target crease edge");
+		cinolib::print_binding(c_kbRedo.name(), "redo");
 		cinolib::print_binding(c_kbPrintDebugInfo.name(), "print debug info");
 		std::cout << "-------------------------------\n";
 	}
@@ -521,11 +524,28 @@ namespace HMP::Gui
 		{
 			onSelectAll(true);
 		}
+		else if (key == c_kbAddTargetCreaseEdge)
+		{
+			onTargetSetCreaseEdge(true);
+		}
+		else if (key == c_kbRemoveTargetCreaseEdge)
+		{
+			onTargetSetCreaseEdge(false);
+		}
 		else
 		{
 			return false;
 		}
 		return true;
+	}
+
+	void App::onTargetSetCreaseEdge(bool _add)
+	{
+		Vec point;
+		if (m_canvas.unproject(m_mouse.position, point))
+		{
+			m_projectionWidget.setTargetCreaseEdgeAtPoint(point, _add);
+		}
 	}
 
 	bool App::onMouseMoved(double _x, double _y)

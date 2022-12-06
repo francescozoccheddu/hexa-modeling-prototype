@@ -47,11 +47,6 @@ namespace HMP::Gui::Widgets
 		return m_mesh;
 	}
 
-	cinolib::DrawablePolygonmesh<>& Target::meshForDisplay()
-	{
-		return m_mesh;
-	}
-
 	cinolib::Polygonmesh<> Target::meshForProjection() const
 	{
 		ensureHasMesh();
@@ -390,6 +385,12 @@ namespace HMP::Gui::Widgets
 				load();
 			}
 		}
+	}
+
+	void Target::paintEdge(Id _eid, const cinolib::Color& _color)
+	{
+		m_mesh.edge_data(_eid).color = _color;
+		m_mesh.updateGL_mesh_e(_eid, _eid);
 	}
 
 	void Target::serialize(HMP::Utils::Serialization::Serializer& _serializer) const
