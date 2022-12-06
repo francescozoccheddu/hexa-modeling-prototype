@@ -32,7 +32,7 @@ namespace HMP::Gui::Widgets
 		VertEdit& m_vertEditWidget;
 		cinolib::FeatureNetworkOptions m_featureFinderOptions;
 		bool m_showCreases{ false }, m_showAllCreases{ false };
-		int m_currentCrease{};
+		I m_currentCrease{};
 
 		void matchCreases(I _first, I _lastEx, bool _fromSource);
 
@@ -49,7 +49,7 @@ namespace HMP::Gui::Widgets
 		void clearCreases();
 
 		void addCrease();
-		
+
 		void removeCrease(I _index);
 
 	public:
@@ -66,7 +66,7 @@ namespace HMP::Gui::Widgets
 
 		void requestReprojection();
 
-		void setTargetCreaseEdgeAtPoint(const Vec& _point);
+		void setTargetCreaseEdgeAtPoint(const Vec& _point, bool _add);
 
 		void draw() override;
 

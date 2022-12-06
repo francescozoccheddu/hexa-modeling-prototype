@@ -42,9 +42,10 @@ namespace HMP::Gui::Widgets
 
 		bool hasMesh() const;
 		const cinolib::DrawablePolygonmesh<>& meshForDisplay() const;
-		cinolib::DrawablePolygonmesh<>& meshForDisplay();
 
 		cinolib::Polygonmesh<> meshForProjection() const;
+
+		void paintEdge(Id _eid, const cinolib::Color& _color);
 
 		void show(bool _visible);
 		bool visible() const;
