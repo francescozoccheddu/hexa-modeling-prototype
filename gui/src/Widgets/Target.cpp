@@ -10,7 +10,7 @@
 namespace HMP::Gui::Widgets
 {
 
-	Target::Target(const Meshing::Mesher::Mesh& _sourceMesh) :
+	Target::Target(const Meshing::Mesher::Mesh& _sourceMesh):
 		cinolib::SideBarItem{ "Target mesh" },
 		m_mesh{}, m_sourceMesh{ _sourceMesh },
 		onApplyTransformToSource{},
@@ -196,6 +196,8 @@ namespace HMP::Gui::Widgets
 		{
 			m_visible = true;
 			m_mesh = cinolib::DrawablePolygonmesh<>{ m_filename.c_str() };
+			m_edgesPainted.clear();
+			m_edgesPainted.resize(toI(m_mesh.num_edges()), false);
 			m_mesh.show_marked_edge(false);
 			m_mesh.draw_back_faces = false;
 			if (!_keepTransform)
@@ -390,6 +392,14 @@ namespace HMP::Gui::Widgets
 	void Target::paintEdge(Id _eid, const cinolib::Color& _color)
 	{
 		m_mesh.edge_data(_eid).color = _color;
+		m_edgesPainted[toI(_eid)] = true;
+		m_mesh.updateGL_mesh_e(_eid, _eid);
+	}
+
+	void Target::unpaintEdge(Id _eid)
+	{
+		m_mesh.edge_data(_eid).color = m_edgeColor;
+		m_edgesPainted[toI(_eid)] = false;
 		m_mesh.updateGL_mesh_e(_eid, _eid);
 	}
 

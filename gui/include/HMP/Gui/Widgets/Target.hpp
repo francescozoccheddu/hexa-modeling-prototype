@@ -12,11 +12,12 @@
 #include <HMP/Gui/Utils/Transform.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <HMP/Utils/Serialization.hpp>
+#include <vector>
 
 namespace HMP::Gui::Widgets
 {
 
-	class Target final : public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
+	class Target final: public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
 	{
 
 	private:
@@ -28,6 +29,7 @@ namespace HMP::Gui::Widgets
 		Utils::Transform m_transform;
 		cinolib::Color m_faceColor, m_edgeColor;
 		bool m_missingMeshFile;
+		std::vector<bool> m_edgesPainted;
 
 		void ensureHasMesh() const;
 
@@ -46,6 +48,7 @@ namespace HMP::Gui::Widgets
 		cinolib::Polygonmesh<> meshForProjection() const;
 
 		void paintEdge(Id _eid, const cinolib::Color& _color);
+		void unpaintEdge(Id _eid);
 
 		void show(bool _visible);
 		bool visible() const;

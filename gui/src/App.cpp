@@ -76,8 +76,8 @@ namespace HMP::Gui
 		cinolib::print_binding(c_kbToggleTargetVisibility.name(), "toggle target visibility");
 		cinolib::print_binding(c_kbUndo.name(), "undo");
 		cinolib::print_binding(c_kbRedo.name(), "redo");
-		cinolib::print_binding(c_kbAddTargetCreaseEdge.name(), "add target crease edge");
-		cinolib::print_binding(c_kbRemoveTargetCreaseEdge.name(), "remove target crease edge");
+		cinolib::print_binding(c_kbAddCreaseEdge.name(), "add crease edge");
+		cinolib::print_binding(c_kbRemoveCreaseEdge.name(), "remove crease edge");
 		cinolib::print_binding(c_kbRedo.name(), "redo");
 		cinolib::print_binding(c_kbPrintDebugInfo.name(), "print debug info");
 		std::cout << "-------------------------------\n";
@@ -524,13 +524,13 @@ namespace HMP::Gui
 		{
 			onSelectAll(true);
 		}
-		else if (key == c_kbAddTargetCreaseEdge)
+		else if (key == c_kbAddCreaseEdge)
 		{
-			onTargetSetCreaseEdge(true);
+			onSetCreaseEdge(true);
 		}
-		else if (key == c_kbRemoveTargetCreaseEdge)
+		else if (key == c_kbRemoveCreaseEdge)
 		{
-			onTargetSetCreaseEdge(false);
+			onSetCreaseEdge(false);
 		}
 		else
 		{
@@ -539,12 +539,19 @@ namespace HMP::Gui
 		return true;
 	}
 
-	void App::onTargetSetCreaseEdge(bool _add)
+	void App::onSetCreaseEdge(bool _add)
 	{
 		Vec point;
 		if (m_canvas.unproject(m_mouse.position, point))
 		{
-			m_projectionWidget.setTargetCreaseEdgeAtPoint(point, _add);
+			if (m_targetWidget.hasMesh() && m_targetWidget.visible())
+			{
+				m_projectionWidget.setTargetCreaseEdgeAtPoint(point, _add);
+			}
+			else
+			{
+				m_projectionWidget.setSourceCreaseEdgeAtPoint(point, _add);
+			}
 		}
 	}
 
@@ -1032,7 +1039,7 @@ namespace HMP::Gui
 
 	// launch
 
-	App::App() :
+	App::App():
 		m_project{}, m_canvas{ 700, 600, 13, 1.0f }, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() },
 		m_dagNamer{}, m_menu{ const_cast<Meshing::Mesher::Mesh*>(&m_mesh), &m_canvas, "Mesh controls" },
 		m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{ m_canvas.camera }, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher }

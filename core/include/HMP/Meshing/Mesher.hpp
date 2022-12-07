@@ -66,7 +66,7 @@ namespace HMP::Meshing
 
 	}
 
-	class Mesher final : public cpputils::mixins::ReferenceClass, public Internal::ElementToPidIterable
+	class Mesher final: public cpputils::mixins::ReferenceClass, public Internal::ElementToPidIterable
 	{
 
 	public:
@@ -81,7 +81,7 @@ namespace HMP::Meshing
 			Id pid;
 		};
 
-		class PolyAttributes final : public cinolib::Polyhedron_std_attributes
+		class PolyAttributes final: public cinolib::Polyhedron_std_attributes
 		{
 
 		private:
@@ -102,7 +102,7 @@ namespace HMP::Meshing
 		class PolyMarkerSet;
 		class FaceMarkerSet;
 
-		class MarkerSetBase : public cpputils::mixins::ReferenceClass
+		class MarkerSetBase: public cpputils::mixins::ReferenceClass
 		{
 
 		private:
@@ -125,7 +125,7 @@ namespace HMP::Meshing
 
 		};
 
-		class PolyMarkerSet final : public MarkerSetBase, public Internal::PolyMarkerIterable
+		class PolyMarkerSet final: public MarkerSetBase, public Internal::PolyMarkerIterable
 		{
 
 		private:
@@ -149,7 +149,7 @@ namespace HMP::Meshing
 
 		};
 
-		class FaceMarkerSet final : public MarkerSetBase, public Internal::FaceMarkerIterable
+		class FaceMarkerSet final: public MarkerSetBase, public Internal::FaceMarkerIterable
 		{
 
 		private:
@@ -186,6 +186,7 @@ namespace HMP::Meshing
 		bool m_dirty;
 		cinolib::Color m_polyColor, m_edgeColor;
 		std::vector<Id> m_visibleFaceIndices, m_visibleEdgeIndices;
+		std::vector<bool> m_edgesPainted;
 		RemovedIds m_removedIds;
 
 		Id getOrAddVert(const Vec& _vert);
@@ -215,6 +216,7 @@ namespace HMP::Meshing
 		void clear();
 
 		void paintEdge(Id _eid, const cinolib::Color& _color);
+		void unpaintEdge(Id _eid);
 
 		PolyMarkerSet& polyMarkerSet();
 		const PolyMarkerSet& polyMarkerSet() const;
