@@ -191,6 +191,8 @@ namespace HMP::Meshing
 
 		Id getOrAddVert(const Vec& _vert);
 
+		void updateEdgeColor(Id _eid, const cinolib::Color& _color);
+
 	public:
 
 		Mesher();

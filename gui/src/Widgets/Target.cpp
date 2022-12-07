@@ -389,18 +389,28 @@ namespace HMP::Gui::Widgets
 		}
 	}
 
+	void Target::updateEdgeColor(Id _eid, const cinolib::Color& _color)
+	{
+		if (m_mesh.edge_data(_eid).color != _color)
+		{
+			m_mesh.edge_data(_eid).color = _color;
+			m_mesh.updateGL_mesh_e(_eid, _eid);
+		}
+	}
+
 	void Target::paintEdge(Id _eid, const cinolib::Color& _color)
 	{
-		m_mesh.edge_data(_eid).color = _color;
 		m_edgesPainted[toI(_eid)] = true;
-		m_mesh.updateGL_mesh_e(_eid, _eid);
+		updateEdgeColor(_eid, _color);
 	}
 
 	void Target::unpaintEdge(Id _eid)
 	{
-		m_mesh.edge_data(_eid).color = m_edgeColor;
-		m_edgesPainted[toI(_eid)] = false;
-		m_mesh.updateGL_mesh_e(_eid, _eid);
+		if (m_edgesPainted[_eid])
+		{
+			m_edgesPainted[toI(_eid)] = false;
+			updateEdgeColor(_eid, m_edgeColor);
+		}
 	}
 
 	void Target::serialize(HMP::Utils::Serialization::Serializer& _serializer) const

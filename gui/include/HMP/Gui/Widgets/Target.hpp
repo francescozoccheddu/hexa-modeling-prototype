@@ -33,6 +33,8 @@ namespace HMP::Gui::Widgets
 
 		void ensureHasMesh() const;
 
+		void updateEdgeColor(Id _eid, const cinolib::Color& _color);
+
 	public:
 
 		Target(const Meshing::Mesher::Mesh& _sourceMesh);
