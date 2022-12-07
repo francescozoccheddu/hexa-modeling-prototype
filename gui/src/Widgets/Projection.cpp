@@ -246,7 +246,14 @@ namespace HMP::Gui::Widgets
 					return;
 				}
 			}
-			crease.push_back(closestEid);
+			if (!has1 || !mesh.edges_are_adjacent(crease[0], closestEid))
+			{
+				crease.push_back(closestEid);
+			}
+			else
+			{
+				crease.insert(crease.begin(), closestEid);
+			}
 			m_targetWidget.paintEdge(closestEid, cinolib::Color::hsv2rgb(static_cast<float>(m_currentCrease) / static_cast<float>(m_creases.size()), 1.0f, 1.0f));
 		}
 		else
