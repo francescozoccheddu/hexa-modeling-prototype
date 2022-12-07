@@ -8,6 +8,7 @@
 #include <HMP/Gui/Widgets/VertEdit.hpp>
 #include <HMP/Commander.hpp>
 #include <cinolib/feature_network.h>
+#include <array>
 
 namespace HMP::Gui::Widgets
 {
@@ -31,7 +32,7 @@ namespace HMP::Gui::Widgets
 		std::vector<EdgeChainPair> m_creases;
 		VertEdit& m_vertEditWidget;
 		cinolib::FeatureNetworkOptions m_featureFinderOptions;
-		bool m_showCreases{ false }, m_showAllCreases{ false };
+		bool m_showCreases{ true }, m_showAllCreases{ false };
 		I m_currentCrease{};
 
 		void matchCreases(I _first, I _lastEx, bool _fromSource);
@@ -55,6 +56,9 @@ namespace HMP::Gui::Widgets
 		void clearSourceCreases(I _first, I _lastEx);
 
 		void clearTargetCreases(I _first, I _lastEx);
+
+		std::array<Id, 2> getEdgeVids(Id _eid, bool _source);
+		std::array<Id, 3> getEdgeVids(Id _eid0, Id _eid1, bool _source);
 
 		template<class M, class V, class E, class P>
 		void setCreaseEdgeAtPoint(const Vec& _point, bool _add, const cinolib::AbstractMesh<M, V, E, P>& _mesh, bool _source);

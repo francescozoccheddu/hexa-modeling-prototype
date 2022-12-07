@@ -8,13 +8,14 @@
 #include <limits>
 #include <algorithm>
 #include <set>
+#include <cinolib/feature_mapping.h>
 
 namespace HMP::Gui::Widgets
 {
 
 	Projection::Projection(Widgets::Target& _targetWidget, HMP::Commander& _commander, Meshing::Mesher& _mesher, VertEdit& _vertEditWidget):
 		cinolib::SideBarItem{ "Projection" }, m_targetWidget{ _targetWidget }, m_commander{ _commander }, m_mesher{ _mesher }, m_vertEditWidget{ _vertEditWidget },
-		onProjectRequest{}, m_options{}
+		onProjectRequest{}, m_options{}, m_creases(1)
 	{
 		m_targetWidget.onMeshChanged += [this]() {
 			clearTargetCreases(0, m_creases.size());
@@ -94,7 +95,137 @@ namespace HMP::Gui::Widgets
 
 	void Projection::matchCreases(I _first, I _lastEx, bool _fromSource)
 	{
-		// TODO Fix findCreases first
+		if (_fromSource)
+		{
+			clearTargetCreases(_first, _lastEx);
+		}
+		else
+		{
+			clearSourceCreases(_first, _lastEx);
+		}
+		std::vector<std::vector<Id>> from, to;
+		from.reserve(_lastEx - _first);
+		for (I i{ _first }; i < _lastEx; i++)
+		{
+			const EdgeChainPair& creasePair{ m_creases[i] };
+			const EdgeChain& crease{ _fromSource ? creasePair.source : creasePair.target };
+			if (crease.empty())
+			{
+				continue;
+			}
+			from.push_back({});
+			std::vector<Id>& vids{ from.back() };
+			vids.reserve(crease.size() + 1);
+			if (crease.size() == 1)
+			{
+				const std::array<Id, 2> edgeVids{ getEdgeVids(crease[0], _fromSource) };
+				vids.push_back(edgeVids[0]);
+				vids.push_back(edgeVids[1]);
+			}
+			else if (crease.size() > 1)
+			{
+				const std::array<Id, 3> edgeVids{ getEdgeVids(crease[0], crease[1], _fromSource) };
+				vids.push_back(edgeVids[0]);
+				vids.push_back(edgeVids[1]);
+				for (I ei{}; ei + 1 < crease.size(); ei++)
+				{
+					vids.push_back(getEdgeVids(crease[ei], crease[ei + 1], _fromSource)[2]);
+				}
+			}
+		}
+		std::unordered_map<Id, Id> surf2vol, vol2surf;
+		cinolib::Polygonmesh<> sourceSurf{};
+		cinolib::export_surface(m_mesher.mesh(), sourceSurf, vol2surf, surf2vol);
+		cinolib::Polygonmesh<> target{ m_targetWidget.meshForProjection() };
+		if (_fromSource)
+		{
+			for (auto& vids : from)
+			{
+				for (Id& vid : vids)
+				{
+					vid = vol2surf[vid];
+				}
+			}
+			cinolib::feature_mapping(sourceSurf, from, target, to);
+		}
+		else
+		{
+			cinolib::feature_mapping(target, from, sourceSurf, to);
+			for (auto& vids : to)
+			{
+				for (Id& vid : vids)
+				{
+					vid = surf2vol[vid];
+				}
+			}
+		}
+		I toI{};
+		for (I i{ _first }; i < _lastEx; i++)
+		{
+			EdgeChainPair& creasePair{ m_creases[i] };
+			const EdgeChain& fromCrease{ _fromSource ? creasePair.source : creasePair.target };
+			EdgeChain& toCrease{ _fromSource ? creasePair.target : creasePair.source };
+			if (fromCrease.empty())
+			{
+				continue;
+			}
+			const std::vector<Id>& vids{ to[i] };
+			for (I vi{}; vi + 1 < vids.size(); vi++)
+			{
+				if (_fromSource)
+				{
+					toCrease.push_back(m_targetWidget.meshForDisplay().edge_id(vids[vi], vids[vi + 1]));
+				}
+				else
+				{
+					toCrease.push_back(m_mesher.mesh().edge_id(vids[vi], vids[vi + 1]));
+				}
+			}
+			if (m_showCreases && (m_showAllCreases || m_currentCrease == i))
+			{
+				if (_fromSource)
+				{
+					updateTargetMeshEdges(i, i + 1, true);
+				}
+				else
+				{
+					updateSourceMeshEdges(i, i + 1, true);
+				}
+			}
+			toI++;
+		}
+	}
+
+	std::array<Id, 2> Projection::getEdgeVids(Id _eid, bool _source)
+	{
+		if (_source)
+		{
+			const auto& mesh{ m_mesher.mesh() };
+			return { mesh.edge_vert_id(_eid, 0), mesh.edge_vert_id(_eid, 1) };
+		}
+		else
+		{
+			const auto& mesh{ m_targetWidget.meshForDisplay() };
+			return { mesh.edge_vert_id(_eid, 0), mesh.edge_vert_id(_eid, 1) };
+		}
+	}
+	std::array<Id, 3> Projection::getEdgeVids(Id _eid0, Id _eid1, bool _source)
+	{
+		std::array<Id, 3> eids;
+		const std::array<Id, 2> vids0{ getEdgeVids(_eid0, _source) }, vids1{ getEdgeVids(_eid1, _source) };
+		if (vids0[0] == vids1[0])
+		{
+			return { vids0[1], vids0[0], vids1[1] };
+		}
+		if (vids0[0] == vids1[1])
+		{
+			return { vids0[1], vids0[0], vids1[0] };
+		}
+		if (vids0[1] == vids1[0])
+		{
+			return { vids0[0], vids0[1], vids1[1] };
+		}
+		return { vids0[0], vids0[1], vids1[0] };
 	}
 
 	void Projection::findCreases(bool _inSource)
@@ -191,7 +322,17 @@ namespace HMP::Gui::Widgets
 	void Projection::addCrease()
 	{
 		m_creases.push_back({});
-		updateMeshEdges(0, m_creases.size(), true);
+		if (m_showCreases)
+		{
+			if (m_showAllCreases)
+			{
+				updateMeshEdges(0, m_creases.size(), m_showCreases);
+			}
+			else if (!m_creases.empty())
+			{
+				updateMeshEdges(m_currentCrease, m_currentCrease + 1, m_showCreases);
+			}
+		}
 	}
 
 	void Projection::removeCrease(I _index)
@@ -370,14 +511,14 @@ namespace HMP::Gui::Widgets
 						if (targetEmpty) ImGui::BeginDisabled();
 						if (ImGui::SmallButton("Match source"))
 						{
-							matchCreases(i, i + 1, true);
+							matchCreases(i, i + 1, false);
 						}
 						if (targetEmpty) ImGui::EndDisabled();
 						ImGui::SameLine();
 						if (sourceEmpty) ImGui::BeginDisabled();
 						if (ImGui::SmallButton("Match target"))
 						{
-							matchCreases(i, i + 1, false);
+							matchCreases(i, i + 1, true);
 						}
 						if (sourceEmpty) ImGui::EndDisabled();
 					}
@@ -404,13 +545,12 @@ namespace HMP::Gui::Widgets
 					ImGui::SameLine();
 					if (ImGui::SmallButton("Match all source"))
 					{
-						matchCreases(0, m_creases.size(), true);
+						matchCreases(0, m_creases.size(), false);
 					}
 					ImGui::SameLine();
-					matchCreases(0, m_creases.size(), true);
 					if (ImGui::SmallButton("Match all target"))
 					{
-						matchCreases(0, m_creases.size(), false);
+						matchCreases(0, m_creases.size(), true);
 					}
 				}
 			}

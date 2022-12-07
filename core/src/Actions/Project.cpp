@@ -36,7 +36,9 @@ namespace HMP::Actions
 		{
 			const Id pid{ mesher.elementToPid(*move.element) };
 			const Id vid{ source.poly_vert_id(pid, move.vertOffset) };
+			const Vec oldPosition{ source.vert(vid) };
 			mesher.moveVert(vid, move.position);
+			move.position = oldPosition;
 		}
 		mesher.updateMesh();
 	}

@@ -200,23 +200,29 @@ namespace HMP::Meshing
 
 	void Mesher::paintEdge(Id _eid, const cinolib::Color& _color)
 	{
-		m_mesh.edge_data(_eid).color = _color;
 		m_edgesPainted[toI(_eid)] = true;
-		const Id visibleIndex{ m_visibleEdgeIndices[toI(_eid)] };
-		if (visibleIndex != noId)
-		{
-			m_mesh.updateGL_out_e(_eid, visibleIndex);
-		}
+		updateEdgeColor(_eid, _color);
 	}
 
 	void Mesher::unpaintEdge(Id _eid)
 	{
-		m_mesh.edge_data(_eid).color = m_edgeColor;
-		m_edgesPainted[toI(_eid)] = false;
-		const Id visibleIndex{ m_visibleEdgeIndices[toI(_eid)] };
-		if (visibleIndex != noId)
+		if (m_edgesPainted[toI(_eid)])
 		{
-			m_mesh.updateGL_out_e(_eid, visibleIndex);
+			m_edgesPainted[toI(_eid)] = false;
+			updateEdgeColor(_eid, m_edgeColor);
+		}
+	}
+
+	void Mesher::updateEdgeColor(Id _eid, const cinolib::Color& _color)
+	{
+		if (m_mesh.edge_data(_eid).color != _color)
+		{
+			m_mesh.edge_data(_eid).color = _color;
+			const Id visibleIndex{ m_visibleEdgeIndices[toI(_eid)] };
+			if (visibleIndex != noId)
+			{
+				m_mesh.updateGL_out_e(_eid, visibleIndex);
+			}
 		}
 	}
 
