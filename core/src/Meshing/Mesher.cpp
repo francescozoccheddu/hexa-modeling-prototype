@@ -201,6 +201,18 @@ namespace HMP::Meshing
 	void Mesher::paintEdge(Id _eid, const cinolib::Color& _color)
 	{
 		m_mesh.edge_data(_eid).color = _color;
+		m_edgesPainted[toI(_eid)] = true;
+		const Id visibleIndex{ m_visibleEdgeIndices[toI(_eid)] };
+		if (visibleIndex != noId)
+		{
+			m_mesh.updateGL_out_e(_eid, visibleIndex);
+		}
+	}
+
+	void Mesher::unpaintEdge(Id _eid)
+	{
+		m_mesh.edge_data(_eid).color = m_edgeColor;
+		m_edgesPainted[toI(_eid)] = false;
 		const Id visibleIndex{ m_visibleEdgeIndices[toI(_eid)] };
 		if (visibleIndex != noId)
 		{
@@ -256,9 +268,13 @@ namespace HMP::Meshing
 		const Id pid{ m_mesh.poly_add(cpputils::collections::conversions::toVector(vids)) };
 		m_mesh.poly_data(pid).m_element = &_element;
 		m_mesh.poly_data(pid).color = m_polyColor;
+		m_edgesPainted.resize(toI(m_mesh.num_edges()), false);
 		for (const Id eid : m_mesh.adj_p2e(pid))
 		{
-			m_mesh.edge_data(eid).color = m_edgeColor;
+			if (!m_edgesPainted[toI(eid)])
+			{
+				m_mesh.edge_data(eid).color = m_edgeColor;
+			}
 		}
 		for (I vo{}; vo < 8; vo++)
 		{
@@ -280,6 +296,11 @@ namespace HMP::Meshing
 		m_removedIds.pid = pid;
 		onElementRemove(_element, m_removedIds);
 		m_elementToPid.erase(&_element);
+		for (const Id eid : m_removedIds.eids)
+		{
+			m_edgesPainted[toI(eid)] = m_edgesPainted.back();
+			m_edgesPainted.pop_back();
+		}
 		const Id lastPid{ m_mesh.num_polys() - 1 };
 		if (pid != lastPid)
 		{

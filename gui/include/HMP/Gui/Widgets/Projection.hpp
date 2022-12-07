@@ -12,7 +12,7 @@
 namespace HMP::Gui::Widgets
 {
 
-	class Projection final : public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
+	class Projection final: public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
 	{
 
 	private:
@@ -52,6 +52,13 @@ namespace HMP::Gui::Widgets
 
 		void removeCrease(I _index);
 
+		void clearSourceCreases(I _first, I _lastEx);
+
+		void clearTargetCreases(I _first, I _lastEx);
+
+		template<class M, class V, class E, class P>
+		void setCreaseEdgeAtPoint(const Vec& _point, bool _add, const cinolib::AbstractMesh<M, V, E, P>& _mesh, bool _source);
+
 	public:
 
 		Projection(Widgets::Target& _targetWidget, HMP::Commander& _commander, HMP::Meshing::Mesher& _mesher, VertEdit& _vertEditWidget);
@@ -68,8 +75,14 @@ namespace HMP::Gui::Widgets
 
 		void setTargetCreaseEdgeAtPoint(const Vec& _point, bool _add);
 
+		void setSourceCreaseEdgeAtPoint(const Vec& _point, bool _add);
+
 		void draw() override;
 
 	};
 
 }
+
+#define HMP_GUI_WIDGETS_PROJECTION_IMPL
+#include <HMP/Gui/Widgets/Projection.tpp>
+#undef HMP_GUI_WIDGETS_PROJECTION_IMPL

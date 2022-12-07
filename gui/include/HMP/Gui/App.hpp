@@ -30,7 +30,7 @@
 namespace HMP::Gui
 {
 
-	class App final : public cpputils::mixins::ReferenceClass
+	class App final: public cpputils::mixins::ReferenceClass
 	{
 
 	private:
@@ -93,8 +93,8 @@ namespace HMP::Gui
 		static constexpr cinolib::KeyBinding c_kbSelectPoly{ GLFW_KEY_4 };
 		static constexpr cinolib::KeyBinding c_kbDeselectAll{ GLFW_KEY_A, GLFW_MOD_CONTROL };
 		static constexpr cinolib::KeyBinding c_kbSelectAll{ GLFW_KEY_A, GLFW_MOD_SHIFT };
-		static constexpr cinolib::KeyBinding c_kbAddTargetCreaseEdge{ GLFW_KEY_I, GLFW_MOD_SHIFT };
-		static constexpr cinolib::KeyBinding c_kbRemoveTargetCreaseEdge{ GLFW_KEY_I, GLFW_MOD_CONTROL };
+		static constexpr cinolib::KeyBinding c_kbAddCreaseEdge{ GLFW_KEY_I, GLFW_MOD_SHIFT };
+		static constexpr cinolib::KeyBinding c_kbRemoveCreaseEdge{ GLFW_KEY_I, GLFW_MOD_CONTROL };
 		static constexpr int c_kmodSelectAdd{ GLFW_MOD_SHIFT };
 		static constexpr int c_kmodSelectRemove{ GLFW_MOD_CONTROL };
 		static constexpr int c_kbDirectEditX{ GLFW_KEY_LEFT_CONTROL };
@@ -194,7 +194,7 @@ namespace HMP::Gui
 
 		// user operation
 		std::string getDebugInfo() const;
-		void onTargetSetCreaseEdge(bool _add);
+		void onSetCreaseEdge(bool _add);
 		void onPrintDebugInfo() const;
 		void onExtrude();
 		void onExtrudeAndSelect();

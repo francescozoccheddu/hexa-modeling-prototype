@@ -12,31 +12,24 @@
 namespace HMP::Gui::Widgets
 {
 
-	Projection::Projection(Widgets::Target& _targetWidget, HMP::Commander& _commander, Meshing::Mesher& _mesher, VertEdit& _vertEditWidget) :
+	Projection::Projection(Widgets::Target& _targetWidget, HMP::Commander& _commander, Meshing::Mesher& _mesher, VertEdit& _vertEditWidget):
 		cinolib::SideBarItem{ "Projection" }, m_targetWidget{ _targetWidget }, m_commander{ _commander }, m_mesher{ _mesher }, m_vertEditWidget{ _vertEditWidget },
 		onProjectRequest{}, m_options{}
 	{
 		m_targetWidget.onMeshChanged += [this]() {
-			updateTargetMeshEdges(0, m_creases.size(), false);
-			for (EdgeChainPair& pair : m_creases)
-			{
-				pair.target.clear();
-			}
+			clearTargetCreases(0, m_creases.size());
 		};
 		m_mesher.onElementAdd += [this](const Dag::Element& _element) {
-			I i{};
-			for (EdgeChainPair& pair : m_creases)
+			for (I i{}; i < m_creases.size(); i++)
 			{
-				for (const Id& eid : pair.source)
+				for (const Id eid : m_creases[i].source)
 				{
 					if (!m_mesher.mesh().edge_is_on_srf(eid))
 					{
-						updateSourceMeshEdges(i, i + 1, false);
-						pair.source.clear();
+						clearSourceCreases(i, i + 1);
 						break;
 					}
 				}
-				i++;
 			}
 		};
 		m_mesher.onElementRemove += [this](const Dag::Element& _element, const Meshing::Mesher::RemovedIds& _removedIds) {
@@ -44,10 +37,9 @@ namespace HMP::Gui::Widgets
 			for (const Id removedEid : _removedIds.eids)
 			{
 				lastEid--;
-				I i{};
-				for (EdgeChainPair& pair : m_creases)
+				for (I i{}; i < m_creases.size(); i++)
 				{
-					for (Id& eid : pair.source)
+					for (Id& eid : m_creases[i].source)
 					{
 						if (eid == lastEid)
 						{
@@ -55,14 +47,15 @@ namespace HMP::Gui::Widgets
 						}
 						else if (eid == removedEid)
 						{
-							updateSourceMeshEdges(i, i + 1, false);
-							pair.source.clear();
+							clearSourceCreases(i, i + 1);
 							break;
 						}
 					}
-					i++;
 				}
 			}
+		};
+		m_mesher.onClear += [this]() {
+			clearSourceCreases(0, m_creases.size());
 		};
 	}
 
@@ -109,22 +102,14 @@ namespace HMP::Gui::Widgets
 		std::vector<std::vector<Id>> network{};
 		if (_inSource)
 		{
-			updateSourceMeshEdges(0, m_creases.size(), false);
-			for (EdgeChainPair& pair : m_creases)
-			{
-				pair.source.clear();
-			}
+			clearSourceCreases(0, m_creases.size());
 			cinolib::Polygonmesh<> surface{};
 			cinolib::export_surface(m_mesher.mesh(), surface);
 			cinolib::feature_network(surface, network, m_featureFinderOptions);
 		}
 		else
 		{
-			updateTargetMeshEdges(0, m_creases.size(), false);
-			for (EdgeChainPair& pair : m_creases)
-			{
-				pair.target.clear();
-			}
+			clearTargetCreases(0, m_creases.size());
 			cinolib::feature_network(m_targetWidget.meshForDisplay(), network, m_featureFinderOptions);
 		}
 		std::cout << network.size() << std::endl;
@@ -168,118 +153,32 @@ namespace HMP::Gui::Widgets
 		}
 	}
 
-	void Projection::setSourceCreaseFromSelection(I _crease)
+	void Projection::clearSourceCreases(I _first, I _lastEx)
 	{
-		updateSourceMeshEdges(_crease, _crease + 1, false);
-		EdgeChain& crease{ m_creases[_crease].source };
-		crease.clear();
-		// TODO 
-		updateSourceMeshEdges(_crease, _crease + 1, true);
+		updateSourceMeshEdges(_first, _lastEx, false);
+		for (I i{ _first }; i < _lastEx; i++)
+		{
+			m_creases[i].source.clear();
+		}
+	}
+
+	void Projection::clearTargetCreases(I _first, I _lastEx)
+	{
+		updateTargetMeshEdges(_first, _lastEx, false);
+		for (I i{ _first }; i < _lastEx; i++)
+		{
+			m_creases[i].target.clear();
+		}
+	}
+
+	void Projection::setSourceCreaseEdgeAtPoint(const Vec& _point, bool _add)
+	{
+		setCreaseEdgeAtPoint(_point, _add, m_mesher.mesh(), true);
 	}
 
 	void Projection::setTargetCreaseEdgeAtPoint(const Vec& _point, bool _add)
 	{
-		if (!m_showCreases || m_showAllCreases || m_creases.empty())
-		{
-			return;
-		}
-		const cinolib::DrawablePolygonmesh<>& mesh{ m_targetWidget.meshForDisplay() };
-		const Vec untransfPoint{ mesh.transform.inverse() * _point };
-		EdgeChain& crease{ m_creases[m_currentCrease].target };
-		const bool has1{ crease.size() > 0 }, has2{ crease.size() > 1 }, has3{ crease.size() > 2 };
-		const I lastI{ crease.size() - 1 };
-		const std::vector<Id> endEids{ has1 ? has2 ? std::vector<Id>{crease[0], crease[lastI]} : std::vector<Id>{ crease[0] } : std::vector<Id>{} };
-		const bool closed{ has3 && mesh.edges_are_adjacent(endEids[0], endEids[1]) };
-		if (_add)
-		{
-			if (closed)
-			{
-				return;
-			}
-			Id closestEid{ noId };
-			if (!has1)
-			{
-				closestEid = mesh.pick_edge(untransfPoint);
-			}
-			else
-			{
-				Real closestDist{ std::numeric_limits<Real>::infinity() };
-				for (const Id endEid : endEids)
-				{
-					for (const Id eid : mesh.adj_e2e(endEid))
-					{
-						if (has2 && (eid == crease[1] || eid == crease[lastI - 1]))
-						{
-							continue;
-						}
-						const Real dist{ untransfPoint.dist_sqrd(mesh.edge_sample_at(eid, 0.5)) };
-						if (dist < closestDist)
-						{
-							closestDist = dist;
-							closestEid = eid;
-						}
-					}
-				}
-			}
-			if (closestEid == noId)
-			{
-				return;
-			}
-			if (has2)
-			{
-				std::set<Id> invalidVids;
-				if (has3)
-				{
-					for (I i{ 1 }; i < lastI; i++)
-					{
-						const Id eid{ crease[i] };
-						invalidVids.insert(mesh.edge_vert_id(eid, 0));
-						invalidVids.insert(mesh.edge_vert_id(eid, 1));
-					}
-				}
-				else
-				{
-					invalidVids.insert(mesh.vert_shared(endEids[0], endEids[1]));
-				}
-				if (invalidVids.contains(mesh.edge_vert_id(closestEid, 0)) || invalidVids.contains(mesh.edge_vert_id(closestEid, 1)))
-				{
-					return;
-				}
-			}
-			if (!has1 || !mesh.edges_are_adjacent(crease[0], closestEid))
-			{
-				crease.push_back(closestEid);
-			}
-			else
-			{
-				crease.insert(crease.begin(), closestEid);
-			}
-			m_targetWidget.paintEdge(closestEid, cinolib::Color::hsv2rgb(static_cast<float>(m_currentCrease) / static_cast<float>(m_creases.size()), 1.0f, 1.0f));
-		}
-		else
-		{
-			const std::vector<Id>& candidates{ closed ? crease : endEids };
-			Real closestDist{ std::numeric_limits<Real>::infinity() };
-			Id closestEid{ noId };
-			for (const Id eid : candidates)
-			{
-				const Real dist{ untransfPoint.dist_sqrd(mesh.edge_sample_at(eid, 0.5)) };
-				if (dist < closestDist)
-				{
-					closestDist = dist;
-					closestEid = eid;
-				}
-			}
-			if (closestEid == noId)
-			{
-				return;
-			}
-			const I i{ static_cast<I>(std::find(crease.begin(), crease.end(), closestEid) - crease.begin()) };
-			const I nextI{ (i + 1) % crease.size() };
-			std::rotate(crease.begin(), crease.begin() + nextI, crease.end());
-			crease.pop_back();
-			m_targetWidget.paintEdge(closestEid, m_targetWidget.edgeColor());
-		}
+		setCreaseEdgeAtPoint(m_targetWidget.meshForDisplay().transform.inverse() * _point, _add, m_targetWidget.meshForDisplay(), false);
 	}
 
 	void Projection::clearCreases()
@@ -417,42 +316,49 @@ namespace HMP::Gui::Widgets
 						removeCrease(i);
 					}
 					ImGui::SameLine();
-					if (ImGui::SmallButton("Source from selection"))
+					const bool sourceEmpty = m_creases[i].source.empty();
+					if (sourceEmpty)
 					{
-						setSourceCreaseFromSelection(i);
+						ImGui::BeginDisabled();
 					}
-					ImGui::SameLine();
-					if (ImGui::SmallButton("Source to selection"))
+					if (ImGui::SmallButton("Clear source"))
 					{
-						m_vertEditWidget.clear();
-						std::vector<Id> vids{};
-						const EdgeChain& chain{ m_creases[i].source };
-						vids.reserve(chain.size() * 2);
-						for (const Id eid : chain)
-						{
-							vids.push_back(m_mesher.mesh().edge_vert_id(eid, 0));
-							vids.push_back(m_mesher.mesh().edge_vert_id(eid, 1));
-						}
-						m_vertEditWidget.add(vids);
+						clearSourceCreases(i, i + 1);
+					}
+					if (sourceEmpty)
+					{
+						ImGui::EndDisabled();
 					}
 					if (m_targetWidget.hasMesh())
 					{
 						ImGui::SameLine();
+						const bool targetEmpty = m_creases[i].target.empty();
+						if (targetEmpty)
+						{
+							ImGui::BeginDisabled();
+						}
 						if (ImGui::SmallButton("Clear target"))
 						{
-							updateTargetMeshEdges(i, i + 1, false);
-							m_creases[i].target.clear();
+							clearTargetCreases(i, i + 1);
+						}
+						if (targetEmpty)
+						{
+							ImGui::EndDisabled();
 						}
 						ImGui::SameLine();
+						if (targetEmpty) ImGui::BeginDisabled();
 						if (ImGui::SmallButton("Match source"))
 						{
 							matchCreases(i, i + 1, true);
 						}
+						if (targetEmpty) ImGui::EndDisabled();
 						ImGui::SameLine();
+						if (sourceEmpty) ImGui::BeginDisabled();
 						if (ImGui::SmallButton("Match target"))
 						{
 							matchCreases(i, i + 1, false);
 						}
+						if (sourceEmpty) ImGui::EndDisabled();
 					}
 					ImGui::PopID();
 				}
