@@ -259,7 +259,14 @@ namespace HMP::Gui::Widgets
 		m_showCreases = ImGui::TreeNode("Creases");
 		if (wasShowingCreases != m_showCreases)
 		{
-			updateMeshEdges(0, m_creases.size(), m_showCreases);
+			if (m_showAllCreases)
+			{
+				updateMeshEdges(0, m_creases.size(), m_showCreases);
+			}
+			else if (!m_creases.empty())
+			{
+				updateMeshEdges(m_currentCrease, m_currentCrease + 1, m_showCreases);
+			}
 		}
 		if (m_showCreases)
 		{
@@ -288,7 +295,21 @@ namespace HMP::Gui::Widgets
 			}
 			else
 			{
-				ImGui::Checkbox("Show all", &m_showAllCreases);
+				if (ImGui::Checkbox("Show all", &m_showAllCreases))
+				{
+					if (m_showCreases)
+					{
+						if (m_showAllCreases)
+						{
+							updateMeshEdges(0, m_creases.size(), true);
+						}
+						else if (!m_creases.empty())
+						{
+							updateMeshEdges(0, m_creases.size(), false);
+							updateMeshEdges(m_currentCrease, m_currentCrease + 1, true);
+						}
+					}
+				}
 				ImGui::Spacing();
 				ImGui::Separator();
 				ImGui::Spacing();
