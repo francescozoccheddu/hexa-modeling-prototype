@@ -14,6 +14,7 @@ namespace HMP::Actions
 		{
 			m_prepared = true;
 			const std::vector<Vec> newVerts{ Meshing::Projection::project(source, m_target, m_pointFeats, m_pathFeats, m_options) };
+			m_vertMoves.resize(newVerts.size());
 			for (I sourceVi{}; sourceVi < newVerts.size(); sourceVi++)
 			{
 				const Id sourceVid{ toId(sourceVi) };
