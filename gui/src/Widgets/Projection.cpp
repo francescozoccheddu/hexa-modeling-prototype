@@ -60,7 +60,7 @@ namespace HMP::Gui::Widgets
 		};
 	}
 
-	const Algorithms::Projection::Options& Projection::options() const
+	const Meshing::Projection::Options& Projection::options() const
 	{
 		return m_options;
 	}
@@ -349,7 +349,7 @@ namespace HMP::Gui::Widgets
 
 	void Projection::draw()
 	{
-		static constexpr auto tweak{ [](Algorithms::Projection::Tweak& _tweak, const char* _header) {
+		static constexpr auto tweak{ [](Meshing::Projection::Tweak& _tweak, const char* _header) {
 			ImGui::PushID(&_tweak);
 			ImGui::Text("%s", _header);
 			float min{static_cast<float>(_tweak.min())};
@@ -371,12 +371,12 @@ namespace HMP::Gui::Widgets
 			int invertMode{ static_cast<int>(m_options.invertMode) };
 			if (ImGui::Combo("Invert mode", &invertMode, "Distance\0BarycentricCoords\0"))
 			{
-				m_options.invertMode = static_cast<Algorithms::Projection::EInvertMode>(invertMode);
+				m_options.invertMode = static_cast<Meshing::Projection::EInvertMode>(invertMode);
 			}
 			int displaceMode{ static_cast<int>(m_options.displaceMode) };
 			if (ImGui::Combo("Displace mode", &displaceMode, "NormDirAvgAndDirNormAvg\0NormDirAvgAndDirAvg\0DirAvg\0VertAvg\0"))
 			{
-				m_options.displaceMode = static_cast<Algorithms::Projection::EDisplaceMode>(displaceMode);
+				m_options.displaceMode = static_cast<Meshing::Projection::EDisplaceMode>(displaceMode);
 			}
 		}
 		ImGui::Spacing();

@@ -3,7 +3,7 @@
 #include <cinolib/gl/side_bar_item.h>
 #include <cpputils/collections/Event.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
-#include <HMP/Algorithms/Projection.hpp>
+#include <HMP/Meshing/Projection.hpp>
 #include <HMP/Gui/Widgets/Target.hpp>
 #include <HMP/Gui/Widgets/VertEdit.hpp>
 #include <HMP/Commander.hpp>
@@ -25,7 +25,7 @@ namespace HMP::Gui::Widgets
 			EdgeChain source, target;
 		};
 
-		Algorithms::Projection::Options m_options;
+		Meshing::Projection::Options m_options;
 		Widgets::Target& m_targetWidget;
 		HMP::Commander& m_commander;
 		HMP::Meshing::Mesher& m_mesher;
@@ -67,9 +67,9 @@ namespace HMP::Gui::Widgets
 
 		Projection(Widgets::Target& _targetWidget, HMP::Commander& _commander, HMP::Meshing::Mesher& _mesher, VertEdit& _vertEditWidget);
 
-		cpputils::collections::Event<Projection, const Algorithms::Projection::Options&> onProjectRequest;
+		cpputils::collections::Event<Projection, const Meshing::Projection::Options&> onProjectRequest;
 
-		const Algorithms::Projection::Options& options() const;
+		const Meshing::Projection::Options& options() const;
 
 		void requestProjection();
 

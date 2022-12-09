@@ -1,4 +1,4 @@
-#include <HMP/Algorithms/Projection.hpp>
+#include <HMP/Meshing/Projection.hpp>
 
 #include <stdexcept>
 #include <cinolib/meshes/hexmesh.h>
@@ -14,7 +14,7 @@
 #include <cinolib/parallel_for.h>
 #include <cinolib/export_surface.h>
 
-namespace HMP::Algorithms::Projection
+namespace HMP::Meshing::Projection
 {
 
     struct TargetToSourceMatch final
@@ -30,7 +30,7 @@ namespace HMP::Algorithms::Projection
         Real weight;
     };
 
-    Tweak::Tweak(Real _min, Real _power) : m_min{ _min }, m_power{ _power }
+    Tweak::Tweak(Real _min, Real _power): m_min{ _min }, m_power{ _power }
     {
         if (_power < 0.0 || _power > 10.0)
         {
@@ -65,14 +65,14 @@ namespace HMP::Algorithms::Projection
         sourceOctree.build_from_mesh_polys(_source);
         cinolib::PARALLEL_FOR(0, _target.num_verts(), 64, [&_target, &sourceOctree, &matches](Id _targetVid) {
             const Vec& targetVert{ _target.vert(_targetVid) };
-            Vec sourceVert;
-            Id sourceFid;
-            Real dist;
-            sourceOctree.closest_point(targetVert, sourceFid, sourceVert, dist);
-            matches[toI(_targetVid)] = {
-                .pos = sourceVert,
-                .sourceFid = sourceFid
-            };
+        Vec sourceVert;
+        Id sourceFid;
+        Real dist;
+        sourceOctree.closest_point(targetVert, sourceFid, sourceVert, dist);
+        matches[toI(_targetVid)] = {
+            .pos = sourceVert,
+            .sourceFid = sourceFid
+        };
         });
         return matches;
     }

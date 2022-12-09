@@ -930,7 +930,7 @@ namespace HMP::Gui
 		}
 	}
 
-	void App::onProjectToTarget(const Algorithms::Projection::Options& _options)
+	void App::onProjectToTarget(const Meshing::Projection::Options& _options)
 	{
 		applyAction(*new Actions::Project{ std::move(m_targetWidget.meshForProjection()), _options });
 	}
