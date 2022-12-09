@@ -4,7 +4,7 @@
 #include <cinolib/meshes/polygonmesh.h>
 #include <vector>
 
-namespace HMP::Algorithms::Projection
+namespace HMP::Meshing::Projection
 {
 
     class Tweak final

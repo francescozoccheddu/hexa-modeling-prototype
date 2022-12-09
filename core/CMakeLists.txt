@@ -13,7 +13,7 @@ add_library (core STATIC
     "src/Actions/TransformVerts.cpp"
     "src/Actions/TransformAll.cpp"
     "src/Actions/Utils.cpp"
-    "src/Algorithms/Projection.cpp"
+    "src/Meshing/Projection.cpp"
     "src/Dag/Delete.cpp"
     "src/Dag/Element.cpp"
     "src/Dag/Extrude.cpp"
