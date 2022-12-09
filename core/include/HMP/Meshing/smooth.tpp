@@ -8,6 +8,18 @@ namespace HMP::Meshing
 {
 
     template<typename M, typename V, typename E, typename P>
+    std::vector<Vec> smooth(const cinolib::AbstractMesh<M, V, E, P>& _mesh)
+    {
+        return smooth(_mesh, _mesh.vector_verts());
+    }
+
+    template<typename M, typename V, typename E, typename P>
+    std::vector<Vec> smooth(const cinolib::AbstractMesh<M, V, E, P>& _mesh, const std::unordered_set<Id>& _vids)
+    {
+        return smooth(_mesh, _mesh.vector_verts(), _vids);
+    }
+
+    template<typename M, typename V, typename E, typename P>
     std::vector<Vec> smooth(const cinolib::AbstractMesh<M, V, E, P>& _mesh, const std::vector<Vec>& _verts)
     {
         std::vector<Vec> newVerts(_verts.size());

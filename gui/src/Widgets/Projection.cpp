@@ -71,8 +71,7 @@ namespace HMP::Gui::Widgets
 		{
 			throw std::logic_error{ "no target mesh" };
 		}
-		throw std::logic_error{ "not implemented" };
-		//onProjectRequest({}, {}, m_options);
+		onProjectRequest({}, {}, m_options);
 	}
 
 	bool Projection::canReproject() const
@@ -381,9 +380,19 @@ namespace HMP::Gui::Widgets
 			}
 		}
 		ImGui::Spacing();
-		tweak(m_options.baseWeightTweak, "Weight factor");
+		tweak(m_options.baseWeightTweak, "Base weight factor");
 		ImGui::Spacing();
 		tweak(m_options.normalDotTweak, "Normal dot factor");
+		ImGui::Spacing();
+		{
+			ImGui::Text("Distance weight factor");
+			float weight{ static_cast<float>(m_options.distanceWeight) };
+			ImGui::SliderFloat("Weight", &weight, 0.0f, 10.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+			m_options.distanceWeight = static_cast<double>(weight);
+			float power{ static_cast<float>(m_options.distanceWeightPower) };
+			ImGui::SliderFloat("Power", &power, 0.0f, 4.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_Logarithmic);
+			m_options.distanceWeightPower = static_cast<double>(power);
+		}
 		ImGui::Spacing();
 		tweak(m_options.unsetVertsDistWeightTweak, "Unset verts distance factor");
 		ImGui::Spacing();

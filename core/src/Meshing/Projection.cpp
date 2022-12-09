@@ -1,16 +1,10 @@
 #include <HMP/Meshing/Projection.hpp>
 
-#include <stdexcept>
-#include <vector>
-#include <cinolib/octree.h>
 #include <cinolib/geometry/quad_utils.h>
+#include <cinolib/meshes/polygonmesh.h>
 #include <optional>
 #include <algorithm>
-#include <unordered_map>
-#include <limits>
-#include <cinolib/parallel_for.h>
 #include <cinolib/export_surface.h>
-#include <limits>
 #include <HMP/Meshing/defensiveAdvance.hpp>
 #include <HMP/Meshing/fill.hpp>
 #include <HMP/Meshing/Match.hpp>
@@ -232,6 +226,8 @@ namespace HMP::Meshing::Projection
                     return sourceVert + normDirSum * ((dirSum / weightSum).norm() / weightSum);
                 case EDisplaceMode::NormDirAvgAndDirNormAvg:
                     return sourceVert + normDirSum * dirLengthSum / weightSum / weightSum;
+                default:
+                    throw std::domain_error{ "unknown displace mode" };
             }
         }
     }
@@ -241,14 +237,106 @@ namespace HMP::Meshing::Projection
         return {};
     }
 
-    std::vector<std::optional<Vec>> projectSurface(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const Options& _options)
+    std::vector<Vec> projectSurface(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const Options& _options)
+    {
+        const std::vector<Match::TargetVidToSource>& matches{ Match::matchSurface(_source, _target) };
+        const std::vector<std::vector<Match::SourceToTargetVid>>& invMatches{ Match::invertSurfaceMatches(_source, _target, matches) };
+        std::vector<std::optional<Vec>> projected(toI(_source.num_verts()));
+        for (Id vid{}; vid < _source.num_verts(); vid++)
+        {
+            projected[toI(vid)] = projectSurfaceVert(_source, _target, vid, invMatches, _options);
+        }
+        const std::vector<Vec> filled{ fill(_source, projected, _options.unsetVertsDistWeightTweak) };
+        return smooth(_source, filled);
+    }
+
+    std::vector<std::optional<Vec>> projectPath(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const Path& _path, const Options& _options)
     {
         return {};
     }
 
+    class SurfaceExporter final
+    {
+
+    private:
+
+        std::unordered_map<Id, Id> m_surf2vol, m_vol2surf;
+
+    public:
+
+        cinolib::Polygonmesh<> surf;
+        Mesher::Mesh vol;
+
+        SurfaceExporter(const Mesher::Mesh& _mesh): vol{ _mesh }
+        {
+            cinolib::export_surface(_mesh, surf, m_vol2surf, m_surf2vol);
+        }
+
+        void applySurfToVol()
+        {
+            for (Id surfVid{}; surfVid < surf.num_verts(); surfVid++)
+            {
+                vol.vert(m_surf2vol.at(surfVid)) = surf.vert(surfVid);
+            }
+        }
+
+        void applyVolToSurf()
+        {
+            for (Id volVid{}; volVid < vol.num_verts(); volVid++)
+            {
+                surf.vert(m_vol2surf.at(volVid)) = vol.vert(volVid);
+            }
+        }
+
+        std::vector<Point> map(const std::vector<Point>& _feats)  const
+        {
+            std::vector<Point> newFeats{ _feats };
+            for (Point& feat : newFeats)
+            {
+                feat.sourceVid = m_vol2surf.at(feat.sourceVid);
+            }
+            return newFeats;
+        }
+
+        std::vector<Path> map(const std::vector<Path>& _feats)  const
+        {
+            std::vector<Path> newFeats{ _feats };
+            for (Path& feat : newFeats)
+            {
+                for (Id& eid : feat.sourceEids)
+                {
+                    eid = surf.edge_id(
+                        m_vol2surf.at(vol.edge_vert_id(eid, 0)),
+                        m_vol2surf.at(vol.edge_vert_id(eid, 1))
+                    );
+                }
+            }
+            return newFeats;
+        }
+
+    };
+
     std::vector<Vec> project(const Mesher::Mesh& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::vector<Point>& _pointFeats, const std::vector<Path>& _pathFeats, const Options& _options)
     {
-        return {};
+        SurfaceExporter exporter{ _source };
+        const std::vector<Point> surfPointFeats{ exporter.map(_pointFeats) };
+        const std::vector<Path> surfPathFeats{ exporter.map(_pathFeats) };
+        for (I i{}; i < _options.iterations; i++)
+        {
+            const bool lastIteration{ i + 1 == _options.iterations };
+            if (i > 0)
+            {
+                exporter.surf.update_normals();
+            }
+            std::vector<Vec> newSurfVerts{ projectSurface(exporter.surf, _target, _options) };
+            // paths
+            // points
+            exporter.surf.vector_verts() = newSurfVerts;
+            exporter.applySurfToVol();
+            smooth(exporter.vol);
+        }
+        exporter.applySurfToVol();
+        return exporter.vol.vector_verts();
     }
 
 }
