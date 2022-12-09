@@ -211,7 +211,7 @@ namespace HMP::Gui
 		void onLoadState();
 		void onLoadTargetMesh();
 		void onToggleTargetVisibility();
-		void onProjectToTarget(const Meshing::Projection::Options& _options);
+		void onProjectToTarget(const std::vector<Meshing::Projection::Point>& _pointFeats, const std::vector<Meshing::Projection::Path>& _pathFeats, const Meshing::Projection::Options& _options);
 		void onApplyTargetTransform(const Mat4& _transform);
 		void onUndo();
 		void onRedo();

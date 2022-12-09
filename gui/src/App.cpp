@@ -930,9 +930,9 @@ namespace HMP::Gui
 		}
 	}
 
-	void App::onProjectToTarget(const Meshing::Projection::Options& _options)
+	void App::onProjectToTarget(const std::vector<Meshing::Projection::Point>& _pointFeats, const std::vector<Meshing::Projection::Path>& _pathFeats, const Meshing::Projection::Options& _options)
 	{
-		applyAction(*new Actions::Project{ std::move(m_targetWidget.meshForProjection()), _options });
+		applyAction(*new Actions::Project{ std::move(m_targetWidget.meshForProjection()), _pointFeats, _pathFeats, _options });
 	}
 
 	void App::onApplyTargetTransform(const Mat4& _transform)

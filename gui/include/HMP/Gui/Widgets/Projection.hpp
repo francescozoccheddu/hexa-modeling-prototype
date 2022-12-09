@@ -67,7 +67,7 @@ namespace HMP::Gui::Widgets
 
 		Projection(Widgets::Target& _targetWidget, HMP::Commander& _commander, HMP::Meshing::Mesher& _mesher, VertEdit& _vertEditWidget);
 
-		cpputils::collections::Event<Projection, const Meshing::Projection::Options&> onProjectRequest;
+		cpputils::collections::Event<Projection, const std::vector<Meshing::Projection::Point>&, const std::vector<Meshing::Projection::Path>&, const Meshing::Projection::Options&> onProjectRequest;
 
 		const Meshing::Projection::Options& options() const;
 

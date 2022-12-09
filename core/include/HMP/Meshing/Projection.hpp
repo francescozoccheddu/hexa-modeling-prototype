@@ -1,8 +1,10 @@
 #pragma once
 
 #include <HMP/Meshing/types.hpp>
-#include <cinolib/meshes/polygonmesh.h>
+#include <cinolib/meshes/abstract_polygonmesh.h>
+#include <cinolib/meshes/abstract_polyhedralmesh.h>
 #include <vector>
+#include <HMP/Meshing/Mesher.hpp>
 
 namespace HMP::Meshing::Projection
 {
@@ -42,15 +44,30 @@ namespace HMP::Meshing::Projection
 
         EInvertMode invertMode{ EInvertMode::Distance };
         EDisplaceMode displaceMode{ EDisplaceMode::DirAvg };
-        Tweak weightTweak{ 0.0, 1.0 };
+        Tweak baseWeightTweak{ 0.0, 1.0 };
         Tweak normalDotTweak{ -1.0, 0.0 };
         Tweak unsetVertsDistWeightTweak{ 0.0, 0.0 };
+        double distanceWeight{ 0.0 };
+        double distanceWeightPower{ 1.0 };
         double advancePercentile{ 0.5 };
         bool smooth{ true };
         I iterations{ 5 };
 
     };
 
-    std::vector<Vec> project(const cinolib::Polygonmesh<>& _source, const cinolib::Polygonmesh<>& _target, const Options& _options = {});
+    struct Point final
+    {
+        Id sourceVid, targetVid;
+    };
+
+    struct Path final
+    {
+        std::vector<Id> sourceEids, targetEids;
+    };
+
+    void normalizeWeights(std::vector<Real>& _weights);
+    void invertAndNormalizeDistances(std::vector<Real>& _distances);
+
+    std::vector<Vec> project(const Mesher::Mesh& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::vector<Point>& _pointFeats, const std::vector<Path>& _pathFeats, const Options& _options = {});
 
 }
