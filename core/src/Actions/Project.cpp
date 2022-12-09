@@ -1,8 +1,6 @@
 #include <HMP/Actions/Project.hpp>
 
 #include <utility>
-#include <unordered_map>
-#include <cinolib/export_surface.h>
 #include <HMP/Meshing/Projection.hpp>
 
 namespace HMP::Actions
@@ -15,18 +13,14 @@ namespace HMP::Actions
 		if (!m_prepared)
 		{
 			m_prepared = true;
-			cinolib::Polygonmesh<> sourceSurf;
-			std::unordered_map<Id, Id> sourceSurf2Source, source2SourceSurf;
-			cinolib::export_surface(source, sourceSurf, source2SourceSurf, sourceSurf2Source);
-			const std::vector<Vec> newSourceSurfVerts{ Meshing::Projection::project(sourceSurf, m_target, m_options) };
-			m_vertMoves.resize(newSourceSurfVerts.size());
-			for (I sourceSurfVi{}; sourceSurfVi < newSourceSurfVerts.size(); sourceSurfVi++)
+			const std::vector<Vec> newVerts{ Meshing::Projection::project(source, m_target, m_pointFeats, m_pathFeats, m_options) };
+			for (I sourceVi{}; sourceVi < newVerts.size(); sourceVi++)
 			{
-				const Id sourceVid{ sourceSurf2Source[toId(sourceSurfVi)] };
+				const Id sourceVid{ toId(sourceVi) };
 				const Id sourcePid{ source.adj_v2p(sourceVid).front() };
 				const Id sourceVertOffset{ source.poly_vert_offset(sourcePid, sourceVid) };
-				m_vertMoves[sourceSurfVi] = VertMove{
-					.position = newSourceSurfVerts[sourceSurfVi],
+				m_vertMoves[sourceVi] = VertMove{
+					.position = newVerts[sourceVi],
 					.vertOffset = sourceVertOffset,
 					.element = &mesher.pidToElement(sourcePid)
 				};
@@ -48,12 +42,12 @@ namespace HMP::Actions
 		apply();
 	}
 
-	Project::Project(TargetMesh&& _target, const Meshing::Projection::Options& _options)
-		: m_target{ std::move(_target) }, m_vertMoves{}, m_prepared{ false }, m_options{ _options }
+	Project::Project(TargetMesh&& _target, const std::vector<Meshing::Projection::Point>& _pointFeats, const std::vector<Meshing::Projection::Path>& _pathFeats, const Meshing::Projection::Options& _options)
+		: m_target{ std::move(_target) }, m_vertMoves{}, m_prepared{ false }, m_options{ _options }, m_pointFeats{ _pointFeats }, m_pathFeats{ _pathFeats }
 	{}
 
-	Project::Project(const TargetMesh& _target, const Meshing::Projection::Options& _options)
-		: m_target{ _target }, m_vertMoves{}, m_prepared{ false }, m_options{ _options }
+	Project::Project(const TargetMesh& _target, const std::vector<Meshing::Projection::Point>& _pointFeats, const std::vector<Meshing::Projection::Path>& _pathFeats, const Meshing::Projection::Options& _options)
+		: m_target{ _target }, m_vertMoves{}, m_prepared{ false }, m_options{ _options }, m_pointFeats{ _pointFeats }, m_pathFeats{ _pathFeats }
 	{}
 
 	const Project::TargetMesh& Project::target() const

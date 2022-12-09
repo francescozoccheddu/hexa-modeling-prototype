@@ -71,7 +71,8 @@ namespace HMP::Gui::Widgets
 		{
 			throw std::logic_error{ "no target mesh" };
 		}
-		onProjectRequest(m_options);
+		throw std::logic_error{ "not implemented" };
+		//onProjectRequest({}, {}, m_options);
 	}
 
 	bool Projection::canReproject() const
@@ -380,7 +381,7 @@ namespace HMP::Gui::Widgets
 			}
 		}
 		ImGui::Spacing();
-		tweak(m_options.weightTweak, "Weight factor");
+		tweak(m_options.baseWeightTweak, "Weight factor");
 		ImGui::Spacing();
 		tweak(m_options.normalDotTweak, "Normal dot factor");
 		ImGui::Spacing();
