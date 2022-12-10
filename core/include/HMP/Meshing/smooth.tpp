@@ -4,6 +4,8 @@
 
 #include <HMP/Meshing/smooth.hpp>
 
+#include <cinolib/parallel_for.h>
+
 namespace HMP::Meshing
 {
 
@@ -11,18 +13,18 @@ namespace HMP::Meshing
     std::vector<Vec> smooth(const cinolib::AbstractMesh<M, V, E, P>& _mesh)
     {
         std::vector<Vec> newVerts(toI(_mesh.num_verts()));
-        for (Id vid{}; vid < _mesh.num_verts(); vid++)
-        {
+        const auto func{ [&_mesh, &newVerts](Id _vid) {
             Vec vertSum{};
             Real weightSum{};
-            for (const Id adjVid : _mesh.adj_v2v(vid))
+            for (const Id adjVid : _mesh.adj_v2v(_vid))
             {
                 const Real weight = 1.0;
                 vertSum += _mesh.vert(adjVid) * weight;
                 weightSum += weight;
             }
-            newVerts[toI(vid)] = vertSum / weightSum;
-        }
+            newVerts[toI(_vid)] = vertSum / weightSum;
+        } };
+        cinolib::PARALLEL_FOR(0, _mesh.num_verts(), 256, func);
         return newVerts;
     }
 

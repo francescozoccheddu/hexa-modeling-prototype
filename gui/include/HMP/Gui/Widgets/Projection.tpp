@@ -16,8 +16,8 @@ namespace HMP::Gui::Widgets
         {
             return;
         }
-        EdgeChainPair& creasePair{ m_creases[m_currentCrease] };
-        EdgeChain& crease{ _source ? creasePair.source : creasePair.target };
+        Meshing::Projection::Path& creasePair{ m_creases[m_currentCrease] };
+        std::vector<Id>& crease{ _source ? creasePair.sourceEids : creasePair.targetEids };
         const bool has1{ crease.size() > 0 }, has2{ crease.size() > 1 }, has3{ crease.size() > 2 };
         const I lastI{ crease.size() - 1 };
         const std::vector<Id> endEids{ has1 ? has2 ? std::vector<Id>{crease[0], crease[lastI]} : std::vector<Id>{ crease[0] } : std::vector<Id>{} };
