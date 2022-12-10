@@ -165,7 +165,7 @@ namespace HMP::Meshing::Projection
             const Vec& targetVert{ _target.vert(adjFid) };
             weights.push_back(targetVert.dist(sourceVert));
         }
-        invertAndNormalizeDistances(weights);
+        normalizeWeights(weights);
         return weights;
     }
 
@@ -198,7 +198,7 @@ namespace HMP::Meshing::Projection
                 {
                     continue;
                 }
-                const Real normDistance{ *normDistanceIt++ };
+                const Real normDistance{ *normDistanceIt };
                 const Real distanceWeight{ std::pow(normDistance, _options.distanceWeightPower) * _options.distanceWeight + 1.0 };
                 const Real weight{ _options.baseWeightTweak.apply(baseWeight) * _options.normalDotTweak.apply(dot) * distanceWeight };
                 const Vec targetVert{ _target.vert(match.targetVid) };
