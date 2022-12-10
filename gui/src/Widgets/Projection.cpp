@@ -403,7 +403,11 @@ namespace HMP::Gui::Widgets
 				m_options.advancePercentile = advancePercentile / 100.0f;
 			}
 		}
-		ImGui::Checkbox("Smooth", &m_options.smooth);
+		ImGui::Spacing();
+		ImGui::Text("Smoothing");
+		ImGui::Checkbox("Surface", &m_options.smoothSurface);
+		ImGui::SameLine();
+		ImGui::Checkbox("Internal", &m_options.smoothInternal);
 		ImGui::Spacing();
 		ImGui::SetNextItemOpen(m_showCreases, ImGuiCond_Always);
 		bool wasShowingCreases{ m_showCreases };

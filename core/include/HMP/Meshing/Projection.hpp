@@ -50,7 +50,8 @@ namespace HMP::Meshing::Projection
         double distanceWeight{ 0.0 };
         double distanceWeightPower{ 1.0 };
         double advancePercentile{ 0.5 };
-        bool smooth{ true };
+        bool smoothSurface{ true };
+        bool smoothInternal{ true };
         I iterations{ 5 };
 
     };

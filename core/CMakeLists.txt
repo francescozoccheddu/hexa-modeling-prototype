@@ -27,6 +27,7 @@ add_library (core STATIC
     "src/Meshing/Utils.cpp"
     "src/Meshing/Projection.cpp"
     "src/Meshing/fill.cpp"
+    "src/Meshing/defensiveAdvance.cpp"
     "src/Meshing/Match.cpp"
     "src/Utils/Geometry.cpp"
     "src/Utils/Serialization.cpp"

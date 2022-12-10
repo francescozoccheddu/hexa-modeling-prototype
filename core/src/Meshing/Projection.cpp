@@ -63,7 +63,7 @@ namespace HMP::Meshing::Projection
         {
             return;
         }
-        const Real minDist{ *std::max_element(_distances.begin(), _distances.end()) };
+        const Real minDist{ *std::min_element(_distances.begin(), _distances.end()) };
         if (minDist != 0.0)
         {
             for (Real& d : _distances)
@@ -246,8 +246,7 @@ namespace HMP::Meshing::Projection
         {
             projected[toI(vid)] = projectSurfaceVert(_source, _target, vid, invMatches, _options);
         }
-        const std::vector<Vec> filled{ fill(_source, projected, _options.unsetVertsDistWeightTweak) };
-        return smooth(_source, filled);
+        return fill(_source, projected, _options.unsetVertsDistWeightTweak);
     }
 
     std::vector<std::optional<Vec>> projectPath(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const Path& _path, const Options& _options)
@@ -328,12 +327,28 @@ namespace HMP::Meshing::Projection
             {
                 exporter.surf.update_normals();
             }
-            std::vector<Vec> newSurfVerts{ projectSurface(exporter.surf, _target, _options) };
-            // paths
-            // points
-            exporter.surf.vector_verts() = newSurfVerts;
-            exporter.applySurfToVol();
-            smooth(exporter.vol);
+            const std::vector<Vec> oldSurfVerts{ exporter.surf.vector_verts() };
+            exporter.surf.vector_verts() = projectSurface(exporter.surf, _target, _options);
+            if (_options.smoothSurface && !lastIteration)
+            {
+                smooth(exporter.surf);
+            }
+            // x = project path 
+            // set x in exporter.surf
+            // smooth paths only
+            for (const Point& pointFeat : _pointFeats)
+            {
+                exporter.surf.vert(pointFeat.sourceVid) = _target.vert(pointFeat.targetVid);
+            }
+            if (_options.advancePercentile < 1.0 && !lastIteration)
+            {
+                defensiveAdvance(oldSurfVerts, exporter.surf.vector_verts(), exporter.surf.vector_verts(), _options.advancePercentile);
+            }
+            if (_options.smoothInternal)
+            {
+                exporter.applySurfToVol();
+                smooth(exporter.vol);
+            }
         }
         exporter.applySurfToVol();
         return exporter.vol.vector_verts();
