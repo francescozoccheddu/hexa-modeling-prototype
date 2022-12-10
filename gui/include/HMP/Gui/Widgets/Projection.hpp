@@ -18,18 +18,11 @@ namespace HMP::Gui::Widgets
 
 	private:
 
-		using EdgeChain = std::vector<Id>;
-
-		struct EdgeChainPair final
-		{
-			EdgeChain source, target;
-		};
-
 		Meshing::Projection::Options m_options;
 		Widgets::Target& m_targetWidget;
 		HMP::Commander& m_commander;
 		HMP::Meshing::Mesher& m_mesher;
-		std::vector<EdgeChainPair> m_creases;
+		std::vector<Meshing::Projection::Path> m_creases;
 		VertEdit& m_vertEditWidget;
 		cinolib::FeatureNetworkOptions m_featureFinderOptions;
 		bool m_showCreases{ true }, m_showAllCreases{ false };

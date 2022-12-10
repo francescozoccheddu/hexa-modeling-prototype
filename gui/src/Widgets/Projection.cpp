@@ -23,7 +23,7 @@ namespace HMP::Gui::Widgets
 		m_mesher.onElementAdd += [this](const Dag::Element& _element) {
 			for (I i{}; i < m_creases.size(); i++)
 			{
-				for (const Id eid : m_creases[i].source)
+				for (const Id eid : m_creases[i].sourceEids)
 				{
 					if (!m_mesher.mesh().edge_is_on_srf(eid))
 					{
@@ -40,7 +40,7 @@ namespace HMP::Gui::Widgets
 				lastEid--;
 				for (I i{}; i < m_creases.size(); i++)
 				{
-					for (Id& eid : m_creases[i].source)
+					for (Id& eid : m_creases[i].sourceEids)
 					{
 						if (eid == lastEid)
 						{
@@ -71,7 +71,19 @@ namespace HMP::Gui::Widgets
 		{
 			throw std::logic_error{ "no target mesh" };
 		}
-		onProjectRequest({}, {}, m_options);
+		std::vector<Meshing::Projection::Point> points;
+		points.reserve(m_creases.size() * 2);
+		std::vector<Meshing::Projection::Path> paths;
+		paths.reserve(m_creases.size());
+		for (const Meshing::Projection::Path& path : m_creases)
+		{
+			if (path.sourceEids.empty() || path.targetEids.empty())
+			{
+				continue;
+			}
+			paths.push_back(path);
+		}
+		onProjectRequest(points, paths, m_options);
 	}
 
 	bool Projection::canReproject() const
@@ -107,8 +119,8 @@ namespace HMP::Gui::Widgets
 		from.reserve(_lastEx - _first);
 		for (I i{ _first }; i < _lastEx; i++)
 		{
-			const EdgeChainPair& creasePair{ m_creases[i] };
-			const EdgeChain& crease{ _fromSource ? creasePair.source : creasePair.target };
+			const Meshing::Projection::Path& creasePair{ m_creases[i] };
+			const std::vector<Id>& crease{ _fromSource ? creasePair.sourceEids : creasePair.targetEids };
 			if (crease.empty())
 			{
 				continue;
@@ -162,9 +174,9 @@ namespace HMP::Gui::Widgets
 		I toI{};
 		for (I i{ _first }; i < _lastEx; i++)
 		{
-			EdgeChainPair& creasePair{ m_creases[i] };
-			const EdgeChain& fromCrease{ _fromSource ? creasePair.source : creasePair.target };
-			EdgeChain& toCrease{ _fromSource ? creasePair.target : creasePair.source };
+			Meshing::Projection::Path& creasePair{ m_creases[i] };
+			const std::vector<Id>& fromCrease{ _fromSource ? creasePair.sourceEids : creasePair.targetEids };
+			std::vector<Id>& toCrease{ _fromSource ? creasePair.targetEids : creasePair.sourceEids };
 			if (fromCrease.empty())
 			{
 				continue;
@@ -262,7 +274,7 @@ namespace HMP::Gui::Widgets
 				? cinolib::Color::hsv2rgb(static_cast<float>(i) / static_cast<float>(m_creases.size()), 1.0f, 1.0f)
 				: m_mesher.edgeColor()
 			};
-			for (const Id eid : m_creases[i].source)
+			for (const Id eid : m_creases[i].sourceEids)
 			{
 				m_mesher.paintEdge(eid, color);
 			}
@@ -277,7 +289,7 @@ namespace HMP::Gui::Widgets
 				? cinolib::Color::hsv2rgb(static_cast<float>(i) / static_cast<float>(m_creases.size()), 1.0f, 1.0f)
 				: m_targetWidget.edgeColor()
 			};
-			for (const Id eid : m_creases[i].target)
+			for (const Id eid : m_creases[i].targetEids)
 			{
 				m_targetWidget.paintEdge(eid, color);
 			}
@@ -289,7 +301,7 @@ namespace HMP::Gui::Widgets
 		updateSourceMeshEdges(_first, _lastEx, false);
 		for (I i{ _first }; i < _lastEx; i++)
 		{
-			m_creases[i].source.clear();
+			m_creases[i].sourceEids.clear();
 		}
 	}
 
@@ -298,7 +310,7 @@ namespace HMP::Gui::Widgets
 		updateTargetMeshEdges(_first, _lastEx, false);
 		for (I i{ _first }; i < _lastEx; i++)
 		{
-			m_creases[i].target.clear();
+			m_creases[i].targetEids.clear();
 		}
 	}
 
@@ -492,7 +504,7 @@ namespace HMP::Gui::Widgets
 						removeCrease(i);
 					}
 					ImGui::SameLine();
-					const bool sourceEmpty = m_creases[i].source.empty();
+					const bool sourceEmpty = m_creases[i].sourceEids.empty();
 					if (sourceEmpty)
 					{
 						ImGui::BeginDisabled();
@@ -508,7 +520,7 @@ namespace HMP::Gui::Widgets
 					if (m_targetWidget.hasMesh())
 					{
 						ImGui::SameLine();
-						const bool targetEmpty = m_creases[i].target.empty();
+						const bool targetEmpty = m_creases[i].targetEids.empty();
 						if (targetEmpty)
 						{
 							ImGui::BeginDisabled();

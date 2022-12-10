@@ -299,7 +299,6 @@ namespace HMP::Meshing::Projection
     std::optional<Vec> projectPathVert(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const Id _vid, const std::vector<Id>& _adjEids, const std::unordered_map<Id, std::vector<Match::SourceToTargetVid>>& _matches, const Options& _options)
     {
         const Vec& sourceVert{ _source.vert(_vid) };
-        const std::array<const std::vector<Match::SourceToTargetVid>*, 2> adjMatches{ &_matches.at(_adjEids[0]), &_matches.at(_adjEids[1]) };
         const std::vector<Real>& baseWeights{ pathVertBaseWeights(_source, _vid, _adjEids, _matches, _options.invertMode) };
         const Vec sourceNorm{ _source.vert_data(_vid).normal };
         Vec targetVertSum{};
