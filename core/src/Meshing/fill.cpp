@@ -50,7 +50,7 @@ namespace HMP::Meshing
         return queue;
     }
 
-    std::vector<Vec> fill(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Projection::Tweak& _distWeightTweak, const std::optional<std::unordered_set<Id>>& _vids)
+    std::vector<Vec> fill(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Projection::Tweak& _distWeightTweak, const std::optional<std::unordered_set<Id>>& _vids, const std::optional<std::unordered_set<Id>>& _eids)
     {
         better_priority_queue::updatable_priority_queue<I, I> skippedVisQueue{ _vids
             ? createQueue(_mesh, _newVerts, *_vids)
@@ -74,6 +74,18 @@ namespace HMP::Meshing
                         adjVids.begin(),
                         adjVids.end(),
                         [&vids](const Id _adjVid) { return !vids.contains(_adjVid); }
+                    ),
+                    adjVids.end()
+                );
+            }
+            if (_eids)
+            {
+                const std::unordered_set<Id>& eids{ *_eids };
+                adjVids.erase(
+                    std::remove_if(
+                        adjVids.begin(),
+                        adjVids.end(),
+                        [&eids, vid, &_mesh](const Id _adjVid) { return !eids.contains(_mesh.edge_id(_adjVid, vid)); }
                     ),
                     adjVids.end()
                 );

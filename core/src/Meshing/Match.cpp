@@ -6,7 +6,20 @@
 namespace HMP::Meshing::Match
 {
 
-    cinolib::Octree pathOctree(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<Id>& _path)
+    struct TargetVidToSource final
+    {
+        Vec pos;
+        Id sourceId;
+    };
+
+    cinolib::Octree surfaceOctree(const cinolib::AbstractPolygonMesh<>& _mesh)
+    {
+        cinolib::Octree octree{};
+        octree.build_from_mesh_polys(_mesh);
+        return octree;
+    }
+
+    cinolib::Octree pathOctree(const cinolib::AbstractPolygonMesh<>& _mesh, const std::unordered_set<Id>& _path)
     {
         cinolib::Octree octree{};
         octree.items.reserve(_path.size());
@@ -15,13 +28,6 @@ namespace HMP::Meshing::Match
             octree.push_segment(eid, _mesh.edge_verts(eid));
         }
         octree.build();
-        return octree;
-    }
-
-    cinolib::Octree surfaceOctree(const cinolib::AbstractPolygonMesh<>& _mesh)
-    {
-        cinolib::Octree octree{};
-        octree.build_from_mesh_polys(_mesh);
         return octree;
     }
 
@@ -46,7 +52,7 @@ namespace HMP::Meshing::Match
         return matches;
     }
 
-    std::vector<TargetVidToSource> matchPath(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::vector<Id>& _sourceEids, const std::vector<Id>& _targetVids)
+    std::vector<TargetVidToSource> matchPath(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::unordered_set<Id>& _sourceEids, const std::vector<Id>& _targetVids)
     {
         std::vector<TargetVidToSource> matches(_targetVids.size());
         const cinolib::Octree sourceOctree{ pathOctree(_source, _sourceEids) };
@@ -57,7 +63,7 @@ namespace HMP::Meshing::Match
             Id sourceEid;
             Real dist;
             sourceOctree.closest_point(targetVert, sourceEid, sourcePos, dist);
-            matches[toI(targetVid)] = {
+            matches[toI(_targetPathVid)] = {
                 .pos = sourcePos,
                 .sourceId = sourceEid
             };
@@ -80,7 +86,7 @@ namespace HMP::Meshing::Match
         return invMatches;
     }
 
-    std::unordered_map<Id, std::vector<SourceToTargetVid>> invertPathMatches(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::vector<Id>& _sourceEids, const std::vector<Id>& _targetVids, const std::vector<TargetVidToSource>& _matches)
+    std::unordered_map<Id, std::vector<SourceToTargetVid>> invertPathMatches(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::unordered_set<Id>& _sourceEids, const std::vector<Id>& _targetVids, const std::vector<TargetVidToSource>& _matches)
     {
         std::unordered_map<Id, std::vector<SourceToTargetVid>> invMatches;
         invMatches.reserve(_sourceEids.size());
@@ -93,6 +99,16 @@ namespace HMP::Meshing::Match
                 });
         }
         return invMatches;
+    }
+
+    std::vector<std::vector<SourceToTargetVid>> matchSurfaceFid(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target)
+    {
+        return invertSurfaceMatches(_source, _target, matchSurface(_source, _target));
+    }
+
+    std::unordered_map<Id, std::vector<SourceToTargetVid>> matchPathEid(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::unordered_set<Id>& _sourceEids, const std::vector<Id>& _targetVids)
+    {
+        return invertPathMatches(_source, _target, _sourceEids, _targetVids, matchPath(_source, _target, _sourceEids, _targetVids));
     }
 
 }
