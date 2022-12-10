@@ -7,7 +7,7 @@
 namespace HMP::Gui::Widgets
 {
 
-    Save::Save() : cinolib::SideBarItem{ "Save" }, m_filename{}, onSave{}, onLoad{}, onExportMesh{}, m_loaded{ false }
+    Save::Save(): cinolib::SideBarItem{ "Save" }, m_filename{}, onSave{}, onLoad{}, onExportMesh{}, m_loaded{ false }
     {}
 
     void Save::apply(bool _load, const std::string& _filename)
@@ -58,6 +58,11 @@ namespace HMP::Gui::Widgets
         {
             apply(true, filename);
         }
+    }
+
+    void Save::requestLoad(const std::string& _filename)
+    {
+        apply(true, _filename);
     }
 
     void Save::requestExportMesh()

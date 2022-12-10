@@ -33,6 +33,8 @@ namespace HMP::Gui::Widgets
         void requestSaveNew();
 
         void requestLoad();
+        
+        void requestLoad(const std::string& _filename);
 
         void requestExportMesh();
 
