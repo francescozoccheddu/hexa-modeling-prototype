@@ -10,6 +10,6 @@
 namespace HMP::Meshing
 {
 
-    std::vector<Vec> fill(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Projection::Tweak& _distWeightTweak, const std::optional<std::unordered_set<Id>>& _vids = std::nullopt);
+    std::vector<Vec> fill(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Projection::Tweak& _distWeightTweak, const std::optional<std::unordered_set<Id>>& _vids = std::nullopt, const std::optional<std::unordered_set<Id>>& _eids = std::nullopt);
 
 }

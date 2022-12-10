@@ -6,7 +6,6 @@
 #include <cinolib/gl/glcanvas.h>
 #include <cinolib/gl/gl_glfw.h>
 #include <cinolib/gl/key_bindings.hpp>
-#include <cinolib/gl/volume_mesh_controls.h>
 #include <cinolib/color.h>
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <cpputils/collections/SetNamer.hpp>
@@ -136,7 +135,6 @@ namespace HMP::Gui
 		const Meshing::Mesher::Mesh& m_mesh;
 		Commander& m_commander;
 		cpputils::collections::SetNamer<const HMP::Dag::Node*> m_dagNamer;
-		cinolib::VolumeMeshControls<Meshing::Mesher::Mesh> m_menu;
 		Widgets::Axes m_axesWidget;
 		Widgets::Target m_targetWidget;
 		Widgets::VertEdit m_vertEditWidget;

@@ -6,12 +6,16 @@
 #include <algorithm>
 #include <cinolib/export_surface.h>
 #include <HMP/Meshing/defensiveAdvance.hpp>
+#include <cpputils/collections/zip.hpp>
 #include <HMP/Meshing/fill.hpp>
 #include <HMP/Meshing/Match.hpp>
 #include <HMP/Meshing/smooth.hpp>
+#include <array>
 
 namespace HMP::Meshing::Projection
 {
+
+    // utils
 
     Tweak::Tweak(Real _min, Real _power): m_min{ _min }, m_power{ _power }
     {
@@ -80,6 +84,8 @@ namespace HMP::Meshing::Projection
         }
     }
 
+    // surface
+
     std::vector<Real> surfaceVertBaseWeights(const cinolib::AbstractPolygonMesh<>& _source, const Id _vid, const std::vector<std::vector<Match::SourceToTargetVid>>& _matches, const EInvertMode _invertMode)
     {
         const std::vector<Id>& adjFids{ _source.adj_v2p(_vid) };
@@ -97,9 +103,9 @@ namespace HMP::Meshing::Projection
             case EInvertMode::Distance:
             {
                 const Vec& sourceVert{ _source.vert(_vid) };
-                for (I i{}; i < adjFids.size(); i++)
+                for (const Id adjFid : adjFids)
                 {
-                    for (const Match::SourceToTargetVid& match : _matches[toI(adjFids[i])])
+                    for (const Match::SourceToTargetVid& match : _matches[toI(adjFid)])
                     {
                         weights.push_back(sourceVert.dist(match.pos));
                     }
@@ -109,9 +115,8 @@ namespace HMP::Meshing::Projection
             break;
             case EInvertMode::BarycentricCoords:
             {
-                for (I i{}; i < adjFids.size(); i++)
+                for (const Id adjFid : adjFids)
                 {
-                    const Id adjFid{ adjFids[i] };
                     const Id adjFO{ _source.poly_vert_offset(adjFid, _vid) };
                     const std::vector<Vec>& sourceFaceVerts{ _source.poly_verts(adjFid) };
                     for (const Match::SourceToTargetVid& match : _matches[toI(adjFid)])
@@ -232,27 +237,142 @@ namespace HMP::Meshing::Projection
         }
     }
 
-    std::optional<Vec> projectPathVert(const cinolib::AbstractPolygonMesh<>& _source, const Id _vid, const Options& _options)
-    {
-        return {};
-    }
-
     std::vector<Vec> projectSurface(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const Options& _options)
     {
-        const std::vector<Match::TargetVidToSource>& matches{ Match::matchSurface(_source, _target) };
-        const std::vector<std::vector<Match::SourceToTargetVid>>& invMatches{ Match::invertSurfaceMatches(_source, _target, matches) };
+        const std::vector<std::vector<Match::SourceToTargetVid>>& matches{ Match::matchSurfaceFid(_source, _target) };
         std::vector<std::optional<Vec>> projected(toI(_source.num_verts()));
         for (Id vid{}; vid < _source.num_verts(); vid++)
         {
-            projected[toI(vid)] = projectSurfaceVert(_source, _target, vid, invMatches, _options);
+            projected[toI(vid)] = projectSurfaceVert(_source, _target, vid, matches, _options);
         }
         return fill(_source, projected, _options.unsetVertsDistWeightTweak);
     }
 
-    std::vector<std::optional<Vec>> projectPath(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const Path& _path, const Options& _options)
+    // path
+
+    std::vector<Real> pathVertBaseWeights(const cinolib::AbstractPolygonMesh<>& _source, const Id _vid, const std::vector<Id>& _adjEids, const std::unordered_map<Id, std::vector<Match::SourceToTargetVid>>& _matches, const EInvertMode _invertMode)
     {
-        return {};
+        std::vector<Real> weights;
+        {
+            I weightCount{};
+            for (const Id adjEid : _adjEids)
+            {
+                weightCount += _matches.at(adjEid).size();
+            }
+            weights.reserve(weightCount);
+        }
+        switch (_invertMode)
+        {
+            case EInvertMode::Distance:
+            {
+                const Vec& sourceVert{ _source.vert(_vid) };
+                for (const Id adjEid : _adjEids)
+                {
+                    for (const Match::SourceToTargetVid& match : _matches.at(adjEid))
+                    {
+                        weights.push_back(sourceVert.dist(match.pos));
+                    }
+                }
+                invertAndNormalizeDistances(weights);
+            }
+            break;
+            case EInvertMode::BarycentricCoords:
+            {
+                for (const Id adjEid : _adjEids)
+                {
+                    for (const Match::SourceToTargetVid& match : _matches.at(adjEid))
+                    {
+                        const Id vid0{ _source.edge_vert_id(adjEid, 0) }, vid1{ _source.edge_vert_id(adjEid, 1) };
+                        const Vec vert0{ _source.vert(vid0) }, vert1{ _source.vert(vid1) };
+                        const Vec adjEdgeDir{ vert1 - vert0 }, progressDir{ match.pos - vert0 };
+                        const Real progress{ progressDir.dot(adjEdgeDir) / adjEdgeDir.dot(adjEdgeDir) };
+                        weights.push_back(_vid == vid1 ? progress : (1.0 - progress));
+                    }
+                }
+                normalizeWeights(weights);
+            }
+            break;
+        }
+        return weights;
     }
+
+    std::optional<Vec> projectPathVert(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const Id _vid, const std::vector<Id>& _adjEids, const std::unordered_map<Id, std::vector<Match::SourceToTargetVid>>& _matches, const Options& _options)
+    {
+        const Vec& sourceVert{ _source.vert(_vid) };
+        const std::array<const std::vector<Match::SourceToTargetVid>*, 2> adjMatches{ &_matches.at(_adjEids[0]), &_matches.at(_adjEids[1]) };
+        const std::vector<Real>& baseWeights{ pathVertBaseWeights(_source, _vid, _adjEids, _matches, _options.invertMode) };
+        const Vec sourceNorm{ _source.vert_data(_vid).normal };
+        Vec targetVertSum{};
+        Vec dirSum{};
+        Vec normDirSum{};
+        Real dirLengthSum{};
+        Real weightSum{};
+        std::vector<Real>::const_iterator baseWeightIt{ baseWeights.begin() };
+        for (const Id adjEid : _adjEids)
+        {
+            for (const Match::SourceToTargetVid& match : _matches.at(adjEid))
+            {
+                const Real baseWeight{ *baseWeightIt++ };
+                if (_options.baseWeightTweak.shouldSkip(baseWeight))
+                {
+                    continue;
+                }
+                const Real weight{ _options.baseWeightTweak.apply(baseWeight) };
+                const Vec targetVert{ _target.vert(match.targetVid) };
+                const Vec dir{ targetVert - sourceVert };
+                weightSum += weight;
+                targetVertSum += targetVert * weight;
+                dirSum += dir * weight;
+                normDirSum += dir.is_null() ? Vec{} : (dir.normalized() * weight);
+                dirLengthSum += dir.norm() * weight;
+            }
+        }
+        if (weightSum == 0)
+        {
+            return std::nullopt;
+        }
+        else
+        {
+            switch (_options.displaceMode)
+            {
+                case EDisplaceMode::VertAvg:
+                    return targetVertSum / weightSum;
+                    break;
+                case EDisplaceMode::DirAvg:
+                    return sourceVert + dirSum / weightSum;
+                case EDisplaceMode::NormDirAvgAndDirAvg:
+                    return sourceVert + normDirSum * ((dirSum / weightSum).norm() / weightSum);
+                case EDisplaceMode::NormDirAvgAndDirNormAvg:
+                    return sourceVert + normDirSum * dirLengthSum / weightSum / weightSum;
+                default:
+                    throw std::domain_error{ "unknown displace mode" };
+            }
+        }
+    }
+
+    std::vector<Vec> projectPath(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::unordered_set<Id>& _sourceEids, const std::unordered_set<Id>& _sourceVids, const std::vector<Id>& _targetVids, const Options& _options)
+    {
+        const std::unordered_map<Id, std::vector<Match::SourceToTargetVid>>& matches{ Match::matchPathEid(_source, _target, _sourceEids, _targetVids) };
+        std::vector<std::optional<Vec>> projected;
+        projected.reserve(_sourceVids.size());
+        std::vector<Id> adjEids;
+        adjEids.reserve(2);
+        for (const Id vid : _sourceVids)
+        {
+            adjEids.clear();
+            for (const Id adjEid : _source.adj_v2e(vid))
+            {
+                if (_sourceEids.contains(adjEid))
+                {
+                    adjEids.push_back(adjEid);
+                }
+            }
+            projected.push_back(projectPathVert(_source, _target, vid, adjEids, matches, _options));
+        }
+        return fill(_source, projected, _options.unsetVertsDistWeightTweak, _sourceVids, _sourceEids);
+    }
+
+    // final projection
 
     class SurfaceExporter final
     {
@@ -315,31 +435,94 @@ namespace HMP::Meshing::Projection
 
     };
 
+    const std::unordered_set<Id> extractVids(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<Id>& _eids)
+    {
+        std::unordered_set<Id> set{};
+        set.reserve(_eids.size() + 1);
+        for (const Id eid : _eids)
+        {
+            set.insert(_mesh.edge_vert_id(eid, 0));
+            set.insert(_mesh.edge_vert_id(eid, 1));
+        }
+        return set;
+    }
+
+    const std::vector<std::unordered_set<Id>> extractSourceEids(const cinolib::AbstractPolygonMesh<>& _source, const std::vector<Path>& _pathFeats)
+    {
+        std::vector<std::unordered_set<Id>> featEids(_pathFeats.size());
+        for (const auto& [eids, path] : cpputils::collections::zip(featEids, _pathFeats))
+        {
+            eids = std::unordered_set<Id>{ path.sourceEids.begin(), path.sourceEids.end() };
+        }
+        return featEids;
+    }
+
+    const std::vector<std::unordered_set<Id>> extractSourceVids(const cinolib::AbstractPolygonMesh<>& _source, const std::vector<Path>& _pathFeats)
+    {
+        std::vector<std::unordered_set<Id>> featVids(_pathFeats.size());
+        for (const auto& [vids, path] : cpputils::collections::zip(featVids, _pathFeats))
+        {
+            vids = extractVids(_source, path.sourceEids);
+        }
+        return featVids;
+    }
+
+    const std::vector<std::vector<Id>> extractTargetVids(const cinolib::AbstractPolygonMesh<>& _target, const std::vector<Path>& _pathFeats)
+    {
+        std::vector<std::vector<Id>> featVids(_pathFeats.size());
+        for (const auto& [vids, path] : cpputils::collections::zip(featVids, _pathFeats))
+        {
+            const std::unordered_set<Id>& vidsSet{ extractVids(_target, path.targetEids) };
+            vids = { vidsSet.begin(), vidsSet.end() };
+        }
+        return featVids;
+    }
+
+    void setVerts(const std::vector<Vec>& _from, std::vector<Vec>& _to, const std::unordered_set<Id>& _vids)
+    {
+        for (const auto& [vid, from] : cpputils::collections::zip(_vids, _from))
+        {
+            _to[toI(vid)] = from;
+        }
+    }
+
     std::vector<Vec> project(const Mesher::Mesh& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::vector<Point>& _pointFeats, const std::vector<Path>& _pathFeats, const Options& _options)
     {
         SurfaceExporter exporter{ _source };
         const std::vector<Point> surfPointFeats{ exporter.map(_pointFeats) };
         const std::vector<Path> surfPathFeats{ exporter.map(_pathFeats) };
+        const std::vector<std::unordered_set<Id>> sourceSurfPathVids{ extractSourceVids(exporter.surf, surfPathFeats) };
+        const std::vector<std::unordered_set<Id>> sourceSurfPathEids{ extractSourceEids(exporter.surf, surfPathFeats) };
+        const std::vector<std::vector<Id>> targetPathVids{ extractTargetVids(_target, surfPathFeats) };
         for (I i{}; i < _options.iterations; i++)
         {
             const bool lastIteration{ i + 1 == _options.iterations };
-            if (i > 0)
+            if (i > 0 && _options.normalDotTweak.power() != 0.0)
             {
                 exporter.surf.update_normals();
             }
             const std::vector<Vec> oldSurfVerts{ exporter.surf.vector_verts() };
+            // surface
             exporter.surf.vector_verts() = projectSurface(exporter.surf, _target, _options);
             if (_options.smoothSurface && !lastIteration)
             {
-                smooth(exporter.surf);
+                exporter.surf.vector_verts() = smooth(exporter.surf);
             }
-            // x = project path 
-            // set x in exporter.surf
-            // smooth paths only
-            for (const Point& pointFeat : _pointFeats)
+            // paths
+            for (const auto& [sourceEids, sourceVids, targetVids] : cpputils::collections::zip(sourceSurfPathEids, sourceSurfPathVids, targetPathVids))
+            {
+                setVerts(projectPath(exporter.surf, _target, sourceEids, sourceVids, targetVids, _options), exporter.surf.vector_verts(), sourceVids);
+                if (_options.smoothSurface && !lastIteration)
+                {
+                    setVerts(smooth(exporter.surf, sourceVids, sourceEids), exporter.surf.vector_verts(), sourceVids);
+                }
+            }
+            // points
+            for (const Point& pointFeat : surfPointFeats)
             {
                 exporter.surf.vert(pointFeat.sourceVid) = _target.vert(pointFeat.targetVid);
             }
+            // advance
             if (_options.advancePercentile < 1.0 && !lastIteration)
             {
                 defensiveAdvance(oldSurfVerts, exporter.surf.vector_verts(), exporter.surf.vector_verts(), _options.advancePercentile);
@@ -347,7 +530,7 @@ namespace HMP::Meshing::Projection
             if (_options.smoothInternal)
             {
                 exporter.applySurfToVol();
-                smooth(exporter.vol);
+                exporter.vol.vector_verts() = smooth(exporter.vol);
             }
         }
         exporter.applySurfToVol();
