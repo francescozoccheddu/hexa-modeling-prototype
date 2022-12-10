@@ -1138,7 +1138,7 @@ namespace HMP::Gui
 		m_canvas.callback_app_controls = [this](auto && ..._args) { return onDrawControls(_args ...); };
 		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChanged(_args...); };
 		m_canvas.callback_custom_gui = [this](auto && ..._args) { return onDrawCustomGui(_args...); };
-		m_canvas.callback_drop_files = [this](std::vector<std::string> _files) { if (_files.size() == 1) { onLoadState(_files[0]); } };
+		m_canvas.callback_drop_files = [this](std::vector<std::string> _files) { if (_files.size() == 1) { m_saveWidget.requestLoad(_files[0]); } };
 		m_canvas.marker_sets.resize(c_markerSetCount);
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
