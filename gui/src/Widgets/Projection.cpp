@@ -116,8 +116,7 @@ namespace HMP::Gui::Widgets
 		cinolib::Polygonmesh<> target{ m_targetWidget.meshForProjection() };
 		const Meshing::Mesher::Mesh& source{ m_mesher.mesh() };
 		clearPaths(_first, _lastEx, !_fromSource);
-		std::vector<std::vector<Id>> from, to;
-		from.reserve(_lastEx - _first);
+		std::vector<std::vector<Id>> from(_lastEx - _first), to;
 		for (I i{ _first }; i < _lastEx; i++)
 		{
 			from[i] = _fromSource

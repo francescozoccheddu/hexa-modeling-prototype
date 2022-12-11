@@ -90,6 +90,10 @@ namespace HMP::Projection::Match
     {
         std::unordered_map<Id, std::vector<SourceToTargetVid>> invMatches;
         invMatches.reserve(_sourceEidsPath.size());
+        for (const Id eid : _sourceEidsPath)
+        {
+            invMatches.emplace(eid, std::vector<SourceToTargetVid>{});
+        }
         for (Id targetVid{}; targetVid < _target.num_verts(); targetVid++)
         {
             const TargetVidToSource& match{ _matches[toI(targetVid)] };

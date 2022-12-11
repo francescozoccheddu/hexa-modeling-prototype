@@ -282,7 +282,7 @@ namespace HMP::Projection
 
     std::vector<Vec> projectPath(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::vector<Id>& _sourceEidsPath, const std::vector<Id>& _sourceVidsPath, const std::vector<Id>& _targetVidsPath, const Options& _options)
     {
-        const std::unordered_map<Id, std::vector<Match::SourceToTargetVid>>& matches{ Match::matchPathEid(_source, _target, _sourceEidsPath, _targetVidsPath) };
+        const std::unordered_map<Id, std::vector<Match::SourceToTargetVid>> matches{ Match::matchPathEid(_source, _target, _sourceEidsPath, _targetVidsPath) };
         std::vector<std::optional<Vec>> projected;
         projected.reserve(_sourceVidsPath.size());
         for (I i{}; i < _sourceVidsPath.size(); i++)
@@ -307,7 +307,7 @@ namespace HMP::Projection
         const std::vector<Id> onSurfVolVids{ exporter.onSurfVolVids() };
         const std::vector<Utils::Point> surfPointFeats{ Utils::toSurfFeats(_pointFeats, exporter) };
         const std::vector<Utils::EidsPath> surfEidsPathFeats{ Utils::toSurfFeats(_pathFeats, exporter) };
-        const std::vector<Utils::VidsPath> surfVidsPathFeats{ Utils::eidsToVidsPaths(_pathFeats, exporter.vol, _target) };
+        const std::vector<Utils::VidsPath> surfVidsPathFeats{ Utils::eidsToVidsPaths(surfEidsPathFeats, exporter.surf, _target) };
         for (I i{}; i < _options.iterations; i++)
         {
             const bool lastIteration{ i + 1 == _options.iterations };
