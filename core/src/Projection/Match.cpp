@@ -1,9 +1,9 @@
-#include <HMP/Meshing/Match.hpp>
+#include <HMP/Projection/Match.hpp>
 
 #include <cinolib/octree.h>
 #include <cinolib/parallel_for.h>
 
-namespace HMP::Meshing::Match
+namespace HMP::Projection::Match
 {
 
     struct TargetVidToSource final
@@ -19,7 +19,7 @@ namespace HMP::Meshing::Match
         return octree;
     }
 
-    cinolib::Octree pathOctree(const cinolib::AbstractPolygonMesh<>& _mesh, const std::unordered_set<Id>& _path)
+    cinolib::Octree pathOctree(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<Id>& _path)
     {
         cinolib::Octree octree{};
         octree.items.reserve(_path.size());
@@ -52,12 +52,12 @@ namespace HMP::Meshing::Match
         return matches;
     }
 
-    std::vector<TargetVidToSource> matchPath(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::unordered_set<Id>& _sourceEids, const std::vector<Id>& _targetVids)
+    std::vector<TargetVidToSource> matchPath(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::vector<Id>& _sourceEidsPath, const std::vector<Id>& _targetVidsPath)
     {
-        std::vector<TargetVidToSource> matches(_targetVids.size());
-        const cinolib::Octree sourceOctree{ pathOctree(_source, _sourceEids) };
-        const auto func{ [&_target, &sourceOctree, &matches, &_targetVids](Id _targetPathVid) {
-            const Id targetVid{ _targetVids[toI(_targetPathVid)] };
+        std::vector<TargetVidToSource> matches(_targetVidsPath.size());
+        const cinolib::Octree sourceOctree{ pathOctree(_source, _sourceEidsPath) };
+        const auto func{ [&_target, &sourceOctree, &matches, &_targetVidsPath](Id _targetPathVid) {
+            const Id targetVid{ _targetVidsPath[toI(_targetPathVid)] };
             const Vec& targetVert{ _target.vert(targetVid) };
             Vec sourcePos;
             Id sourceEid;
@@ -68,7 +68,7 @@ namespace HMP::Meshing::Match
                 .sourceId = sourceEid
             };
         } };
-        cinolib::PARALLEL_FOR(0, toId(_targetVids.size()), c_minQueriesForParallelFor, func);
+        cinolib::PARALLEL_FOR(0, toId(_targetVidsPath.size()), c_minQueriesForParallelFor, func);
         return matches;
     }
 
@@ -86,10 +86,10 @@ namespace HMP::Meshing::Match
         return invMatches;
     }
 
-    std::unordered_map<Id, std::vector<SourceToTargetVid>> invertPathMatches(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::unordered_set<Id>& _sourceEids, const std::vector<Id>& _targetVids, const std::vector<TargetVidToSource>& _matches)
+    std::unordered_map<Id, std::vector<SourceToTargetVid>> invertPathMatches(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::vector<Id>& _sourceEidsPath, const std::vector<Id>& _targetVidsPath, const std::vector<TargetVidToSource>& _matches)
     {
         std::unordered_map<Id, std::vector<SourceToTargetVid>> invMatches;
-        invMatches.reserve(_sourceEids.size());
+        invMatches.reserve(_sourceEidsPath.size());
         for (Id targetVid{}; targetVid < _target.num_verts(); targetVid++)
         {
             const TargetVidToSource& match{ _matches[toI(targetVid)] };
@@ -106,9 +106,9 @@ namespace HMP::Meshing::Match
         return invertSurfaceMatches(_source, _target, matchSurface(_source, _target));
     }
 
-    std::unordered_map<Id, std::vector<SourceToTargetVid>> matchPathEid(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::unordered_set<Id>& _sourceEids, const std::vector<Id>& _targetVids)
+    std::unordered_map<Id, std::vector<SourceToTargetVid>> matchPathEid(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::vector<Id>& _sourceEidsPath, const std::vector<Id>& _targetVidsPath)
     {
-        return invertPathMatches(_source, _target, _sourceEids, _targetVids, matchPath(_source, _target, _sourceEids, _targetVids));
+        return invertPathMatches(_source, _target, _sourceEidsPath, _targetVidsPath, matchPath(_source, _target, _sourceEidsPath, _targetVidsPath));
     }
 
 }

@@ -1,11 +1,11 @@
-#include <HMP/Meshing/fill.hpp>
+#include <HMP/Projection/fill.hpp>
 
 #include <algorithm>
 #include <limits>
 #include <updatable_priority_queue.h>
 #include <cpputils/collections/zip.hpp>
 
-namespace HMP::Meshing
+namespace HMP::Projection
 {
 
     better_priority_queue::updatable_priority_queue<I, I> createQueue(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts)
@@ -23,79 +23,75 @@ namespace HMP::Meshing
                         count++;
                     }
                 }
-                queue.push(vi, std::numeric_limits<I>::max() - count);
+                queue.push(vi, count);
             }
         }
         return queue;
     }
 
-    better_priority_queue::updatable_priority_queue<I, I> createQueue(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, std::unordered_set<Id> _vids)
+    better_priority_queue::updatable_priority_queue<I, I> createQueue(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, std::vector<Id> _vidsPath)
     {
         better_priority_queue::updatable_priority_queue<I, I> queue{};
-        for (const Id vid : _vids)
+        for (I i{}; i < _vidsPath.size(); i++)
         {
+            const Id vid{ _vidsPath[i] };
             if (!_newVerts[toI(vid)])
             {
                 I count{};
-                for (const Id adjVid : _mesh.adj_v2v(vid))
+                for (const Id adjVid : Utils::vidsPathAdjVids(_vidsPath, i))
                 {
-                    if (_newVerts[toI(adjVid)] && _vids.contains(adjVid))
+                    if (_newVerts[toI(adjVid)])
                     {
                         count++;
                     }
                 }
-                queue.push(toI(vid), std::numeric_limits<I>::max() - count);
+                queue.push(toI(vid), count);
             }
         }
         return queue;
     }
 
-    std::vector<Vec> fill(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Projection::Tweak& _distWeightTweak, const std::optional<std::unordered_set<Id>>& _vids, const std::optional<std::unordered_set<Id>>& _eids)
+    std::vector<Vec> fill(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Utils::Tweak& _distWeightTweak, const std::optional<std::vector<Id>>& _vidsPath)
     {
-        better_priority_queue::updatable_priority_queue<I, I> skippedVisQueue{ _vids
-            ? createQueue(_mesh, _newVerts, *_vids)
+        std::vector<Vec> out;
+        fill(_mesh, _newVerts, _distWeightTweak, out, _vidsPath);
+        return out;
+    }
+
+    void fill(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Utils::Tweak& _distWeightTweak, std::vector<Vec>& _out, const std::optional<std::vector<Id>>& _vidsPath)
+    {
+        better_priority_queue::updatable_priority_queue<I, I> skippedVisQueue{ _vidsPath
+            ? createQueue(_mesh, _newVerts, *_vidsPath)
             : createQueue(_mesh, _newVerts)
         };
         std::vector<std::optional<Vec>> newVerts{ _newVerts };
         std::vector<Real> distances;
         distances.reserve(4);
-
+        std::unordered_map<Id, I> vid2vidsI;
+        if (_vidsPath)
+        {
+            const std::vector<Id>& vidsPath{ *_vidsPath };
+            vid2vidsI.reserve(vidsPath.size());
+            for (I i{}; i < vidsPath.size(); i++)
+            {
+                vid2vidsI.emplace(vidsPath[i], i);
+            }
+        }
         while (!skippedVisQueue.empty())
         {
             const I vi{ skippedVisQueue.pop_value(false).key };
             const Id vid{ toId(vi) };
             const Vec vert{ _mesh.vert(vid) };
-            std::vector<Id> adjVids{ _mesh.adj_v2v(vid) };
-            if (_vids)
-            {
-                const std::unordered_set<Id>& vids{ *_vids };
-                adjVids.erase(
-                    std::remove_if(
-                        adjVids.begin(),
-                        adjVids.end(),
-                        [&vids](const Id _adjVid) { return !vids.contains(_adjVid); }
-                    ),
-                    adjVids.end()
-                );
-            }
-            if (_eids)
-            {
-                const std::unordered_set<Id>& eids{ *_eids };
-                adjVids.erase(
-                    std::remove_if(
-                        adjVids.begin(),
-                        adjVids.end(),
-                        [&eids, vid, &_mesh](const Id _adjVid) { return !eids.contains(_mesh.edge_id(_adjVid, vid)); }
-                    ),
-                    adjVids.end()
-                );
-            }
+            const std::vector<Id> adjVids{ _vidsPath
+                ? Utils::vidsPathAdjVids(*_vidsPath, vid2vidsI.at(vid))
+                : _mesh.adj_v2v(vid)
+            };
             distances.clear();
             for (const Id adjVid : adjVids)
             {
                 distances.push_back(vert.dist(_mesh.vert(adjVid)));
             }
-            Projection::invertAndNormalizeDistances(distances);
+            Utils::invertAndNormalizeDistances(distances);
             Real minOldDist{ std::numeric_limits<Real>::infinity() };
             Vec adjVertSum{};
             Real weightSum{};
@@ -131,11 +127,11 @@ namespace HMP::Meshing
                 }
             }
         }
-
-        std::vector<Vec> newActualVerts{};
-        newActualVerts.reserve(newVerts.size());
-        std::transform(newVerts.begin(), newVerts.end(), std::back_inserter(newActualVerts), [](const std::optional<Vec>& _vec) { return *_vec; });
-        return newActualVerts;
+        _out.resize(newVerts.size());
+        for (const auto& [in, out] : cpputils::collections::zip(newVerts, _out))
+        {
+            out = *in;
+        }
     }
 
 }

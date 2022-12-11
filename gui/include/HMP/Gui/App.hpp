@@ -92,8 +92,8 @@ namespace HMP::Gui
 		static constexpr cinolib::KeyBinding c_kbSelectPoly{ GLFW_KEY_4 };
 		static constexpr cinolib::KeyBinding c_kbDeselectAll{ GLFW_KEY_A, GLFW_MOD_CONTROL };
 		static constexpr cinolib::KeyBinding c_kbSelectAll{ GLFW_KEY_A, GLFW_MOD_SHIFT };
-		static constexpr cinolib::KeyBinding c_kbAddCreaseEdge{ GLFW_KEY_I, GLFW_MOD_SHIFT };
-		static constexpr cinolib::KeyBinding c_kbRemoveCreaseEdge{ GLFW_KEY_I, GLFW_MOD_CONTROL };
+		static constexpr cinolib::KeyBinding c_kbAddPathEdge{ GLFW_KEY_I, GLFW_MOD_SHIFT };
+		static constexpr cinolib::KeyBinding c_kbRemovePathEdge{ GLFW_KEY_I, GLFW_MOD_CONTROL };
 		static constexpr int c_kmodSelectAdd{ GLFW_MOD_SHIFT };
 		static constexpr int c_kmodSelectRemove{ GLFW_MOD_CONTROL };
 		static constexpr int c_kbDirectEditX{ GLFW_KEY_LEFT_CONTROL };
@@ -192,7 +192,7 @@ namespace HMP::Gui
 
 		// user operation
 		std::string getDebugInfo() const;
-		void onSetCreaseEdge(bool _add);
+		void onSetPathEdge(bool _add);
 		void onPrintDebugInfo() const;
 		void onExtrude();
 		void onExtrudeAndSelect();
@@ -209,7 +209,7 @@ namespace HMP::Gui
 		void onLoadState();
 		void onLoadTargetMesh();
 		void onToggleTargetVisibility();
-		void onProjectToTarget(const std::vector<Meshing::Projection::Point>& _pointFeats, const std::vector<Meshing::Projection::Path>& _pathFeats, const Meshing::Projection::Options& _options);
+		void onProjectToTarget(const std::vector<Projection::Utils::Point>& _pointFeats, const std::vector<Projection::Utils::EidsPath>& _pathFeats, const Projection::Options& _options);
 		void onApplyTargetTransform(const Mat4& _transform);
 		void onUndo();
 		void onRedo();

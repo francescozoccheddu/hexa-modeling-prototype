@@ -4,7 +4,7 @@
 #include <HMP/Dag/NodeHandle.hpp>
 #include <HMP/Dag/Element.hpp>
 #include <cinolib/meshes/polygonmesh.h>
-#include <HMP/Meshing/Projection.hpp>
+#include <HMP/Projection/project.hpp>
 #include <vector>
 
 namespace HMP::Actions
@@ -29,21 +29,21 @@ namespace HMP::Actions
 		const TargetMesh m_target;
 		bool m_prepared;
 		std::vector<VertMove> m_vertMoves;
-		const std::vector<Meshing::Projection::Point> m_pointFeats;
-		const std::vector<Meshing::Projection::Path> m_pathFeats;
-		const Meshing::Projection::Options m_options;
+		const std::vector<Projection::Utils::Point> m_pointFeats;
+		const std::vector<Projection::Utils::EidsPath> m_pathFeats;
+		const Projection::Options m_options;
 
 		void apply() override;
 		void unapply() override;
 
 	public:
 
-		Project(TargetMesh&& _target, const std::vector<Meshing::Projection::Point>& _pointFeats, const std::vector<Meshing::Projection::Path>& _pathFeats, const Meshing::Projection::Options& _options);
-		Project(const TargetMesh& _target, const std::vector<Meshing::Projection::Point>& _pointFeats, const std::vector<Meshing::Projection::Path>& _pathFeats, const Meshing::Projection::Options& _options);
+		Project(TargetMesh&& _target, const std::vector<Projection::Utils::Point>& _pointFeats, const std::vector<Projection::Utils::EidsPath>& _pathFeats, const Projection::Options& _options);
+		Project(const TargetMesh& _target, const std::vector<Projection::Utils::Point>& _pointFeats, const std::vector<Projection::Utils::EidsPath>& _pathFeats, const Projection::Options& _options);
 
 		const TargetMesh& target() const;
 
-		const Meshing::Projection::Options options() const;
+		const Projection::Options options() const;
 
 	};
 

@@ -1,10 +1,13 @@
-#include <HMP/Meshing/defensiveAdvance.hpp>
+#include <HMP/Projection/defensiveAdvance.hpp>
 
 #include <algorithm>
 #include <limits>
+#include <cinolib/parallel_for.h>
 
-namespace HMP::Meshing
+namespace HMP::Projection
 {
+
+    static constexpr unsigned int c_minVertsForParallelFor{ 1024 };
 
     std::vector<Vec> defensiveAdvance(const std::vector<Vec>& _from, const std::vector<Vec>& _to, const double _percentile)
     {
@@ -19,10 +22,11 @@ namespace HMP::Meshing
         Real maxLength{};
         {
             std::vector<Real> lengths(_from.size());
-            for (I i{}; i < _from.size(); i++)
-            {
-                lengths.push_back((_to[i] - _from[i]).norm());
-            }
+            const auto func{ [&lengths, &_to, &_from](const Id _id) {
+                const I i{ toI(_id) };
+                lengths[i] = (_to[i] - _from[i]).norm();
+            } };
+            cinolib::PARALLEL_FOR(0, toId(_from.size()), c_minVertsForParallelFor, func);
             std::sort(lengths.begin(), lengths.end());
             I medianI{ static_cast<I>(std::round(static_cast<double>(lengths.size() - 1) * _percentile)) };
             if (medianI <= lengths.size())
@@ -34,12 +38,13 @@ namespace HMP::Meshing
                 maxLength = std::numeric_limits<Real>::infinity();
             }
         }
-        for (I i{}; i < _from.size(); i++)
-        {
+        const auto func{ [maxLength, &_to, &_from, &_out](const Id _id) {
+            const I i{ toI(_id) };
             const Vec offset{ _to[i] - _from[i] };
             const Vec clampedOffset{ offset.norm() <= maxLength ? offset : (offset.normalized() * maxLength) };
             _out[i] = _from[i] + clampedOffset;
-        }
+        } };
+        cinolib::PARALLEL_FOR(0, toId(_from.size()), c_minVertsForParallelFor, func);
     }
 
 }

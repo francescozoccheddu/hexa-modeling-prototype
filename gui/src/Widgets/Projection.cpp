@@ -9,25 +9,26 @@
 #include <algorithm>
 #include <set>
 #include <cinolib/feature_mapping.h>
+#include <HMP/Projection/Utils.hpp>
 
 namespace HMP::Gui::Widgets
 {
 
 	Projection::Projection(Widgets::Target& _targetWidget, HMP::Commander& _commander, Meshing::Mesher& _mesher, VertEdit& _vertEditWidget):
 		cinolib::SideBarItem{ "Projection" }, m_targetWidget{ _targetWidget }, m_commander{ _commander }, m_mesher{ _mesher }, m_vertEditWidget{ _vertEditWidget },
-		onProjectRequest{}, m_options{}, m_creases(1)
+		onProjectRequest{}, m_options{}, m_paths(1)
 	{
 		m_targetWidget.onMeshChanged += [this]() {
-			clearTargetCreases(0, m_creases.size());
+			clearTargetPaths(0, m_paths.size());
 		};
 		m_mesher.onElementAdd += [this](const Dag::Element& _element) {
-			for (I i{}; i < m_creases.size(); i++)
+			for (I i{}; i < m_paths.size(); i++)
 			{
-				for (const Id eid : m_creases[i].sourceEids)
+				for (const Id eid : m_paths[i].sourceEids)
 				{
 					if (!m_mesher.mesh().edge_is_on_srf(eid))
 					{
-						clearSourceCreases(i, i + 1);
+						clearSourcePaths(i, i + 1);
 						break;
 					}
 				}
@@ -38,9 +39,9 @@ namespace HMP::Gui::Widgets
 			for (const Id removedEid : _removedIds.eids)
 			{
 				lastEid--;
-				for (I i{}; i < m_creases.size(); i++)
+				for (I i{}; i < m_paths.size(); i++)
 				{
-					for (Id& eid : m_creases[i].sourceEids)
+					for (Id& eid : m_paths[i].sourceEids)
 					{
 						if (eid == lastEid)
 						{
@@ -48,7 +49,7 @@ namespace HMP::Gui::Widgets
 						}
 						else if (eid == removedEid)
 						{
-							clearSourceCreases(i, i + 1);
+							clearSourcePaths(i, i + 1);
 							break;
 						}
 					}
@@ -56,11 +57,11 @@ namespace HMP::Gui::Widgets
 			}
 		};
 		m_mesher.onClear += [this]() {
-			clearSourceCreases(0, m_creases.size());
+			clearSourcePaths(0, m_paths.size());
 		};
 	}
 
-	const Meshing::Projection::Options& Projection::options() const
+	const HMP::Projection::Options& Projection::options() const
 	{
 		return m_options;
 	}
@@ -71,17 +72,21 @@ namespace HMP::Gui::Widgets
 		{
 			throw std::logic_error{ "no target mesh" };
 		}
-		std::vector<Meshing::Projection::Point> points;
-		points.reserve(m_creases.size() * 2);
-		std::vector<Meshing::Projection::Path> paths;
-		paths.reserve(m_creases.size());
-		for (const Meshing::Projection::Path& path : m_creases)
+		std::vector<HMP::Projection::Utils::Point> points;
+		points.reserve(m_paths.size() * 2);
+		std::vector<HMP::Projection::Utils::EidsPath> paths;
+		paths.reserve(m_paths.size());
+		for (const HMP::Projection::Utils::EidsPath& path : m_paths)
 		{
 			if (path.sourceEids.empty() || path.targetEids.empty())
 			{
 				continue;
 			}
 			paths.push_back(path);
+			for (const HMP::Projection::Utils::Point& point : HMP::Projection::Utils::endPoints(path, m_mesher.mesh(), m_targetWidget.meshForDisplay()))
+			{
+				points.push_back(point);
+			}
 		}
 		onProjectRequest(points, paths, m_options);
 	}
@@ -105,50 +110,22 @@ namespace HMP::Gui::Widgets
 		requestProjection();
 	}
 
-	void Projection::matchCreases(I _first, I _lastEx, bool _fromSource)
+	void Projection::matchPaths(I _first, I _lastEx, bool _fromSource)
 	{
-		if (_fromSource)
-		{
-			clearTargetCreases(_first, _lastEx);
-		}
-		else
-		{
-			clearSourceCreases(_first, _lastEx);
-		}
+		cinolib::Polygonmesh<> target{ m_targetWidget.meshForProjection() };
+		const Meshing::Mesher::Mesh& source{ m_mesher.mesh() };
+		clearPaths(_first, _lastEx, !_fromSource);
 		std::vector<std::vector<Id>> from, to;
 		from.reserve(_lastEx - _first);
 		for (I i{ _first }; i < _lastEx; i++)
 		{
-			const Meshing::Projection::Path& creasePair{ m_creases[i] };
-			const std::vector<Id>& crease{ _fromSource ? creasePair.sourceEids : creasePair.targetEids };
-			if (crease.empty())
-			{
-				continue;
-			}
-			from.push_back({});
-			std::vector<Id>& vids{ from.back() };
-			vids.reserve(crease.size() + 1);
-			if (crease.size() == 1)
-			{
-				const std::array<Id, 2> edgeVids{ getEdgeVids(crease[0], _fromSource) };
-				vids.push_back(edgeVids[0]);
-				vids.push_back(edgeVids[1]);
-			}
-			else if (crease.size() > 1)
-			{
-				const std::array<Id, 3> edgeVids{ getEdgeVids(crease[0], crease[1], _fromSource) };
-				vids.push_back(edgeVids[0]);
-				vids.push_back(edgeVids[1]);
-				for (I ei{}; ei + 1 < crease.size(); ei++)
-				{
-					vids.push_back(getEdgeVids(crease[ei], crease[ei + 1], _fromSource)[2]);
-				}
-			}
+			from[i] = _fromSource
+				? HMP::Projection::Utils::eidsToVidsPath(source, m_paths[i].sourceEids)
+				: HMP::Projection::Utils::eidsToVidsPath(target, m_paths[i].targetEids);
 		}
 		std::unordered_map<Id, Id> surf2vol, vol2surf;
 		cinolib::Polygonmesh<> sourceSurf{};
-		cinolib::export_surface(m_mesher.mesh(), sourceSurf, vol2surf, surf2vol);
-		cinolib::Polygonmesh<> target{ m_targetWidget.meshForProjection() };
+		cinolib::export_surface(source, sourceSurf, vol2surf, surf2vol);
 		if (_fromSource)
 		{
 			for (auto& vids : from)
@@ -171,88 +148,54 @@ namespace HMP::Gui::Widgets
 				}
 			}
 		}
-		I toI{};
 		for (I i{ _first }; i < _lastEx; i++)
 		{
-			Meshing::Projection::Path& creasePair{ m_creases[i] };
-			const std::vector<Id>& fromCrease{ _fromSource ? creasePair.sourceEids : creasePair.targetEids };
-			std::vector<Id>& toCrease{ _fromSource ? creasePair.targetEids : creasePair.sourceEids };
-			if (fromCrease.empty())
+			if (_fromSource)
 			{
-				continue;
+				m_paths[i].sourceEids = HMP::Projection::Utils::vidsToEidsPath(target, to[i]);
 			}
-			const std::vector<Id>& vids{ to[i] };
-			for (I vi{}; vi + 1 < vids.size(); vi++)
+			else
 			{
-				if (_fromSource)
-				{
-					toCrease.push_back(m_targetWidget.meshForDisplay().edge_id(vids[vi], vids[vi + 1]));
-				}
-				else
-				{
-					toCrease.push_back(m_mesher.mesh().edge_id(vids[vi], vids[vi + 1]));
-				}
+				m_paths[i].targetEids = HMP::Projection::Utils::vidsToEidsPath(source, to[i]);
 			}
-			if (m_showCreases && (m_showAllCreases || m_currentCrease == i))
+			if (m_showPaths && (m_showAllPaths || m_currentPath == i))
 			{
-				if (_fromSource)
-				{
-					updateTargetMeshEdges(i, i + 1, true);
-				}
-				else
-				{
-					updateSourceMeshEdges(i, i + 1, true);
-				}
+				updateMeshEdges(i, i + 1, true, !_fromSource);
 			}
-			toI++;
 		}
 	}
 
-	std::array<Id, 2> Projection::getEdgeVids(Id _eid, bool _source)
+	void Projection::clearPaths(I _first, I _lastEx, bool _source)
 	{
 		if (_source)
 		{
-			const auto& mesh{ m_mesher.mesh() };
-			return { mesh.edge_vert_id(_eid, 0), mesh.edge_vert_id(_eid, 1) };
+			clearSourcePaths(_first, _lastEx);
 		}
 		else
 		{
-			const auto& mesh{ m_targetWidget.meshForDisplay() };
-			return { mesh.edge_vert_id(_eid, 0), mesh.edge_vert_id(_eid, 1) };
+			clearTargetPaths(_first, _lastEx);
 		}
-	}
-	std::array<Id, 3> Projection::getEdgeVids(Id _eid0, Id _eid1, bool _source)
-	{
-		std::array<Id, 3> eids;
-		const std::array<Id, 2> vids0{ getEdgeVids(_eid0, _source) }, vids1{ getEdgeVids(_eid1, _source) };
-		if (vids0[0] == vids1[0])
-		{
-			return { vids0[1], vids0[0], vids1[1] };
-		}
-		if (vids0[0] == vids1[1])
-		{
-			return { vids0[1], vids0[0], vids1[0] };
-		}
-		if (vids0[1] == vids1[0])
-		{
-			return { vids0[0], vids0[1], vids1[1] };
-		}
-		return { vids0[0], vids0[1], vids1[0] };
 	}
 
-	void Projection::findCreases(bool _inSource)
+	void Projection::clearBothPaths(I _first, I _lastEx)
+	{
+		clearSourcePaths(_first, _lastEx);
+		clearTargetPaths(_first, _lastEx);
+	}
+
+	void Projection::findPaths(bool _inSource)
 	{
 		std::vector<std::vector<Id>> network{};
 		if (_inSource)
 		{
-			clearSourceCreases(0, m_creases.size());
+			clearSourcePaths(0, m_paths.size());
 			cinolib::Polygonmesh<> surface{};
 			cinolib::export_surface(m_mesher.mesh(), surface);
 			cinolib::feature_network(surface, network, m_featureFinderOptions);
 		}
 		else
 		{
-			clearTargetCreases(0, m_creases.size());
+			clearTargetPaths(0, m_paths.size());
 			cinolib::feature_network(m_targetWidget.meshForDisplay(), network, m_featureFinderOptions);
 		}
 		std::cout << network.size() << std::endl;
@@ -260,7 +203,19 @@ namespace HMP::Gui::Widgets
 		// TODO Clear
 	}
 
-	void Projection::updateMeshEdges(I _first, I _lastEx, bool _show)
+	void Projection::updateMeshEdges(I _first, I _lastEx, bool _show, bool _source)
+	{
+		if (_source)
+		{
+			updateSourceMeshEdges(_first, _lastEx, _show);
+		}
+		else
+		{
+			updateTargetMeshEdges(_first, _lastEx, _show);
+		}
+	}
+
+	void Projection::updateBothMeshEdges(I _first, I _lastEx, bool _show)
 	{
 		updateSourceMeshEdges(_first, _lastEx, _show);
 		updateTargetMeshEdges(_first, _lastEx, _show);
@@ -271,10 +226,10 @@ namespace HMP::Gui::Widgets
 		for (I i{ _first }; i < _lastEx; i++)
 		{
 			const cinolib::Color& color{ _show
-				? cinolib::Color::hsv2rgb(static_cast<float>(i) / static_cast<float>(m_creases.size()), 1.0f, 1.0f)
+				? cinolib::Color::hsv2rgb(static_cast<float>(i) / static_cast<float>(m_paths.size()), 1.0f, 1.0f)
 				: m_mesher.edgeColor()
 			};
-			for (const Id eid : m_creases[i].sourceEids)
+			for (const Id eid : m_paths[i].sourceEids)
 			{
 				m_mesher.paintEdge(eid, color);
 			}
@@ -286,82 +241,82 @@ namespace HMP::Gui::Widgets
 		for (I i{ _first }; i < _lastEx; i++)
 		{
 			const cinolib::Color& color{ _show
-				? cinolib::Color::hsv2rgb(static_cast<float>(i) / static_cast<float>(m_creases.size()), 1.0f, 1.0f)
+				? cinolib::Color::hsv2rgb(static_cast<float>(i) / static_cast<float>(m_paths.size()), 1.0f, 1.0f)
 				: m_targetWidget.edgeColor()
 			};
-			for (const Id eid : m_creases[i].targetEids)
+			for (const Id eid : m_paths[i].targetEids)
 			{
 				m_targetWidget.paintEdge(eid, color);
 			}
 		}
 	}
 
-	void Projection::clearSourceCreases(I _first, I _lastEx)
+	void Projection::clearSourcePaths(I _first, I _lastEx)
 	{
 		updateSourceMeshEdges(_first, _lastEx, false);
 		for (I i{ _first }; i < _lastEx; i++)
 		{
-			m_creases[i].sourceEids.clear();
+			m_paths[i].sourceEids.clear();
 		}
 	}
 
-	void Projection::clearTargetCreases(I _first, I _lastEx)
+	void Projection::clearTargetPaths(I _first, I _lastEx)
 	{
 		updateTargetMeshEdges(_first, _lastEx, false);
 		for (I i{ _first }; i < _lastEx; i++)
 		{
-			m_creases[i].targetEids.clear();
+			m_paths[i].targetEids.clear();
 		}
 	}
 
-	void Projection::setSourceCreaseEdgeAtPoint(const Vec& _point, bool _add)
+	void Projection::setSourcePathEdgeAtPoint(const Vec& _point, bool _add)
 	{
-		setCreaseEdgeAtPoint(_point, _add, m_mesher.mesh(), true);
+		setPathEdgeAtPoint(_point, _add, m_mesher.mesh(), true);
 	}
 
-	void Projection::setTargetCreaseEdgeAtPoint(const Vec& _point, bool _add)
+	void Projection::setTargetPathEdgeAtPoint(const Vec& _point, bool _add)
 	{
-		setCreaseEdgeAtPoint(m_targetWidget.meshForDisplay().transform.inverse() * _point, _add, m_targetWidget.meshForDisplay(), false);
+		setPathEdgeAtPoint(m_targetWidget.meshForDisplay().transform.inverse() * _point, _add, m_targetWidget.meshForDisplay(), false);
 	}
 
-	void Projection::clearCreases()
+	void Projection::clearBothPaths()
 	{
-		m_currentCrease = 0;
-		updateMeshEdges(0, m_creases.size(), false);
-		m_creases.clear();
+		m_currentPath = 0;
+		updateBothMeshEdges(0, m_paths.size(), false);
+		m_paths.clear();
 	}
 
-	void Projection::addCrease()
+	void Projection::addPath()
 	{
-		m_creases.push_back({});
-		if (m_showCreases)
+		m_paths.push_back({});
+		if (m_showPaths)
 		{
-			if (m_showAllCreases)
+			if (m_showAllPaths)
 			{
-				updateMeshEdges(0, m_creases.size(), m_showCreases);
+				updateBothMeshEdges(0, m_paths.size(), m_showPaths);
 			}
-			else if (!m_creases.empty())
+			else if (!m_paths.empty())
 			{
-				updateMeshEdges(m_currentCrease, m_currentCrease + 1, m_showCreases);
+				updateBothMeshEdges(m_currentPath, m_currentPath + 1, m_showPaths);
 			}
 		}
 	}
 
-	void Projection::removeCrease(I _index)
+	void Projection::removePath(I _index)
 	{
-		updateMeshEdges(_index, _index + 1, false);
-		std::swap(m_creases[_index], m_creases[m_creases.size() - 1]);
-		m_creases.pop_back();
-		if (_index == m_currentCrease)
+		updateBothMeshEdges(_index, _index + 1, false);
+		std::swap(m_paths[_index], m_paths[m_paths.size() - 1]);
+		m_paths.pop_back();
+		if (_index == m_currentPath)
 		{
-			m_currentCrease = 0;
+			m_currentPath = 0;
 		}
-		updateMeshEdges(0, m_creases.size(), false);
+		updateBothMeshEdges(0, m_paths.size(), false);
 	}
 
 	void Projection::draw()
 	{
-		static constexpr auto tweak{ [](Meshing::Projection::Tweak& _tweak, const char* _header) {
+		static constexpr auto tweak{ [](HMP::Projection::Utils::Tweak& _tweak, const char* _header) {
 			ImGui::PushID(&_tweak);
 			ImGui::Text("%s", _header);
 			float min{static_cast<float>(_tweak.min())};
@@ -380,15 +335,15 @@ namespace HMP::Gui::Widgets
 		}
 		ImGui::Spacing();
 		{
-			int invertMode{ static_cast<int>(m_options.invertMode) };
-			if (ImGui::Combo("Invert mode", &invertMode, "Distance\0BarycentricCoords\0"))
+			int baseWeightMode{ static_cast<int>(m_options.baseWeightMode) };
+			if (ImGui::Combo("Invert mode", &baseWeightMode, "Distance\0BarycentricCoords\0"))
 			{
-				m_options.invertMode = static_cast<Meshing::Projection::EInvertMode>(invertMode);
+				m_options.baseWeightMode = static_cast<HMP::Projection::EBaseWeightMode>(baseWeightMode);
 			}
 			int displaceMode{ static_cast<int>(m_options.displaceMode) };
 			if (ImGui::Combo("Displace mode", &displaceMode, "NormDirAvgAndDirNormAvg\0NormDirAvgAndDirAvg\0DirAvg\0VertAvg\0"))
 			{
-				m_options.displaceMode = static_cast<Meshing::Projection::EDisplaceMode>(displaceMode);
+				m_options.displaceMode = static_cast<HMP::Projection::EDisplaceMode>(displaceMode);
 			}
 		}
 		ImGui::Spacing();
@@ -421,21 +376,21 @@ namespace HMP::Gui::Widgets
 		ImGui::SameLine();
 		ImGui::Checkbox("Internal", &m_options.smoothInternal);
 		ImGui::Spacing();
-		ImGui::SetNextItemOpen(m_showCreases, ImGuiCond_Always);
-		bool wasShowingCreases{ m_showCreases };
-		m_showCreases = ImGui::TreeNode("Creases");
-		if (wasShowingCreases != m_showCreases)
+		ImGui::SetNextItemOpen(m_showPaths, ImGuiCond_Always);
+		bool wasShowingPaths{ m_showPaths };
+		m_showPaths = ImGui::TreeNode("Paths");
+		if (wasShowingPaths != m_showPaths)
 		{
-			if (m_showAllCreases)
+			if (m_showAllPaths)
 			{
-				updateMeshEdges(0, m_creases.size(), m_showCreases);
+				updateBothMeshEdges(0, m_paths.size(), m_showPaths);
 			}
-			else if (!m_creases.empty())
+			else if (!m_paths.empty())
 			{
-				updateMeshEdges(m_currentCrease, m_currentCrease + 1, m_showCreases);
+				updateBothMeshEdges(m_currentPath, m_currentPath + 1, m_showPaths);
 			}
 		}
-		if (m_showCreases)
+		if (m_showPaths)
 		{
 			if (ImGui::TreeNode("Auto finder"))
 			{
@@ -443,75 +398,75 @@ namespace HMP::Gui::Widgets
 				ImGui::Checkbox("Split", &m_featureFinderOptions.split_lines_at_high_curvature_points);
 				if (ImGui::Button("Find in source"))
 				{
-					findCreases(true);
+					findPaths(true);
 				}
 				if (m_targetWidget.hasMesh())
 				{
 					ImGui::SameLine();
 					if (ImGui::Button("Find in target"))
 					{
-						findCreases(false);
+						findPaths(false);
 					}
 				}
 				ImGui::TreePop();
 			}
 			ImGui::Spacing();
-			if (m_creases.empty())
+			if (m_paths.empty())
 			{
-				ImGui::TextDisabled("No creases");
+				ImGui::TextDisabled("No paths");
 			}
 			else
 			{
-				if (ImGui::Checkbox("Show all", &m_showAllCreases))
+				if (ImGui::Checkbox("Show all", &m_showAllPaths))
 				{
-					if (m_showCreases)
+					if (m_showPaths)
 					{
-						if (m_showAllCreases)
+						if (m_showAllPaths)
 						{
-							updateMeshEdges(0, m_creases.size(), true);
+							updateBothMeshEdges(0, m_paths.size(), true);
 						}
-						else if (!m_creases.empty())
+						else if (!m_paths.empty())
 						{
-							updateMeshEdges(0, m_creases.size(), false);
-							updateMeshEdges(m_currentCrease, m_currentCrease + 1, true);
+							updateBothMeshEdges(0, m_paths.size(), false);
+							updateBothMeshEdges(m_currentPath, m_currentPath + 1, true);
 						}
 					}
 				}
 				ImGui::Spacing();
 				ImGui::Separator();
 				ImGui::Spacing();
-				for (I i{}; i < m_creases.size(); i++)
+				for (I i{}; i < m_paths.size(); i++)
 				{
 					ImGui::PushID(static_cast<int>(i));
-					if (!m_showAllCreases)
+					if (!m_showAllPaths)
 					{
-						int currentCrease = static_cast<int>(m_currentCrease);
-						if (ImGui::RadioButton("", &currentCrease, static_cast<int>(i)))
+						int currentPath = static_cast<int>(m_currentPath);
+						if (ImGui::RadioButton("", &currentPath, static_cast<int>(i)))
 						{
-							updateMeshEdges(m_currentCrease, m_currentCrease + 1, false);
-							m_currentCrease = static_cast<I>(currentCrease);
-							updateMeshEdges(m_currentCrease, m_currentCrease + 1, true);
+							updateBothMeshEdges(m_currentPath, m_currentPath + 1, false);
+							m_currentPath = static_cast<I>(currentPath);
+							updateBothMeshEdges(m_currentPath, m_currentPath + 1, true);
 						}
 						ImGui::SameLine();
 					}
 					ImVec4 color;
-					ImGui::ColorConvertHSVtoRGB(static_cast<float>(i) / static_cast<float>(m_creases.size()), 1.0f, 1.0f, color.x, color.y, color.z);
+					ImGui::ColorConvertHSVtoRGB(static_cast<float>(i) / static_cast<float>(m_paths.size()), 1.0f, 1.0f, color.x, color.y, color.z);
 					color.w = 1.0f;
 					ImGui::ColorButton("##color", color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoTooltip);
 					ImGui::SameLine();
 					if (ImGui::Button("Remove"))
 					{
-						removeCrease(i);
+						removePath(i);
 					}
 					ImGui::SameLine();
-					const bool sourceEmpty = m_creases[i].sourceEids.empty();
+					const bool sourceEmpty = m_paths[i].sourceEids.empty();
 					if (sourceEmpty)
 					{
 						ImGui::BeginDisabled();
 					}
 					if (ImGui::SmallButton("Clear source"))
 					{
-						clearSourceCreases(i, i + 1);
+						clearSourcePaths(i, i + 1);
 					}
 					if (sourceEmpty)
 					{
@@ -520,14 +475,14 @@ namespace HMP::Gui::Widgets
 					if (m_targetWidget.hasMesh())
 					{
 						ImGui::SameLine();
-						const bool targetEmpty = m_creases[i].targetEids.empty();
+						const bool targetEmpty = m_paths[i].targetEids.empty();
 						if (targetEmpty)
 						{
 							ImGui::BeginDisabled();
 						}
 						if (ImGui::SmallButton("Clear target"))
 						{
-							clearTargetCreases(i, i + 1);
+							clearTargetPaths(i, i + 1);
 						}
 						if (targetEmpty)
 						{
@@ -537,14 +492,14 @@ namespace HMP::Gui::Widgets
 						if (targetEmpty) ImGui::BeginDisabled();
 						if (ImGui::SmallButton("Match source"))
 						{
-							matchCreases(i, i + 1, false);
+							matchPaths(i, i + 1, false);
 						}
 						if (targetEmpty) ImGui::EndDisabled();
 						ImGui::SameLine();
 						if (sourceEmpty) ImGui::BeginDisabled();
 						if (ImGui::SmallButton("Match target"))
 						{
-							matchCreases(i, i + 1, true);
+							matchPaths(i, i + 1, true);
 						}
 						if (sourceEmpty) ImGui::EndDisabled();
 					}
@@ -557,26 +512,26 @@ namespace HMP::Gui::Widgets
 			ImGui::Spacing();
 			if (ImGui::Button("Add"))
 			{
-				addCrease();
+				addPath();
 			}
-			if (!m_creases.empty())
+			if (!m_paths.empty())
 			{
 				ImGui::SameLine();
 				if (ImGui::Button("Clear"))
 				{
-					clearCreases();
+					clearBothPaths();
 				}
 				if (m_targetWidget.hasMesh())
 				{
 					ImGui::SameLine();
 					if (ImGui::SmallButton("Match all source"))
 					{
-						matchCreases(0, m_creases.size(), false);
+						matchPaths(0, m_paths.size(), false);
 					}
 					ImGui::SameLine();
 					if (ImGui::SmallButton("Match all target"))
 					{
-						matchCreases(0, m_creases.size(), true);
+						matchPaths(0, m_paths.size(), true);
 					}
 				}
 			}

@@ -10,17 +10,17 @@ namespace HMP::Gui::Widgets
 {
 
     template<class M, class V, class E, class P>
-    void Projection::setCreaseEdgeAtPoint(const Vec& _point, bool _add, const cinolib::AbstractMesh<M, V, E, P>& _mesh, bool _source)
+    void Projection::setPathEdgeAtPoint(const Vec& _point, bool _add, const cinolib::AbstractMesh<M, V, E, P>& _mesh, bool _source)
     {
-        if (!m_showCreases || m_showAllCreases || m_creases.empty())
+        if (!m_showPaths || m_showAllPaths || m_paths.empty())
         {
             return;
         }
-        Meshing::Projection::Path& creasePair{ m_creases[m_currentCrease] };
-        std::vector<Id>& crease{ _source ? creasePair.sourceEids : creasePair.targetEids };
-        const bool has1{ crease.size() > 0 }, has2{ crease.size() > 1 }, has3{ crease.size() > 2 };
-        const I lastI{ crease.size() - 1 };
-        const std::vector<Id> endEids{ has1 ? has2 ? std::vector<Id>{crease[0], crease[lastI]} : std::vector<Id>{ crease[0] } : std::vector<Id>{} };
+        HMP::Projection::Utils::EidsPath& pathPair{ m_paths[m_currentPath] };
+        std::vector<Id>& path{ _source ? pathPair.sourceEids : pathPair.targetEids };
+        const bool has1{ path.size() > 0 }, has2{ path.size() > 1 }, has3{ path.size() > 2 };
+        const I lastI{ path.size() - 1 };
+        const std::vector<Id> endEids{ has1 ? has2 ? std::vector<Id>{path[0], path[lastI]} : std::vector<Id>{ path[0] } : std::vector<Id>{} };
         const bool closed{ has3 && _mesh.edges_are_adjacent(endEids[0], endEids[1]) };
         if (_add)
         {
@@ -34,7 +34,7 @@ namespace HMP::Gui::Widgets
             {
                 for (Id eid{}; eid < _mesh.num_edges(); eid++)
                 {
-                    if (has2 && (eid == crease[1] || eid == crease[lastI - 1]))
+                    if (has2 && (eid == path[1] || eid == path[lastI - 1]))
                     {
                         continue;
                     }
@@ -56,7 +56,7 @@ namespace HMP::Gui::Widgets
                 {
                     for (const Id eid : _mesh.adj_e2e(endEid))
                     {
-                        if (has2 && (eid == crease[1] || eid == crease[lastI - 1]))
+                        if (has2 && (eid == path[1] || eid == path[lastI - 1]))
                         {
                             continue;
                         }
@@ -80,7 +80,7 @@ namespace HMP::Gui::Widgets
                 {
                     for (I i{ 1 }; i < lastI; i++)
                     {
-                        const Id eid{ crease[i] };
+                        const Id eid{ path[i] };
                         invalidVids.insert(_mesh.edge_vert_id(eid, 0));
                         invalidVids.insert(_mesh.edge_vert_id(eid, 1));
                     }
@@ -94,15 +94,15 @@ namespace HMP::Gui::Widgets
                     return;
                 }
             }
-            if (!has1 || !_mesh.edges_are_adjacent(crease[0], closestEid))
+            if (!has1 || !_mesh.edges_are_adjacent(path[0], closestEid))
             {
-                crease.push_back(closestEid);
+                path.push_back(closestEid);
             }
             else
             {
-                crease.insert(crease.begin(), closestEid);
+                path.insert(path.begin(), closestEid);
             }
-            const cinolib::Color color{ cinolib::Color::hsv2rgb(static_cast<float>(m_currentCrease) / static_cast<float>(m_creases.size()), 1.0f, 1.0f) };
+            const cinolib::Color color{ cinolib::Color::hsv2rgb(static_cast<float>(m_currentPath) / static_cast<float>(m_paths.size()), 1.0f, 1.0f) };
             if (_source)
             {
                 m_mesher.paintEdge(closestEid, color);
@@ -114,7 +114,7 @@ namespace HMP::Gui::Widgets
         }
         else
         {
-            const std::vector<Id>& candidates{ closed ? crease : endEids };
+            const std::vector<Id>& candidates{ closed ? path : endEids };
             Real closestDist{ std::numeric_limits<Real>::infinity() };
             Id closestEid{ noId };
             for (const Id eid : candidates)
@@ -130,10 +130,10 @@ namespace HMP::Gui::Widgets
             {
                 return;
             }
-            const I i{ static_cast<I>(std::find(crease.begin(), crease.end(), closestEid) - crease.begin()) };
-            const I nextI{ (i + 1) % crease.size() };
-            std::rotate(crease.begin(), crease.begin() + nextI, crease.end());
-            crease.pop_back();
+            const I i{ static_cast<I>(std::find(path.begin(), path.end(), closestEid) - path.begin()) };
+            const I nextI{ (i + 1) % path.size() };
+            std::rotate(path.begin(), path.begin() + nextI, path.end());
+            path.pop_back();
             if (_source)
             {
                 m_mesher.unpaintEdge(closestEid);
