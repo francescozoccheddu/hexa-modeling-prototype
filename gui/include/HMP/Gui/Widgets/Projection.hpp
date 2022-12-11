@@ -3,7 +3,7 @@
 #include <cinolib/gl/side_bar_item.h>
 #include <cpputils/collections/Event.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
-#include <HMP/Meshing/Projection.hpp>
+#include <HMP/Projection/project.hpp>
 #include <HMP/Gui/Widgets/Target.hpp>
 #include <HMP/Gui/Widgets/VertEdit.hpp>
 #include <HMP/Commander.hpp>
@@ -18,51 +18,54 @@ namespace HMP::Gui::Widgets
 
 	private:
 
-		Meshing::Projection::Options m_options;
+		HMP::Projection::Options m_options;
 		Widgets::Target& m_targetWidget;
 		HMP::Commander& m_commander;
 		HMP::Meshing::Mesher& m_mesher;
-		std::vector<Meshing::Projection::Path> m_creases;
+		std::vector<HMP::Projection::Utils::EidsPath> m_paths;
 		VertEdit& m_vertEditWidget;
 		cinolib::FeatureNetworkOptions m_featureFinderOptions;
-		bool m_showCreases{ true }, m_showAllCreases{ false };
-		I m_currentCrease{};
+		bool m_showPaths{ true }, m_showAllPaths{ false };
+		I m_currentPath{};
 
-		void matchCreases(I _first, I _lastEx, bool _fromSource);
+		void matchPaths(I _first, I _lastEx, bool _fromSource);
 
-		void findCreases(bool _inSource);
+		void findPaths(bool _inSource);
 
-		void setSourceCreaseFromSelection(I _crease);
+		void setSourcePathFromSelection(I _path);
 
-		void updateMeshEdges(I _first, I _lastEx, bool _show);
+		void updateMeshEdges(I _first, I _lastEx, bool _show, bool _source);
+
+		void updateBothMeshEdges(I _first, I _lastEx, bool _show);
 
 		void updateSourceMeshEdges(I _first, I _lastEx, bool _show);
 
 		void updateTargetMeshEdges(I _first, I _lastEx, bool _show);
 
-		void clearCreases();
+		void clearBothPaths();
 
-		void addCrease();
+		void addPath();
 
-		void removeCrease(I _index);
+		void removePath(I _index);
 
-		void clearSourceCreases(I _first, I _lastEx);
+		void clearPaths(I _first, I _lastEx, bool _source);
 
-		void clearTargetCreases(I _first, I _lastEx);
+		void clearBothPaths(I _first, I _lastEx);
 
-		std::array<Id, 2> getEdgeVids(Id _eid, bool _source);
-		std::array<Id, 3> getEdgeVids(Id _eid0, Id _eid1, bool _source);
+		void clearSourcePaths(I _first, I _lastEx);
+
+		void clearTargetPaths(I _first, I _lastEx);
 
 		template<class M, class V, class E, class P>
-		void setCreaseEdgeAtPoint(const Vec& _point, bool _add, const cinolib::AbstractMesh<M, V, E, P>& _mesh, bool _source);
+		void setPathEdgeAtPoint(const Vec& _point, bool _add, const cinolib::AbstractMesh<M, V, E, P>& _mesh, bool _source);
 
 	public:
 
 		Projection(Widgets::Target& _targetWidget, HMP::Commander& _commander, HMP::Meshing::Mesher& _mesher, VertEdit& _vertEditWidget);
 
-		cpputils::collections::Event<Projection, const std::vector<Meshing::Projection::Point>&, const std::vector<Meshing::Projection::Path>&, const Meshing::Projection::Options&> onProjectRequest;
+		cpputils::collections::Event<Projection, const std::vector<HMP::Projection::Utils::Point>&, const std::vector<HMP::Projection::Utils::EidsPath>&, const HMP::Projection::Options&> onProjectRequest;
 
-		const Meshing::Projection::Options& options() const;
+		const HMP::Projection::Options& options() const;
 
 		void requestProjection();
 
@@ -70,9 +73,9 @@ namespace HMP::Gui::Widgets
 
 		void requestReprojection();
 
-		void setTargetCreaseEdgeAtPoint(const Vec& _point, bool _add);
+		void setTargetPathEdgeAtPoint(const Vec& _point, bool _add);
 
-		void setSourceCreaseEdgeAtPoint(const Vec& _point, bool _add);
+		void setSourcePathEdgeAtPoint(const Vec& _point, bool _add);
 
 		void draw() override;
 

@@ -1,7 +1,6 @@
 #include <HMP/Actions/Project.hpp>
 
 #include <utility>
-#include <HMP/Meshing/Projection.hpp>
 
 namespace HMP::Actions
 {
@@ -13,7 +12,7 @@ namespace HMP::Actions
 		if (!m_prepared)
 		{
 			m_prepared = true;
-			const std::vector<Vec> newVerts{ Meshing::Projection::project(source, m_target, m_pointFeats, m_pathFeats, m_options) };
+			const std::vector<Vec> newVerts{ Projection::project(source, m_target, m_pointFeats, m_pathFeats, m_options) };
 			m_vertMoves.resize(newVerts.size());
 			for (I sourceVi{}; sourceVi < newVerts.size(); sourceVi++)
 			{
@@ -43,11 +42,11 @@ namespace HMP::Actions
 		apply();
 	}
 
-	Project::Project(TargetMesh&& _target, const std::vector<Meshing::Projection::Point>& _pointFeats, const std::vector<Meshing::Projection::Path>& _pathFeats, const Meshing::Projection::Options& _options)
+	Project::Project(TargetMesh&& _target, const std::vector<Projection::Utils::Point>& _pointFeats, const std::vector<Projection::Utils::EidsPath>& _pathFeats, const Projection::Options& _options)
 		: m_target{ std::move(_target) }, m_vertMoves{}, m_prepared{ false }, m_options{ _options }, m_pointFeats{ _pointFeats }, m_pathFeats{ _pathFeats }
 	{}
 
-	Project::Project(const TargetMesh& _target, const std::vector<Meshing::Projection::Point>& _pointFeats, const std::vector<Meshing::Projection::Path>& _pathFeats, const Meshing::Projection::Options& _options)
+	Project::Project(const TargetMesh& _target, const std::vector<Projection::Utils::Point>& _pointFeats, const std::vector<Projection::Utils::EidsPath>& _pathFeats, const Projection::Options& _options)
 		: m_target{ _target }, m_vertMoves{}, m_prepared{ false }, m_options{ _options }, m_pointFeats{ _pointFeats }, m_pathFeats{ _pathFeats }
 	{}
 
@@ -56,7 +55,7 @@ namespace HMP::Actions
 		return m_target;
 	}
 
-	const Meshing::Projection::Options Project::options() const
+	const Projection::Options Project::options() const
 	{
 		return m_options;
 	}

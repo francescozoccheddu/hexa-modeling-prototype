@@ -76,8 +76,8 @@ namespace HMP::Gui
 		cinolib::print_binding(c_kbToggleTargetVisibility.name(), "toggle target visibility");
 		cinolib::print_binding(c_kbUndo.name(), "undo");
 		cinolib::print_binding(c_kbRedo.name(), "redo");
-		cinolib::print_binding(c_kbAddCreaseEdge.name(), "add crease edge");
-		cinolib::print_binding(c_kbRemoveCreaseEdge.name(), "remove crease edge");
+		cinolib::print_binding(c_kbAddPathEdge.name(), "add path edge");
+		cinolib::print_binding(c_kbRemovePathEdge.name(), "remove path edge");
 		cinolib::print_binding(c_kbRedo.name(), "redo");
 		cinolib::print_binding(c_kbPrintDebugInfo.name(), "print debug info");
 		std::cout << "-------------------------------\n";
@@ -524,13 +524,13 @@ namespace HMP::Gui
 		{
 			onSelectAll(true);
 		}
-		else if (key == c_kbAddCreaseEdge)
+		else if (key == c_kbAddPathEdge)
 		{
-			onSetCreaseEdge(true);
+			onSetPathEdge(true);
 		}
-		else if (key == c_kbRemoveCreaseEdge)
+		else if (key == c_kbRemovePathEdge)
 		{
-			onSetCreaseEdge(false);
+			onSetPathEdge(false);
 		}
 		else
 		{
@@ -539,18 +539,18 @@ namespace HMP::Gui
 		return true;
 	}
 
-	void App::onSetCreaseEdge(bool _add)
+	void App::onSetPathEdge(bool _add)
 	{
 		Vec point;
 		if (m_canvas.unproject(m_mouse.position, point))
 		{
 			if (m_targetWidget.hasMesh() && m_targetWidget.visible())
 			{
-				m_projectionWidget.setTargetCreaseEdgeAtPoint(point, _add);
+				m_projectionWidget.setTargetPathEdgeAtPoint(point, _add);
 			}
 			else
 			{
-				m_projectionWidget.setSourceCreaseEdgeAtPoint(point, _add);
+				m_projectionWidget.setTargetPathEdgeAtPoint(point, _add);
 			}
 		}
 	}
@@ -930,7 +930,7 @@ namespace HMP::Gui
 		}
 	}
 
-	void App::onProjectToTarget(const std::vector<Meshing::Projection::Point>& _pointFeats, const std::vector<Meshing::Projection::Path>& _pathFeats, const Meshing::Projection::Options& _options)
+	void App::onProjectToTarget(const std::vector<Projection::Utils::Point>& _pointFeats, const std::vector<Projection::Utils::EidsPath>& _pathFeats, const Projection::Options& _options)
 	{
 		applyAction(*new Actions::Project{ std::move(m_targetWidget.meshForProjection()), _pointFeats, _pathFeats, _options });
 	}
