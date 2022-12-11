@@ -550,7 +550,7 @@ namespace HMP::Gui
 			}
 			else
 			{
-				m_projectionWidget.setTargetPathEdgeAtPoint(point, _add);
+				m_projectionWidget.setSourcePathEdgeAtPoint(point, _add);
 			}
 		}
 	}
@@ -930,9 +930,9 @@ namespace HMP::Gui
 		}
 	}
 
-	void App::onProjectToTarget(const std::vector<Projection::Utils::Point>& _pointFeats, const std::vector<Projection::Utils::EidsPath>& _pathFeats, const Projection::Options& _options)
+	void App::onProjectToTarget(const cinolib::Polygonmesh<>& _target, const std::vector<Projection::Utils::Point>& _pointFeats, const std::vector<Projection::Utils::EidsPath>& _pathFeats, const Projection::Options& _options)
 	{
-		applyAction(*new Actions::Project{ std::move(m_targetWidget.meshForProjection()), _pointFeats, _pathFeats, _options });
+		applyAction(*new Actions::Project{ _target, _pointFeats, _pathFeats, _options });
 	}
 
 	void App::onApplyTargetTransform(const Mat4& _transform)

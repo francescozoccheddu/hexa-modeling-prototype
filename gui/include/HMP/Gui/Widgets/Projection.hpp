@@ -63,7 +63,7 @@ namespace HMP::Gui::Widgets
 
 		Projection(Widgets::Target& _targetWidget, HMP::Commander& _commander, HMP::Meshing::Mesher& _mesher, VertEdit& _vertEditWidget);
 
-		cpputils::collections::Event<Projection, const std::vector<HMP::Projection::Utils::Point>&, const std::vector<HMP::Projection::Utils::EidsPath>&, const HMP::Projection::Options&> onProjectRequest;
+		cpputils::collections::Event<Projection, const cinolib::Polygonmesh<>&, const std::vector<HMP::Projection::Utils::Point>&, const std::vector<HMP::Projection::Utils::EidsPath>&, const HMP::Projection::Options&> onProjectRequest;
 
 		const HMP::Projection::Options& options() const;
 
