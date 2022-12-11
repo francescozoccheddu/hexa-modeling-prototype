@@ -76,6 +76,7 @@ namespace HMP::Gui::Widgets
 		points.reserve(m_paths.size() * 2);
 		std::vector<HMP::Projection::Utils::EidsPath> paths;
 		paths.reserve(m_paths.size());
+		const cinolib::Polygonmesh<>& targetMesh{ m_targetWidget.meshForProjection() };
 		for (const HMP::Projection::Utils::EidsPath& path : m_paths)
 		{
 			if (path.sourceEids.empty() || path.targetEids.empty())
@@ -83,12 +84,12 @@ namespace HMP::Gui::Widgets
 				continue;
 			}
 			paths.push_back(path);
-			for (const HMP::Projection::Utils::Point& point : HMP::Projection::Utils::endPoints(path, m_mesher.mesh(), m_targetWidget.meshForDisplay()))
+			for (const HMP::Projection::Utils::Point& point : HMP::Projection::Utils::endPoints(path, m_mesher.mesh(), targetMesh))
 			{
 				points.push_back(point);
 			}
 		}
-		onProjectRequest(points, paths, m_options);
+		onProjectRequest(targetMesh, points, paths, m_options);
 	}
 
 	bool Projection::canReproject() const

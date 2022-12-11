@@ -209,7 +209,7 @@ namespace HMP::Gui
 		void onLoadState();
 		void onLoadTargetMesh();
 		void onToggleTargetVisibility();
-		void onProjectToTarget(const std::vector<Projection::Utils::Point>& _pointFeats, const std::vector<Projection::Utils::EidsPath>& _pathFeats, const Projection::Options& _options);
+		void onProjectToTarget(const cinolib::Polygonmesh<>& _target, const std::vector<Projection::Utils::Point>& _pointFeats, const std::vector<Projection::Utils::EidsPath>& _pathFeats, const Projection::Options& _options);
 		void onApplyTargetTransform(const Mat4& _transform);
 		void onUndo();
 		void onRedo();
