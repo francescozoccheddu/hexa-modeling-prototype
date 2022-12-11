@@ -184,6 +184,7 @@ namespace HMP::Projection::Utils
         for (const auto& [out, in] : cpputils::collections::zip(out, _feats))
         {
             out.sourceVid = _exporter.toSurfVid(in.sourceVid);
+            out.targetVid = in.targetVid;
         }
         return out;
     }
@@ -198,6 +199,7 @@ namespace HMP::Projection::Utils
             {
                 outEid = _exporter.toSurfEid(inEid);
             }
+            out.targetEids = in.targetEids;
         }
         return out;
     }

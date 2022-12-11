@@ -67,7 +67,7 @@ namespace HMP::Projection::Utils
     {
         std::vector<Id> vids;
         vids.reserve(vids.size() + 1);
-        if (!vids.empty())
+        if (!_eids.empty())
         {
             vids.push_back(_mesh.edge_vert_id(_eids.front(), 0));
             vids.push_back(_mesh.edge_vert_id(_eids.front(), 1));
