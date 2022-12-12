@@ -4,7 +4,9 @@
 
 #include <HMP/Gui/Widgets/Projection.hpp>
 
+#include <HMP/Projection/Utils.hpp>
 #include <functional>
+#include <unordered_set>
 
 namespace HMP::Gui::Widgets
 {
@@ -21,7 +23,7 @@ namespace HMP::Gui::Widgets
         const bool has1{ path.size() > 0 }, has2{ path.size() > 1 }, has3{ path.size() > 2 };
         const I lastI{ path.size() - 1 };
         const std::vector<Id> endEids{ has1 ? has2 ? std::vector<Id>{path[0], path[lastI]} : std::vector<Id>{ path[0] } : std::vector<Id>{} };
-        const bool closed{ has3 && _mesh.edges_are_adjacent(endEids[0], endEids[1]) };
+        const bool closed{ HMP::Projection::Utils::isEidsPathClosed(_mesh, path) };
         if (_add)
         {
             if (closed)
@@ -75,7 +77,7 @@ namespace HMP::Gui::Widgets
             }
             if (has2)
             {
-                std::set<Id> invalidVids;
+                std::unordered_set<Id> invalidVids;
                 if (has3)
                 {
                     for (I i{ 1 }; i < lastI; i++)
