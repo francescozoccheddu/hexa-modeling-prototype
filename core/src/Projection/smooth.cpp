@@ -53,8 +53,7 @@ namespace HMP::Projection
     void smoothInternal(const Meshing::Mesher::Mesh& _mesh, const std::vector<Id>& _surfaceVids, std::vector<Vec>& _out)
     {
         _out = _mesh.vector_verts();
-        std::unordered_set<Id> doneVids{};
-        doneVids.reserve(toI(_mesh.num_verts()));
+        std::vector<bool> doneVids(toI(_mesh.num_verts()), false);
         std::vector<Id> currentVids{}, nextVids{ _surfaceVids };
         const auto func{ [&](Id _vidsI) {
             const Id vid{ currentVids[toI(_vidsI)] };
@@ -62,7 +61,7 @@ namespace HMP::Projection
             I vertCount{};
             for (const Id adjVid : _mesh.adj_v2v(vid))
             {
-                vertSum += doneVids.contains(adjVid)
+                vertSum += doneVids[adjVid]
                     ? _out[toI(adjVid)]
                     : _mesh.vert(adjVid);
                 vertCount++;
@@ -76,12 +75,15 @@ namespace HMP::Projection
             currentVids = nextVids;
             nextVids.clear();
             cinolib::PARALLEL_FOR(0, toId(currentVids.size()), c_minVertsForParallelFor, func);
-            doneVids.insert(currentVids.begin(), currentVids.end());
+            for (const Id vid : currentVids)
+            {
+                doneVids[toI(vid)] = true;
+            }
             for (const Id vid : currentVids)
             {
                 for (const Id adjVid : _mesh.adj_v2v(vid))
                 {
-                    if (!doneVids.contains(adjVid))
+                    if (!doneVids[toI(adjVid)])
                     {
                         nextVids.push_back(adjVid);
                     }
