@@ -1,4 +1,4 @@
-#include <HMP/Projection/defensiveAdvance.hpp>
+#include <HMP/Projection/percentileAdvance.hpp>
 
 #include <algorithm>
 #include <limits>
@@ -9,14 +9,14 @@ namespace HMP::Projection
 
     static constexpr unsigned int c_minVertsForParallelFor{ 1024 };
 
-    std::vector<Vec> defensiveAdvance(const std::vector<Vec>& _from, const std::vector<Vec>& _to, const double _percentile)
+    std::vector<Vec> percentileAdvance(const std::vector<Vec>& _from, const std::vector<Vec>& _to, const double _percentile)
     {
         std::vector<Vec> out;
-        defensiveAdvance(_from, _to, out, _percentile);
+        percentileAdvance(_from, _to, out, _percentile);
         return out;
     }
 
-    void defensiveAdvance(const std::vector<Vec>& _from, const std::vector<Vec>& _to, std::vector<Vec>& _out, const double _percentile)
+    void percentileAdvance(const std::vector<Vec>& _from, const std::vector<Vec>& _to, std::vector<Vec>& _out, const double _percentile)
     {
         _out.resize(_from.size());
         Real maxLength{};
