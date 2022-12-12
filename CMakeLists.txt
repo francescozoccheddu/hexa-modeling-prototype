@@ -8,6 +8,13 @@ project ("hexa-modeling-prototype")
 option (HMP_GUI_ENABLE_DAG_VIEWER "Enable dag viewer widget" OFF)
 option (HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER "Enable ae-3d2shape exporter" OFF)
 option (HMP_GUI_LIGHT_THEME "Enable GUI light theme" OFF)
+option (HMP_AGGRESSIVE_DEBUG "Enable ASAN and debug libc" OFF)
+
+if (HMP_AGGRESSIVE_DEBUG)
+    add_compile_definitions(_GLIBCXX_DEBUG)
+    add_compile_options(-fsanitize=address)
+    add_link_options(-fsanitize=address)
+endif()
 
 # cinolib
 set (CINOLIB_HEADER_ONLY OFF)
