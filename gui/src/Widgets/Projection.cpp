@@ -348,6 +348,11 @@ namespace HMP::Gui::Widgets
 			{
 				m_options.displaceMode = static_cast<HMP::Projection::EDisplaceMode>(displaceMode);
 			}
+			int jacobianCheckMode{ static_cast<int>(m_options.jacobianCheckMode) };
+			if (ImGui::Combo("Jacobian check mode", &jacobianCheckMode, "None\0SurfaceOnly\0All\0"))
+			{
+				m_options.jacobianCheckMode = static_cast<HMP::Projection::EJacobianCheckMode>(jacobianCheckMode);
+			}
 		}
 		ImGui::Spacing();
 		tweak(m_options.baseWeightTweak, "Base weight factor");
