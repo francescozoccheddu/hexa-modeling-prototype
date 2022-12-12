@@ -71,6 +71,10 @@ namespace HMP::Projection::Utils
         {
             vids.push_back(_mesh.edge_vert_id(_eids.front(), 0));
             vids.push_back(_mesh.edge_vert_id(_eids.front(), 1));
+            if (_eids.size() > 1 && !_mesh.edge_contains_vert(_eids[1], vids.back()))
+            {
+                std::swap(vids[0], vids[1]);
+            }
             for (I i{ 1 }; i < _eids.size(); i++)
             {
                 vids.push_back(_mesh.vert_opposite_to(_eids[i], vids.back()));
