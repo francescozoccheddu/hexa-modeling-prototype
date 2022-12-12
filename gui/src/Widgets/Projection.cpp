@@ -119,7 +119,7 @@ namespace HMP::Gui::Widgets
 		std::vector<std::vector<Id>> from(_lastEx - _first), to;
 		for (I i{ _first }; i < _lastEx; i++)
 		{
-			from[i] = _fromSource
+			from[i - _first] = _fromSource
 				? HMP::Projection::Utils::eidsToVidsPath(source, m_paths[i].sourceEids)
 				: HMP::Projection::Utils::eidsToVidsPath(target, m_paths[i].targetEids);
 		}
@@ -152,11 +152,11 @@ namespace HMP::Gui::Widgets
 		{
 			if (_fromSource)
 			{
-				m_paths[i].targetEids = HMP::Projection::Utils::vidsToEidsPath(target, to[i]);
+				m_paths[i].targetEids = HMP::Projection::Utils::vidsToEidsPath(target, to[i - _first]);
 			}
 			else
 			{
-				m_paths[i].sourceEids = HMP::Projection::Utils::vidsToEidsPath(source, to[i]);
+				m_paths[i].sourceEids = HMP::Projection::Utils::vidsToEidsPath(source, to[i - _first]);
 			}
 			if (m_showPaths && (m_showAllPaths || m_currentPath == i))
 			{
@@ -305,7 +305,10 @@ namespace HMP::Gui::Widgets
 	void Projection::removePath(I _index)
 	{
 		updateBothMeshEdges(_index, _index + 1, false);
-		std::swap(m_paths[_index], m_paths[m_paths.size() - 1]);
+		if (_index + 1 != m_paths.size())
+		{
+			std::swap(m_paths[_index], m_paths.back());
+		}
 		m_paths.pop_back();
 		if (_index == m_currentPath)
 		{
