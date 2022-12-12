@@ -2,6 +2,7 @@
 
 #include <cinolib/octree.h>
 #include <cinolib/parallel_for.h>
+#include <cpputils/collections/zip.hpp>
 
 namespace HMP::Projection::Match
 {
@@ -56,14 +57,14 @@ namespace HMP::Projection::Match
     {
         std::vector<TargetVidToSource> matches(_targetVidsPath.size());
         const cinolib::Octree sourceOctree{ pathOctree(_source, _sourceEidsPath) };
-        const auto func{ [&_target, &sourceOctree, &matches, &_targetVidsPath](Id _targetPathVid) {
-            const Id targetVid{ _targetVidsPath[toI(_targetPathVid)] };
+        const auto func{ [&_target, &sourceOctree, &matches, &_targetVidsPath](Id _targetPathId) {
+            const Id targetVid{ _targetVidsPath[toI(_targetPathId)] };
             const Vec& targetVert{ _target.vert(targetVid) };
             Vec sourcePos;
             Id sourceEid;
             Real dist;
             sourceOctree.closest_point(targetVert, sourceEid, sourcePos, dist);
-            matches[toI(_targetPathVid)] = {
+            matches[toI(_targetPathId)] = {
                 .pos = sourcePos,
                 .sourceId = sourceEid
             };
@@ -94,9 +95,8 @@ namespace HMP::Projection::Match
         {
             invMatches.emplace(eid, std::vector<SourceToTargetVid>{});
         }
-        for (Id targetVid{}; targetVid < _target.num_verts(); targetVid++)
+        for (const auto& [targetVid, match] : cpputils::collections::zip(_targetVidsPath, _matches))
         {
-            const TargetVidToSource& match{ _matches[toI(targetVid)] };
             invMatches[match.sourceId].push_back({
                 .pos = match.pos,
                 .targetVid = targetVid

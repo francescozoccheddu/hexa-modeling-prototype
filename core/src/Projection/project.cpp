@@ -215,11 +215,11 @@ namespace HMP::Projection
                 {
                     for (const Match::SourceToTargetVid& match : _matches.at(adjEid))
                     {
-                        const Id vid0{ _source.edge_vert_id(adjEid, 0) }, vid1{ _source.edge_vert_id(adjEid, 1) };
-                        const Vec vert0{ _source.vert(vid0) }, vert1{ _source.vert(vid1) };
-                        const Vec adjEdgeDir{ vert1 - vert0 }, progressDir{ match.pos - vert0 };
+                        const Id otherVid{ _source.vert_opposite_to(adjEid, _vid) };
+                        const Vec vert{ _source.vert(_vid) }, otherVert{ _source.vert(otherVid) };
+                        const Vec adjEdgeDir{ otherVert - vert }, progressDir{ match.pos - vert };
                         const Real progress{ progressDir.dot(adjEdgeDir) / adjEdgeDir.dot(adjEdgeDir) };
-                        weights.push_back(_vid == vid1 ? progress : (1.0 - progress));
+                        weights.push_back(1.0 - progress);
                     }
                 }
                 Utils::normalizeWeights(weights);
