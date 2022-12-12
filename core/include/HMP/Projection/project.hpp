@@ -19,11 +19,17 @@ namespace HMP::Projection
         NormDirAvgAndDirNormAvg, NormDirAvgAndDirAvg, DirAvg, VertAvg
     };
 
+    enum class EJacobianCheckMode
+    {
+        None, Surface, All
+    };
+
     struct Options final
     {
 
         EBaseWeightMode baseWeightMode{ EBaseWeightMode::Distance };
         EDisplaceMode displaceMode{ EDisplaceMode::DirAvg };
+        EJacobianCheckMode jacobianCheckMode{ EJacobianCheckMode::Surface };
         Utils::Tweak baseWeightTweak{ 0.0, 1.0 };
         Utils::Tweak normalDotTweak{ -1.0, 0.0 };
         Utils::Tweak unsetVertsDistWeightTweak{ 0.0, 0.0 };
