@@ -10,8 +10,12 @@
 namespace HMP::Projection
 {
 
-    void fill(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Utils::Tweak& _distWeightTweak, std::vector<Vec>& _out, const std::optional<std::vector<Id>>& _vidsPath = std::nullopt);
+    void fill(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Utils::Tweak& _distWeightTweak, std::vector<Vec>& _out);
 
-    std::vector<Vec> fill(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Utils::Tweak& _distWeightTweak, const std::optional<std::vector<Id>>& _vidsPath = std::nullopt);
+    void fillPath(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Utils::Tweak& _distWeightTweak, const std::vector<Id>& _vidsPath, std::vector<Vec>& _out);
+
+    std::vector<Vec> fill(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Utils::Tweak& _distWeightTweak);
+
+    std::vector<Vec> fillPath(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Utils::Tweak& _distWeightTweak, const std::vector<Id>& _vidsPath);
 
 }

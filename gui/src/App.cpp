@@ -716,7 +716,7 @@ namespace HMP::Gui
 		locs.reserve(8);
 		std::vector<Id> dagVids{};
 		dagVids.reserve(8);
-		for (const auto [element, pid] : m_mesher)
+		for (const auto& [element, pid] : m_mesher)
 		{
 			dagVids.clear();
 			locs.clear();
