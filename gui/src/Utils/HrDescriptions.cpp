@@ -63,14 +63,14 @@ namespace HMP::Gui::Utils::HrDescriptions
 		stream
 			<< std::fixed << std::setprecision(3)
 			<< "{";
-		for (I r{ 0 }; r < 4; r++)
+		for (Id r{ 0 }; r < 4; r++)
 		{
 			if (r)
 			{
 				stream << ",";
 			}
 			stream << "{";
-			for (I c{ 0 }; c < 4; c++)
+			for (Id c{ 0 }; c < 4; c++)
 			{
 				if (c)
 				{

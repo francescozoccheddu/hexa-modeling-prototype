@@ -284,7 +284,7 @@ namespace HMP::Meshing
 		}
 		for (I vo{}; vo < 8; vo++)
 		{
-			_element.vertices()[vo] = m_mesh.vert(m_mesh.poly_vert_id(pid, vo));
+			_element.vertices()[vo] = m_mesh.vert(m_mesh.poly_vert_id(pid, toId(vo)));
 		}
 		m_elementToPid[&_element] = pid;
 		m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
@@ -508,7 +508,7 @@ namespace HMP::Meshing
 	{
 		double minT{ std::numeric_limits<double>::infinity() };
 		_fid = noId;
-		for (I fid{}; fid < m_mesh.num_faces(); fid++)
+		for (Id fid{}; fid < m_mesh.num_faces(); fid++)
 		{
 			Id facePid;
 			if (m_mesh.face_is_visible(fid, facePid))
