@@ -310,6 +310,8 @@ namespace HMP::Projection
         const std::vector<Utils::Point> surfPointFeats{ Utils::toSurfFeats(_pointFeats, exporter) };
         const std::vector<Utils::EidsPath> surfEidsPathFeats{ Utils::toSurfFeats(_pathFeats, exporter) };
         const std::vector<Utils::VidsPath> surfVidsPathFeats{ Utils::eidsToVidsPaths(surfEidsPathFeats, exporter.surf, _target) };
+        std::vector<std::vector<Vec>> pathTempVerts(surfEidsPathFeats.size());
+        std::vector<Vec> oldVolVerts, oldSurfVerts;
         for (I i{}; i < _options.iterations; i++)
         {
             const bool lastIteration{ i + 1 == _options.iterations };
@@ -317,39 +319,47 @@ namespace HMP::Projection
             {
                 exporter.surf.update_normals();
             }
-            const std::vector<Vec> oldSurfVerts{ exporter.surf.vector_verts() };
+            oldVolVerts = exporter.vol.vector_verts();
+            oldSurfVerts = exporter.surf.vector_verts();
+            // points
+            Utils::setVerts(exporter.surf.vector_verts(), _target.vector_verts(), surfPointFeats);
+            // paths
+            for (const auto& [newVerts, eidsPath, vidsPath] : cpputils::collections::zip(pathTempVerts, surfEidsPathFeats, surfVidsPathFeats))
+            {
+                newVerts = projectPath(exporter.surf, _target, eidsPath.sourceEids, vidsPath.sourceVids, vidsPath.targetVids, _options);
+            }
+            Utils::setSourceVerts(pathTempVerts, exporter.surf.vector_verts(), surfVidsPathFeats);
+            Utils::setVerts(exporter.surf.vector_verts(), _target.vector_verts(), surfPointFeats);
             // surface
             exporter.surf.vector_verts() = projectSurface(exporter.surf, _target, _options);
+            Utils::setSourceVerts(pathTempVerts, exporter.surf.vector_verts(), surfVidsPathFeats);
+            Utils::setVerts(exporter.surf.vector_verts(), _target.vector_verts(), surfPointFeats);
+            // smooth
             if (_options.smoothSurface && !lastIteration)
             {
                 exporter.surf.vector_verts() = smooth(exporter.surf);
-            }
-            // paths
-            for (const auto& [eidsPath, vidsPath] : cpputils::collections::zip(surfEidsPathFeats, surfVidsPathFeats))
-            {
-                Utils::setVerts(projectPath(exporter.surf, _target, eidsPath.sourceEids, vidsPath.sourceVids, vidsPath.targetVids, _options), exporter.surf.vector_verts(), vidsPath.sourceVids);
-                if (_options.smoothSurface && !lastIteration)
+                Utils::setSourceVerts(pathTempVerts, exporter.surf.vector_verts(), surfVidsPathFeats);
+                Utils::setVerts(exporter.surf.vector_verts(), _target.vector_verts(), surfPointFeats);
+                for (const auto& [newVerts, eidsPath, vidsPath] : cpputils::collections::zip(pathTempVerts, surfEidsPathFeats, surfVidsPathFeats))
                 {
                     Utils::setVerts(smoothPath(exporter.surf, vidsPath.sourceVids), exporter.surf.vector_verts(), vidsPath.sourceVids);
                 }
+                Utils::setVerts(exporter.surf.vector_verts(), _target.vector_verts(), surfPointFeats);
             }
-            // points
-            for (const Utils::Point& pointFeat : surfPointFeats)
-            {
-                exporter.surf.vert(pointFeat.sourceVid) = _target.vert(pointFeat.targetVid);
-            }
-            // advance
+            // median advance
             if (_options.advancePercentile < 1.0 && !lastIteration)
             {
                 defensiveAdvance(oldSurfVerts, exporter.surf.vector_verts(), exporter.surf.vector_verts(), _options.advancePercentile);
             }
+            exporter.applySurfToVol();
             if (_options.smoothInternal)
             {
-                exporter.applySurfToVol();
                 exporter.vol.vector_verts() = smoothInternal(exporter.vol, onSurfVolVids);
             }
+            exporter.applySurfToVol();
+            // jacobian advance
+            // TODO
         }
-        exporter.applySurfToVol();
         return exporter.vol.vector_verts();
     }
 
