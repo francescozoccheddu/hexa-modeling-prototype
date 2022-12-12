@@ -14,7 +14,7 @@ namespace HMP::Projection::Utils
     template<typename M, typename V, typename E, typename P>
     bool isEidsPathClosed(const cinolib::AbstractMesh<M, V, E, P>& _mesh, const std::vector<Id>& _eids)
     {
-        return _eids.size() >= 2 && _mesh.edges_are_adjacent(_eids.front(), _eids.back());
+        return _eids.size() >= 3 && _mesh.edges_are_adjacent(_eids.front(), _eids.back());
     }
 
     template<typename M, typename V, typename E, typename P>
