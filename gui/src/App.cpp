@@ -30,6 +30,7 @@
 #include <iomanip>
 #include <filesystem>
 #include <ctime>
+#include <cstring>
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 #include <HMP/Gui/DagViewer/createLayout.hpp>
@@ -1037,6 +1038,34 @@ namespace HMP::Gui
 		}
 	}
 
+	void App::onFilesDropped(const std::vector<std::string>& _files)
+	{
+		if (_files.size() == 1)
+		{
+			loadTargetMeshOrProjectFile(_files[0]);
+		}
+	}
+
+	void App::loadTargetMeshOrProjectFile(const std::string& _file)
+	{
+		static const std::unordered_set<std::string> targetMeshExts{ ".off", ".obj", ".stl" }, projectExts{ ".hmp" };
+		std::string ext{ std::filesystem::path{_file}.extension() };
+		for (char& c : ext) c = std::tolower(c);
+		if (projectExts.contains(ext))
+		{
+			m_saveWidget.requestLoad(_file);
+		}
+		else if (targetMeshExts.contains(ext))
+		{
+			m_targetWidget.load(_file);
+		}
+		else
+		{
+			std::cerr << "unknown extension '" << ext << "'" << std::endl;
+			std::cout << "only *.off, *.obj and *.stl target mesh files and *.hmp project files are supported" << std::endl;
+		}
+	}
+
 	// launch
 
 	App::App():
@@ -1138,7 +1167,7 @@ namespace HMP::Gui
 		m_canvas.callback_app_controls = [this](auto && ..._args) { return onDrawControls(_args ...); };
 		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChanged(_args...); };
 		m_canvas.callback_custom_gui = [this](auto && ..._args) { return onDrawCustomGui(_args...); };
-		m_canvas.callback_drop_files = [this](std::vector<std::string> _files) { if (_files.size() == 1) { m_saveWidget.requestLoad(_files[0]); } };
+		m_canvas.callback_drop_files = [this](std::vector<std::string> _files) { onFilesDropped(_files); };
 		m_canvas.marker_sets.resize(c_markerSetCount);
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
