@@ -4,7 +4,7 @@
 #include <cinolib/meshes/polygonmesh.h>
 #include <optional>
 #include <algorithm>
-#include <HMP/Projection/defensiveAdvance.hpp>
+#include <HMP/Projection/percentileAdvance.hpp>
 #include <cpputils/collections/zip.hpp>
 #include <HMP/Projection/fill.hpp>
 #include <HMP/Projection/Match.hpp>
@@ -349,7 +349,7 @@ namespace HMP::Projection
             // median advance
             if (_options.advancePercentile < 1.0 && !lastIteration)
             {
-                defensiveAdvance(oldSurfVerts, exporter.surf.vector_verts(), exporter.surf.vector_verts(), _options.advancePercentile);
+                percentileAdvance(oldSurfVerts, exporter.surf.vector_verts(), exporter.surf.vector_verts(), _options.advancePercentile);
             }
             exporter.applySurfToVol();
             if (_options.smoothInternal)
