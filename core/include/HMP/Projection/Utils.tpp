@@ -18,30 +18,42 @@ namespace HMP::Projection::Utils
     }
 
     template<typename M, typename V, typename E, typename P>
-    std::vector<Id> eidsPathAdjEids(const cinolib::AbstractMesh<M, V, E, P>& _mesh, const std::vector<Id>& _eids, I _i)
+    std::vector<I> eidsPathAdjEidsI(const cinolib::AbstractMesh<M, V, E, P>& _mesh, const std::vector<Id>& _eids, I _i)
     {
-        std::vector<Id> adjEids;
+        std::vector<I> adjEidsI;
         if (_i == 0)
         {
             if (isEidsPathClosed(_mesh, _eids))
             {
-                adjEids.push_back(_eids.back());
+                adjEidsI.push_back(_eids.size() - 1);
             }
         }
         else
         {
-            adjEids.push_back(_eids[_i - 1]);
+            adjEidsI.push_back(_i - 1);
         }
         if (_i == _eids.size() - 1)
         {
             if (isEidsPathClosed(_mesh, _eids))
             {
-                adjEids.push_back(_eids.front());
+                adjEidsI.push_back(0);
             }
         }
         else
         {
-            adjEids.push_back(_eids[_i + 1]);
+            adjEidsI.push_back(_i + 1);
+        }
+        return adjEidsI;
+    }
+
+    template<typename M, typename V, typename E, typename P>
+    std::vector<Id> eidsPathAdjEids(const cinolib::AbstractMesh<M, V, E, P>& _mesh, const std::vector<Id>& _eids, I _i)
+    {
+        const std::vector<I> adjEidsI{ eidsPathAdjEidsI(_mesh, _eids, _i) };
+        std::vector<Id> adjEids(adjEidsI.size());
+        for (const auto& [eid, i] : cpputils::collections::zip(adjEids, adjEidsI))
+        {
+            eid = _eids[i];
         }
         return adjEids;
     }

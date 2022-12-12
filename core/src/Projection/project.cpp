@@ -298,7 +298,7 @@ namespace HMP::Projection
             projected[i] = projectPathVert(_source, _target, vid, adjEids, matches, _options);
         } };
         cinolib::PARALLEL_FOR(0, toId(_sourceVidsPath.size()), c_minVertsForParallelFor, func);
-        return fill(_source, projected, _options.unsetVertsDistWeightTweak, _sourceVidsPath);
+        return fillPath(_source, projected, _options.unsetVertsDistWeightTweak, _sourceVidsPath);
     }
 
     // final projection

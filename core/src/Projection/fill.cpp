@@ -51,57 +51,61 @@ namespace HMP::Projection
         return queue;
     }
 
-    std::vector<Vec> fill(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Utils::Tweak& _distWeightTweak, const std::optional<std::vector<Id>>& _vidsPath)
+    std::vector<Vec> fill(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Utils::Tweak& _distWeightTweak)
     {
         std::vector<Vec> out;
-        fill(_mesh, _newVerts, _distWeightTweak, out, _vidsPath);
+        fill(_mesh, _newVerts, _distWeightTweak, out);
         return out;
     }
 
-    void fill(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Utils::Tweak& _distWeightTweak, std::vector<Vec>& _out, const std::optional<std::vector<Id>>& _vidsPath)
+    std::vector<Vec> fillPath(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Utils::Tweak& _distWeightTweak, const std::vector<Id>& _vidsPath)
     {
-        better_priority_queue::updatable_priority_queue<I, I> skippedVisQueue{ _vidsPath
-            ? createQueue(_mesh, _newVerts, *_vidsPath)
-            : createQueue(_mesh, _newVerts)
-        };
-        std::vector<std::optional<Vec>> newVerts{ _newVerts };
-        std::vector<Real> distances;
-        distances.reserve(4);
-        std::unordered_map<Id, I> vid2vidsI;
-        if (_vidsPath)
+        std::vector<Vec> out;
+        fillPath(_mesh, _newVerts, _distWeightTweak, _vidsPath, out);
+        return out;
+    }
+
+    void fill(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Utils::Tweak& _distWeightTweak, std::vector<Vec>& _out)
+    {
+        better_priority_queue::updatable_priority_queue<I, I> queue{};
+        for (I vi{}; vi < _newVerts.size(); vi++)
         {
-            const std::vector<Id>& vidsPath{ *_vidsPath };
-            vid2vidsI.reserve(vidsPath.size());
-            for (I i{}; i < vidsPath.size(); i++)
+            if (!_newVerts[vi])
             {
-                vid2vidsI.emplace(vidsPath[i], i);
+                I count{};
+                for (const Id adjVid : _mesh.adj_v2v(toId(vi)))
+                {
+                    if (_newVerts[toI(adjVid)])
+                    {
+                        count++;
+                    }
+                }
+                queue.push(vi, count);
             }
         }
-        while (!skippedVisQueue.empty())
+        std::vector<std::optional<Vec>> newVerts{ _newVerts };
+        std::vector<Real> baseWeights;
+        baseWeights.reserve(4);
+        while (!queue.empty())
         {
-            const I vi{ skippedVisQueue.pop_value(false).key };
+            const I vi{ queue.pop_value(false).key };
             const Id vid{ toId(vi) };
             const Vec vert{ _mesh.vert(vid) };
-            const std::vector<Id> adjVids{ _vidsPath
-                ? Utils::vidsPathAdjVids(*_vidsPath, vid2vidsI.at(vid))
-                : _mesh.adj_v2v(vid)
-            };
-            distances.clear();
-            for (const Id adjVid : adjVids)
+            baseWeights.clear();
+            for (const Id adjVid : _mesh.adj_v2v(vid))
             {
-                distances.push_back(vert.dist(_mesh.vert(adjVid)));
+                baseWeights.push_back(vert.dist(_newVerts[toI(adjVid)].value_or(_mesh.vert(adjVid))));
             }
-            Utils::invertAndNormalizeDistances(distances);
-            Real minOldDist{ std::numeric_limits<Real>::infinity() };
+            Utils::invertAndNormalizeDistances(baseWeights);
             Vec adjVertSum{};
             Real weightSum{};
-            for (const auto [adjVid, baseWeight] : cpputils::collections::zip(adjVids, distances))
+            for (const auto& [adjVid, baseWeight] : cpputils::collections::zip(_mesh.adj_v2v(vid), baseWeights))
             {
                 if (_distWeightTweak.shouldSkip(baseWeight))
                 {
                     continue;
                 }
-                const Real weight{ _distWeightTweak.apply(weight) };
+                const Real weight{ _distWeightTweak.apply(baseWeight) };
                 const Vec adjVert{
                     newVerts[toI(adjVid)]
                     ? *newVerts[toI(adjVid)]
@@ -110,20 +114,79 @@ namespace HMP::Projection
                 weightSum += weight;
                 adjVertSum += adjVert * weight;
             }
-            if (weightSum != 0.0)
-            {
-                newVerts[vi] = adjVertSum / weightSum;
-            }
-            else
-            {
-                newVerts[vi] = vert;
-            }
-            for (const Id adjVid : adjVids)
+            newVerts[vi] = weightSum != 0.0
+                ? adjVertSum / weightSum
+                : vert;
+            for (const Id adjVid : _mesh.adj_v2v(vid))
             {
                 if (!newVerts[toI(adjVid)])
                 {
-                    const I oldCount{ skippedVisQueue.get_priority(toI(adjVid)).second };
-                    skippedVisQueue.update(toI(adjVid), oldCount + 1);
+                    const I oldCount{ queue.get_priority(toI(adjVid)).second };
+                    queue.update(toI(adjVid), oldCount + 1);
+                }
+            }
+        }
+        _out.resize(newVerts.size());
+        for (const auto& [in, out] : cpputils::collections::zip(newVerts, _out))
+        {
+            out = *in;
+        }
+    }
+
+    void fillPath(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Utils::Tweak& _distWeightTweak, const std::vector<Id>& _vidsPath, std::vector<Vec>& _out)
+    {
+        better_priority_queue::updatable_priority_queue<I, I> queue{};
+        for (I pvi{}; pvi < _newVerts.size(); pvi++)
+        {
+            if (!_newVerts[pvi])
+            {
+                I count{};
+                for (const I adjPvi : Utils::vidsPathAdjVidsI(_vidsPath, pvi))
+                {
+                    if (_newVerts[adjPvi])
+                    {
+                        count++;
+                    }
+                }
+                queue.push(pvi, count);
+            }
+        }
+        std::vector<std::optional<Vec>> newVerts{ _newVerts };
+        std::vector<Real> baseWeights;
+        baseWeights.reserve(4);
+        while (!queue.empty())
+        {
+            const I pvi{ queue.pop_value(false).key };
+            const Vec vert{ newVerts[pvi].value_or(_mesh.vert(_vidsPath[pvi])) };
+            baseWeights.clear();
+            const std::vector<I> adjPvis{ Utils::vidsPathAdjVidsI(_vidsPath, pvi) };
+            for (const I adjPvi : adjPvis)
+            {
+                baseWeights.push_back(vert.dist(_newVerts[adjPvi].value_or(_mesh.vert(_vidsPath[adjPvi]))));
+            }
+            Utils::invertAndNormalizeDistances(baseWeights);
+            Vec adjVertSum{};
+            Real weightSum{};
+            for (const auto& [adjPvi, baseWeight] : cpputils::collections::zip(adjPvis, baseWeights))
+            {
+                if (_distWeightTweak.shouldSkip(baseWeight))
+                {
+                    continue;
+                }
+                const Real weight{ _distWeightTweak.apply(baseWeight) };
+                const Vec adjVert{ newVerts[adjPvi].value_or(_mesh.vert(_vidsPath[adjPvi])) };
+                weightSum += weight;
+                adjVertSum += adjVert * weight;
+            }
+            newVerts[pvi] = weightSum != 0.0
+                ? adjVertSum / weightSum
+                : vert;
+            for (const I adjPvi : adjPvis)
+            {
+                if (!newVerts[adjPvi])
+                {
+                    const I oldCount{ queue.get_priority(adjPvi).second };
+                    queue.update(adjPvi, oldCount + 1);
                 }
             }
         }

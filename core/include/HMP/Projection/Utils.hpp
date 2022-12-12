@@ -85,7 +85,12 @@ namespace HMP::Projection::Utils
 
     bool isVidsPathClosed(const std::vector<Id>& _vids);
 
+    std::vector<I> vidsPathAdjVidsI(const std::vector<Id>& _vids, I _i);
+
     std::vector<Id> vidsPathAdjVids(const std::vector<Id>& _vids, I _i);
+
+    template<typename M, typename V, typename E, typename P>
+    std::vector<I> eidsPathAdjEidsI(const cinolib::AbstractMesh<M, V, E, P>& _mesh, const std::vector<Id>& _eids, I _i);
 
     template<typename M, typename V, typename E, typename P>
     std::vector<Id> eidsPathAdjEids(const cinolib::AbstractMesh<M, V, E, P>& _mesh, const std::vector<Id>& _eids, I _i);

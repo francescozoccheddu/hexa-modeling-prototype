@@ -111,30 +111,41 @@ namespace HMP::Projection::Utils
         return _vids.size() >= 2 && _vids.front() == _vids.back();
     }
 
-    std::vector<Id> vidsPathAdjVids(const std::vector<Id>& _vids, I _i)
+    std::vector<I> vidsPathAdjVidsI(const std::vector<Id>& _vids, I _i)
     {
-        std::vector<Id> adjVids;
+        std::vector<I> adjVidsI;
         if (_i == 0)
         {
             if (isVidsPathClosed(_vids))
             {
-                adjVids.push_back(_vids[_vids.size() - 2]);
+                adjVidsI.push_back(_vids.size() - 2);
             }
         }
         else
         {
-            adjVids.push_back(_vids[_i - 1]);
+            adjVidsI.push_back(_i - 1);
         }
         if (_i == _vids.size() - 1)
         {
             if (isVidsPathClosed(_vids))
             {
-                adjVids.push_back(_vids[1]);
+                adjVidsI.push_back(1);
             }
         }
         else
         {
-            adjVids.push_back(_vids[_i + 1]);
+            adjVidsI.push_back(_i + 1);
+        }
+        return adjVidsI;
+    }
+
+    std::vector<Id> vidsPathAdjVids(const std::vector<Id>& _vids, I _i)
+    {
+        const std::vector<I> adjVidsI{ vidsPathAdjVidsI(_vids, _i) };
+        std::vector<Id> adjVids(adjVidsI.size());
+        for (const auto& [vid, i] : cpputils::collections::zip(adjVids, adjVidsI))
+        {
+            vid = _vids[i];
         }
         return adjVids;
     }
