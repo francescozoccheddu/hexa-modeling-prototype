@@ -223,4 +223,20 @@ namespace HMP::Projection::Utils
         }
     }
 
+    void setVerts(std::vector<Vec>& _source, const std::vector<Vec>& _target, const std::vector<Point>& _feats)
+    {
+        for (const Point& _point : _feats)
+        {
+            _source[toI(_point.sourceVid)] = _target[toI(_point.targetVid)];
+        }
+    }
+
+    void setSourceVerts(const std::vector<std::vector<Vec>>& _from, std::vector<Vec>& _to, const std::vector<VidsPath>& _vids)
+    {
+        for (const auto& [path, from] : cpputils::collections::zip(_vids, _from))
+        {
+            setVerts(from, _to, path.sourceVids);
+        }
+    }
+
 }

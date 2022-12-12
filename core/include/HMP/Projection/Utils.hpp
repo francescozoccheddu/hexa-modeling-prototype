@@ -110,6 +110,10 @@ namespace HMP::Projection::Utils
 
     void setVerts(const std::vector<Vec>& _from, std::vector<Vec>& _to, const std::vector<Id>& _vids);
 
+    void setVerts(std::vector<Vec>& _source, const std::vector<Vec>& _target, const std::vector<Point>& _feats);
+
+    void setSourceVerts(const std::vector<std::vector<Vec>>& _from, std::vector<Vec>& _to, const std::vector<VidsPath>& _vids);
+
     template<typename M, typename V, typename E, typename P>
     std::vector<Id> eidsPathEndVids(const cinolib::AbstractMesh<M, V, E, P>& _mesh, const std::vector<Id>& _eids);
 
