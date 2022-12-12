@@ -17,6 +17,7 @@
 #include <HMP/Gui/Widgets/DirectVertEdit.hpp>
 #include <HMP/Gui/Widgets/Projection.hpp>
 #include <HMP/Gui/Widgets/Save.hpp>
+#include <vector>
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 #include <HMP/Gui/DagViewer/Widget.hpp>
@@ -184,6 +185,7 @@ namespace HMP::Gui
 		void onDrawCustomGui();
 		void onDagViewerDraw();
 		void updateMouse();
+		void onFilesDropped(const std::vector<std::string>& _files);
 
 		// save events
 		void onSaveState(const std::string& _filename);
@@ -220,6 +222,8 @@ namespace HMP::Gui
 	public:
 
 		App();
+
+		void loadTargetMeshOrProjectFile(const std::string& _file);
 
 		int launch();
 
