@@ -285,8 +285,7 @@ namespace HMP::Projection
     std::vector<Vec> projectPath(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::vector<Id>& _sourceEidsPath, const std::vector<Id>& _sourceVidsPath, const std::vector<Id>& _targetVidsPath, const Options& _options)
     {
         const std::unordered_map<Id, std::vector<Match::SourceToTargetVid>> matches{ Match::matchPathEid(_source, _target, _sourceEidsPath, _targetVidsPath) };
-        std::vector<std::optional<Vec>> projected;
-        projected.reserve(_sourceVidsPath.size());
+        std::vector<std::optional<Vec>> projected(_sourceVidsPath.size());
         const auto func{ [&](const Id _id) {
             const I i{ toI(_id) };
             const Id vid{ _sourceVidsPath[i] };
@@ -296,7 +295,7 @@ namespace HMP::Projection
             {
                 adjEid = _source.edge_id(vid, adjVid);
             }
-            projected.push_back(projectPathVert(_source, _target, vid, adjEids, matches, _options));
+            projected[i] = projectPathVert(_source, _target, vid, adjEids, matches, _options);
         } };
         cinolib::PARALLEL_FOR(0, toId(_sourceVidsPath.size()), c_minVertsForParallelFor, func);
         return fill(_source, projected, _options.unsetVertsDistWeightTweak, _sourceVidsPath);
