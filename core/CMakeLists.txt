@@ -30,6 +30,7 @@ add_library (core STATIC
     "src/Projection/fill.cpp"
     "src/Projection/smooth.cpp"
     "src/Projection/percentileAdvance.cpp"
+    "src/Projection/jacobianAdvance.cpp"
     "src/Projection/Match.cpp"
     "src/Utils/Geometry.cpp"
     "src/Utils/Serialization.cpp"
