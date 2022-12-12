@@ -8,49 +8,6 @@
 namespace HMP::Projection
 {
 
-    better_priority_queue::updatable_priority_queue<I, I> createQueue(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts)
-    {
-        better_priority_queue::updatable_priority_queue<I, I> queue{};
-        for (I vi{}; vi < _newVerts.size(); vi++)
-        {
-            if (!_newVerts[vi])
-            {
-                I count{};
-                for (const Id adjVid : _mesh.adj_v2v(toId(vi)))
-                {
-                    if (_newVerts[toI(adjVid)])
-                    {
-                        count++;
-                    }
-                }
-                queue.push(vi, count);
-            }
-        }
-        return queue;
-    }
-
-    better_priority_queue::updatable_priority_queue<I, I> createQueue(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, std::vector<Id> _vidsPath)
-    {
-        better_priority_queue::updatable_priority_queue<I, I> queue{};
-        for (I i{}; i < _vidsPath.size(); i++)
-        {
-            const Id vid{ _vidsPath[i] };
-            if (!_newVerts[toI(vid)])
-            {
-                I count{};
-                for (const Id adjVid : Utils::vidsPathAdjVids(_vidsPath, i))
-                {
-                    if (_newVerts[toI(adjVid)])
-                    {
-                        count++;
-                    }
-                }
-                queue.push(toI(vid), count);
-            }
-        }
-        return queue;
-    }
-
     std::vector<Vec> fill(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Utils::Tweak& _distWeightTweak)
     {
         std::vector<Vec> out;
@@ -58,10 +15,10 @@ namespace HMP::Projection
         return out;
     }
 
-    std::vector<Vec> fillPath(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Utils::Tweak& _distWeightTweak, const std::vector<Id>& _vidsPath)
+    std::vector<Vec> fillPath(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newPathVerts, const Utils::Tweak& _distWeightTweak, const std::vector<Id>& _vidsPath)
     {
         std::vector<Vec> out;
-        fillPath(_mesh, _newVerts, _distWeightTweak, _vidsPath, out);
+        fillPath(_mesh, _newPathVerts, _distWeightTweak, _vidsPath, out);
         return out;
     }
 
@@ -133,17 +90,17 @@ namespace HMP::Projection
         }
     }
 
-    void fillPath(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newVerts, const Utils::Tweak& _distWeightTweak, const std::vector<Id>& _vidsPath, std::vector<Vec>& _out)
+    void fillPath(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<std::optional<Vec>>& _newPathVerts, const Utils::Tweak& _distWeightTweak, const std::vector<Id>& _vidsPath, std::vector<Vec>& _out)
     {
         better_priority_queue::updatable_priority_queue<I, I> queue{};
-        for (I pvi{}; pvi < _newVerts.size(); pvi++)
+        for (I pvi{}; pvi < _newPathVerts.size(); pvi++)
         {
-            if (!_newVerts[pvi])
+            if (!_newPathVerts[pvi])
             {
                 I count{};
                 for (const I adjPvi : Utils::vidsPathAdjVidsI(_vidsPath, pvi))
                 {
-                    if (_newVerts[adjPvi])
+                    if (_newPathVerts[adjPvi])
                     {
                         count++;
                     }
@@ -151,7 +108,7 @@ namespace HMP::Projection
                 queue.push(pvi, count);
             }
         }
-        std::vector<std::optional<Vec>> newVerts{ _newVerts };
+        std::vector<std::optional<Vec>> newVerts{ _newPathVerts };
         std::vector<Real> baseWeights;
         baseWeights.reserve(4);
         while (!queue.empty())
@@ -162,7 +119,7 @@ namespace HMP::Projection
             const std::vector<I> adjPvis{ Utils::vidsPathAdjVidsI(_vidsPath, pvi) };
             for (const I adjPvi : adjPvis)
             {
-                baseWeights.push_back(vert.dist(_newVerts[adjPvi].value_or(_mesh.vert(_vidsPath[adjPvi]))));
+                baseWeights.push_back(vert.dist(_newPathVerts[adjPvi].value_or(_mesh.vert(_vidsPath[adjPvi]))));
             }
             Utils::invertAndNormalizeDistances(baseWeights);
             Vec adjVertSum{};
