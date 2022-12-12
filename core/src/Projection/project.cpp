@@ -4,16 +4,18 @@
 #include <cinolib/meshes/polygonmesh.h>
 #include <optional>
 #include <algorithm>
-#include <cinolib/export_surface.h>
 #include <HMP/Projection/defensiveAdvance.hpp>
 #include <cpputils/collections/zip.hpp>
 #include <HMP/Projection/fill.hpp>
 #include <HMP/Projection/Match.hpp>
 #include <HMP/Projection/smooth.hpp>
 #include <array>
+#include <cinolib/parallel_for.h>
 
 namespace HMP::Projection
 {
+
+    static constexpr unsigned int c_minVertsForParallelFor{ 256 };
 
     // surface
 
@@ -172,10 +174,10 @@ namespace HMP::Projection
     {
         const std::vector<std::vector<Match::SourceToTargetVid>>& matches{ Match::matchSurfaceFid(_source, _target) };
         std::vector<std::optional<Vec>> projected(toI(_source.num_verts()));
-        for (Id vid{}; vid < _source.num_verts(); vid++)
-        {
-            projected[toI(vid)] = projectSurfaceVert(_source, _target, vid, matches, _options);
-        }
+        const auto func{ [&](const Id _vid) {
+            projected[toI(_vid)] = projectSurfaceVert(_source, _target, _vid, matches, _options);
+        } };
+        cinolib::PARALLEL_FOR(0, _source.num_verts(), c_minVertsForParallelFor, func);
         return fill(_source, projected, _options.unsetVertsDistWeightTweak);
     }
 
@@ -285,8 +287,8 @@ namespace HMP::Projection
         const std::unordered_map<Id, std::vector<Match::SourceToTargetVid>> matches{ Match::matchPathEid(_source, _target, _sourceEidsPath, _targetVidsPath) };
         std::vector<std::optional<Vec>> projected;
         projected.reserve(_sourceVidsPath.size());
-        for (I i{}; i < _sourceVidsPath.size(); i++)
-        {
+        const auto func{ [&](const Id _id) {
+            const I i{ toI(_id) };
             const Id vid{ _sourceVidsPath[i] };
             const std::vector<Id> adjVids{ Utils::vidsPathAdjVids(_sourceVidsPath, i) };
             std::vector<Id> adjEids(adjVids.size());
@@ -295,7 +297,8 @@ namespace HMP::Projection
                 adjEid = _source.edge_id(vid, adjVid);
             }
             projected.push_back(projectPathVert(_source, _target, vid, adjEids, matches, _options));
-        }
+        } };
+        cinolib::PARALLEL_FOR(0, toId(_sourceVidsPath.size()), c_minVertsForParallelFor, func);
         return fill(_source, projected, _options.unsetVertsDistWeightTweak, _sourceVidsPath);
     }
 

@@ -152,11 +152,11 @@ namespace HMP::Gui::Widgets
 		{
 			if (_fromSource)
 			{
-				m_paths[i].sourceEids = HMP::Projection::Utils::vidsToEidsPath(target, to[i]);
+				m_paths[i].targetEids = HMP::Projection::Utils::vidsToEidsPath(target, to[i]);
 			}
 			else
 			{
-				m_paths[i].targetEids = HMP::Projection::Utils::vidsToEidsPath(source, to[i]);
+				m_paths[i].sourceEids = HMP::Projection::Utils::vidsToEidsPath(source, to[i]);
 			}
 			if (m_showPaths && (m_showAllPaths || m_currentPath == i))
 			{

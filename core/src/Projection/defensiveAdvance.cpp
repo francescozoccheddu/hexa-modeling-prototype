@@ -22,7 +22,7 @@ namespace HMP::Projection
         Real maxLength{};
         {
             std::vector<Real> lengths(_from.size());
-            const auto func{ [&lengths, &_to, &_from](const Id _id) {
+            const auto func{ [&](const Id _id) {
                 const I i{ toI(_id) };
                 lengths[i] = (_to[i] - _from[i]).norm();
             } };
@@ -38,7 +38,7 @@ namespace HMP::Projection
                 maxLength = std::numeric_limits<Real>::infinity();
             }
         }
-        const auto func{ [maxLength, &_to, &_from, &_out](const Id _id) {
+        const auto func{ [&](const Id _id) {
             const I i{ toI(_id) };
             const Vec offset{ _to[i] - _from[i] };
             const Vec clampedOffset{ offset.norm() <= maxLength ? offset : (offset.normalized() * maxLength) };

@@ -37,7 +37,7 @@ namespace HMP::Projection::Match
     {
         std::vector<TargetVidToSource> matches(toI(_target.num_verts()));
         const cinolib::Octree sourceOctree{ surfaceOctree(_source) };
-        const auto func{ [&_target, &sourceOctree, &matches](Id _targetVid) {
+        const auto func{ [&](Id _targetVid) {
             const Vec& targetVert{ _target.vert(_targetVid) };
             Vec sourcePos;
             Id sourceFid;

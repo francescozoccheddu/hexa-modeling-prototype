@@ -11,7 +11,7 @@ namespace HMP::Projection
     void smooth(const cinolib::AbstractPolygonMesh<>& _mesh, std::vector<Vec>& _out)
     {
         _out.resize(toI(_mesh.num_verts()));
-        const auto func{ [&_out, &_mesh](Id _vid) {
+        const auto func{ [&](Id _vid) {
             Vec vertSum{};
             I vertCount{};
             for (const Id adjVid : _mesh.adj_v2v(_vid))
@@ -29,7 +29,7 @@ namespace HMP::Projection
     void smoothPath(const cinolib::AbstractPolygonMesh<>& _mesh, const std::vector<Id>& _vids, std::vector<Vec>& _out)
     {
         _out.resize(_vids.size());
-        const auto func{ [&_out, &_mesh, &_vids](Id _vidsI) {
+        const auto func{ [&](Id _vidsI) {
             const Id vid{ _vids[toI(_vidsI)] };
             Vec vertSum{};
             I vertCount{};
@@ -56,7 +56,7 @@ namespace HMP::Projection
         std::unordered_set<Id> doneVids{};
         doneVids.reserve(toI(_mesh.num_verts()));
         std::vector<Id> currentVids{}, nextVids{ _surfaceVids };
-        const auto func{ [&_out, &_mesh, &currentVids, &doneVids](Id _vidsI) {
+        const auto func{ [&](Id _vidsI) {
             const Id vid{ currentVids[toI(_vidsI)] };
             Vec vertSum{};
             I vertCount{};
