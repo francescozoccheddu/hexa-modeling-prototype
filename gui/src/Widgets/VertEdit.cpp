@@ -191,8 +191,8 @@ namespace HMP::Gui::Widgets
 				m_unappliedTransform.origin += pos;
 				m_centroid += m_mesher.mesh().vert(vid);
 			}
-			m_centroid /= m_verts.size();
-			m_unappliedTransform.origin /= m_verts.size();
+			m_centroid /= static_cast<Real>(m_verts.size());
+			m_unappliedTransform.origin /= static_cast<Real>(m_verts.size());
 		}
 		onCentroidChanged();
 	}
