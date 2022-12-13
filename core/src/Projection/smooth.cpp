@@ -45,12 +45,12 @@ namespace HMP::Projection
         cinolib::PARALLEL_FOR(0, toId(_vids.size()), c_minVertsForParallelFor, func);
     }
 
-    void smoothInternal(const Meshing::Mesher::Mesh& _mesh, std::vector<Vec>& _out)
+    void smoothInternal(const Meshing::Mesher::Mesh& _mesh, Real _doneWeight, std::vector<Vec>& _out)
     {
-        smoothInternal(_mesh, Utils::SurfaceExporter::onSurfVids(_mesh), _out);
+        smoothInternal(_mesh, Utils::SurfaceExporter::onSurfVids(_mesh), _doneWeight, _out);
     }
 
-    void smoothInternal(const Meshing::Mesher::Mesh& _mesh, const std::vector<Id>& _surfaceVids, std::vector<Vec>& _out)
+    void smoothInternal(const Meshing::Mesher::Mesh& _mesh, const std::vector<Id>& _surfaceVids, Real _doneWeight, std::vector<Vec>& _out)
     {
         _out = _mesh.vector_verts();
         std::vector<bool> doneVids(toI(_mesh.num_verts()), false);
@@ -58,16 +58,18 @@ namespace HMP::Projection
         const auto func{ [&](Id _vidsI) {
             const Id vid{ currentVids[toI(_vidsI)] };
             Vec vertSum{};
-            I vertCount{};
+            Real weightSum{};
             for (const Id adjVid : _mesh.adj_v2v(vid))
             {
                 vertSum += doneVids[adjVid]
-                    ? _out[toI(adjVid)]
+                    ? _out[toI(adjVid)] * _doneWeight
                     : _mesh.vert(adjVid);
-                vertCount++;
+                weightSum += doneVids[adjVid]
+                    ? _doneWeight
+                    : 1.0;
             }
-            _out[toI(vid)] = vertCount != 0
-                ? vertSum / static_cast<Real>(vertCount)
+            _out[toI(vid)] = weightSum != 0
+                ? vertSum / weightSum
                 : _mesh.vert(vid);
         } };
         while (!nextVids.empty())
@@ -106,17 +108,17 @@ namespace HMP::Projection
         return out;
     }
 
-    std::vector<Vec> smoothInternal(const Meshing::Mesher::Mesh& _mesh)
+    std::vector<Vec> smoothInternal(const Meshing::Mesher::Mesh& _mesh, Real _doneWeight)
     {
         std::vector<Vec> out;
-        smoothInternal(_mesh, out);
+        smoothInternal(_mesh, _doneWeight, out);
         return out;
     }
 
-    std::vector<Vec> smoothInternal(const Meshing::Mesher::Mesh& _mesh, const std::vector<Id>& _surfaceVids)
+    std::vector<Vec> smoothInternal(const Meshing::Mesher::Mesh& _mesh, const std::vector<Id>& _surfaceVids, Real _doneWeight)
     {
         std::vector<Vec> out;
-        smoothInternal(_mesh, _surfaceVids, out);
+        smoothInternal(_mesh, _surfaceVids, _doneWeight, out);
         return out;
     }
 

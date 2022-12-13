@@ -77,4 +77,42 @@ namespace HMP::Gui::Utils::Controls
 		return ImVec2{ static_cast<float>(_vec.x()), static_cast<float>(_vec.y()) };
 	}
 
+	bool sliderI(const char* _label, I& _value, I _min, I _max)
+	{
+		int value{ static_cast<int>(_value) };
+		if (ImGui::SliderInt(_label, &value, static_cast<int>(_min), static_cast<int>(_max), "%d", ImGuiSliderFlags_AlwaysClamp))
+		{
+			_value = static_cast<I>(value);
+			return true;
+		}
+		return false;
+	}
+
+	bool sliderReal(const char* _label, Real& _value, Real _min, Real _max, bool _logarithmic, const char* _format)
+	{
+		float value{ static_cast<float>(_value) };
+		ImGuiSliderFlags flags{ ImGuiSliderFlags_AlwaysClamp };
+		if (_logarithmic)
+		{
+			flags |= ImGuiSliderFlags_Logarithmic;
+		}
+		if (ImGui::SliderFloat(_label, &value, static_cast<float>(_min), static_cast<float>(_max), _format, flags))
+		{
+			_value = static_cast<Real>(value);
+			return true;
+		}
+		return false;
+	}
+
+	bool sliderPercentage(const char* _label, Real& _value, Real _min, Real _max, const char* _format)
+	{
+		Real value{ _value * 100.0 };
+		if (sliderReal(_label, value, _min * 100.0, _max * 100.0, false, _format))
+		{
+			_value = value / 100.0;
+			return true;
+		}
+		return false;
+	}
+
 }

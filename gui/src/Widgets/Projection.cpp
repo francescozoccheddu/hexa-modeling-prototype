@@ -10,6 +10,7 @@
 #include <set>
 #include <cinolib/feature_mapping.h>
 #include <HMP/Projection/Utils.hpp>
+#include <HMP/Gui/Utils/Controls.hpp>
 
 namespace HMP::Gui::Widgets
 {
@@ -319,71 +320,59 @@ namespace HMP::Gui::Widgets
 
 	void Projection::draw()
 	{
-		static constexpr auto tweak{ [](HMP::Projection::Utils::Tweak& _tweak, const char* _header) {
+		static constexpr auto tweak{ [](HMP::Projection::Utils::Tweak& _tweak, const char* _label) {
 			ImGui::PushID(&_tweak);
-			ImGui::Text("%s", _header);
-			float min{static_cast<float>(_tweak.min())};
-			ImGui::SliderFloat("Min", &min, -2.0f, 1.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
-			float power{static_cast<float>(_tweak.power())};
-			ImGui::SliderFloat("Power", &power, 0.0f, 4.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_Logarithmic);
+			ImGui::Text("%s", _label);
+			Real min{ _tweak.min() }, power{ _tweak.power() };
+			Utils::Controls::sliderReal("Min", min, -2.0, 1.0);
+			Utils::Controls::sliderReal("Power", power, 0.0, 4.0, true);
 			_tweak = { min, power };
 			ImGui::PopID();
 		} };
+		if (ImGui::TreeNode("Weights"))
 		{
-			int iterations{ static_cast<int>(m_options.iterations) };
-			if (ImGui::SliderInt("Iterations", &iterations, 1, 10, "%d", ImGuiSliderFlags_AlwaysClamp))
-			{
-				m_options.iterations = static_cast<I>(iterations);
-			}
-		}
-		ImGui::Spacing();
-		{
-			int baseWeightMode{ static_cast<int>(m_options.baseWeightMode) };
-			if (ImGui::Combo("Invert mode", &baseWeightMode, "Distance\0BarycentricCoords\0"))
-			{
-				m_options.baseWeightMode = static_cast<HMP::Projection::EBaseWeightMode>(baseWeightMode);
-			}
-			int displaceMode{ static_cast<int>(m_options.displaceMode) };
-			if (ImGui::Combo("Displace mode", &displaceMode, "NormDirAvgAndDirNormAvg\0NormDirAvgAndDirAvg\0DirAvg\0VertAvg\0"))
-			{
-				m_options.displaceMode = static_cast<HMP::Projection::EDisplaceMode>(displaceMode);
-			}
-			int jacobianCheckMode{ static_cast<int>(m_options.jacobianCheckMode) };
-			if (ImGui::Combo("Jacobian check mode", &jacobianCheckMode, "None\0SurfaceOnly\0All\0"))
-			{
-				m_options.jacobianCheckMode = static_cast<HMP::Projection::EJacobianCheckMode>(jacobianCheckMode);
-			}
-		}
-		ImGui::Spacing();
-		tweak(m_options.baseWeightTweak, "Base weight factor");
-		ImGui::Spacing();
-		tweak(m_options.normalDotTweak, "Normal dot factor");
-		ImGui::Spacing();
-		{
+			ImGui::Spacing();
+			Utils::Controls::combo("Displace mode", m_options.displaceMode, { "NormDirAvgAndDirNormAvg", "NormDirAvgAndDirAvg", "DirAvg", "VertAvg" });
+			ImGui::Spacing();
+			tweak(m_options.baseWeightTweak, "Base weight factor");
+			Utils::Controls::combo("Mode", m_options.baseWeightMode, { "Distance", "Barycentric coords" });
+			ImGui::Spacing();
+			tweak(m_options.normalDotTweak, "Normal dot factor");
+			ImGui::Spacing();
 			ImGui::Text("Distance weight factor");
-			float weight{ static_cast<float>(m_options.distanceWeight) };
-			ImGui::SliderFloat("Weight", &weight, 0.0f, 10.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
-			m_options.distanceWeight = static_cast<double>(weight);
-			float power{ static_cast<float>(m_options.distanceWeightPower) };
-			ImGui::SliderFloat("Power", &power, 0.0f, 4.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp | ImGuiSliderFlags_Logarithmic);
-			m_options.distanceWeightPower = static_cast<double>(power);
+			Utils::Controls::sliderReal("Weight", m_options.distanceWeight, 0.0, 10.0);
+			Utils::Controls::sliderReal("Power", m_options.distanceWeightPower, 0.0, 4.0, true);
+			ImGui::Spacing();
+			ImGui::TreePop();
 		}
-		ImGui::Spacing();
-		tweak(m_options.unsetVertsDistWeightTweak, "Unset verts distance factor");
-		ImGui::Spacing();
+		if (ImGui::TreeNode("Fill and advance"))
 		{
-			float advancePercentile{ static_cast<float>(m_options.advancePercentile) * 100.0f };
-			if (ImGui::SliderFloat("Advance percentile", &advancePercentile, 0.0f, 100.0f, "%.2f%%", ImGuiSliderFlags_AlwaysClamp))
-			{
-				m_options.advancePercentile = advancePercentile / 100.0f;
-			}
+			ImGui::Spacing();
+			tweak(m_options.unsetVertsDistWeightTweak, "Fill distance factor");
+			ImGui::Spacing();
+			Utils::Controls::sliderPercentage("Advance percentile", m_options.advancePercentile);
+			ImGui::Spacing();
+			ImGui::TreePop();
 		}
-		ImGui::Spacing();
-		ImGui::Text("Smoothing");
-		ImGui::Checkbox("Surface", &m_options.smoothSurface);
-		ImGui::SameLine();
-		ImGui::Checkbox("Internal", &m_options.smoothInternal);
-		ImGui::Spacing();
+		if (ImGui::TreeNode("Smoothing"))
+		{
+			ImGui::Spacing();
+			Utils::Controls::sliderI("Surface iterations", m_options.smoothSurfaceIterations, 0, 10);
+			Utils::Controls::sliderI("Internal iterations", m_options.smoothInternalIterations, 0, 10);
+			Utils::Controls::sliderPercentage("Internal done weight", m_options.smoothInternalDoneWeight, 1.0, 10.0);
+			ImGui::Spacing();
+			ImGui::TreePop();
+		}
+		if (ImGui::TreeNode("Jacobian check"))
+		{
+			ImGui::Spacing();
+			Utils::Controls::combo("Target", m_options.jacobianCheckMode, { "None", "Surface only", "All" });
+			Utils::Controls::combo("Advance mode", m_options.jacobianAdvanceMode, { "Length", "Lerp" });
+			Utils::Controls::sliderI("Max tests", m_options.jacobianAdvanceMaxTests, 2, 20);
+			Utils::Controls::sliderPercentage("Stop threshold", m_options.jacobianAdvanceStopThreshold, 0.01, 0.4);
+			ImGui::Spacing();
+			ImGui::TreePop();
+		}
 		ImGui::SetNextItemOpen(m_showPaths, ImGuiCond_Always);
 		bool wasShowingPaths{ m_showPaths };
 		m_showPaths = ImGui::TreeNode("Paths");
@@ -400,6 +389,7 @@ namespace HMP::Gui::Widgets
 		}
 		if (m_showPaths)
 		{
+			ImGui::Spacing();
 			if (ImGui::TreeNode("Auto finder"))
 			{
 				ImGui::SliderFloat("Angle threshold", &m_featureFinderOptions.ang_thresh_deg, 0.0f, 180.0f, "%.0f deg", ImGuiSliderFlags_AlwaysClamp);
@@ -543,8 +533,10 @@ namespace HMP::Gui::Widgets
 					}
 				}
 			}
+			ImGui::Spacing();
 			ImGui::TreePop();
 		}
+		Utils::Controls::sliderI("Iterations", m_options.iterations, 1, 10);
 		if (m_targetWidget.hasMesh())
 		{
 			ImGui::Spacing();

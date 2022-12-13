@@ -33,6 +33,9 @@ namespace HMP::Projection
         EJacobianCheckMode jacobianCheckMode{ EJacobianCheckMode::Surface };
         EJacobianAdvanceMode jacobianAdvanceMode{ EJacobianAdvanceMode::Length };
         I jacobianAdvanceMaxTests{ 7 };
+        I smoothInternalIterations{ 1 };
+        I smoothSurfaceIterations{ true };
+        Real smoothInternalDoneWeight{ 2.0 };
         Real jacobianAdvanceStopThreshold{ 0.1 };
         Utils::Tweak baseWeightTweak{ 0.0, 1.0 };
         Utils::Tweak normalDotTweak{ -1.0, 0.0 };
@@ -40,8 +43,6 @@ namespace HMP::Projection
         double distanceWeight{ 0.0 };
         double distanceWeightPower{ 1.0 };
         double advancePercentile{ 0.5 };
-        bool smoothSurface{ true };
-        bool smoothInternal{ true };
         I iterations{ 5 };
 
     };
