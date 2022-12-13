@@ -5,6 +5,7 @@
 #include <vector>
 #include <HMP/Meshing/Mesher.hpp>
 #include <HMP/Projection/Utils.hpp>
+#include <HMP/Projection/jacobianAdvance.hpp>
 
 namespace HMP::Projection
 {
@@ -30,6 +31,9 @@ namespace HMP::Projection
         EBaseWeightMode baseWeightMode{ EBaseWeightMode::Distance };
         EDisplaceMode displaceMode{ EDisplaceMode::DirAvg };
         EJacobianCheckMode jacobianCheckMode{ EJacobianCheckMode::Surface };
+        EJacobianAdvanceMode jacobianAdvanceMode{ EJacobianAdvanceMode::Length };
+        I jacobianAdvanceMaxTests{ 7 };
+        Real jacobianAdvanceStopThreshold{ 0.1 };
         Utils::Tweak baseWeightTweak{ 0.0, 1.0 };
         Utils::Tweak normalDotTweak{ -1.0, 0.0 };
         Utils::Tweak unsetVertsDistWeightTweak{ 0.0, 0.0 };
