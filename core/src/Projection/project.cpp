@@ -13,6 +13,8 @@
 #include <array>
 #include <cinolib/parallel_for.h>
 
+#define HMP_PROJECTION_PROJECT_DEBUG_LOG
+
 namespace HMP::Projection
 {
 
@@ -369,6 +371,20 @@ namespace HMP::Projection
                     break;
             }
         }
+#ifdef HMP_PROJECTION_PROJECT_DEBUG_LOG
+        {
+            I notOkCount{};
+            for (Id pid{}; pid < exporter.vol.num_polys(); pid++)
+            {
+                const std::vector<Vec>& verts{ exporter.vol.poly_verts(pid) };
+                if (cinolib::hex_scaled_jacobian(verts[0], verts[1], verts[2], verts[3], verts[4], verts[5], verts[6], verts[7]) < 0.0)
+                {
+                    notOkCount++;
+                }
+            }
+            std::cout << notOkCount << " polys with negative scaled jacobian" << std::endl;
+        }
+#endif
         return exporter.vol.vector_verts();
     }
 
