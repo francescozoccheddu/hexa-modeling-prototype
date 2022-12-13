@@ -12,8 +12,8 @@ namespace HMP::Projection
         Length, Lerp
     };
 
-    void jacobianAdvance(Meshing::Mesher::Mesh& _mesh, const std::vector<Vec>& _from, EJacobianAdvanceMode _mode = EJacobianAdvanceMode::Length, I _maxTests = 7, Real _stopThreshold = 0.9);
+    void jacobianAdvance(Meshing::Mesher::Mesh& _mesh, const std::vector<Vec>& _from, EJacobianAdvanceMode _mode = EJacobianAdvanceMode::Length, I _maxTests = 7, Real _stopThreshold = 0.1);
 
-    void jacobianAdvance(Meshing::Mesher::Mesh& _mesh, const std::vector<Vec>& _from, const std::vector<Id>& _vids, EJacobianAdvanceMode _mode = EJacobianAdvanceMode::Length, I _maxTests = 7, Real _stopThreshold = 0.9);
+    void jacobianAdvance(Meshing::Mesher::Mesh& _mesh, const std::vector<Vec>& _from, const std::vector<Id>& _vids, EJacobianAdvanceMode _mode = EJacobianAdvanceMode::Length, I _maxTests = 7, Real _stopThreshold = 0.1);
 
 }

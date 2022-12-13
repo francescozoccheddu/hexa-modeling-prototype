@@ -58,9 +58,9 @@ namespace HMP::Projection::Utils
     {
         std::vector<Id> vids;
         vids.reserve(m_v2s.size());
-        for (const auto& [volVid, surfVid] : m_v2s)
+        for (Id surfVid{}; surfVid < surf.num_verts(); surfVid++)
         {
-            vids.push_back(volVid);
+            vids.push_back(m_s2v.at(surfVid));
         }
         return vids;
     }

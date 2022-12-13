@@ -5,6 +5,7 @@
 #include <optional>
 #include <algorithm>
 #include <HMP/Projection/percentileAdvance.hpp>
+#include <HMP/Projection/jacobianAdvance.hpp>
 #include <cpputils/collections/zip.hpp>
 #include <HMP/Projection/fill.hpp>
 #include <HMP/Projection/Match.hpp>
@@ -358,7 +359,15 @@ namespace HMP::Projection
             }
             exporter.applySurfToVol();
             // jacobian advance
-            // TODO
+            switch (_options.jacobianCheckMode)
+            {
+                case EJacobianCheckMode::Surface:
+                    jacobianAdvance(exporter.vol, oldSurfVerts, onSurfVolVids, _options.jacobianAdvanceMode, _options.jacobianAdvanceMaxTests, _options.jacobianAdvanceStopThreshold);
+                    break;
+                case EJacobianCheckMode::All:
+                    jacobianAdvance(exporter.vol, oldVolVerts, _options.jacobianAdvanceMode, _options.jacobianAdvanceMaxTests, _options.jacobianAdvanceStopThreshold);
+                    break;
+            }
         }
         return exporter.vol.vector_verts();
     }
