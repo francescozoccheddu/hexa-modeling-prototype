@@ -1,5 +1,6 @@
 #include <HMP/Gui/Widgets/Ae3d2ShapeExporter.hpp>
 
+#include <HMP/Gui/Utils/Controls.hpp>
 #include <cpputils/collections/conversions.hpp>
 #include <cinolib/gl/file_dialog_save.h>
 #include <algorithm>
@@ -39,7 +40,7 @@ namespace HMP::Gui::Widgets
 			<< ']';
 	}
 
-	Ae3d2ShapeExporter::Ae3d2ShapeExporter(const Meshing::Mesher::Mesh& _mesh, const cinolib::FreeCamera<Real>& _camera) :
+	Ae3d2ShapeExporter::Ae3d2ShapeExporter(const Meshing::Mesher::Mesh& _mesh, const cinolib::FreeCamera<Real>& _camera):
 		cinolib::SideBarItem{ "ae-3d2shape exporter" }, m_camera{ _camera }, m_mesh{ _mesh }, m_sampleError{},
 		m_keyframes{}
 	{}
@@ -224,17 +225,9 @@ namespace HMP::Gui::Widgets
 		{
 			ImGui::TextColored(ImVec4{ 1.0f,0.0f,0.0f,1.0f }, "%s", m_sampleError->c_str());
 		}
-		if (empty())
-		{
-			ImGui::BeginDisabled();
-		}
-		if (ImGui::Button("Export"))
+		if (Utils::Controls::disabledButton("Export", !empty()))
 		{
 			requestExport();
-		}
-		if (empty())
-		{
-			ImGui::EndDisabled();
 		}
 	}
 

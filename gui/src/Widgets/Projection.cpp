@@ -457,49 +457,27 @@ namespace HMP::Gui::Widgets
 						removePath(i);
 					}
 					ImGui::SameLine();
-					const bool sourceEmpty = m_paths[i].sourceEids.empty();
-					if (sourceEmpty)
-					{
-						ImGui::BeginDisabled();
-					}
-					if (ImGui::SmallButton("Clear source"))
+					if (Utils::Controls::disabledSmallButton("Clear source", !m_paths[i].sourceEids.empty()))
 					{
 						clearSourcePaths(i, i + 1);
-					}
-					if (sourceEmpty)
-					{
-						ImGui::EndDisabled();
 					}
 					if (m_targetWidget.hasMesh())
 					{
 						ImGui::SameLine();
-						const bool targetEmpty = m_paths[i].targetEids.empty();
-						if (targetEmpty)
-						{
-							ImGui::BeginDisabled();
-						}
-						if (ImGui::SmallButton("Clear target"))
+						if (Utils::Controls::disabledSmallButton("Clear target", !m_paths[i].targetEids.empty()))
 						{
 							clearTargetPaths(i, i + 1);
 						}
-						if (targetEmpty)
-						{
-							ImGui::EndDisabled();
-						}
 						ImGui::SameLine();
-						if (targetEmpty) ImGui::BeginDisabled();
-						if (ImGui::SmallButton("Match source"))
+						if (Utils::Controls::disabledSmallButton("Match source", !m_paths[i].targetEids.empty()))
 						{
 							matchPaths(i, i + 1, false);
 						}
-						if (targetEmpty) ImGui::EndDisabled();
 						ImGui::SameLine();
-						if (sourceEmpty) ImGui::BeginDisabled();
-						if (ImGui::SmallButton("Match target"))
+						if (Utils::Controls::disabledSmallButton("Match target", !m_paths[i].sourceEids.empty()))
 						{
 							matchPaths(i, i + 1, true);
 						}
-						if (sourceEmpty) ImGui::EndDisabled();
 					}
 					ImGui::PopID();
 				}

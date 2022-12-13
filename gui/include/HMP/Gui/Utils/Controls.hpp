@@ -31,6 +31,10 @@ namespace HMP::Gui::Utils::Controls
 	template<typename TEnum> requires std::is_enum_v<TEnum>
 	bool combo(const char* _label, TEnum& _value, const std::initializer_list<const char*>& _values);
 
+	bool disabledButton(const char* _label, bool _enabled = false);
+
+	bool disabledSmallButton(const char* _label, bool _enabled = false);
+
 	ImVec4 toImGui(const cinolib::Color& _color);
 
 	ImVec2 toImGui(const Vec2& _vec);
