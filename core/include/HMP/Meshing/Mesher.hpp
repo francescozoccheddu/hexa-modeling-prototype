@@ -12,6 +12,8 @@
 #include <functional>
 #include <unordered_set>
 #include <vector>
+#include <cinolib/octree.h>
+#include <memory>
 
 namespace HMP::Meshing
 {
@@ -188,10 +190,13 @@ namespace HMP::Meshing
 		std::vector<Id> m_visibleFaceIndices, m_visibleEdgeIndices;
 		std::vector<bool> m_edgesPainted;
 		RemovedIds m_removedIds;
+		std::unique_ptr<cinolib::Octree> m_octree;
 
 		Id getOrAddVert(const Vec& _vert);
 
 		void updateEdgeColor(Id _eid, const cinolib::Color& _color);
+
+		void updateOctree();
 
 	public:
 
