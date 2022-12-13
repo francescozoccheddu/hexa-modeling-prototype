@@ -115,4 +115,32 @@ namespace HMP::Gui::Utils::Controls
 		return false;
 	}
 
+	bool disabledButton(const char* _label, bool _enabled)
+	{
+		if (!_enabled)
+		{
+			ImGui::BeginDisabled();
+		}
+		const bool pressed{ ImGui::Button(_label) };
+		if (!_enabled)
+		{
+			ImGui::EndDisabled();
+		}
+		return pressed;
+	}
+
+	bool disabledSmallButton(const char* _label, bool _enabled)
+	{
+		if (!_enabled)
+		{
+			ImGui::BeginDisabled();
+		}
+		const bool pressed{ ImGui::SmallButton(_label) };
+		if (!_enabled)
+		{
+			ImGui::EndDisabled();
+		}
+		return pressed;
+	}
+
 }
