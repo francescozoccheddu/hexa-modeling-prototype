@@ -4,6 +4,7 @@
 #include <cpputils/collections/conversions.hpp>
 #include <cinolib/Moller_Trumbore_intersection.h>
 #include <limits>
+#include <cinolib/octree.h>
 
 namespace HMP::Meshing
 {
@@ -406,6 +407,7 @@ namespace HMP::Meshing
 	{
 		if (m_dirty)
 		{
+			updateOctree();
 			{
 				m_visibleFaceIndices.resize(toI(m_mesh.num_faces()));
 				Id lastI{};
@@ -507,39 +509,8 @@ namespace HMP::Meshing
 	bool Mesher::pick(const Vec& _from, const Vec& _normDir, Id& _pid, Id& _fid, Id& _eid, Id& _vid) const
 	{
 		double minT{ std::numeric_limits<double>::infinity() };
-		_fid = noId;
-		for (Id fid{}; fid < m_mesh.num_faces(); fid++)
-		{
-			Id facePid;
-			if (m_mesh.face_is_visible(fid, facePid))
-			{
-				const bool cw{ m_mesh.poly_face_is_CW(facePid, fid) };
-				for (I ti{}; ti < 2; ti++)
-				{
-					bool back, coplanar;
-					double t;
-					Vec bary;
-					if (cinolib::Moller_Trumbore_intersection(
-						_from,
-						_normDir,
-						m_mesh.vert(m_mesh.face_tessellation(fid)[ti * 3 + (cw ? 2 : 0)]),
-						m_mesh.vert(m_mesh.face_tessellation(fid)[ti * 3 + 1]),
-						m_mesh.vert(m_mesh.face_tessellation(fid)[ti * 3 + (cw ? 0 : 2)]),
-						back,
-						coplanar,
-						t,
-						bary))
-					{
-						if (!back && !coplanar && t < minT)
-						{
-							minT = t;
-							_fid = fid;
-						}
-					}
-				}
-			}
-		}
-		if (_fid != noId)
+		_pid = _fid = _eid = _vid = noId;
+		if (m_octree->intersects_ray(_from, _normDir, minT, _fid))
 		{
 			const Vec point{ _from + _normDir * minT };
 			_pid = m_mesh.adj_f2p(_fid)[0];
@@ -551,6 +522,29 @@ namespace HMP::Meshing
 		{
 			return false;
 		}
+	}
+
+	void Mesher::updateOctree()
+	{
+		m_octree = std::make_unique<cinolib::Octree>();
+		for (Id fid{}; fid < m_mesh.num_faces(); fid++)
+		{
+			Id facePid;
+			if (m_mesh.face_is_visible(fid, facePid))
+			{
+				const bool cw{ m_mesh.poly_face_is_CW(facePid, fid) };
+				for (I ti{}; ti < 2; ti++)
+				{
+					m_octree->push_triangle(fid, {
+							m_mesh.vert(m_mesh.face_tessellation(fid)[ti * 3 + (cw ? 2 : 0)]),
+							m_mesh.vert(m_mesh.face_tessellation(fid)[ti * 3 + 1]),
+							m_mesh.vert(m_mesh.face_tessellation(fid)[ti * 3 + (cw ? 0 : 2)]),
+						}
+					);
+				}
+			}
+		}
+		m_octree->build();
 	}
 
 }
