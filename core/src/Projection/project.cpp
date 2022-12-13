@@ -338,16 +338,19 @@ namespace HMP::Projection
             Utils::setSourceVerts(pathTempVerts, exporter.surf.vector_verts(), surfVidsPathFeats);
             Utils::setVerts(exporter.surf.vector_verts(), _target.vector_verts(), surfPointFeats);
             // smooth
-            if (_options.smoothSurface && !lastIteration)
+            if (!lastIteration)
             {
-                exporter.surf.vector_verts() = smooth(exporter.surf);
-                Utils::setSourceVerts(pathTempVerts, exporter.surf.vector_verts(), surfVidsPathFeats);
-                Utils::setVerts(exporter.surf.vector_verts(), _target.vector_verts(), surfPointFeats);
-                for (const auto& [newVerts, eidsPath, vidsPath] : cpputils::collections::zip(pathTempVerts, surfEidsPathFeats, surfVidsPathFeats))
+                for (I si{}; si < _options.smoothSurfaceIterations; si++)
                 {
-                    Utils::setVerts(smoothPath(exporter.surf, vidsPath.sourceVids), exporter.surf.vector_verts(), vidsPath.sourceVids);
+                    exporter.surf.vector_verts() = smooth(exporter.surf);
+                    Utils::setSourceVerts(pathTempVerts, exporter.surf.vector_verts(), surfVidsPathFeats);
+                    Utils::setVerts(exporter.surf.vector_verts(), _target.vector_verts(), surfPointFeats);
+                    for (const auto& [newVerts, eidsPath, vidsPath] : cpputils::collections::zip(pathTempVerts, surfEidsPathFeats, surfVidsPathFeats))
+                    {
+                        Utils::setVerts(smoothPath(exporter.surf, vidsPath.sourceVids), exporter.surf.vector_verts(), vidsPath.sourceVids);
+                    }
+                    Utils::setVerts(exporter.surf.vector_verts(), _target.vector_verts(), surfPointFeats);
                 }
-                Utils::setVerts(exporter.surf.vector_verts(), _target.vector_verts(), surfPointFeats);
             }
             // median advance
             if (_options.advancePercentile < 1.0 && !lastIteration)
@@ -355,9 +358,9 @@ namespace HMP::Projection
                 percentileAdvance(oldSurfVerts, exporter.surf.vector_verts(), exporter.surf.vector_verts(), _options.advancePercentile);
             }
             exporter.applySurfToVol();
-            if (_options.smoothInternal)
+            for (I si{}; si < _options.smoothInternalIterations; si++)
             {
-                exporter.vol.vector_verts() = smoothInternal(exporter.vol, onSurfVolVids);
+                exporter.vol.vector_verts() = smoothInternal(exporter.vol, onSurfVolVids, _options.smoothInternalDoneWeight);
             }
             exporter.applySurfToVol();
             // jacobian advance
