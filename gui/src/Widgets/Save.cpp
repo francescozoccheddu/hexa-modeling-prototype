@@ -67,7 +67,7 @@ namespace HMP::Gui::Widgets
 
     void Save::requestExportMesh()
     {
-        const std::string filename{ cinolib::file_dialog_open() };
+        const std::string filename{ cinolib::file_dialog_save() };
         if (!filename.empty())
         {
             onExportMesh(filename);
