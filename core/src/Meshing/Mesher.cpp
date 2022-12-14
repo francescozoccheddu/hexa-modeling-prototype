@@ -506,11 +506,11 @@ namespace HMP::Meshing
 		}
 	}
 
-	bool Mesher::pick(const Vec& _from, const Vec& _normDir, Id& _pid, Id& _fid, Id& _eid, Id& _vid) const
+	bool Mesher::pick(const Vec& _from, const Vec& _normDir, Id& _pid, Id& _fid, Id& _eid, Id& _vid, bool _allowBehind) const
 	{
 		double minT{ std::numeric_limits<double>::infinity() };
 		_pid = _fid = _eid = _vid = noId;
-		if (m_octree->intersects_ray(_from, _normDir, minT, _fid))
+		if (_allowBehind ? m_octree->intersects_line(_from, _normDir, minT, _fid) : m_octree->intersects_ray(_from, _normDir, minT, _fid))
 		{
 			const Vec point{ _from + _normDir * minT };
 			_pid = m_mesh.adj_f2p(_fid)[0];

@@ -242,7 +242,7 @@ namespace HMP::Meshing
 		void updateMeshTemp(const std::unordered_set<Id>& _changedVids);
 		void updateMeshMarkers();
 
-		bool pick(const Vec& _from, const Vec& _dir, Id& _pid, Id& _fid, Id& _eid, Id& _vid) const;
+		bool pick(const Vec& _from, const Vec& _dir, Id& _pid, Id& _fid, Id& _eid, Id& _vid, bool _allowBehind = false) const;
 
 	};
 
