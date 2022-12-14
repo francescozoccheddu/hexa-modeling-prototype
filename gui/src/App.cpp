@@ -667,7 +667,7 @@ namespace HMP::Gui
 		{
 			Id pid, fid, eid, vid;
 			const cinolib::Ray ray{ m_canvas.eye_to_mouse_ray() };
-			if (m_mesher.pick(ray.begin(), ray.dir(), pid, fid, eid, vid))
+			if (m_mesher.pick(ray.begin(), ray.dir(), pid, fid, eid, vid, !m_canvas.camera.projection.perspective))
 			{
 				m_mouse.element = &m_mesher.pidToElement(pid);
 				m_mouse.faceOffset = m_mesh.poly_face_offset(pid, fid);
