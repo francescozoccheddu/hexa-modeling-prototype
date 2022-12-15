@@ -128,11 +128,11 @@ namespace HMP::Actions::Utils
 		}
 	}
 
-	Dag::Extrude& prepareExtrude(Id _forwardFaceOffset, Id _upFaceOffset)
+	Dag::Extrude& prepareExtrude(const std::array<Id, 3>& _faceOffsets, Dag::Extrude::ESource _source)
 	{
 		Dag::Extrude& extrude{ *new Dag::Extrude{} };
-		extrude.forwardFaceOffset() = _forwardFaceOffset;
-		extrude.upFaceOffset() = _upFaceOffset;
+		extrude.faceOffsets() = _faceOffsets;
+		extrude.source() = _source;
 		extrude.children().attach(*new Dag::Element{});
 		return extrude;
 	}
@@ -311,7 +311,7 @@ namespace HMP::Actions::Utils
 		}
 	}
 
-	Sub3x3AdapterCandidate::Sub3x3AdapterCandidate(Dag::Element& _element) : m_element{ &_element }, m_scheme{} {}
+	Sub3x3AdapterCandidate::Sub3x3AdapterCandidate(Dag::Element& _element): m_element{ &_element }, m_scheme{} {}
 
 	Dag::Element& Sub3x3AdapterCandidate::element() const
 	{

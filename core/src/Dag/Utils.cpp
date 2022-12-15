@@ -77,9 +77,11 @@ namespace HMP::Dag::Utils
 						case Operation::EPrimitive::Extrude:
 						{
 							const Extrude& extrudeOperation{ static_cast<const Extrude&>(operation) };
-							_serializer
-								<< extrudeOperation.forwardFaceOffset()
-								<< extrudeOperation.upFaceOffset();
+							_serializer << extrudeOperation.source();
+							for (const Id faceOffset : extrudeOperation.faceOffsets())
+							{
+								_serializer << faceOffset;
+							}
 						}
 						break;
 						case Operation::EPrimitive::Refine:
@@ -155,9 +157,11 @@ namespace HMP::Dag::Utils
 						case Operation::EPrimitive::Extrude:
 						{
 							Extrude& extrudeOperation{ *new Extrude{} };
-							_deserializer
-								>> extrudeOperation.forwardFaceOffset()
-								>> extrudeOperation.upFaceOffset();
+							_deserializer >> extrudeOperation.source();
+							for (Id& faceOffset : extrudeOperation.faceOffsets())
+							{
+								_deserializer >> faceOffset;
+							}
 							operation = &extrudeOperation;
 						}
 						break;

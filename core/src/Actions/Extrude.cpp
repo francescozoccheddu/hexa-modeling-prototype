@@ -1,24 +1,34 @@
 #include <HMP/Actions/Extrude.hpp>
 
 #include <HMP/Actions/Utils.hpp>
+#include <cpputils/collections/conversions.hpp>
+#include <cpputils/collections/zip.hpp>
+#include <cpputils/collections/index.hpp>
+#include <ranges>
 
 namespace HMP::Actions
 {
 
 	void Extrude::apply()
 	{
-		for (const Dag::Operation& child : m_element.children())
+		for (const auto& [parent, i] : cpputils::collections::zip(m_elements, cpputils::collections::index(m_elements)))
 		{
-			if (child.primitive() != Dag::Operation::EPrimitive::Extrude)
+			for (const Dag::Operation& child : parent->children())
 			{
-				throw std::logic_error{ "element has non-extrude child" };
-			}
-			if (static_cast<const Dag::Extrude&>(child).forwardFaceOffset() == m_operation->forwardFaceOffset())
-			{
-				throw std::logic_error{ "element already has equivalent child" };
+				if (child.primitive() != Dag::Operation::EPrimitive::Extrude)
+				{
+					throw std::logic_error{ "element has non-extrude child" };
+				}
+				if (static_cast<const Dag::Extrude&>(child).faceOffsets()[i] == m_operation->faceOffsets()[i])
+				{
+					throw std::logic_error{ "element already has equivalent child" };
+				}
 			}
 		}
-		m_operation->parents().attach(m_element);
+		for (Dag::Element* parent : m_elements)
+		{
+			m_operation->parents().attach(*parent);
+		}
 		Utils::applyExtrude(mesher(), *m_operation);
 		mesher().updateMesh();
 	}
@@ -29,13 +39,25 @@ namespace HMP::Actions
 		mesher().updateMesh();
 	}
 
-	Extrude::Extrude(Dag::Element& _element, Id _forwardFaceOffset, Id _upFaceOffset)
-		: m_element{ _element }, m_operation{ Utils::prepareExtrude(_forwardFaceOffset, _upFaceOffset) }
+	Extrude::Extrude(const std::vector<Dag::Element*>& _elements, const std::array<Id, 3>& _faceOffsets, Dag::Extrude::ESource _source)
+		: m_elements{ _elements }, m_operation{ Utils::prepareExtrude(_faceOffsets, _source) }
 	{}
 
-	const Dag::Element& Extrude::element() const
+	Extrude::Extrude(Dag::Element& _element, Id _forwardFaceOffset, Id _upFaceOffset)
+		: Extrude{ {&_element}, {_forwardFaceOffset, _upFaceOffset, noId}, Dag::Extrude::ESource::Face }
+	{}
+
+	Extrude::Extrude(Dag::Element& _element0, Id _faceOffset0, Dag::Element& _element1, Id _faceOffset1)
+		: Extrude{ {&_element0, &_element1}, {_faceOffset0, _faceOffset1, noId}, Dag::Extrude::ESource::Edge }
+	{}
+
+	Extrude::Extrude(Dag::Element& _element0, Id _faceOffset0, Dag::Element& _element1, Id _faceOffset1, Dag::Element& _element2, Id _faceOffset2)
+		: Extrude{ {&_element0, &_element1, &_element2}, {_faceOffset0, _faceOffset1, _faceOffset2}, Dag::Extrude::ESource::Vertex }
+	{}
+
+	Extrude::Elements Extrude::elements() const
 	{
-		return m_element;
+		return Elements{ m_elements };
 	}
 
 	const Dag::Extrude& Extrude::operation() const
