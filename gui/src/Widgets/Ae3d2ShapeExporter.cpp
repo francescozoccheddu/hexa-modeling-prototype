@@ -1,7 +1,6 @@
 #include <HMP/Gui/Widgets/Ae3d2ShapeExporter.hpp>
 
 #include <HMP/Gui/Utils/Controls.hpp>
-#include <cpputils/collections/conversions.hpp>
 #include <cinolib/gl/file_dialog_save.h>
 #include <algorithm>
 #include <imgui.h>
@@ -179,7 +178,7 @@ namespace HMP::Gui::Widgets
 				{
 					std::reverse(verts.begin(), verts.end());
 				}
-				keyframe.polygons.push_back(cpputils::collections::conversions::toArray<4>(verts));
+				keyframe.polygons.push_back(cpputils::range::of(verts).toArray<4>());
 			}
 		}
 		if (!m_keyframes.empty() && m_keyframes[0].polygons.size() != keyframe.polygons.size())

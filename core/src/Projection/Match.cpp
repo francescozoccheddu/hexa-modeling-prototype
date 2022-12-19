@@ -2,7 +2,7 @@
 
 #include <cinolib/octree.h>
 #include <cinolib/parallel_for.h>
-#include <cpputils/collections/zip.hpp>
+#include <cpputils/range/zip.hpp>
 
 namespace HMP::Projection::Match
 {
@@ -95,7 +95,7 @@ namespace HMP::Projection::Match
         {
             invMatches.emplace(eid, std::vector<SourceToTargetVid>{});
         }
-        for (const auto& [targetVid, match] : cpputils::collections::zip(_targetVidsPath, _matches))
+        for (const auto& [targetVid, match] : cpputils::range::zip(_targetVidsPath, _matches))
         {
             invMatches[match.sourceId].push_back({
                 .pos = match.pos,

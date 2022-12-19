@@ -5,7 +5,7 @@
 #include <optional>
 #include <algorithm>
 #include <cinolib/export_surface.h>
-#include <cpputils/collections/zip.hpp>
+#include <cpputils/range/zip.hpp>
 #include <array>
 
 namespace HMP::Projection::Utils
@@ -143,7 +143,7 @@ namespace HMP::Projection::Utils
     {
         const std::vector<I> adjVidsI{ vidsPathAdjVidsI(_vids, _i) };
         std::vector<Id> adjVids(adjVidsI.size());
-        for (const auto& [vid, i] : cpputils::collections::zip(adjVids, adjVidsI))
+        for (const auto& [vid, i] : cpputils::range::zip(adjVids, adjVidsI))
         {
             vid = _vids[i];
         }
@@ -192,7 +192,7 @@ namespace HMP::Projection::Utils
     std::vector<Point> toSurfFeats(const std::vector<Point>& _feats, const SurfaceExporter& _exporter)
     {
         std::vector<Point> out(_feats.size());
-        for (const auto& [out, in] : cpputils::collections::zip(out, _feats))
+        for (const auto& [out, in] : cpputils::range::zip(out, _feats))
         {
             out.sourceVid = _exporter.toSurfVid(in.sourceVid);
             out.targetVid = in.targetVid;
@@ -203,10 +203,10 @@ namespace HMP::Projection::Utils
     std::vector<EidsPath> toSurfFeats(const std::vector<EidsPath>& _feats, const SurfaceExporter& _exporter)
     {
         std::vector<EidsPath> out(_feats.size());
-        for (const auto& [out, in] : cpputils::collections::zip(out, _feats))
+        for (const auto& [out, in] : cpputils::range::zip(out, _feats))
         {
             out.sourceEids.resize(in.sourceEids.size());
-            for (const auto& [outEid, inEid] : cpputils::collections::zip(out.sourceEids, in.sourceEids))
+            for (const auto& [outEid, inEid] : cpputils::range::zip(out.sourceEids, in.sourceEids))
             {
                 outEid = _exporter.toSurfEid(inEid);
             }
@@ -217,7 +217,7 @@ namespace HMP::Projection::Utils
 
     void setVerts(const std::vector<Vec>& _from, std::vector<Vec>& _to, const std::vector<Id>& _vids)
     {
-        for (const auto& [vid, from] : cpputils::collections::zip(_vids, _from))
+        for (const auto& [vid, from] : cpputils::range::zip(_vids, _from))
         {
             _to[toI(vid)] = from;
         }
@@ -233,7 +233,7 @@ namespace HMP::Projection::Utils
 
     void setSourceVerts(const std::vector<std::vector<Vec>>& _from, std::vector<Vec>& _to, const std::vector<VidsPath>& _vids)
     {
-        for (const auto& [path, from] : cpputils::collections::zip(_vids, _from))
+        for (const auto& [path, from] : cpputils::range::zip(_vids, _from))
         {
             setVerts(from, _to, path.sourceVids);
         }

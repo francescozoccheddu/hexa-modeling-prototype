@@ -2,7 +2,6 @@
 
 #include <HMP/Dag/Utils.hpp>
 #include <stdexcept>
-#include <cpputils/collections/conversions.hpp>
 
 namespace HMP::Meshing::Utils
 {
@@ -118,7 +117,7 @@ namespace HMP::Meshing::Utils
 		{
 			std::reverse(vids.begin(), vids.end());
 		}
-		return cpputils::collections::conversions::toArray<4>(vids);
+		return cpputils::range::of(vids).toArray<4>();
 	}
 
 	FaceVertIds faceVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _upEid, bool _winding)
@@ -132,7 +131,7 @@ namespace HMP::Meshing::Utils
 		{
 			std::rotate(vids.begin(), vids.begin() + 1, vids.end());
 		}
-		return cpputils::collections::conversions::toArray<4>(vids);
+		return cpputils::range::of(vids).toArray<4>();
 	}
 
 	PolyVertIds polyVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _forwardUpEid)

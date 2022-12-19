@@ -6,19 +6,19 @@
 #include <HMP/Gui/Utils/Transform.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <cpputils/collections/Event.hpp>
-#include <cpputils/collections/Iterable.hpp>
+#include <cpputils/range/of.hpp>
 #include <unordered_map>
 #include <vector>
 
 namespace HMP::Gui::Widgets
 {
 
-	class VertEdit final : public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
+	class VertEdit final: public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
 	{
 
 	private:
 
-		static constexpr Id vertsIterableConvert(const std::unordered_map<Id, Vec>::value_type& _entry)
+		static constexpr Id vertsToVidsConvert(const std::unordered_map<Id, Vec>::value_type& _entry)
 		{
 			return _entry.first;
 		}
@@ -33,7 +33,7 @@ namespace HMP::Gui::Widgets
 
 	public:
 
-		using Vids = cpputils::collections::Iterable<const std::unordered_map<Id, Vec>, Id, Id, vertsIterableConvert, vertsIterableConvert>;
+		using Vids = decltype(cpputils::range::ofc(m_verts).map(&vertsToVidsConvert));
 
 		cpputils::collections::Event<VertEdit> onVidsChanged{};
 		cpputils::collections::Event<VertEdit> onCentroidChanged{};

@@ -5,9 +5,10 @@
 #include <unordered_map>
 #include <HMP/Dag/Element.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
-#include <cpputils/collections/Iterable.hpp>
+#include <cpputils/range/Ranged.hpp>
+#include <HMP/Utils/DerefRanged.hpp>
+#include <HMP/Utils/MapRanged.hpp>
 #include <cpputils/collections/Event.hpp>
-#include <cpputils/collections/DereferenceIterable.hpp>
 #include <utility>
 #include <functional>
 #include <unordered_set>
@@ -21,30 +22,6 @@ namespace HMP::Meshing
 	namespace Internal
 	{
 
-		constexpr std::pair<Dag::Element&, Id> ElementToPidIterableConvert(std::unordered_map<Dag::Element*, Id>::value_type& _entry)
-		{
-			return std::pair<Dag::Element&, Id>{*_entry.first, _entry.second};
-		}
-
-		constexpr std::pair<const Dag::Element&, Id> ElementToPidIterableConstConvert(const std::unordered_map<Dag::Element*, Id>::value_type& _entry)
-		{
-			return std::pair<const Dag::Element&, Id>{*_entry.first, _entry.second};
-		}
-
-		using ElementToPidIterable = cpputils::collections::Iterable <
-			std::unordered_map<Dag::Element*, Id>,
-			std::pair<Dag::Element&, Id>,
-			std::pair<const Dag::Element&, Id>,
-			ElementToPidIterableConvert,
-			ElementToPidIterableConstConvert
-		>;
-
-		using PolyMarkerIterable = cpputils::collections::DereferenceIterable <
-			std::unordered_set<const Dag::Element*>,
-			const Dag::Element&,
-			const Dag::Element&
-		>;
-
 		struct FaceMarkerHasher final
 		{
 			I operator () (const std::pair<const Dag::Element*, Id>& _faceMarker) const
@@ -53,22 +30,30 @@ namespace HMP::Meshing
 			}
 		};
 
-		constexpr std::pair<const Dag::Element&, Id> FaceMarkerIterableConstConvert(const std::pair<const Dag::Element*, Id>& _entry)
+		constexpr std::pair<const Dag::Element&, Id> faceMarkerConvert(const std::pair<const Dag::Element*, Id>& _entry)
 		{
 			return std::pair<const Dag::Element&, Id>{*_entry.first, _entry.second};
 		}
 
-		using FaceMarkerIterable = cpputils::collections::Iterable <
-			std::unordered_set<std::pair<const Dag::Element*, Id>, FaceMarkerHasher>,
-			std::pair<const Dag::Element&, Id>,
-			std::pair<const Dag::Element&, Id>,
-			FaceMarkerIterableConstConvert,
-			FaceMarkerIterableConstConvert
-		>;
+		constexpr std::pair<Dag::Element&, Id> mesherEntryConvert(std::unordered_map<Dag::Element*, Id>::value_type& _entry)
+		{
+			return std::pair<Dag::Element&, Id>{*_entry.first, _entry.second};
+		}
+
+		constexpr std::pair<const Dag::Element&, Id> mesherEntryConstConvert(const std::unordered_map<Dag::Element*, Id>::value_type& _entry)
+		{
+			return std::pair<const Dag::Element&, Id>{*_entry.first, _entry.second};
+		}
 
 	}
 
-	class Mesher final: public cpputils::mixins::ReferenceClass, public Internal::ElementToPidIterable
+	class Mesher final: public cpputils::mixins::ReferenceClass, public HMP::Utils::ConstAndNonConstMapRanged<
+		std::unordered_map<Dag::Element*, Id>,
+		std::pair<const Dag::Element&, Id>,
+		Internal::mesherEntryConstConvert,
+		std::pair<Dag::Element&, Id>,
+		Internal::mesherEntryConvert
+	>
 	{
 
 	public:
@@ -127,7 +112,7 @@ namespace HMP::Meshing
 
 		};
 
-		class PolyMarkerSet final: public MarkerSetBase, public Internal::PolyMarkerIterable
+		class PolyMarkerSet final: public MarkerSetBase, public HMP::Utils::ConstDerefRanged<std::unordered_set<const Dag::Element*>>
 		{
 
 		private:
@@ -151,7 +136,11 @@ namespace HMP::Meshing
 
 		};
 
-		class FaceMarkerSet final: public MarkerSetBase, public Internal::FaceMarkerIterable
+		class FaceMarkerSet final: public MarkerSetBase, public HMP::Utils::ConstMapRanged<
+			std::unordered_set < std::pair<const Dag::Element*, Id>, Internal::FaceMarkerHasher>,
+			std::pair<const Dag::Element&, Id>,
+			Internal::faceMarkerConvert
+		>
 		{
 
 		private:

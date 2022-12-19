@@ -3,7 +3,7 @@
 #include <deque>
 #include <HMP/Dag/Element.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
-#include <cpputils/collections/DereferenceIterable.hpp>
+#include <HMP/Utils/DerefRanged.hpp>
 #include <HMP/Meshing/Mesher.hpp>
 
 namespace HMP
@@ -11,14 +11,14 @@ namespace HMP
 
 	class Project;
 
-	class Commander final : public cpputils::mixins::ReferenceClass
+	class Commander final: public cpputils::mixins::ReferenceClass
 	{
 
 	public:
 
 		class Action;
 
-		class ActionBase : public cpputils::mixins::ReferenceClass
+		class ActionBase: public cpputils::mixins::ReferenceClass
 		{
 
 		private:
@@ -58,7 +58,7 @@ namespace HMP
 
 		class Stack;
 
-		class StackBase : public cpputils::mixins::ReferenceClass, public cpputils::collections::DereferenceIterable<std::deque<Action*>, const Action&, const Action&>
+		class StackBase: public cpputils::mixins::ReferenceClass, public HMP::Utils::ConstDerefRanged<std::deque<Action*>>
 		{
 
 		private:
@@ -83,7 +83,7 @@ namespace HMP
 
 		};
 
-		class Action : public ActionBase
+		class Action: public ActionBase
 		{
 
 		private:
@@ -101,7 +101,7 @@ namespace HMP
 
 		};
 
-		class Stack final : public StackBase
+		class Stack final: public StackBase
 		{
 
 		private:

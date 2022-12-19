@@ -1,10 +1,12 @@
 #pragma once
 
-#include <cpputils/collections/DereferenceIterable.hpp>
+#include <cpputils/range/Ranged.hpp>
+#include <cpputils/range/of.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <unordered_map>
 #include <functional>
 #include <list>
+#include <type_traits>
 
 namespace HMP::Dag
 {
@@ -20,7 +22,7 @@ namespace HMP::Dag
 		template<typename>
 		class NodeSetBase;
 
-		class NodeSetData final : public cpputils::mixins::ReferenceClass
+		class NodeSetData final: public cpputils::mixins::ReferenceClass
 		{
 
 		private:
@@ -39,7 +41,7 @@ namespace HMP::Dag
 
 		};
 
-		class NodeSetHandle final : public cpputils::mixins::ReferenceClass
+		class NodeSetHandle final: public cpputils::mixins::ReferenceClass
 		{
 
 		private:
@@ -60,7 +62,19 @@ namespace HMP::Dag
 		};
 
 		template<typename TNode>
-		class NodeSetBase : public cpputils::mixins::ReferenceClass, public cpputils::collections::DereferenceIterable<std::list<Node*>, TNode&, const TNode&>
+		constexpr TNode& nonConstNodeMapper(Node* _node) { return static_cast<TNode&>(*_node); }
+
+		template<typename TNode>
+		constexpr const TNode& constNodeMapper(Node* _node) { return static_cast<const TNode&>(*_node); }
+
+		template<typename TNode>
+		using NonConstNodeRange = decltype(cpputils::range::ofc(std::declval<std::list<Node*>>()).map(&nonConstNodeMapper<TNode>));
+
+		template<typename TNode>
+		using ConstNodeRange = decltype(cpputils::range::ofc(std::declval<const std::list<Node*>>()).map(&constNodeMapper<TNode>));
+
+		template<typename TNode>
+		class NodeSetBase: public cpputils::mixins::ReferenceClass, public cpputils::range::Ranged<typename ConstNodeRange<TNode>::Iterator, typename NonConstNodeRange<TNode>::Iterator>
 		{
 
 		private:
@@ -75,6 +89,10 @@ namespace HMP::Dag
 
 			~NodeSetBase();
 
+			NonConstNodeRange<TNode> range() override;
+
+			ConstNodeRange<TNode> range() const override;
+
 		public:
 
 			bool attach(TNode& _node);
@@ -88,7 +106,7 @@ namespace HMP::Dag
 	}
 
 	template<typename TNode>
-	class NodeSet final : public Internal::NodeSetBase<TNode>
+	class NodeSet final: public Internal::NodeSetBase<TNode>
 	{
 
 	private:

@@ -2,9 +2,8 @@
 
 #include <sstream>
 #include <iomanip>
-#include <cpputils/collections/conversions.hpp>
-#include <cpputils/collections/zip.hpp>
-#include <cpputils/collections/index.hpp>
+#include <cpputils/range/of.hpp>
+#include <cpputils/range/enumerate.hpp>
 
 namespace HMP::Gui::Utils::HrDescriptions
 {
@@ -144,20 +143,6 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return stream.str();
 	}
 
-	std::string describeFaces(Id _forwardFaceOffset, Id _upFaceOffset)
-	{
-		std::ostringstream stream{};
-		stream << _forwardFaceOffset << "-" << _upFaceOffset;
-		return stream.str();
-	}
-
-	std::string describeFaces(Id _forwardFaceOffset, Id _upFaceOffset, Id _rightFaceOffset)
-	{
-		std::ostringstream stream{};
-		stream << _forwardFaceOffset << "-" << _upFaceOffset << "-" << _rightFaceOffset;
-		return stream.str();
-	}
-
 	std::string describe(const HMP::Dag::Delete& _operation, const HMP::Dag::Element& _element, DagNamer& _dagNamer)
 	{
 		std::ostringstream stream{};
@@ -168,11 +153,11 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return stream.str();
 	}
 
-	std::string describe(const HMP::Dag::Extrude& _operation, const std::vector<const HMP::Dag::Element*>& _elements, DagNamer& _dagNamer)
+	std::string describe(const HMP::Dag::Extrude& _operation, const cpputils::collections::FixedVector<const HMP::Dag::Element*, 3>& _elements, DagNamer& _dagNamer)
 	{
 		std::ostringstream stream{};
 		stream << "Extrude ";
-		for (const auto& [element, i] : cpputils::collections::zip(_elements, cpputils::collections::index(_elements)))
+		for (const auto& [i, element] : cpputils::range::enumerate(_elements))
 		{
 			if (i)
 			{
@@ -192,16 +177,8 @@ namespace HMP::Gui::Utils::HrDescriptions
 				stream << " (vertex)";
 				break;
 		}
-		stream << " towards ";
-		if (_operation.source() == HMP::Dag::Extrude::ESource::Vertex)
-		{
-			stream << describeFaces(_operation.forwardFaceOffset(), _operation.upFaceOffset(), _operation.rightFaceOffset());
-		}
-		else
-		{
-			stream << describeFaces(_operation.forwardFaceOffset(), _operation.upFaceOffset());
-		}
-		stream
+		stream << " towards "
+			<< describe(cpputils::range::of(_operation.faceOffsets()).toVector())
 			<< " into " << name(_operation.children().single(), _dagNamer)
 			<< " (" << name(_operation, _dagNamer) << ")";
 		return stream.str();
@@ -214,7 +191,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 			<< "Refine"
 			<< " " << name(_element, _dagNamer)
 			<< " with scheme " << describe(_operation.scheme())
-			<< " towards " << describeFaces(_operation.forwardFaceOffset(), _operation.upFaceOffset())
+			<< " towards " << describe(std::vector<Id>{ _operation.forwardFaceOffset(), _operation.upFaceOffset() })
 			<< " (" << name(_operation, _dagNamer) << ")";
 		return stream.str();
 	}
@@ -226,7 +203,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 
 	std::string describe(const HMP::Dag::Extrude& _operation, DagNamer& _dagNamer)
 	{
-		return describe(_operation, cpputils::collections::conversions::toVector<const HMP::Dag::Operation::Set&, const HMP::Dag::Element*, std::addressof>(_operation.parents()), _dagNamer);
+		return describe(_operation, _operation.parents().address().toFixedVector<3>(), _dagNamer);
 	}
 
 	std::string describe(const HMP::Dag::Refine& _operation, DagNamer& _dagNamer)
@@ -246,7 +223,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 
 	std::string describe(const Actions::Extrude& _action, DagNamer& _dagNamer)
 	{
-		return describe(_action.operation(), cpputils::collections::conversions::toVector<Actions::Extrude::Elements, const HMP::Dag::Element*, std::addressof>(_action.elements()), _dagNamer);
+		return describe(_action.operation(), _action.elements().address().toFixedVector<3>(), _dagNamer);
 	}
 
 	std::string describe(const Actions::Load& _action, DagNamer& _dagNamer)
@@ -306,7 +283,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 			<< " at " << name(_action.element(), _dagNamer)
 			<< " ("
 			<< name(_action.operation(), _dagNamer)
-			<< " towards " << describeFaces(_action.operation().forwardFaceOffset(), _action.operation().upFaceOffset())
+			<< " towards " << describe(std::vector<Id>{_action.operation().forwardFaceOffset(), _action.operation().upFaceOffset()})
 			<< " into " << name(_action.operation().children().single(), _dagNamer)
 			<< ")";
 		return stream.str();
@@ -329,16 +306,6 @@ namespace HMP::Gui::Utils::HrDescriptions
 		stream
 			<< describe(_action.operation(), _action.element(), _dagNamer)
 			<< " with depth " << _action.depth();
-		return stream.str();
-	}
-
-	std::string describe(const Actions::Rotate& _action, DagNamer& _dagNamer)
-	{
-		std::ostringstream stream{};
-		stream
-			<< "Rotate"
-			<< " " << name(_action.operation().children().single(), _dagNamer)
-			<< " (" << name(_action.operation(), _dagNamer) << ")";
 		return stream.str();
 	}
 
@@ -382,10 +349,6 @@ namespace HMP::Gui::Utils::HrDescriptions
 			return describe(*action, _dagNamer);
 		}
 		if (const Actions::Refine* action{ dynamic_cast<const Actions::Refine*>(&_action) }; action)
-		{
-			return describe(*action, _dagNamer);
-		}
-		if (const Actions::Rotate* action{ dynamic_cast<const Actions::Rotate*>(&_action) }; action)
 		{
 			return describe(*action, _dagNamer);
 		}

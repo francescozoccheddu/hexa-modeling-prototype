@@ -29,8 +29,9 @@ namespace HMP::Actions
 	Paste::Paste(Dag::Element& _target, Id _targetForwardFaceOffset, Id _targetUpFaceOffset, Dag::Extrude& _source)
 		: m_element{ _target }, m_operation{ static_cast<Dag::Extrude&>(Dag::Utils::clone(_source)) }, m_prepared{ false }
 	{
-		m_operation->forwardFaceOffset() = _targetForwardFaceOffset;
-		m_operation->upFaceOffset() = _targetUpFaceOffset;
+		// TODO!
+		//m_operation->forwardFaceOffset() = _targetForwardFaceOffset;
+		//m_operation->upFaceOffset() = _targetUpFaceOffset;
 	}
 
 	const Dag::Element& Paste::element() const

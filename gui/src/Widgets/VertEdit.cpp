@@ -40,7 +40,7 @@ namespace HMP::Gui::Widgets
 		return changed;
 	}
 
-	VertEdit::VertEdit(Meshing::Mesher& _mesher) :
+	VertEdit::VertEdit(Meshing::Mesher& _mesher):
 		cinolib::SideBarItem{ "Vertex editor" }, m_mesher{ _mesher },
 		m_verts{}, m_pendingAction{ false },
 		m_unappliedTransform{}, m_appliedTransform{}, m_centroid{}
@@ -93,7 +93,7 @@ namespace HMP::Gui::Widgets
 
 	VertEdit::Vids VertEdit::vids() const
 	{
-		return Vids{ m_verts };
+		return cpputils::range::ofc(m_verts).map(&vertsToVidsConvert);
 	}
 
 	void VertEdit::clear()
