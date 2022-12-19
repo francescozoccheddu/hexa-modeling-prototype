@@ -89,7 +89,7 @@ namespace HMP
 	// Commander::StackBase
 
 	Commander::StackBase::StackBase()
-		: m_data{}, m_limit{ 1000 }, cpputils::collections::DereferenceIterable<std::deque<Action*>, const Action&, const Action&>{ m_data }
+		: m_data{}, m_limit{ 1000 }, HMP::Utils::ConstDerefRanged<std::deque<Action*>>{ m_data }
 	{}
 
 	Commander::Action& Commander::StackBase::pop()

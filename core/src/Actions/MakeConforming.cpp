@@ -2,7 +2,6 @@
 
 #include <HMP/Meshing/refinementSchemes.hpp>
 #include <HMP/Dag/Utils.hpp>
-#include <cpputils/collections/conversions.hpp>
 #include <unordered_map>
 #include <unordered_set>
 #include <set>
@@ -99,7 +98,7 @@ namespace HMP::Actions
 					{
 						for (const Dag::Element& child : refine.children())
 						{
-							if (child.children().any([](const Dag::Operation& _childOperation) { return _childOperation.primitive() == Dag::Operation::EPrimitive::Delete; }))
+							if (!child.children().filter([](const Dag::Operation& _childOperation) { return _childOperation.primitive() == Dag::Operation::EPrimitive::Delete; }).empty())
 							{
 								goto nextRefine;
 							}
@@ -229,7 +228,7 @@ namespace HMP::Actions
 		mesher().updateMesh();
 	}
 
-	MakeConforming::MakeConforming() : m_operations{}, m_prepared{ false }
+	MakeConforming::MakeConforming(): m_operations{}, m_prepared{ false }
 	{}
 
 	std::vector<std::pair<const Dag::Refine*, const Dag::Element*>> MakeConforming::operations() const

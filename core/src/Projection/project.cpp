@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <HMP/Projection/percentileAdvance.hpp>
 #include <HMP/Projection/jacobianAdvance.hpp>
-#include <cpputils/collections/zip.hpp>
+#include <cpputils/range/zip.hpp>
 #include <HMP/Projection/fill.hpp>
 #include <HMP/Projection/Match.hpp>
 #include <HMP/Projection/smooth.hpp>
@@ -294,7 +294,7 @@ namespace HMP::Projection
             const Id vid{ _sourceVidsPath[i] };
             const std::vector<Id> adjVids{ Utils::vidsPathAdjVids(_sourceVidsPath, i) };
             std::vector<Id> adjEids(adjVids.size());
-            for (const auto& [adjVid, adjEid] : cpputils::collections::zip(adjVids, adjEids))
+            for (const auto& [adjVid, adjEid] : cpputils::range::zip(adjVids, adjEids))
             {
                 adjEid = _source.edge_id(vid, adjVid);
             }
@@ -327,7 +327,7 @@ namespace HMP::Projection
             // points
             Utils::setVerts(exporter.surf.vector_verts(), _target.vector_verts(), surfPointFeats);
             // paths
-            for (const auto& [newVerts, eidsPath, vidsPath] : cpputils::collections::zip(pathTempVerts, surfEidsPathFeats, surfVidsPathFeats))
+            for (const auto& [newVerts, eidsPath, vidsPath] : cpputils::range::zip(pathTempVerts, surfEidsPathFeats, surfVidsPathFeats))
             {
                 newVerts = projectPath(exporter.surf, _target, eidsPath.sourceEids, vidsPath.sourceVids, vidsPath.targetVids, _options);
             }
@@ -345,7 +345,7 @@ namespace HMP::Projection
                     exporter.surf.vector_verts() = smooth(exporter.surf);
                     Utils::setSourceVerts(pathTempVerts, exporter.surf.vector_verts(), surfVidsPathFeats);
                     Utils::setVerts(exporter.surf.vector_verts(), _target.vector_verts(), surfPointFeats);
-                    for (const auto& [newVerts, eidsPath, vidsPath] : cpputils::collections::zip(pathTempVerts, surfEidsPathFeats, surfVidsPathFeats))
+                    for (const auto& [newVerts, eidsPath, vidsPath] : cpputils::range::zip(pathTempVerts, surfEidsPathFeats, surfVidsPathFeats))
                     {
                         Utils::setVerts(smoothPath(exporter.surf, vidsPath.sourceVids), exporter.surf.vector_verts(), vidsPath.sourceVids);
                     }
@@ -371,6 +371,8 @@ namespace HMP::Projection
                     break;
                 case EJacobianCheckMode::All:
                     jacobianAdvance(exporter.vol, oldVolVerts, _options.jacobianAdvanceMode, _options.jacobianAdvanceMaxTests, _options.jacobianAdvanceStopThreshold);
+                    break;
+                default:
                     break;
             }
         }

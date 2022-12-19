@@ -2,8 +2,9 @@
 
 #include <HMP/Dag/Utils.hpp>
 #include <HMP/Meshing/Utils.hpp>
-#include <cpputils/collections/conversions.hpp>
-#include <cpputils/collections/zip.hpp>
+#include <cpputils/range/zip.hpp>
+#include <cpputils/range/enumerate.hpp>
+#include <cpputils/collections/FixedVector.hpp>
 #include <stdexcept>
 #include <vector>
 #include <cstddef>
@@ -61,7 +62,7 @@ namespace HMP::Actions::Utils
 	void applyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine)
 	{
 		const std::vector<PolyVerts> polys{ previewRefine(_mesher, _refine) };
-		for (const auto& [child, verts] : cpputils::collections::zip(_refine.children(), polys))
+		for (const auto& [child, verts] : cpputils::range::zip(_refine.children(), polys))
 		{
 			child.vertices() = verts;
 			_mesher.add(child);
@@ -74,10 +75,12 @@ namespace HMP::Actions::Utils
 		applyRefine(_mesher, _refine);
 		for (Dag::Element& child : _refine.children())
 		{
-			const auto refineIt{ child.children().singleIt([](const Dag::Operation& _op) {return _op.primitive() == Dag::Operation::EPrimitive::Refine; }) };
-			if (refineIt != child.children().end())
+			for (Dag::Operation& operation : child.children())
 			{
-				applyRefineRecursive(_mesher, static_cast<Dag::Refine&>(*refineIt));
+				if (operation.primitive() == Dag::Operation::EPrimitive::Refine)
+				{
+					applyRefineRecursive(_mesher, static_cast<Dag::Refine&>(operation));
+				}
 			}
 		}
 	}
@@ -99,10 +102,12 @@ namespace HMP::Actions::Utils
 	{
 		for (Dag::Element& child : _refine.children())
 		{
-			const auto refineIt{ child.children().singleIt([](const Dag::Operation& _op) {return _op.primitive() == Dag::Operation::EPrimitive::Refine; }) };
-			if (refineIt != child.children().end())
+			for (Dag::Operation& operation : child.children())
 			{
-				unapplyRefineRecursive(_mesher, static_cast<Dag::Refine&>(*refineIt), false);
+				if (operation.primitive() == Dag::Operation::EPrimitive::Refine)
+				{
+					unapplyRefineRecursive(_mesher, static_cast<Dag::Refine&>(operation), false);
+				}
 			}
 		}
 		unapplyRefine(_mesher, _refine, _detach);
@@ -128,7 +133,7 @@ namespace HMP::Actions::Utils
 		}
 	}
 
-	Dag::Extrude& prepareExtrude(const std::array<Id, 3>& _faceOffsets, Dag::Extrude::ESource _source)
+	Dag::Extrude& prepareExtrude(const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Dag::Extrude::ESource _source)
 	{
 		Dag::Extrude& extrude{ *new Dag::Extrude{} };
 		extrude.faceOffsets() = _faceOffsets;
@@ -137,32 +142,63 @@ namespace HMP::Actions::Utils
 		return extrude;
 	}
 
-	void applyExtrude(Meshing::Mesher& _mesher, Dag::Extrude& _extrude)
+	PolyVerts shapeFaceExtrude(const Meshing::Mesher::Mesh& _mesh, const Id _pid, const Id _forwardFid, const Id _upFid)
 	{
-		Dag::Element& element{ _extrude.parents().single() };
-		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
-		const Id pid{ _mesher.elementToPid(element) };
-		const Id forwardFid{ mesh.poly_face_id(pid, _extrude.forwardFaceOffset()) };
-		const Id upFid{ mesh.poly_face_id(pid, _extrude.upFaceOffset()) };
-		const Id upEid{ mesh.face_shared_edge(forwardFid, upFid) };
-		const FaceVertIds faceVids{ Meshing::Utils::faceVids(mesh, pid, forwardFid, upEid, true) };
-		const FaceVerts faceVerts{ Meshing::Utils::verts(mesh, faceVids) };
+		const Id upEid{ _mesh.face_shared_edge(_forwardFid, _upFid) };
+		const FaceVertIds faceVids{ Meshing::Utils::faceVids(_mesh, _pid, _forwardFid, upEid, true) };
+		const FaceVerts faceVerts{ Meshing::Utils::verts(_mesh, faceVids) };
 		Real avgFaceEdgeLength{};
 		{
-			const std::vector<Id> faceEids{ mesh.adj_f2e(forwardFid) };
+			const std::vector<Id> faceEids{ _mesh.adj_f2e(_forwardFid) };
 			for (const Id eid : faceEids)
 			{
-				avgFaceEdgeLength += mesh.edge_length(eid);
+				avgFaceEdgeLength += _mesh.edge_length(eid);
 			}
-			avgFaceEdgeLength /= faceEids.size();
+			avgFaceEdgeLength /= static_cast<Real>(faceEids.size());
 		}
-		PolyVerts& verts{ _extrude.children().single().vertices() };
+		PolyVerts verts;
 		std::copy(faceVerts.begin(), faceVerts.end(), verts.begin());
-		const Vec faceNormal = mesh.poly_face_normal(pid, forwardFid);
+		const Vec faceNormal = _mesh.poly_face_normal(_pid, _forwardFid);
 		int i{ 4 };
 		for (const Vec& faceVert : faceVerts)
 		{
 			verts[i++] = faceVert + faceNormal * avgFaceEdgeLength;
+		}
+		return verts;
+	}
+
+	PolyVerts shapeEdgeExtrude(const Meshing::Mesher::Mesh& _mesh, const std::array<Id, 2>& _pids, const std::array<Id, 2>& _fids)
+	{
+		return shapeFaceExtrude(_mesh, _pids[0], _fids[0], _fids[1]);
+	}
+
+	PolyVerts shapeVertexExtrude(const Meshing::Mesher::Mesh& _mesh, const std::array<Id, 3>& _pids, const std::array<Id, 3>& _fids)
+	{
+		return shapeFaceExtrude(_mesh, _pids[0], _fids[0], _fids[1]);
+	}
+
+	void applyExtrude(Meshing::Mesher& _mesher, Dag::Extrude& _extrude)
+	{
+		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
+		cpputils::collections::FixedVector<Id, 3> pids, fids;
+		for (const auto& [i, parent] : cpputils::range::enumerate(_extrude.parents()))
+		{
+			pids.addLast(_mesher.elementToPid(parent));
+			fids.addLast(mesh.poly_face_id(pids[i], _extrude.faceOffsets()[i]));
+		}
+		PolyVerts& verts{ _extrude.children().single().vertices() };
+		switch (_extrude.source())
+		{
+			case Dag::Extrude::ESource::Face:
+				fids.addLast(mesh.poly_face_id(pids[0], _extrude.upFaceOffset()));
+				verts = shapeFaceExtrude(mesh, pids[0], fids[0], fids[1]);
+				break;
+			case Dag::Extrude::ESource::Edge:
+				verts = shapeEdgeExtrude(mesh, cpputils::range::of(pids).toArray<2>(), cpputils::range::of(fids).toArray<2>());
+				break;
+			case Dag::Extrude::ESource::Vertex:
+				verts = shapeVertexExtrude(mesh, cpputils::range::of(pids).toArray<3>(), cpputils::range::of(fids).toArray<3>());
+				break;
 		}
 		_mesher.add(_extrude.children().single());
 	}
@@ -199,7 +235,6 @@ namespace HMP::Actions::Utils
 			}
 		}
 	}
-
 
 	void Sub3x3AdapterCandidate::setup3x3Subdivide(const Meshing::Mesher& _mesher)
 	{

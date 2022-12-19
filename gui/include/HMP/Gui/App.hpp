@@ -78,7 +78,6 @@ namespace HMP::Gui
 		static constexpr cinolib::KeyBinding c_kbDelete{ GLFW_KEY_D };
 		static constexpr cinolib::KeyBinding c_kbCopy{ GLFW_KEY_C };
 		static constexpr cinolib::KeyBinding c_kbPaste{ GLFW_KEY_V };
-		static constexpr cinolib::KeyBinding c_kbRotate{ GLFW_KEY_Y };
 		static constexpr cinolib::KeyBinding c_kbMakeConforming{ GLFW_KEY_Q };
 		static constexpr cinolib::KeyBinding c_kbToggleTargetVisibility{ GLFW_KEY_U };
 		static constexpr cinolib::KeyBinding c_kbUndo{ GLFW_KEY_Z, GLFW_MOD_CONTROL };
@@ -202,7 +201,6 @@ namespace HMP::Gui
 		void onPaste();
 		void onRefineElement(bool _twice);
 		void onDelete();
-		void onRotate();
 		void onRefineFace();
 		void onMakeConformant();
 		void onExportMesh();

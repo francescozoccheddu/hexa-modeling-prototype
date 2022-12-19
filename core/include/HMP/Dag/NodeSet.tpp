@@ -16,7 +16,7 @@ namespace HMP::Dag
 
 		template<typename TNode>
 		NodeSetBase<TNode>::NodeSetBase(NodeSetHandle& _handle, bool _owner)
-			: m_handle{ _handle }, m_owner{ _owner }, cpputils::collections::DereferenceIterable<std::list<Node*>, TNode&, const TNode&>{ _handle.m_data.m_list }
+			: m_handle{ _handle }, m_owner{ _owner }
 		{}
 
 		template<typename TNode>
@@ -50,6 +50,18 @@ namespace HMP::Dag
 		bool NodeSetBase<TNode>::has(const TNode& _node) const
 		{
 			return m_handle.m_data.m_map.contains(_node);
+		}
+
+		template<typename TNode>
+		NonConstNodeRange<TNode> NodeSetBase<TNode>::range()
+		{
+			return cpputils::range::ofc(m_handle.m_data.m_list).map(&nonConstNodeMapper<TNode>);
+		}
+
+		template<typename TNode>
+		ConstNodeRange<TNode> NodeSetBase<TNode>::range() const
+		{
+			return cpputils::range::ofc(m_handle.m_data.m_list).map(&constNodeMapper<TNode>);
 		}
 
 	}

@@ -72,12 +72,9 @@ namespace HMP::Gui::Widgets
 				ImGui::TextColored(ImVec4(0.75f, 0.75f, 0.2f, 1.0f), "Pending vertex edit action on %d vertices", static_cast<int>(m_vertEdit.vids().size()));
 			}
 
-			auto it{ m_commander.unapplied().rbegin() };
-			const auto end{ m_commander.unapplied().rend() };
-			while (it != end)
+			for (const auto& action : m_commander.unapplied().reverse())
 			{
-				ImGui::TextColored(ImVec4(0.75f, 0.2f, 0.2f, 1.0f), "%s", Utils::HrDescriptions::describe(*it, m_dagNamer).c_str());
-				++it;
+				ImGui::TextColored(ImVec4(0.75f, 0.2f, 0.2f, 1.0f), "%s", Utils::HrDescriptions::describe(action, m_dagNamer).c_str());
 			}
 
 			for (const HMP::Commander::Action& action : m_commander.applied())

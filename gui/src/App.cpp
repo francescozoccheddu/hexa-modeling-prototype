@@ -18,15 +18,15 @@
 #include <HMP/Actions/MakeConforming.hpp>
 #include <HMP/Actions/Project.hpp>
 #include <HMP/Actions/Refine.hpp>
-#include <HMP/Actions/Rotate.hpp>
 #include <HMP/Actions/Paste.hpp>
 #include <HMP/Actions/TransformAll.hpp>
 #include <HMP/Utils/Serialization.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Gui/Utils/HrDescriptions.hpp>
 #include <HMP/Gui/Utils/Controls.hpp>
-#include <cpputils/collections/conversions.hpp>
+#include <cpputils/range/of.hpp>
 #include <sstream>
+#include <array>
 #include <iomanip>
 #include <filesystem>
 #include <ctime>
@@ -50,7 +50,6 @@ namespace HMP::Gui
 		cinolib::print_binding(c_kbDelete.name(), "delete");
 		cinolib::print_binding(c_kbCopy.name(), "copy");
 		cinolib::print_binding(c_kbPaste.name(), "paste");
-		cinolib::print_binding(c_kbRotate.name(), "rotate");
 		cinolib::print_binding(c_kbClear.name(), "clear");
 		cinolib::print_binding(c_kbMakeConforming.name(), "make conforming");
 		cinolib::print_binding(c_kbSelectVertex.name(), "select vertex");
@@ -377,11 +376,6 @@ namespace HMP::Gui
 		{
 			onDelete();
 		}
-		// rotate
-		else if (key == c_kbRotate)
-		{
-			onRotate();
-		}
 		// make conformant
 		else if (key == c_kbMakeConforming)
 		{
@@ -597,7 +591,7 @@ namespace HMP::Gui
 				<< "Hovering "
 				<< Utils::HrDescriptions::name(*m_mouse.element, m_dagNamer)
 				<< " ("
-				<< "faces " << Utils::HrDescriptions::describeFaces(m_mouse.faceOffset, m_mouse.upFaceOffset)
+				<< "faces " << Utils::HrDescriptions::describe(std::vector<Id>{ m_mouse.faceOffset, m_mouse.upFaceOffset })
 				<< ", vert " << m_mouse.vertOffset
 				<< ")";
 			ImGui::TextDisabled("%s", stream.str().c_str());
@@ -802,45 +796,117 @@ namespace HMP::Gui
 
 	void App::onExtrudeAndSelect()
 	{
-		if (m_vertEditWidget.vids().size() == 4)
+		const std::vector<Id> vids{ m_vertEditWidget.vids().toVector() };
+		Actions::Extrude* action{};
+		Id sourceId{ noId };
+		switch (vids.size())
 		{
-
-			const std::vector<Id> vids{ cpputils::collections::conversions::toVector(m_vertEditWidget.vids()) };
-			const Id fid{ static_cast<Id>(m_mesh.face_id(vids)) };
-			if (fid == noId)
+			case 4:
 			{
-				return;
-			}
-			Id pid;
-			if (m_mesh.face_is_visible(fid, pid))
-			{
-				HMP::Dag::Element& element{ m_mesher.pidToElement(pid) };
-				const Id faceOffset{ m_mesh.poly_face_offset(pid, fid) };
-				Id upFaceOffset{ noId };
+				const Id fid{ static_cast<Id>(m_mesh.face_id(vids)) };
+				if (fid == noId)
 				{
-					Real upFaceCentroidY{};
-					for (const Id upFid : m_mesh.poly_faces_id(pid))
+					return;
+				}
+				Id pid;
+				if (m_mesh.face_is_visible(fid, pid))
+				{
+					HMP::Dag::Element& element{ m_mesher.pidToElement(pid) };
+					const Id faceOffset{ m_mesh.poly_face_offset(pid, fid) };
+					const std::vector<Id>& polyFids{ m_mesh.poly_faces_id(pid) };
+					const Id upFaceOffset{ cpputils::range::of(polyFids).filter([&](Id _fid) {
+						return m_mesh.faces_are_adjacent(_fid, fid);
+					}).first() };
+					action = new Actions::Extrude{ element, faceOffset, upFaceOffset };
+					sourceId = fid;
+				}
+			}
+			break;
+			case 2:
+			{
+				const Id eid{ static_cast<Id>(m_mesh.edge_id(vids)) };
+				if (eid == noId)
+				{
+					return;
+				}
+				if (m_mesh.edge_is_on_srf(eid))
+				{
+					std::vector<Id> fids, pids;
+					for (const Id fid : m_mesh.adj_e2f(eid))
 					{
-						if (upFid == fid || m_mesh.face_shared_edge(fid, upFid) == noId)
+						Id pid;
+						if (m_mesh.face_is_visible(fid, pid))
 						{
-							continue;
-						}
-						const Real centroidY{ m_mesh.face_centroid(upFid).y() };
-						if (upFaceOffset == noId || centroidY > upFaceCentroidY)
-						{
-							upFaceCentroidY = centroidY;
-							upFaceOffset = m_mesh.poly_face_offset(pid, upFid);
+							pids.push_back(pid);
+							fids.push_back(fid);
 						}
 					}
+					if (fids.size() != 2 || pids[0] == pids[1])
+					{
+						return;
+					}
+					std::array<Id, 2> faceOffsets;
+					std::array<Dag::Element*, 2> elements;
+					for (I i{}; i < 2; i++)
+					{
+						faceOffsets[i] = m_mesh.poly_face_offset(pids[i], fids[i]);
+						elements[i] = &m_mesher.pidToElement(pids[i]);
+					}
+					action = new Actions::Extrude{ *elements[0], faceOffsets[0], *elements[1], faceOffsets[1] };
+					sourceId = eid;
 				}
-				Actions::Extrude& action{ *new Actions::Extrude{ element, faceOffset, upFaceOffset } };
-				applyAction(action);
-				const HMP::Dag::Element& newElement{ action.operation().children().single() };
-				const Id newPid{ m_mesher.elementToPid(newElement) };
-				const Id newFid{ m_mesh.poly_face_opposite_to(newPid, fid) };
-				m_vertEditWidget.clear();
+			}
+			break;
+			case 1:
+			{
+				const Id vid{ vids[0] };
+				if (m_mesh.vert_is_on_srf(vid))
+				{
+					std::vector<Id> fids, pids;
+					for (const Id fid : m_mesh.adj_v2f(vid))
+					{
+						Id pid;
+						if (m_mesh.face_is_visible(fid, pid))
+						{
+							pids.push_back(pid);
+							fids.push_back(fid);
+						}
+					}
+					if (fids.size() != 3 || pids[0] == pids[1] || pids[1] == pids[2] || pids[0] == pids[2])
+					{
+						return;
+					}
+					std::array<Id, 3> faceOffsets;
+					std::array<Dag::Element*, 3> elements;
+					for (I i{}; i < 3; i++)
+					{
+						faceOffsets[i] = m_mesh.poly_face_offset(pids[i], fids[i]);
+						elements[i] = &m_mesher.pidToElement(pids[i]);
+					}
+					action = new Actions::Extrude{ *elements[0], faceOffsets[0], *elements[1], faceOffsets[1], *elements[2], faceOffsets[2] };
+					sourceId = vid;
+				}
+			}
+			break;
+			default:
+				return;
+		}
+		applyAction(*action);
+		m_vertEditWidget.clear();
+		const HMP::Dag::Element& newElement{ action->operation().children().single() };
+		const Id newPid{ m_mesher.elementToPid(newElement) };
+		switch (action->operation().source())
+		{
+			case Dag::Extrude::ESource::Face:
+			{
+				const Id newFid{ m_mesh.poly_face_opposite_to(newPid, sourceId) };
 				m_vertEditWidget.add(m_mesh.face_verts_id(newFid));
 			}
+			break;
+			case Dag::Extrude::ESource::Edge:
+				break;
+			case Dag::Extrude::ESource::Vertex:
+				break;
 		}
 	}
 
@@ -878,14 +944,6 @@ namespace HMP::Gui
 		if (m_mouse.element)
 		{
 			applyAction(*new Actions::Delete{ *m_mouse.element });
-		}
-	}
-
-	void App::onRotate()
-	{
-		if (m_mouse.element && m_mouse.element->parents().size() == 1 && m_mouse.element->parents().single().primitive() == HMP::Dag::Operation::EPrimitive::Extrude)
-		{
-			applyAction(*new Actions::Rotate{ static_cast<HMP::Dag::Extrude&>(m_mouse.element->parents().single()) });
 		}
 	}
 

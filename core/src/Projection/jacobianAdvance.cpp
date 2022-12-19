@@ -4,7 +4,7 @@
 #include <limits>
 #include <cinolib/parallel_for.h>
 #include <ranges>
-#include <cpputils/collections/zip.hpp>
+#include <cpputils/range/zip.hpp>
 #include <cinolib/quality_hex.h>
 #include <unordered_set>
 #include <unordered_map>
@@ -19,7 +19,7 @@ namespace HMP::Projection
     {
         std::vector<Vec> offs;
         offs.reserve(static_cast<I>(_vids.end() - _vids.begin()));
-        for (const auto& [vid, fromVert] : cpputils::collections::zip(_vids, _from))
+        for (const auto& [vid, fromVert] : cpputils::range::zip(_vids, _from))
         {
             offs.push_back(_mesh.vert(vid) - fromVert);
         }
@@ -105,7 +105,7 @@ namespace HMP::Projection
             }
             if (failurePid == noId)
             {
-                for (const auto& [from, off, len, vid] : cpputils::collections::zip(_from, offs, lens, _vids))
+                for (const auto& [from, off, len, vid] : cpputils::range::zip(_from, offs, lens, _vids))
                 {
                     _mesh.vert(vid) = displace(from, off, len, maxLen, _mode, prog);
                 }
@@ -145,7 +145,7 @@ namespace HMP::Projection
 #ifdef HMP_PROJECTION_JACOBIANADVANCE_LOG
             std::cout << "falling back to prog = " << minProg << std::endl;
 #endif
-            for (const auto& [from, off, len, vid] : cpputils::collections::zip(_from, offs, lens, _vids))
+            for (const auto& [from, off, len, vid] : cpputils::range::zip(_from, offs, lens, _vids))
             {
                 _mesh.vert(vid) = displace(from, off, len, maxLen, _mode, minProg);
             }

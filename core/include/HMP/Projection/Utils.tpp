@@ -4,7 +4,7 @@
 
 #include <HMP/Projection/Utils.hpp>
 
-#include <cpputils/collections/zip.hpp>
+#include <cpputils/range/zip.hpp>
 #include <cassert>
 #include <utility>
 
@@ -51,7 +51,7 @@ namespace HMP::Projection::Utils
     {
         const std::vector<I> adjEidsI{ eidsPathAdjEidsI(_mesh, _eids, _i) };
         std::vector<Id> adjEids(adjEidsI.size());
-        for (const auto& [eid, i] : cpputils::collections::zip(adjEids, adjEidsI))
+        for (const auto& [eid, i] : cpputils::range::zip(adjEids, adjEidsI))
         {
             eid = _eids[i];
         }
@@ -99,7 +99,7 @@ namespace HMP::Projection::Utils
     std::vector<VidsPath> eidsToVidsPaths(const std::vector<EidsPath>& _paths, const cinolib::AbstractMesh <MS, VS, ES, PS>& _source, const cinolib::AbstractMesh<MT, VT, ET, PT>& _target)
     {
         std::vector<VidsPath> out(_paths.size());
-        for (const auto& [out, in] : cpputils::collections::zip(out, _paths))
+        for (const auto& [out, in] : cpputils::range::zip(out, _paths))
         {
             out.sourceVids = eidsToVidsPath(_source, in.sourceEids);
             out.targetVids = eidsToVidsPath(_target, in.targetEids);

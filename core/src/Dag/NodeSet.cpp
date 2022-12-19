@@ -1,5 +1,7 @@
 #include <HMP/Dag/NodeSet.hpp>
 
+#include <cpputils/range/of.hpp>
+
 namespace HMP::Dag
 {
 
@@ -18,7 +20,7 @@ namespace HMP::Dag
 			else
 			{
 				m_list.push_back(&_node);
-				m_map.insert(it, { &_node, --m_list.end()});
+				m_map.insert(it, { &_node, --m_list.end() });
 				return true;
 			}
 		}
@@ -51,7 +53,7 @@ namespace HMP::Dag
 		NodeSetHandle::NodeSetHandle(NodeSetData& _data, std::function<bool(Node&)> _onAttach, std::function<bool(Node&, bool)> _onDetach, std::function<bool(bool)> _onDetachAll)
 			: m_data{ _data }, m_onAttach{ _onAttach }, m_onDetach{ _onDetach }, m_onDetachAll{ _onDetachAll }
 		{}
-		
+
 	}
 
 }

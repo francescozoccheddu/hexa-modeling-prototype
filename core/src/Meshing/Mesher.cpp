@@ -1,7 +1,6 @@
 #include <HMP/Meshing/Mesher.hpp>
 
 #include <HMP/Meshing/Utils.hpp>
-#include <cpputils/collections/conversions.hpp>
 #include <cinolib/Moller_Trumbore_intersection.h>
 #include <limits>
 #include <cinolib/octree.h>
@@ -45,7 +44,7 @@ namespace HMP::Meshing
 	// Mesher::PolyMarkerSet
 
 	Mesher::PolyMarkerSet::PolyMarkerSet(Mesher& _mesher)
-		: MarkerSetBase{ _mesher }, m_data{}, Internal::PolyMarkerIterable{ m_data }
+		: MarkerSetBase{ _mesher }, m_data{}, HMP::Utils::ConstDerefRanged<std::unordered_set<const Dag::Element*>>{m_data}
 	{}
 
 	void Mesher::PolyMarkerSet::mark(const Dag::Element& _element, bool _marked)
@@ -96,7 +95,11 @@ namespace HMP::Meshing
 	}
 
 	Mesher::FaceMarkerSet::FaceMarkerSet(Mesher& _mesher)
-		: MarkerSetBase{ _mesher }, m_data{}, Internal::FaceMarkerIterable{ m_data }
+		: MarkerSetBase{ _mesher }, m_data{}, HMP::Utils::ConstMapRanged<
+		std::unordered_set < std::pair<const Dag::Element*, Id>, Internal::FaceMarkerHasher>,
+		std::pair<const Dag::Element&, Id>,
+		Internal::faceMarkerConvert
+		>{ m_data }
 	{}
 
 	void Mesher::FaceMarkerSet::mark(const Dag::Element& _element, Id _faceOffset, bool _marked)
@@ -181,10 +184,17 @@ namespace HMP::Meshing
 	}
 
 	Mesher::Mesher()
-		: m_mesh(), m_elementToPid{}, Internal::ElementToPidIterable{ m_elementToPid },
+		: m_mesh(), m_elementToPid{},
 		m_polyMarkerSet{ *this }, m_faceMarkerSet{ *this },
 		m_polyColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.35f) }, m_edgeColor{ cinolib::Color::BLACK() },
-		m_dirty{ false }, m_visibleFaceIndices{}, m_visibleEdgeIndices{}, m_removedIds{}
+		m_dirty{ false }, m_visibleFaceIndices{}, m_visibleEdgeIndices{}, m_removedIds{},
+		HMP::Utils::ConstAndNonConstMapRanged<
+		std::unordered_map<Dag::Element*, Id>,
+		std::pair<const Dag::Element&, Id>,
+		Internal::mesherEntryConstConvert,
+		std::pair<Dag::Element&, Id>,
+		Internal::mesherEntryConvert
+		>{m_elementToPid}
 	{
 		m_polyMarkerSet.color() = cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.5f);
 		m_faceMarkerSet.color() = cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.7f);
@@ -272,7 +282,7 @@ namespace HMP::Meshing
 		}
 		//vids = Utils::sortVids(m_mesh, vids);
 		onElementAdd(_element);
-		const Id pid{ m_mesh.poly_add(cpputils::collections::conversions::toVector(vids)) };
+		const Id pid{ m_mesh.poly_add(cpputils::range::of(vids).toVector()) };
 		m_mesh.poly_data(pid).m_element = &_element;
 		m_mesh.poly_data(pid).color = m_polyColor;
 		m_edgesPainted.resize(toI(m_mesh.num_edges()), false);

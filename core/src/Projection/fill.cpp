@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <limits>
 #include <updatable_priority_queue.h>
-#include <cpputils/collections/zip.hpp>
+#include <cpputils/range/zip.hpp>
 
 namespace HMP::Projection
 {
@@ -56,7 +56,7 @@ namespace HMP::Projection
             Utils::invertAndNormalizeDistances(baseWeights);
             Vec adjVertSum{};
             Real weightSum{};
-            for (const auto& [adjVid, baseWeight] : cpputils::collections::zip(_mesh.adj_v2v(vid), baseWeights))
+            for (const auto& [adjVid, baseWeight] : cpputils::range::zip(_mesh.adj_v2v(vid), baseWeights))
             {
                 if (_distWeightTweak.shouldSkip(baseWeight))
                 {
@@ -84,7 +84,7 @@ namespace HMP::Projection
             }
         }
         _out.resize(newVerts.size());
-        for (const auto& [in, out] : cpputils::collections::zip(newVerts, _out))
+        for (const auto& [in, out] : cpputils::range::zip(newVerts, _out))
         {
             out = *in;
         }
@@ -124,7 +124,7 @@ namespace HMP::Projection
             Utils::invertAndNormalizeDistances(baseWeights);
             Vec adjVertSum{};
             Real weightSum{};
-            for (const auto& [adjPvi, baseWeight] : cpputils::collections::zip(adjPvis, baseWeights))
+            for (const auto& [adjPvi, baseWeight] : cpputils::range::zip(adjPvis, baseWeights))
             {
                 if (_distWeightTweak.shouldSkip(baseWeight))
                 {
@@ -148,7 +148,7 @@ namespace HMP::Projection
             }
         }
         _out.resize(newVerts.size());
-        for (const auto& [in, out] : cpputils::collections::zip(newVerts, _out))
+        for (const auto& [in, out] : cpputils::range::zip(newVerts, _out))
         {
             out = *in;
         }

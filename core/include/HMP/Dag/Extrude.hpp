@@ -2,7 +2,7 @@
 
 #include <HMP/Meshing/types.hpp>
 #include <HMP/Dag/Operation.hpp>
-#include <array>
+#include <cpputils/collections/FixedVector.hpp>
 
 namespace HMP::Dag
 {
@@ -19,7 +19,7 @@ namespace HMP::Dag
 
 	private:
 
-		std::array<Id, 3> m_faceOffsets;
+		cpputils::collections::FixedVector<Id, 3> m_faceOffsets;
 		ESource m_source;
 
 	public:
@@ -27,16 +27,11 @@ namespace HMP::Dag
 		Extrude();
 
 		Id forwardFaceOffset() const;
-		Id& forwardFaceOffset();
 
 		Id upFaceOffset() const;
-		Id& upFaceOffset();
 
-		Id rightFaceOffset() const;
-		Id& rightFaceOffset();
-
-		const std::array<Id, 3>& faceOffsets() const;
-		std::array<Id, 3>& faceOffsets();
+		const cpputils::collections::FixedVector<Id, 3>& faceOffsets() const;
+		cpputils::collections::FixedVector<Id, 3>& faceOffsets();
 
 		ESource source() const;
 		ESource& source();

@@ -14,10 +14,10 @@
 #include <HMP/Actions/Paste.hpp>
 #include <HMP/Actions/Project.hpp>
 #include <HMP/Actions/Refine.hpp>
-#include <HMP/Actions/Rotate.hpp>
 #include <HMP/Actions/TransformAll.hpp>
 #include <HMP/Actions/TransformVerts.hpp>
 #include <HMP/Meshing/Utils.hpp>
+#include <cpputils/collections/FixedVector.hpp>
 #include <cpputils/collections/Namer.hpp>
 #include <string>
 
@@ -34,10 +34,8 @@ namespace HMP::Gui::Utils::HrDescriptions
 	std::string describe(const std::vector<bool>& _flags);
 	std::string describe(const std::vector<HMP::Meshing::Utils::PolyVertLoc>& _locs);
 	std::string describe(const HMP::Meshing::Utils::PolyVertLoc _loc);
-	std::string describeFaces(Id _forwardFaceOffset, Id _upFaceOffset);
-	std::string describeFaces(Id _forwardFaceOffset, Id _upFaceOffset, Id _rightFaceOffset);
 	std::string describe(const HMP::Dag::Delete& _operation, const HMP::Dag::Element& _element, DagNamer& _dagNamer);
-	std::string describe(const HMP::Dag::Extrude& _operation, const std::vector<const HMP::Dag::Element*>& _elements, DagNamer& _dagNamer);
+	std::string describe(const HMP::Dag::Extrude& _operation, const cpputils::collections::FixedVector<const HMP::Dag::Element*, 3>& _elements, DagNamer& _dagNamer);
 	std::string describe(const HMP::Dag::Refine& _operation, const HMP::Dag::Element& _element, DagNamer& _dagNamer);
 	std::string describe(const HMP::Dag::Delete& _operation, DagNamer& _dagNamer);
 	std::string describe(const HMP::Dag::Extrude& _operation, DagNamer& _dagNamer);
@@ -51,7 +49,6 @@ namespace HMP::Gui::Utils::HrDescriptions
 	std::string describe(const Actions::Paste& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::Project& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::Refine& _action, DagNamer& _dagNamer);
-	std::string describe(const Actions::Rotate& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::TransformVerts& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::TransformAll& _action, DagNamer& _dagNamer);
 	std::string describe(const Commander::Action& _action, DagNamer& _dagNamer);
