@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <limits>
 #include <cinolib/parallel_for.h>
-#include <ranges>
 #include <cpputils/range/zip.hpp>
+#include <cpputils/range/index.hpp>
 #include <cinolib/quality_hex.h>
 #include <unordered_set>
 #include <unordered_map>
@@ -154,8 +154,8 @@ namespace HMP::Projection
 
     void jacobianAdvance(Meshing::Mesher::Mesh& _mesh, const std::vector<Vec>& _from, EJacobianAdvanceMode _mode, I _maxTests, Real _stopThreshold)
     {
-        const auto vids{ std::views::iota(static_cast<Id>(0), _mesh.num_verts()) };
-        const auto pids{ std::views::iota(static_cast<Id>(0), _mesh.num_polys()) };
+        const auto vids{ cpputils::range::count<Id>(_mesh.num_verts()) };
+        const auto pids{ cpputils::range::count<Id>(_mesh.num_polys()) };
         jacobianAdvance(_mesh, _from, _mode, _maxTests, _stopThreshold, vids, toI, pids);
     }
 

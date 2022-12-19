@@ -9,71 +9,72 @@ namespace HMP::Utils
     {
 
         template<typename TIterable>
-        using NonConstDerefRange = decltype(cpputils::range::of(std::declval<TIterable&>()).dereference());
+        using NonConstIteratorDereference = decltype(*std::declval<const NonConstIteratorReference<TIterable>&>());
 
         template<typename TIterable>
-        using ConstDerefRange = decltype(cpputils::range::ofc(std::declval<const TIterable&>()).dereference().immutable());
+        using ConstIteratorDereference = decltype(*std::declval<const ConstIteratorReference<TIterable>&>());
 
         template<typename TIterable>
-        constexpr NonConstDerefRange<TIterable> makeNonConstDerefRange(TIterable& _iterable)
+        constexpr NonConstIteratorDereference<TIterable> nonConstIteratorDereference(const NonConstIteratorReference<TIterable>& _reference)
         {
-            return cpputils::range::of(_iterable).dereference();
+            return *_reference;
         }
 
         template<typename TIterable>
-        constexpr ConstDerefRange<TIterable> makeConstDerefRange(const TIterable& _iterable)
+        constexpr ConstIteratorDereference<TIterable> constIteratorDereference(const ConstIteratorReference<TIterable>& _reference)
         {
-            return cpputils::range::ofc(_iterable).dereference().immutable();
+            return *_reference;
         }
-
-        template<typename TIterable>
-        using NonConstDerefRangeIterator = typename NonConstDerefRange<TIterable>::Iterator;
-
-        template<typename TIterable>
-        using ConstDerefRangeIterator = typename ConstDerefRange<TIterable>::Iterator;
 
     }
 
     template<typename TIterable>
-    class DerefRanged: public cpputils::range::ConstAndNonConstRanged<Internal::ConstDerefRangeIterator<TIterable>, Internal::NonConstDerefRangeIterator<TIterable>, cpputils::range::RangeMaker<TIterable>::compTimeSize>
+    class ConstDerefRanged: public ConstMapRanged<
+        TIterable,
+        Internal::ConstIteratorDereference<TIterable>,
+        Internal::constIteratorDereference<TIterable>
+    >
     {
-
-    private:
-
-        TIterable& m_iterable;
-
-        virtual Internal::NonConstDerefRange<TIterable> range() override final
-        {
-            return Internal::makeNonConstDerefRange<TIterable>(m_iterable);
-        }
-
-        virtual Internal::ConstDerefRange<TIterable> range() const override final
-        {
-            return Internal::makeConstDerefRange<TIterable>(m_iterable);
-        }
 
     protected:
 
-        DerefRanged(TIterable& _iterable): m_iterable{ _iterable } {}
+        using ConstMapRanged<TIterable, Internal::ConstIteratorDereference<TIterable>, Internal::constIteratorDereference<TIterable>>::ConstMapRanged;
 
     };
 
     template<typename TIterable>
-    class ConstDerefRanged: public cpputils::range::ConstRanged<Internal::ConstDerefRangeIterator<TIterable>, cpputils::range::RangeMaker<TIterable>::compTimeSize>
+    class NonConstDerefRanged: public NonConstMapRanged<
+        TIterable,
+        Internal::NonConstIteratorDereference<TIterable>,
+        Internal::nonConstIteratorDereference<TIterable>
+    >
     {
-
-    private:
-
-        const TIterable& m_iterable;
-
-        virtual Internal::ConstDerefRange<TIterable> range() const override final
-        {
-            return Internal::makeConstDerefRange<TIterable>(m_iterable);
-        }
 
     protected:
 
-        ConstDerefRanged(const TIterable& _iterable): m_iterable{ _iterable } {}
+        using NonConstMapRanged<TIterable, Internal::NonConstIteratorDereference<TIterable>, Internal::nonConstIteratorDereference<TIterable>>::NonConstMapRanged;
+
+    };
+
+    template<typename TIterable>
+    class ConstAndNonConstDerefRanged: public ConstAndNonConstMapRanged<
+        TIterable,
+        Internal::ConstIteratorDereference<TIterable>,
+        Internal::constIteratorDereference<TIterable>,
+        Internal::NonConstIteratorDereference<TIterable>,
+        Internal::nonConstIteratorDereference<TIterable>
+    >
+    {
+
+    protected:
+
+        using ConstAndNonConstMapRanged<
+            TIterable,
+            Internal::ConstIteratorDereference<TIterable>,
+            Internal::constIteratorDereference<TIterable>,
+            Internal::NonConstIteratorDereference<TIterable>,
+            Internal::nonConstIteratorDereference<TIterable>
+        >::ConstAndNonConstMapRanged;
 
     };
 
