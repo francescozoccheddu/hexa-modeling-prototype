@@ -12,35 +12,35 @@ namespace HMP::Utils
     {
 
         template<typename TIterable>
-        using NonConstMapperInput = decltype(*std::begin(std::declval<TIterable&>()));
+        using NonConstIteratorReference = decltype(*std::begin(std::declval<TIterable&>()));
 
         template<typename TIterable>
-        using ConstMapperInput = decltype(*std::cbegin(std::declval<const TIterable&>()));
+        using ConstIteratorReference = decltype(*std::cbegin(std::declval<const TIterable&>()));
 
         template<
             typename TIterable,
             typename TResult,
-            TResult(*TMapper)(const Internal::NonConstMapperInput<TIterable>&)
+            TResult(*TMapper)(const Internal::NonConstIteratorReference<TIterable>&)
         >
         using NonConstMapRange = decltype(cpputils::range::of(std::declval<TIterable&>()).map(TMapper));
 
         template<
             typename TIterable,
             typename TResult,
-            TResult(*TMapper)(const Internal::ConstMapperInput<const TIterable>&)
+            TResult(*TMapper)(const Internal::ConstIteratorReference<const TIterable>&)
         >
         using ConstMapRange = decltype(cpputils::range::ofc(std::declval<const TIterable&>()).map(TMapper));
 
         template<
             typename TIterable,
             typename TResult,
-            TResult(*TMapper)(const Internal::NonConstMapperInput<TIterable>&)
+            TResult(*TMapper)(const Internal::NonConstIteratorReference<TIterable>&)
         >
         using NonConstMapRangeIterator = typename NonConstMapRange<TIterable, TResult, TMapper>::Iterator;
 
         template<
             typename TIterable,
-            typename TResult, TResult(*TMapper)(const Internal::ConstMapperInput<TIterable>&)
+            typename TResult, TResult(*TMapper)(const Internal::ConstIteratorReference<TIterable>&)
         >
         using ConstMapRangeIterator = typename ConstMapRange<TIterable, TResult, TMapper>::Iterator;
 
@@ -49,7 +49,7 @@ namespace HMP::Utils
     template<
         typename TIterable,
         typename TResult,
-        TResult(*TMapper)(const Internal::ConstMapperInput<TIterable>&)
+        TResult(*TMapper)(const Internal::ConstIteratorReference<TIterable>&)
     >
     class ConstMapRanged:
         public cpputils::range::ConstRanged<
@@ -76,7 +76,7 @@ namespace HMP::Utils
     template<
         typename TIterable,
         typename TResult,
-        TResult(*TMapper)(const Internal::NonConstMapperInput<TIterable>&)
+        TResult(*TMapper)(const Internal::NonConstIteratorReference<TIterable>&)
     >
     class NonConstMapRanged:
         public cpputils::range::NonConstRanged<
@@ -103,9 +103,9 @@ namespace HMP::Utils
     template<
         typename TIterable,
         typename TConstResult,
-        TConstResult(*TConstMapper)(const Internal::ConstMapperInput<TIterable>&),
+        TConstResult(*TConstMapper)(const Internal::ConstIteratorReference<TIterable>&),
         typename TNonConstResult,
-        TNonConstResult(*TNonConstMapper)(const Internal::NonConstMapperInput<TIterable>&)
+        TNonConstResult(*TNonConstMapper)(const Internal::NonConstIteratorReference<TIterable>&)
     >
     class ConstAndNonConstMapRanged: public cpputils::range::ConstAndNonConstRanged<
         Internal::ConstMapRangeIterator<TIterable, TConstResult, TConstMapper>,
