@@ -88,40 +88,6 @@ namespace HMP::Gui
 		std::cout << "-------------------------------\n";
 	}
 
-	// markers
-
-	void App::updateVertSelectionMarkers()
-	{
-		std::vector<cinolib::Marker>& set{ m_canvas.marker_sets[c_vertSelectionMarkerSetInd] };
-		set.clear();
-		set.reserve(m_vertEditWidget.vids().size() + 1);
-		for (const Id vid : m_vertEditWidget.vids())
-		{
-			set.push_back(cinolib::Marker{
-				.pos_3d{m_mesh.vert(vid)},
-				.color{c_overlayColor},
-				.shape_radius = 6u,
-				.shape = cinolib::Marker::EShape::CircleOutline,
-				.line_thickness = 1.5f
-				});
-		}
-		if (!m_vertEditWidget.empty())
-		{
-			set.push_back(cinolib::Marker{
-				.pos_3d{m_vertEditWidget.centroid()},
-				.color{c_overlayColor},
-				.shape_radius = 6u,
-				.shape = cinolib::Marker::EShape::Cross90,
-				.line_thickness = 2.0f,
-				});
-		}
-	}
-
-	void App::updateAllMarkers()
-	{
-		updateVertSelectionMarkers();
-	}
-
 	// actions
 
 	void App::onActionApplied()
@@ -130,7 +96,6 @@ namespace HMP::Gui
 		m_vertEditWidget.updateCentroid();
 		m_mouse.element = nullptr;
 		updateMouse();
-		updateAllMarkers();
 		requestDagViewerUpdate();
 		m_canvas.refit_scene();
 	}
@@ -167,7 +132,6 @@ namespace HMP::Gui
 		{
 			m_vertEditWidget.replace(--meshVertCount, vid);
 		}
-		onVertEditVidsOrCentroidChanged();
 	}
 
 	void App::onClearElements()
@@ -177,20 +141,6 @@ namespace HMP::Gui
 	}
 
 	// vert edit events
-
-	void App::onVertEditVidsOrCentroidChanged()
-	{
-		if (m_vertEditWidget.empty())
-		{
-			m_directVertEditWidget.cancel();
-		}
-		updateVertSelectionMarkers();
-	}
-
-	void App::onVertEditMeshUpdated()
-	{
-		updateAllMarkers();
-	}
 
 	void App::onApplyVertEdit(const std::vector<Id>& _vids, const Mat4& _transform)
 	{
@@ -1237,7 +1187,8 @@ namespace HMP::Gui
 
 		m_canvas.push(&m_saveWidget);
 		m_canvas.push(&m_commanderWidget);
-		m_canvas.push(&m_vertEditWidget);
+		m_canvas.push(static_cast<cinolib::CanvasGuiItem*>(&m_vertEditWidget));
+		m_canvas.push(static_cast<cinolib::SideBarItem*>(&m_vertEditWidget));
 		m_canvas.push(&m_targetWidget);
 		m_canvas.push(&m_projectionWidget);
 
@@ -1258,9 +1209,6 @@ namespace HMP::Gui
 		m_targetWidget.onApplyTransformToSource += [this](const Mat4& _transform) { onApplyTargetTransform(_transform); };
 
 		m_vertEditWidget.onApplyAction += [this](std::vector<Id> _vids, Mat4 _transform) { onApplyVertEdit(_vids, _transform); };
-		m_vertEditWidget.onMeshUpdated += [this]() { onVertEditMeshUpdated(); };
-		m_vertEditWidget.onVidsChanged += [this]() { onVertEditVidsOrCentroidChanged(); };
-		m_vertEditWidget.onCentroidChanged += [this]() { onVertEditVidsOrCentroidChanged(); };
 		m_vertEditWidget.onPendingActionChanged += [this]() { onVertEditPendingActionChanged(); };
 
 		m_directVertEditWidget.onPendingChanged += [this]() { updateMouse(); };
@@ -1277,7 +1225,6 @@ namespace HMP::Gui
 		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChanged(_args...); };
 		m_canvas.callback_custom_gui = [this](auto && ..._args) { return onDrawCustomGui(_args...); };
 		m_canvas.callback_drop_files = [this](std::vector<std::string> _files) { onFilesDropped(_files); };
-		m_canvas.marker_sets.resize(c_markerSetCount);
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		m_dagViewerWidget.onDraw += [this]() { onDagViewerDraw(); };

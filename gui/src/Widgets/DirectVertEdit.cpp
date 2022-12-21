@@ -20,7 +20,14 @@ namespace HMP::Gui::Widgets
     DirectVertEdit::DirectVertEdit(VertEdit& _vertEdit, const cinolib::GLcanvas& _canvas):
         m_vertEdit{ _vertEdit }, m_canvas{ _canvas }, m_pending{ false },
         m_centroid{}, m_kind{}, m_onX{}, m_onY{}, m_onZ{}, m_start{}, onPendingChanged{}, m_mouse{}
-    {}
+    {
+        _vertEdit.onVidsChanged += [&]() {
+            if (m_vertEdit.empty())
+            {
+                cancel();
+            }
+        };
+    }
 
     void DirectVertEdit::request(EKind _kind, const Vec2& _mouse)
     {

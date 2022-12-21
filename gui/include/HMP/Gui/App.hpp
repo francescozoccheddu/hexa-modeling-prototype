@@ -58,9 +58,6 @@ namespace HMP::Gui
 		static constexpr cinolib::Color c_selectedFaceColor{ cinolib::Color::hsv2rgb(c_hue, 0.75f, 1.0f) };
 #endif
 
-		static constexpr I c_vertSelectionMarkerSetInd{ 1 };
-		static constexpr I c_markerSetCount{ 2 };
-
 		static constexpr cinolib::KeyBinding c_kbCancelDirectEdit{ GLFW_KEY_ESCAPE };
 		static constexpr cinolib::KeyBinding c_kbDirectTranslation{ GLFW_KEY_T };
 		static constexpr cinolib::KeyBinding c_kbDirectScale{ GLFW_KEY_S };
@@ -153,10 +150,6 @@ namespace HMP::Gui
 		Widgets::Ae3d2ShapeExporter m_ae3d2ShapeExporter;
 #endif
 
-		// markers
-		void updateVertSelectionMarkers();
-		void updateAllMarkers();
-
 		// actions
 		void onActionApplied();
 		void applyAction(Commander::Action& _action);
@@ -168,8 +161,6 @@ namespace HMP::Gui
 		void onClearElements();
 
 		// vert edit events
-		void onVertEditVidsOrCentroidChanged();
-		void onVertEditMeshUpdated();
 		void onApplyVertEdit(const std::vector<Id>& _vids, const Mat4& _transform);
 		void onVertEditPendingActionChanged();
 

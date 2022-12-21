@@ -2,6 +2,8 @@
 
 #include <HMP/Meshing/types.hpp>
 #include <cinolib/gl/side_bar_item.h>
+#include <cinolib/gl/canvas_gui_item.h>
+#include <cinolib/color.h>
 #include <HMP/Meshing/Mesher.hpp>
 #include <HMP/Gui/Utils/Transform.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
@@ -13,7 +15,7 @@
 namespace HMP::Gui::Widgets
 {
 
-	class VertEdit final: public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
+	class VertEdit final: public cinolib::SideBarItem, public cinolib::CanvasGuiItem, public cpputils::mixins::ReferenceClass
 	{
 
 	private:
@@ -32,6 +34,8 @@ namespace HMP::Gui::Widgets
 		bool addOrRemove(const Id* _vids, I _count, bool _add, bool _update);
 
 	public:
+
+		cinolib::Color color{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 1.0f, 0.7f) };
 
 		using Vids = decltype(cpputils::range::ofc(m_verts).map(&vertsToVidsConvert));
 
@@ -78,6 +82,8 @@ namespace HMP::Gui::Widgets
 		void updateCentroid();
 
 		void draw() override;
+
+		void draw(const cinolib::GLcanvas& _canvas) override;
 
 	};
 
