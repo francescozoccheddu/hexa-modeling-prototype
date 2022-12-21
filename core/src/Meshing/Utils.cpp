@@ -137,8 +137,8 @@ namespace HMP::Meshing::Utils
 
 	PolyVertIds polyVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _forwardUpEid)
 	{
-		const FaceVertIds forwardFaceVids{ pidFidVidsByFirstEid(_mesh, _pid, _forwardFid, _forwardUpEid, false) };
-		FaceVertIds backFaceVids{ pidFidVids(_mesh, _pid, _mesh.poly_face_opposite_to(_pid, _forwardFid), true) };
+		const FaceVertIds forwardFaceVids{ pidFidVidsByFirstEid(_mesh, _pid, _forwardFid, _forwardUpEid, true) };
+		FaceVertIds backFaceVids{ pidFidVids(_mesh, _pid, _mesh.poly_face_opposite_to(_pid, _forwardFid), false) };
 		while (_mesh.edge_id(forwardFaceVids[0], backFaceVids[0]) == noId)
 		{
 			std::rotate(backFaceVids.begin(), backFaceVids.begin() + 1, backFaceVids.end());
