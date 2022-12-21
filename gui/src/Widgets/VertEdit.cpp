@@ -3,6 +3,7 @@
 #include <imgui.h>
 #include <stdexcept>
 #include <HMP/Gui/Utils/Controls.hpp>
+#include <HMP/Gui/Utils/Drawing.hpp>
 
 namespace HMP::Gui::Widgets
 {
@@ -240,6 +241,22 @@ namespace HMP::Gui::Widgets
 		if (ImGui::Button("Reset##all"))
 		{
 			cancel();
+		}
+	}
+
+	void VertEdit::draw(const cinolib::GLcanvas& _canvas)
+	{
+		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
+		const ImU32 colorU32{ Utils::Drawing::toU32(this->color) };
+		for (const Id vid : vids())
+		{
+			const Vec vert{ m_mesher.mesh().vert(vid) };
+			const ImVec2 pos{ Utils::Drawing::project(_canvas, vert) };
+			Utils::Drawing::circle(drawList, pos, 8.0f, colorU32, 2.0f);
+		}
+		if (!empty())
+		{
+			Utils::Drawing::cross(drawList, Utils::Drawing::project(_canvas, m_centroid), 8.0f, colorU32, 2.0f);
 		}
 	}
 
