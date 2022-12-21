@@ -529,7 +529,7 @@ namespace HMP::Gui
 		const ImVec4 warningColor{ Utils::Controls::toImGui(c_warningTextColor) };
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
 		using namespace Utils::Drawing;
-		const ImU32 overlayColorU32{ toU32(c_overlayColor) };
+		const ImU32 colorU32{ toU32(c_overlayColor) };
 		const ImU32 mutedColorU32{ toU32(c_mutedOverlayColor) };
 		if (m_mouse.element)
 		{
@@ -537,12 +537,17 @@ namespace HMP::Gui
 			const Id vid{ m_mesh.poly_vert_id(pid, m_mouse.vertOffset) };
 			const Id fid{ m_mesh.poly_face_id(pid, m_mouse.faceOffset) };
 			const Id upFid{ m_mesh.poly_face_id(pid, m_mouse.upFaceOffset) };
-			const Id eid{ m_mesh.face_shared_edge(fid, upFid) };
-			const ImVec2 vert{ project(m_canvas, m_mesh.vert(vid)) };
-			circleFilled(drawList, vert, 5.0f, overlayColorU32);
-			const ImVec2 eVert1{ project(m_canvas, m_mesh.vert(m_mesh.edge_vert_id(eid, 0))) };
-			const ImVec2 eVert2{ project(m_canvas, m_mesh.vert(m_mesh.edge_vert_id(eid, 1))) };
-			dashedLine(drawList, eVert1, eVert2, overlayColorU32, 4.0f);
+			const Id upEid{ m_mesh.face_shared_edge(fid, upFid) };
+			for (const Id eid : m_mesh.adj_f2e(fid))
+			{
+				const ImVec2 eVert1{ project(m_canvas, m_mesh.vert(m_mesh.edge_vert_id(eid, 0))) };
+				const ImVec2 eVert2{ project(m_canvas, m_mesh.vert(m_mesh.edge_vert_id(eid, 1))) };
+				dashedLine(drawList, eVert1, eVert2, eid == upEid ? colorU32 : mutedColorU32, 4.0f);
+			}
+			{
+				const ImVec2 vert{ project(m_canvas, m_mesh.vert(vid)) };
+				circleFilled(drawList, vert, 5.0f, colorU32);
+			}
 		}
 		if (m_options.showNames)
 		{
@@ -552,7 +557,7 @@ namespace HMP::Gui
 				{
 					const ImVec2 center{ project(m_canvas, m_mesh.poly_centroid(pid)) };
 					const Dag::Element& element{ m_mesher.pidToElement(pid) };
-					const ImU32 color{ (m_mouse.element && &element != m_mouse.element) ? mutedColorU32 : overlayColorU32 };
+					const ImU32 color{ (m_mouse.element && &element != m_mouse.element) ? mutedColorU32 : colorU32 };
 					text(drawList, m_dagNamer(&element).c_str(), center, 20.0f, color);
 				}
 			}
