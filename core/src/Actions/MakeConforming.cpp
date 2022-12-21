@@ -149,7 +149,7 @@ namespace HMP::Actions
 				Dag::Element& candEl = mesher.pidToElement(candPid);
 				const Id candForwardFid{ sharedFid };
 				const Id candForwardFaceOffset{ mesh.poly_face_offset(candPid, candForwardFid) };
-				const Id candUpFid{ Meshing::Utils::adjacentFid(mesh, candPid, candForwardFid, mesh.face_edge_id(candForwardFid, 0)) };
+				const Id candUpFid{ Meshing::Utils::adjFidInPidByEidAndFid(mesh, candPid, candForwardFid, mesh.face_edge_id(candForwardFid, 0)) };
 				const Id candUpFaceOffset{ mesh.poly_face_offset(candPid, candUpFid) };
 				// apply the refinement
 				Dag::Refine& adapterRef{ Utils::prepareRefine(candForwardFaceOffset, candUpFaceOffset, ERefinementScheme::Inset) };

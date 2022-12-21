@@ -22,15 +22,12 @@ namespace HMP::Actions
 		void apply() override;
 		void unapply() override;
 
-		Extrude(const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Dag::Extrude::ESource _source);
 
 	public:
 
 		using Elements = decltype(cpputils::range::ofc(m_elements).dereference().immutable());
 
-		Extrude(Dag::Element& _element, Id _forwardFaceOffset, Id _upFaceOffset);
-		Extrude(Dag::Element& _element0, Id _faceOffset0, Dag::Element& _element1, Id _faceOffset1);
-		Extrude(Dag::Element& _element0, Id _faceOffset0, Dag::Element& _element1, Id _faceOffset1, Dag::Element& _element2, Id _faceOffset2);
+		Extrude(const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id _firstUpFaceOffset);
 
 		Elements elements() const;
 

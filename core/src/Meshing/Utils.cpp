@@ -1,32 +1,33 @@
 #include <HMP/Meshing/Utils.hpp>
 
 #include <HMP/Dag/Utils.hpp>
+#include <cpputils/range/of.hpp>
 #include <stdexcept>
 
 namespace HMP::Meshing::Utils
 {
 
-	Id rotateEid(const Meshing::Mesher::Mesh& _mesh, Id _fid, Id _eid, int _rotation)
+	Id anyAdjFidInPidByFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid)
 	{
-		if (!_mesh.face_contains_edge(_fid, _eid))
-		{
-			throw std::logic_error{ "edge not in face" };
-		}
-		const std::vector<Id> vids{ _mesh.edge_vert_ids(_eid) };
-		Id edgeOffset{};
-		while (_mesh.face_edge_id(_fid, edgeOffset) != _eid)
-		{
-			edgeOffset++;
-		}
-		if (_rotation < 0)
-		{
-			_rotation = 4 - ((-_rotation) % 4);
-		}
-		edgeOffset = (edgeOffset + _rotation) % 4;
-		return _mesh.face_edge_id(_fid, edgeOffset);
+		return adjFidInPidByEidAndFid(_mesh, _pid, _fid, _mesh.adj_f2e(_fid)[0]);
 	}
 
-	Id anyFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _eid)
+	Id adjFidInPidByVidAndFids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _vid, Id _fid1, Id _fid2)
+	{
+		return cpputils::range::of(_mesh.poly_faces_id(_pid)).filter([&](const Id _fid) {
+			return _fid != _fid1 && _fid != _fid2
+			&& _mesh.faces_are_adjacent(_fid, _fid1)
+			&& _mesh.faces_are_adjacent(_fid, _fid2)
+			&& _mesh.face_contains_vert(_fid, _vid);
+		}).single();
+	}
+
+	Id anyAdjFidInPidByFids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid1, Id _fid2)
+	{
+		return adjFidInPidByVidAndFids(_mesh, _pid, _mesh.edge_vert_id(_mesh.face_shared_edge(_fid1, _fid2), 0), _fid1, _fid2);
+	}
+
+	Id anyAdjFidInPidByEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _eid)
 	{
 		if (!_mesh.poly_contains_edge(_pid, _eid))
 		{
@@ -42,7 +43,7 @@ namespace HMP::Meshing::Utils
 		throw std::runtime_error{ "unexpected" };
 	}
 
-	Id adjacentFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _eid)
+	Id adjFidInPidByEidAndFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _eid)
 	{
 		if (!_mesh.poly_contains_face(_pid, _fid))
 		{
@@ -106,38 +107,38 @@ namespace HMP::Meshing::Utils
 		};
 	}
 
-	FaceVertIds faceVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, bool _winding)
+	FaceVertIds pidFidVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, bool _winding)
 	{
 		if (!_mesh.poly_contains_face(_pid, _fid))
 		{
 			throw std::logic_error{ "face not in poly" };
 		}
 		std::vector<Id> vids{ _mesh.face_verts_id(_fid) };
-		if (_winding != _mesh.poly_face_winding(_pid, _fid))
+		if (_winding == _mesh.poly_face_winding(_pid, _fid))
 		{
 			std::reverse(vids.begin(), vids.end());
 		}
 		return cpputils::range::of(vids).toArray<4>();
 	}
 
-	FaceVertIds faceVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _upEid, bool _winding)
+	FaceVertIds pidFidVidsByFirstEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstEid, bool _winding)
 	{
-		if (!_mesh.face_contains_edge(_fid, _upEid))
+		if (!_mesh.face_contains_edge(_fid, _firstEid))
 		{
 			throw std::logic_error{ "edge not in face" };
 		}
-		FaceVertIds vids{ faceVids(_mesh, _pid, _fid, _winding) };
-		while (_mesh.edge_id(vids[0], vids[1]) != _upEid)
+		FaceVertIds vids{ pidFidVids(_mesh, _pid, _fid, _winding) };
+		while (_mesh.edge_id(vids[0], vids[1]) != _firstEid)
 		{
 			std::rotate(vids.begin(), vids.begin() + 1, vids.end());
 		}
-		return cpputils::range::of(vids).toArray<4>();
+		return vids;
 	}
 
 	PolyVertIds polyVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _forwardUpEid)
 	{
-		const FaceVertIds forwardFaceVids{ faceVids(_mesh, _pid, _forwardFid, _forwardUpEid, false) };
-		FaceVertIds backFaceVids{ faceVids(_mesh, _pid, _mesh.poly_face_opposite_to(_pid, _forwardFid), true) };
+		const FaceVertIds forwardFaceVids{ pidFidVidsByFirstEid(_mesh, _pid, _forwardFid, _forwardUpEid, false) };
+		FaceVertIds backFaceVids{ pidFidVids(_mesh, _pid, _mesh.poly_face_opposite_to(_pid, _forwardFid), true) };
 		while (_mesh.edge_id(forwardFaceVids[0], backFaceVids[0]) == noId)
 		{
 			std::rotate(backFaceVids.begin(), backFaceVids.begin() + 1, backFaceVids.end());
