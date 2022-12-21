@@ -177,8 +177,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 				stream << " (vertex)";
 				break;
 		}
-		stream << " towards "
-			<< describe(cpputils::range::of(_operation.faceOffsets()).toVector())
+		stream << " towards " << describe(cpputils::range::of(_operation.faceOffsets()).toVector()) << " (" << _operation.firstUpFaceOffset() << ")"
 			<< " into " << name(_operation.children().single(), _dagNamer)
 			<< " (" << name(_operation, _dagNamer) << ")";
 		return stream.str();
@@ -283,7 +282,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 			<< " at " << name(_action.element(), _dagNamer)
 			<< " ("
 			<< name(_action.operation(), _dagNamer)
-			<< " towards " << describe(std::vector<Id>{_action.operation().forwardFaceOffset(), _action.operation().upFaceOffset()})
+			<< " towards " << describe(cpputils::range::of(_action.operation().faceOffsets()).toVector()) << " (" << _action.operation().firstUpFaceOffset() << ")"
 			<< " into " << name(_action.operation().children().single(), _dagNamer)
 			<< ")";
 		return stream.str();

@@ -1,7 +1,7 @@
 #pragma once 
 
 #include <cpputils/range/Ranged.hpp>
-#include <cpputils/range/RangeMaker.hpp>
+#include <cpputils/range/RangeSizer.hpp>
 #include <cpputils/range/of.hpp>
 #include <type_traits>
 
@@ -54,7 +54,7 @@ namespace HMP::Utils
     class ConstMapRanged:
         public cpputils::range::ConstRanged<
         Internal::ConstMapRangeIterator<TIterable, TResult, TMapper>,
-        cpputils::range::RangeMaker<TIterable>::compTimeSize
+        cpputils::range::internal::compTimeSize<TIterable>
         >
     {
 
@@ -81,7 +81,7 @@ namespace HMP::Utils
     class NonConstMapRanged:
         public cpputils::range::NonConstRanged<
         Internal::NonConstMapRangeIterator<TIterable, TResult, TMapper>,
-        cpputils::range::RangeMaker<TIterable>::compTimeSize
+        cpputils::range::internal::compTimeSize<TIterable>
         >
     {
 
@@ -110,7 +110,7 @@ namespace HMP::Utils
     class ConstAndNonConstMapRanged: public cpputils::range::ConstAndNonConstRanged<
         Internal::ConstMapRangeIterator<TIterable, TConstResult, TConstMapper>,
         Internal::NonConstMapRangeIterator<TIterable, TNonConstResult, TNonConstMapper>,
-        cpputils::range::RangeMaker<TIterable>::compTimeSize
+        cpputils::range::internal::compTimeSize<TIterable>
     >
     {
 

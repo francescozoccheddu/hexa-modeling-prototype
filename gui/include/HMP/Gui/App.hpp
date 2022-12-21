@@ -9,6 +9,7 @@
 #include <cinolib/color.h>
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <cpputils/collections/SetNamer.hpp>
+#include <cpputils/collections/FixedVector.hpp>
 #include <string>
 #include <HMP/Gui/Widgets/Axes.hpp>
 #include <HMP/Gui/Widgets/Commander.hpp>
@@ -66,8 +67,10 @@ namespace HMP::Gui
 		static constexpr cinolib::KeyBinding c_kbDirectTranslation{ GLFW_KEY_T };
 		static constexpr cinolib::KeyBinding c_kbDirectScale{ GLFW_KEY_S };
 		static constexpr cinolib::KeyBinding c_kbDirectRotation{ GLFW_KEY_R };
-		static constexpr cinolib::KeyBinding c_kbExtrude{ GLFW_KEY_E };
-		static constexpr cinolib::KeyBinding c_kbExtrudeAndSelect{ GLFW_KEY_E, GLFW_MOD_SHIFT };
+		static constexpr cinolib::KeyBinding c_kbExtrudeFace{ GLFW_KEY_E };
+		static constexpr cinolib::KeyBinding c_kbExtrudeEdge{ GLFW_KEY_E, GLFW_MOD_ALT };
+		static constexpr cinolib::KeyBinding c_kbExtrudeVertex{ GLFW_KEY_E, GLFW_MOD_ALT | GLFW_MOD_CONTROL };
+		static constexpr cinolib::KeyBinding c_kbExtrudeSelected{ GLFW_KEY_E, GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbRefine{ GLFW_KEY_H };
 		static constexpr cinolib::KeyBinding c_kbDoubleRefine{ GLFW_KEY_H, GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbFaceRefine{ GLFW_KEY_F };
@@ -185,6 +188,7 @@ namespace HMP::Gui
 		void onDagViewerDraw();
 		void updateMouse();
 		void onFilesDropped(const std::vector<std::string>& _files);
+		bool hoveredExtrudeElements(Dag::Extrude::ESource _source, cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id& _firstUpFaceOffset);
 
 		// save events
 		void onSaveState(const std::string& _filename);
@@ -195,8 +199,8 @@ namespace HMP::Gui
 		std::string getDebugInfo() const;
 		void onSetPathEdge(bool _add);
 		void onPrintDebugInfo() const;
-		void onExtrude();
-		void onExtrudeAndSelect();
+		void onExtrude(Dag::Extrude::ESource _source);
+		void onExtrudeSelected();
 		void onCopy();
 		void onPaste();
 		void onRefineElement(bool _twice);

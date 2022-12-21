@@ -25,12 +25,14 @@
 #include <HMP/Gui/Utils/HrDescriptions.hpp>
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <cpputils/range/of.hpp>
+#include <cpputils/range/index.hpp>
 #include <sstream>
 #include <array>
 #include <iomanip>
 #include <filesystem>
 #include <ctime>
 #include <cstring>
+#include <cinolib/geometry/plane.h>
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 #include <HMP/Gui/DagViewer/createLayout.hpp>
@@ -42,8 +44,10 @@ namespace HMP::Gui
 	void App::printKeyBindings()
 	{
 		std::cout << "------ App key bindings -------\n";
-		cinolib::print_binding(c_kbExtrude.name(), "extrude");
-		cinolib::print_binding(c_kbExtrudeAndSelect.name(), "extrude and select");
+		cinolib::print_binding(c_kbExtrudeFace.name(), "extrude face");
+		cinolib::print_binding(c_kbExtrudeEdge.name(), "extrude edge");
+		cinolib::print_binding(c_kbExtrudeVertex.name(), "extrude vertex");
+		cinolib::print_binding(c_kbExtrudeSelected.name(), "extrude selected");
 		cinolib::print_binding(c_kbRefine.name(), "refine");
 		cinolib::print_binding(c_kbDoubleRefine.name(), "refine twice");
 		cinolib::print_binding(c_kbFaceRefine.name(), "refine face");
@@ -332,14 +336,22 @@ namespace HMP::Gui
 	{
 		cinolib::KeyBinding key{ _key, _modifiers };
 		// extrude
-		if (key == c_kbExtrude)
+		if (key == c_kbExtrudeFace)
 		{
-			onExtrude();
+			onExtrude(Dag::Extrude::ESource::Face);
 		}
-		// extrude and select
-		else if (key == c_kbExtrudeAndSelect)
+		else if (key == c_kbExtrudeEdge)
 		{
-			onExtrudeAndSelect();
+			onExtrude(Dag::Extrude::ESource::Edge);
+		}
+		else if (key == c_kbExtrudeVertex)
+		{
+			onExtrude(Dag::Extrude::ESource::Vertex);
+		}
+		// extrude selected
+		else if (key == c_kbExtrudeSelected)
+		{
+			onExtrudeSelected();
 		}
 		// copy
 		else if (key == c_kbCopy)
@@ -665,7 +677,7 @@ namespace HMP::Gui
 			{
 				m_mouse.element = &m_mesher.pidToElement(pid);
 				m_mouse.faceOffset = m_mesh.poly_face_offset(pid, fid);
-				const Id upFid{ Meshing::Utils::adjacentFid(m_mesh, pid, fid, eid) };
+				const Id upFid{ Meshing::Utils::adjFidInPidByEidAndFid(m_mesh, pid, fid, eid) };
 				m_mouse.upFaceOffset = m_mesh.poly_face_offset(pid, upFid);
 				m_mouse.vertOffset = m_mesh.poly_vert_offset(pid, vid);
 			}
@@ -786,111 +798,193 @@ namespace HMP::Gui
 			<< std::endl;
 	}
 
-	void App::onExtrude()
+	bool App::hoveredExtrudeElements(Dag::Extrude::ESource _source, cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id& _firstUpFaceOffset)
 	{
+		cpputils::collections::FixedVector<Id, 3> pids, fids;
 		if (m_mouse.element)
 		{
-			applyAction(*new Actions::Extrude{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset });
+			pids.addLast(m_mesher.elementToPid(*m_mouse.element));
+			fids.addLast(m_mesh.poly_face_id(pids[0], m_mouse.faceOffset));
+			const Id commVid{ m_mesh.poly_vert_id(pids[0], m_mouse.vertOffset) };
+			const Id firstEid{ m_mesh.face_shared_edge(fids[0], m_mesh.poly_face_id(pids[0], m_mouse.upFaceOffset)) };
+			if (_source != Dag::Extrude::ESource::Face)
+			{
+				const cinolib::Plane firstPlane{
+					m_mesh.face_centroid(fids[0]),
+					m_mesh.poly_face_normal(pids[0], fids[0])
+				};
+				for (const Id adjFid : m_mesh.adj_e2f(firstEid))
+				{
+					Id adjPid;
+					if (m_mesh.face_is_visible(adjFid, adjPid)
+						&& adjPid != pids[0]
+						&& firstPlane.point_plane_dist_signed(m_mesh.face_centroid(adjFid)) > 0)
+					{
+						if (fids.size() == 2)
+						{
+							const auto edgeVec{ [&](const Id _pid, const Id _fid) {
+								return m_mesh.edge_vec(m_mesh.edge_id(commVid, m_mesh.poly_vert_opposite_to(_pid, _fid, commVid)), true);
+							} };
+							const Vec firstEdge{ edgeVec(pids[0], fids[0]) };
+							const Vec currSecondEdge{ edgeVec(pids[1], fids[1]) };
+							const Vec candSecondEdge{ edgeVec(adjPid, adjFid) };
+							if (firstEdge.dot(candSecondEdge) > firstEdge.dot(currSecondEdge))
+							{
+								pids[1] = adjPid;
+								fids[1] = adjFid;
+							}
+						}
+						else
+						{
+							pids.addLast(adjPid);
+							fids.addLast(adjFid);
+						}
+					}
+				}
+				if (fids.size() != 2)
+				{
+					return false;
+				}
+				if (_source == Dag::Extrude::ESource::Vertex)
+				{
+					for (const Id adjFid : m_mesh.adj_f2f(fids[0]))
+					{
+						Id adjPid;
+						if (m_mesh.face_is_visible(adjFid, adjPid)
+							&& adjPid != pids[0] && adjPid != pids[1]
+							&& adjFid != fids[0] && adjFid != fids[1]
+							&& m_mesh.face_contains_vert(adjFid, commVid)
+							&& m_mesh.faces_are_adjacent(adjFid, fids[1]))
+						{
+							if (fids.size() == 3)
+							{
+								return false;
+							}
+							pids.addLast(adjPid);
+							fids.addLast(adjFid);
+						}
+					}
+					if (fids.size() != 3)
+					{
+						return false;
+					}
+				}
+			}
+			_elements = cpputils::range::of(pids).map([&](Id _pid) {
+				return &m_mesher.pidToElement(_pid);
+			}).toFixedVector<3>();
+			_faceOffsets = cpputils::range::of(fids).zip(pids).map([&](const auto& _fidAndPid) {
+				const auto [fid, pid] {_fidAndPid};
+			return m_mesh.poly_face_offset(pid, fid);
+			}).toFixedVector<3>();
+			_firstUpFaceOffset = m_mouse.upFaceOffset;
+			return true;
+		}
+		return false;
+	}
+
+	void App::onExtrude(Dag::Extrude::ESource _source)
+	{
+		cpputils::collections::FixedVector<Dag::Element*, 3> elements;
+		cpputils::collections::FixedVector<Id, 3> faceOffsets;
+		Id firstUpFaceOffset;
+		if (hoveredExtrudeElements(_source, elements, faceOffsets, firstUpFaceOffset))
+		{
+			applyAction(*new Actions::Extrude{ elements, faceOffsets, firstUpFaceOffset });
 		}
 	}
 
-	void App::onExtrudeAndSelect()
+	void App::onExtrudeSelected()
 	{
 		const std::vector<Id> vids{ m_vertEditWidget.vids().toVector() };
 		Actions::Extrude* action{};
-		Id sourceId{ noId };
+		cpputils::collections::FixedVector<Id, 3> pids, fids;
 		switch (vids.size())
 		{
 			case 4:
 			{
 				const Id fid{ static_cast<Id>(m_mesh.face_id(vids)) };
-				if (fid == noId)
+				if (fid != noId)
 				{
-					return;
-				}
-				Id pid;
-				if (m_mesh.face_is_visible(fid, pid))
-				{
-					HMP::Dag::Element& element{ m_mesher.pidToElement(pid) };
-					const Id faceOffset{ m_mesh.poly_face_offset(pid, fid) };
-					const std::vector<Id>& polyFids{ m_mesh.poly_faces_id(pid) };
-					const Id upFaceOffset{ cpputils::range::of(polyFids).filter([&](Id _fid) {
-						return m_mesh.faces_are_adjacent(_fid, fid);
-					}).first() };
-					action = new Actions::Extrude{ element, faceOffset, upFaceOffset };
-					sourceId = fid;
+					Id pid;
+					if (m_mesh.face_is_visible(fid, pid))
+					{
+						pids.addLast(pid);
+						fids.addLast(fid);
+						break;
+					}
 				}
 			}
-			break;
+			return;
 			case 2:
 			{
 				const Id eid{ static_cast<Id>(m_mesh.edge_id(vids)) };
-				if (eid == noId)
+				if (eid != noId)
 				{
-					return;
-				}
-				if (m_mesh.edge_is_on_srf(eid))
-				{
-					std::vector<Id> fids, pids;
-					for (const Id fid : m_mesh.adj_e2f(eid))
+					if (m_mesh.edge_is_on_srf(eid))
 					{
-						Id pid;
-						if (m_mesh.face_is_visible(fid, pid))
+						for (const Id fid : m_mesh.adj_e2f(eid))
 						{
-							pids.push_back(pid);
-							fids.push_back(fid);
+							Id pid;
+							if (m_mesh.face_is_visible(fid, pid))
+							{
+								if (pids.size() == 2)
+								{
+									return;
+								}
+								pids.addLast(pid);
+								fids.addLast(fid);
+							}
+						}
+						if (pids.size() == 2 && cpputils::range::of(pids).isSet())
+						{
+							break;
 						}
 					}
-					if (fids.size() != 2 || pids[0] == pids[1])
-					{
-						return;
-					}
-					std::array<Id, 2> faceOffsets;
-					std::array<Dag::Element*, 2> elements;
-					for (I i{}; i < 2; i++)
-					{
-						faceOffsets[i] = m_mesh.poly_face_offset(pids[i], fids[i]);
-						elements[i] = &m_mesher.pidToElement(pids[i]);
-					}
-					action = new Actions::Extrude{ *elements[0], faceOffsets[0], *elements[1], faceOffsets[1] };
-					sourceId = eid;
 				}
 			}
-			break;
+			return;
 			case 1:
 			{
 				const Id vid{ vids[0] };
 				if (m_mesh.vert_is_on_srf(vid))
 				{
-					std::vector<Id> fids, pids;
 					for (const Id fid : m_mesh.adj_v2f(vid))
 					{
 						Id pid;
 						if (m_mesh.face_is_visible(fid, pid))
 						{
-							pids.push_back(pid);
-							fids.push_back(fid);
+							if (pids.size() == 3)
+							{
+								return;
+							}
+							pids.addLast(pid);
+							fids.addLast(fid);
 						}
 					}
-					if (fids.size() != 3 || pids[0] == pids[1] || pids[1] == pids[2] || pids[0] == pids[2])
+					if (pids.size() == 3 && cpputils::range::of(pids).isSet())
 					{
-						return;
+						break;
 					}
-					std::array<Id, 3> faceOffsets;
-					std::array<Dag::Element*, 3> elements;
-					for (I i{}; i < 3; i++)
-					{
-						faceOffsets[i] = m_mesh.poly_face_offset(pids[i], fids[i]);
-						elements[i] = &m_mesher.pidToElement(pids[i]);
-					}
-					action = new Actions::Extrude{ *elements[0], faceOffsets[0], *elements[1], faceOffsets[1], *elements[2], faceOffsets[2] };
-					sourceId = vid;
 				}
 			}
-			break;
+			return;
 			default:
 				return;
 		}
+		const cpputils::collections::FixedVector<Id, 3> faceOffsets{ cpputils::range::of(fids).zip(pids).map([&](const auto& _fidAndPid) {
+			const auto [fid, pid] {_fidAndPid};
+			return m_mesh.poly_face_offset(pid, fid);
+		}).toFixedVector<3>() };
+		const cpputils::collections::FixedVector<Dag::Element*, 3> elements{ cpputils::range::of(pids).map([&](Id _pid) {
+			return &m_mesher.pidToElement(_pid); }).toFixedVector<3>()
+		};
+		const Id firstUpFid{ fids.size() >= 2
+			? Meshing::Utils::adjFidInPidByEidAndFid(m_mesh, pids[0], fids[0], m_mesh.face_shared_edge(fids[0], fids[1]))
+			: Meshing::Utils::anyAdjFidInPidByFid(m_mesh, pids[0], fids[0])
+		};
+		const Id firstUpFaceOffset{ m_mesh.poly_face_offset(pids[0], firstUpFid) };
+		action = new Actions::Extrude{ elements, faceOffsets, firstUpFaceOffset };
 		applyAction(*action);
 		m_vertEditWidget.clear();
 		const HMP::Dag::Element& newElement{ action->operation().children().single() };
@@ -899,14 +993,10 @@ namespace HMP::Gui
 		{
 			case Dag::Extrude::ESource::Face:
 			{
-				const Id newFid{ m_mesh.poly_face_opposite_to(newPid, sourceId) };
+				const Id newFid{ m_mesh.poly_face_opposite_to(newPid, fids[0]) };
 				m_vertEditWidget.add(m_mesh.face_verts_id(newFid));
 			}
 			break;
-			case Dag::Extrude::ESource::Edge:
-				break;
-			case Dag::Extrude::ESource::Vertex:
-				break;
 		}
 	}
 

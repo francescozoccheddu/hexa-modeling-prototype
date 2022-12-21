@@ -133,65 +133,93 @@ namespace HMP::Actions::Utils
 		}
 	}
 
-	Dag::Extrude& prepareExtrude(const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Dag::Extrude::ESource _source)
+	Dag::Extrude& prepareExtrude(Id _firstUpFaceOffset, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets)
 	{
 		Dag::Extrude& extrude{ *new Dag::Extrude{} };
+		extrude.firstUpFaceOffset() = _firstUpFaceOffset;
 		extrude.faceOffsets() = _faceOffsets;
-		extrude.source() = _source;
+		switch (_faceOffsets.size())
+		{
+			case 1:
+				extrude.source() = Dag::Extrude::ESource::Face;
+				break;
+			case 2:
+				extrude.source() = Dag::Extrude::ESource::Edge;
+				break;
+			case 3:
+				extrude.source() = Dag::Extrude::ESource::Vertex;
+				break;
+			default:
+				throw std::domain_error{ "empty" };
+		}
 		extrude.children().attach(*new Dag::Element{});
 		return extrude;
 	}
 
-	PolyVerts shapeFaceExtrude(const Meshing::Mesher::Mesh& _mesh, const Id _pid, const Id _forwardFid, const Id _upFid)
+	PolyVerts shapeFaceExtrude(const Meshing::Mesher::Mesh& _mesh, const Id _pid, const Id _fid, const Id _firstEid)
 	{
-		const Id upEid{ _mesh.face_shared_edge(_forwardFid, _upFid) };
-		const FaceVertIds faceVids{ Meshing::Utils::faceVids(_mesh, _pid, _forwardFid, upEid, true) };
+		const FaceVertIds faceVids{ Meshing::Utils::pidFidVidsByFirstEid(_mesh, _pid, _fid, _firstEid) };
 		const FaceVerts faceVerts{ Meshing::Utils::verts(_mesh, faceVids) };
-		Real avgFaceEdgeLength{};
-		{
-			const std::vector<Id> faceEids{ _mesh.adj_f2e(_forwardFid) };
-			for (const Id eid : faceEids)
-			{
-				avgFaceEdgeLength += _mesh.edge_length(eid);
-			}
-			avgFaceEdgeLength /= static_cast<Real>(faceEids.size());
-		}
+		const Real avgEdgeLength{ cpputils::range::of(_mesh.adj_f2e(_fid)).map([&](Id _eid) { return _mesh.edge_length(_eid);}).avg() };
 		PolyVerts verts;
 		std::copy(faceVerts.begin(), faceVerts.end(), verts.begin());
-		const Vec faceNormal = _mesh.poly_face_normal(_pid, _forwardFid);
+		const Vec faceNormal = _mesh.poly_face_normal(_pid, _fid);
 		int i{ 4 };
 		for (const Vec& faceVert : faceVerts)
 		{
-			verts[i++] = faceVert + faceNormal * avgFaceEdgeLength;
+			verts[i++] = faceVert + faceNormal * avgEdgeLength;
 		}
 		return verts;
 	}
 
 	PolyVerts shapeEdgeExtrude(const Meshing::Mesher::Mesh& _mesh, const std::array<Id, 2>& _pids, const std::array<Id, 2>& _fids)
 	{
-		return shapeFaceExtrude(_mesh, _pids[0], _fids[0], _fids[1]);
+		const Id firstEid{ _mesh.face_shared_edge(_fids[0], _fids[1]) };
+		const PolyVerts face1{ shapeFaceExtrude(_mesh, _pids[0], _fids[0], firstEid) };
+		const PolyVerts face2{ shapeFaceExtrude(_mesh, _pids[1], _fids[1], firstEid) };
+		return {
+			face1[0], face1[1], face1[2], face1[3],
+			face2[2], face2[3], (face1[6] + face2[7]) / 2, (face1[7] + face2[6]) / 2
+		};
 	}
 
 	PolyVerts shapeVertexExtrude(const Meshing::Mesher::Mesh& _mesh, const std::array<Id, 3>& _pids, const std::array<Id, 3>& _fids)
 	{
-		return shapeFaceExtrude(_mesh, _pids[0], _fids[0], _fids[1]);
+		const Id firstEid{ _mesh.face_shared_edge(_fids[0], _fids[1]) };
+		const Id secondEid{ _mesh.face_shared_edge(_fids[0], _fids[2]) };
+		const Id commVid{ static_cast<Id>(_mesh.vert_shared_between_faces(cpputils::range::of(_fids).toVector())) };
+		const PolyVerts face1{ shapeFaceExtrude(_mesh, _pids[0], _fids[0], firstEid) };
+		const PolyVerts face2{ shapeFaceExtrude(_mesh, _pids[1], _fids[1], firstEid) };
+		const PolyVerts face3{ shapeFaceExtrude(_mesh, _pids[2], _fids[2], secondEid) };
+		const FaceVertIds face1Ids{ Meshing::Utils::pidFidVidsByFirstEid(_mesh, _pids[0], _fids[0], firstEid) };
+		const bool right{ face1Ids[0] == commVid };
+		return right
+			? PolyVerts{
+				face1[0], face1[1], face1[2], face1[3],
+				face2[2], face2[3], (face1[6] + face2[7] + face3[6]) / 3, face3[2]
+		}
+			: PolyVerts{
+				face1[0], face1[1], face1[2], face1[3],
+				face2[2], face2[3], face3[3], (face1[7] + face2[6] + face3[7]) / 3
+		};
 	}
 
 	void applyExtrude(Meshing::Mesher& _mesher, Dag::Extrude& _extrude)
 	{
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
-		cpputils::collections::FixedVector<Id, 3> pids, fids;
-		for (const auto& [i, parent] : cpputils::range::enumerate(_extrude.parents()))
-		{
-			pids.addLast(_mesher.elementToPid(parent));
-			fids.addLast(mesh.poly_face_id(pids[i], _extrude.faceOffsets()[i]));
-		}
+		const cpputils::collections::FixedVector<Id, 3> pids{ _extrude.parents().map([&](const Dag::Element& _parent) {
+			return _mesher.elementToPid(_parent);
+		}).toFixedVector<3>() };
+		const cpputils::collections::FixedVector<Id, 3> fids{ cpputils::range::of(_extrude.faceOffsets()).zip(pids).map([&](const auto& foAndPid) {
+			const auto [fo, pid] {foAndPid};
+			return mesh.poly_face_id(pid, fo);
+		}).toFixedVector<3>() };
+		const Id firstEid{ mesh.face_shared_edge(fids[0], mesh.poly_face_id(pids[0], _extrude.firstUpFaceOffset())) };
 		PolyVerts& verts{ _extrude.children().single().vertices() };
 		switch (_extrude.source())
 		{
 			case Dag::Extrude::ESource::Face:
-				fids.addLast(mesh.poly_face_id(pids[0], _extrude.upFaceOffset()));
-				verts = shapeFaceExtrude(mesh, pids[0], fids[0], fids[1]);
+				verts = shapeFaceExtrude(mesh, pids[0], fids[0], firstEid);
 				break;
 			case Dag::Extrude::ESource::Edge:
 				verts = shapeEdgeExtrude(mesh, cpputils::range::of(pids).toArray<2>(), cpputils::range::of(fids).toArray<2>());
@@ -243,7 +271,7 @@ namespace HMP::Actions::Utils
 		m_scheme = Meshing::ERefinementScheme::Subdivide3x3;
 		m_forwardFaceOffset = 0;
 		const Id forwardFid{ mesh.poly_face_id(pid, m_forwardFaceOffset) };
-		const Id upFid{ Meshing::Utils::adjacentFid(mesh, pid, forwardFid, mesh.face_edge_id(forwardFid, 0)) };
+		const Id upFid{ Meshing::Utils::adjFidInPidByEidAndFid(mesh, pid, forwardFid, mesh.face_edge_id(forwardFid, 0)) };
 		m_upFaceOffset = mesh.poly_face_offset(pid, upFid);
 	}
 
@@ -266,7 +294,7 @@ namespace HMP::Actions::Utils
 				m_scheme = Meshing::ERefinementScheme::AdapterFaceSubdivide3x3;
 				m_forwardFaceOffset = m_adjacentFaceOffsets[0];
 				const Id forwardFid{ mesh.poly_face_id(pid, m_forwardFaceOffset) };
-				const Id upFid{ Meshing::Utils::adjacentFid(mesh, pid, forwardFid, mesh.face_edge_id(forwardFid, 0)) };
+				const Id upFid{ Meshing::Utils::adjFidInPidByEidAndFid(mesh, pid, forwardFid, mesh.face_edge_id(forwardFid, 0)) };
 				m_upFaceOffset = mesh.poly_face_offset(pid, upFid);
 			}
 			break;
@@ -332,9 +360,9 @@ namespace HMP::Actions::Utils
 				{
 					// no adapter has already been applied and there is only a single unprocessed edge -> AdapterEdgeSubdivide3x3
 					m_scheme = Meshing::ERefinementScheme::AdapterEdgeSubdivide3x3;
-					const Id targetForwardFid{ Meshing::Utils::anyFid(mesh, pid, unprocessedEids[0]) };
+					const Id targetForwardFid{ Meshing::Utils::anyAdjFidInPidByEid(mesh, pid, unprocessedEids[0]) };
 					m_forwardFaceOffset = mesh.poly_face_offset(pid, targetForwardFid);
-					const Id targetUpFid{ Meshing::Utils::adjacentFid(mesh, pid, targetForwardFid, unprocessedEids[0]) };
+					const Id targetUpFid{ Meshing::Utils::adjFidInPidByEidAndFid(mesh, pid, targetForwardFid, unprocessedEids[0]) };
 					m_upFaceOffset = mesh.poly_face_offset(pid, targetUpFid);
 				}
 				else

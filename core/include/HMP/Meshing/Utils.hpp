@@ -20,7 +20,7 @@ namespace HMP::Meshing::Utils
 		static constexpr int c_bitX{ 0 }, c_bitY{ 1 }, c_bitZ{ 2 };
 		static constexpr int c_maskX{ 1 << c_bitX }, c_maskY{ 1 << c_bitY }, c_maskZ{ 1 << c_bitZ };
 
-		constexpr PolyVertLoc(bool _x, bool _y, bool _z) : m_bits{ static_cast<char>(_x << c_bitX | _y << c_bitY | _z << c_bitZ) }
+		constexpr PolyVertLoc(bool _x, bool _y, bool _z): m_bits{ static_cast<char>(_x << c_bitX | _y << c_bitY | _z << c_bitZ) }
 		{}
 
 		constexpr char bits() const
@@ -56,10 +56,11 @@ namespace HMP::Meshing::Utils
 		PolyVertLoc{true,true,false},
 	};
 
-	Id rotateEid(const Meshing::Mesher::Mesh& _mesh, Id _fid, Id _eid, int _rotation);
-
-	Id anyFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _eid);
-	Id adjacentFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _eid);
+	Id anyAdjFidInPidByEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _eid);
+	Id adjFidInPidByEidAndFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _eid);
+	Id adjFidInPidByVidAndFids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _vid, Id _fid1, Id _fid2);
+	Id anyAdjFidInPidByFids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid1, Id _fid2);
+	Id anyAdjFidInPidByFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid);
 
 	Id sharedEid(const Meshing::Mesher::Mesh& _mesh, Id _pid1, Id _pid2);
 	EdgeVertIds edgeVids(const Meshing::Mesher::Mesh& _mesh, Id _eid);
@@ -67,8 +68,8 @@ namespace HMP::Meshing::Utils
 	EdgeVertIds edgePolyVertOffsets(const Meshing::Mesher::Mesh& _mesh, Id _eid, Id _pid);
 	EdgeVertIds edgePolyVertOffsets(const Meshing::Mesher::Mesh& _mesh, const EdgeVertIds& _edgeVids, Id _pid);
 
-	FaceVertIds faceVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, bool _winding = false);
-	FaceVertIds faceVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _upEid, bool _winding = false);
+	FaceVertIds pidFidVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, bool _winding = false);
+	FaceVertIds pidFidVidsByFirstEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstEid, bool _winding = false);
 	PolyVertIds polyVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _forwardUpEid);
 
 	FaceVerts verts(const Meshing::Mesher::Mesh& _mesh, const FaceVertIds& _vids);
