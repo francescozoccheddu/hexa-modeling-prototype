@@ -5,6 +5,7 @@
 #include <cinolib/deg_rad.h>
 #include <cinolib/gl/glcanvas.h>
 #include <HMP/Gui/Utils/Controls.hpp>
+#include <HMP/Gui/Utils/Drawing.hpp>
 #include <cmath>
 #include <array>
 #include <utility>
@@ -13,38 +14,31 @@
 namespace HMP::Gui::Widgets
 {
 
-	Axes::Axes(const cinolib::FreeCamera<Real>& _camera)
-		: m_camera{ _camera }
-	{}
-
-	const cinolib::FreeCamera<Real>& Axes::camera() const
-	{
-		return m_camera;
-	}
-
-	void Axes::draw()
+	void Axes::draw(const cinolib::GLcanvas& _canvas)
 	{
 		using Utils::Controls::toImGui;
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
 		Vec origin;
 		Real radius;
-		if (m_camera.projection.perspective)
+		const cinolib::FreeCamera<Real>& camera{ _canvas.camera };
+		if (camera.projection.perspective)
 		{
-			origin = m_camera.view.centerAt(3);
-			radius = std::tan(cinolib::to_rad(m_camera.projection.verticalFieldOfView / 2));
+			origin = camera.view.centerAt(3);
+			radius = std::tan(cinolib::to_rad(camera.projection.verticalFieldOfView / 2));
 		}
 		else
 		{
-			origin = m_camera.view.centerAt(2);
-			radius = m_camera.projection.verticalFieldOfView / 2 * 0.75;
+			origin = camera.view.centerAt(2);
+			radius = camera.projection.verticalFieldOfView / 2 * 0.75;
 		}
 		const Vec right(origin + cinolib::GLcanvas::world_right() * radius);
 		const Vec up(origin + cinolib::GLcanvas::world_up() * radius);
 		const Vec forward(origin - cinolib::GLcanvas::world_forward() * radius);
-		const auto project{ [this](const Vec& _point) -> Vec {
-			Vec proj(m_camera.projectionViewMatrix() * _point);
-			proj.x() *= m_camera.projection.aspectRatio;
-			const Real size{ 100 };
+		const Real maxSize{ static_cast<Real>(std::min(_canvas.canvas_width(), _canvas.height())) };
+		const Real size{ std::min((maxSize * 0.1 + 100) / 2, maxSize / 3) };
+		const auto project{ [&](const Vec& _point) -> Vec {
+			Vec proj(camera.projectionViewMatrix() * _point);
+			proj.x() *= camera.projection.aspectRatio;
 			const ImVec2 windowOrigin{ ImGui::GetWindowPos() };
 			const ImVec2 windowSize{ ImGui::GetWindowSize() };
 			proj.x() = proj.x() * size + windowOrigin.x + windowSize.x - size;
@@ -69,9 +63,9 @@ namespace HMP::Gui::Widgets
 		std::sort(tips.begin(), tips.end(), [](const std::pair<Vec, ImColor>& _a, const std::pair<Vec, ImColor>& _b) { return _a.first.z() > _b.first.z(); });
 		for (const auto& [tip, color] : tips)
 		{
-			drawList.AddLine(toImGui(origin.rem_coord()), toImGui(tip.rem_coord()), color, 3);
-			drawList.AddCircleFilled(toImGui(tip.rem_coord()), 5, color, 6);
+			Utils::Drawing::line(drawList, toImGui(origin.rem_coord()), toImGui(tip.rem_coord()), color, 3.0f);
+			Utils::Drawing::circleFilled(drawList, toImGui(tip.rem_coord()), 5.0f, color);
 		}
-	}
+		}
 
-}
+	}
