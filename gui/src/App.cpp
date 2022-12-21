@@ -1153,7 +1153,7 @@ namespace HMP::Gui
 	void App::loadTargetMeshOrProjectFile(const std::string& _file)
 	{
 		static const std::unordered_set<std::string> targetMeshExts{ ".off", ".obj", ".stl" }, projectExts{ ".hmp" };
-		std::string ext{ std::filesystem::path{_file}.extension() };
+		std::string ext{ std::filesystem::path{_file}.extension().string() };
 		for (char& c : ext) c = std::tolower(c);
 		if (projectExts.contains(ext))
 		{
