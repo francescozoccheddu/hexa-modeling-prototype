@@ -163,7 +163,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 			{
 				stream << ", ";
 			}
-			stream << name(_operation, _dagNamer);
+			stream << name(*element, _dagNamer);
 		}
 		switch (_operation.source())
 		{
