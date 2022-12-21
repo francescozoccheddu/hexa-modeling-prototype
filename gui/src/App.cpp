@@ -24,6 +24,7 @@
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Gui/Utils/HrDescriptions.hpp>
 #include <HMP/Gui/Utils/Controls.hpp>
+#include <HMP/Gui/Utils/Drawing.hpp>
 #include <cpputils/range/of.hpp>
 #include <cpputils/range/index.hpp>
 #include <sstream>
@@ -89,38 +90,6 @@ namespace HMP::Gui
 
 	// markers
 
-	void App::updateMouseMarkers()
-	{
-		std::vector<cinolib::Marker>& set{ m_canvas.marker_sets[c_mouseMarkerSetInd] };
-		static constexpr unsigned int highlightRadius{ 4 };
-		if (m_mouse.element)
-		{
-			set.resize(2);
-			const Id pid{ m_mesher.elementToPid(*m_mouse.element) };
-			const Id vid{ m_mesh.poly_vert_id(pid, m_mouse.vertOffset) };
-			const Id forwardFid{ m_mesh.poly_face_id(pid, m_mouse.faceOffset) };
-			const Id upFid{ m_mesh.poly_face_id(pid, m_mouse.upFaceOffset) };
-			const Id eid{ m_mesh.face_shared_edge(forwardFid, upFid) };
-			set[0] = cinolib::Marker{
-					.pos_3d{m_mesh.vert(m_mesh.poly_vert_id(pid, m_mouse.vertOffset))},
-					.color = c_overlayColor,
-					.shape_radius = highlightRadius,
-					.shape = cinolib::Marker::EShape::CircleFilled
-			};
-			set[1] = cinolib::Marker{
-					.pos_3d{Meshing::Utils::midpoint(m_mesh, eid)},
-					.color{c_overlayColor},
-					.shape_radius = highlightRadius,
-					.shape = cinolib::Marker::EShape::Cross45,
-					.line_thickness = 2.0f
-			};
-		}
-		else
-		{
-			set.clear();
-		}
-	}
-
 	void App::updateVertSelectionMarkers()
 	{
 		std::vector<cinolib::Marker>& set{ m_canvas.marker_sets[c_vertSelectionMarkerSetInd] };
@@ -148,40 +117,8 @@ namespace HMP::Gui
 		}
 	}
 
-	void App::updateElementsMarkers()
-	{
-		std::vector<cinolib::Marker>& set{ m_canvas.marker_sets[c_elementsMarkerSetInd] };
-		set.clear();
-		static constexpr unsigned int nameFontSize{ 20 };
-		if (m_options.showNames)
-		{
-			set.reserve(m_mesh.num_polys());
-			for (Id pid{}; pid < m_mesh.num_polys(); pid++)
-			{
-				if (m_mesh.poly_is_on_surf(pid))
-				{
-					const HMP::Dag::Element& element{ m_mesher.pidToElement(pid) };
-					cinolib::Color color{ m_mouse.element == &element ? c_overlayColor : c_mutedOverlayColor };
-					if (m_mouse.element && m_mouse.element != &element)
-					{
-						color.a() /= 5;
-					}
-					set.push_back(cinolib::Marker{
-						.pos_3d{m_mesh.poly_centroid(pid)},
-						.text{m_dagNamer(&element)},
-						.color{color},
-						.shape_radius = 0,
-						.font_size = nameFontSize
-						});
-				}
-			}
-		}
-	}
-
 	void App::updateAllMarkers()
 	{
-		updateMouseMarkers();
-		updateElementsMarkers();
 		updateVertSelectionMarkers();
 	}
 
@@ -191,6 +128,7 @@ namespace HMP::Gui
 	{
 		m_mesher.updateMesh();
 		m_vertEditWidget.updateCentroid();
+		m_mouse.element = nullptr;
 		updateMouse();
 		updateAllMarkers();
 		requestDagViewerUpdate();
@@ -573,18 +511,11 @@ namespace HMP::Gui
 	{
 		// names
 		{
-			bool showNames{ m_options.showNames };
-			ImGui::Checkbox("Show element names", &showNames);
-			if (showNames != m_options.showNames)
-			{
-				m_options.showNames = showNames;
-				updateElementsMarkers();
-			}
+			ImGui::Checkbox("Show element names", &m_options.showNames);
 			ImGui::SameLine();
 			if (ImGui::Button("Reset names"))
 			{
 				m_dagNamer.reset();
-				updateElementsMarkers();
 			}
 		}
 		if (ImGui::Button("Crash me!"))
@@ -596,6 +527,36 @@ namespace HMP::Gui
 	void App::onDrawCustomGui()
 	{
 		const ImVec4 warningColor{ Utils::Controls::toImGui(c_warningTextColor) };
+		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
+		using namespace Utils::Drawing;
+		const ImU32 overlayColorU32{ toU32(c_overlayColor) };
+		const ImU32 mutedColorU32{ toU32(c_mutedOverlayColor) };
+		if (m_mouse.element)
+		{
+			const Id pid{ m_mesher.elementToPid(*m_mouse.element) };
+			const Id vid{ m_mesh.poly_vert_id(pid, m_mouse.vertOffset) };
+			const Id fid{ m_mesh.poly_face_id(pid, m_mouse.faceOffset) };
+			const Id upFid{ m_mesh.poly_face_id(pid, m_mouse.upFaceOffset) };
+			const Id eid{ m_mesh.face_shared_edge(fid, upFid) };
+			const ImVec2 vert{ project(m_canvas, m_mesh.vert(vid)) };
+			circleFilled(drawList, vert, 5.0f, overlayColorU32);
+			const ImVec2 eVert1{ project(m_canvas, m_mesh.vert(m_mesh.edge_vert_id(eid, 0))) };
+			const ImVec2 eVert2{ project(m_canvas, m_mesh.vert(m_mesh.edge_vert_id(eid, 1))) };
+			dashedLine(drawList, eVert1, eVert2, overlayColorU32, 4.0f);
+		}
+		if (m_options.showNames)
+		{
+			for (Id pid{}; pid < m_mesh.num_polys(); pid++)
+			{
+				if (m_mesh.poly_is_on_surf(pid))
+				{
+					const ImVec2 center{ project(m_canvas, m_mesh.poly_centroid(pid)) };
+					const Dag::Element& element{ m_mesher.pidToElement(pid) };
+					const ImU32 color{ (m_mouse.element && &element != m_mouse.element) ? mutedColorU32 : overlayColorU32 };
+					text(drawList, m_dagNamer(&element).c_str(), center, 20.0f, color);
+				}
+			}
+		}
 		if (m_mouse.element)
 		{
 			std::ostringstream stream{};
@@ -701,11 +662,6 @@ namespace HMP::Gui
 				m_mesher.faceMarkerSet().add(*m_mouse.element, m_mouse.faceOffset);
 			}
 			m_mesher.updateMeshMarkers();
-		}
-		if (m_mouse.element != lastElement || m_mouse.faceOffset != lastFaceOffset || m_mouse.upFaceOffset != lastUpFaceOffset || m_mouse.vertOffset != lastVertOffset)
-		{
-			updateMouseMarkers();
-			updateElementsMarkers();
 		}
 		const bool lockX{ glfwGetKey(m_canvas.window, c_kbDirectEditX) == GLFW_PRESS };
 		const bool lockY{ glfwGetKey(m_canvas.window, c_kbDirectEditY) == GLFW_PRESS };
@@ -1218,8 +1174,8 @@ namespace HMP::Gui
 
 	App::App():
 		m_project{}, m_canvas{ 700, 600, 13, 1.0f }, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() },
-		m_dagNamer{}, m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{ m_canvas.camera }, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher }
-		, m_directVertEditWidget{ m_vertEditWidget, m_canvas }, m_saveWidget{}, m_projectionWidget{ m_targetWidget, m_commander, m_mesher, m_vertEditWidget }
+		m_dagNamer{}, m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{}, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher },
+		m_directVertEditWidget{ m_vertEditWidget, m_canvas }, m_saveWidget{}, m_projectionWidget{ m_targetWidget, m_commander, m_mesher, m_vertEditWidget }
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		, m_dagViewerWidget{ m_mesher, m_dagNamer }, m_dagViewerNeedsUpdate{ true }
 #endif

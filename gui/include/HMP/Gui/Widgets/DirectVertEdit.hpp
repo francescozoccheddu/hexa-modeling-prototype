@@ -11,7 +11,7 @@
 namespace HMP::Gui::Widgets
 {
 
-    class DirectVertEdit final : public cinolib::CanvasGuiItem, public cpputils::mixins::ReferenceClass
+    class DirectVertEdit final: public cinolib::CanvasGuiItem, public cpputils::mixins::ReferenceClass
     {
 
     public:
@@ -66,7 +66,7 @@ namespace HMP::Gui::Widgets
 
         bool onZ() const;
 
-        void draw() override final;
+        void draw(const cinolib::GLcanvas& _canvas) override final;
 
     };
 

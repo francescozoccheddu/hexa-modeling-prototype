@@ -58,10 +58,8 @@ namespace HMP::Gui
 		static constexpr cinolib::Color c_selectedFaceColor{ cinolib::Color::hsv2rgb(c_hue, 0.75f, 1.0f) };
 #endif
 
-		static constexpr I c_mouseMarkerSetInd{ 1 };
-		static constexpr I c_vertSelectionMarkerSetInd{ 2 };
-		static constexpr I c_elementsMarkerSetInd{ 3 };
-		static constexpr I c_markerSetCount{ 4 };
+		static constexpr I c_vertSelectionMarkerSetInd{ 1 };
+		static constexpr I c_markerSetCount{ 2 };
 
 		static constexpr cinolib::KeyBinding c_kbCancelDirectEdit{ GLFW_KEY_ESCAPE };
 		static constexpr cinolib::KeyBinding c_kbDirectTranslation{ GLFW_KEY_T };
@@ -156,9 +154,7 @@ namespace HMP::Gui
 #endif
 
 		// markers
-		void updateMouseMarkers();
 		void updateVertSelectionMarkers();
-		void updateElementsMarkers();
 		void updateAllMarkers();
 
 		// actions

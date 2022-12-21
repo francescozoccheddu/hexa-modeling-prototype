@@ -2,6 +2,7 @@
 
 #include <HMP/Gui/Utils/Transform.hpp>
 #include <HMP/Gui/Utils/Controls.hpp>
+#include <HMP/Gui/Utils/Drawing.hpp>
 #include <stdexcept>
 #include <imgui.h>
 
@@ -16,7 +17,7 @@ namespace HMP::Gui::Widgets
         }
     }
 
-    DirectVertEdit::DirectVertEdit(VertEdit& _vertEdit, const cinolib::GLcanvas& _canvas) :
+    DirectVertEdit::DirectVertEdit(VertEdit& _vertEdit, const cinolib::GLcanvas& _canvas):
         m_vertEdit{ _vertEdit }, m_canvas{ _canvas }, m_pending{ false },
         m_centroid{}, m_kind{}, m_onX{}, m_onY{}, m_onZ{}, m_start{}, onPendingChanged{}, m_mouse{}
     {}
@@ -218,13 +219,14 @@ namespace HMP::Gui::Widgets
         return m_onZ;
     }
 
-    void DirectVertEdit::draw()
+    void DirectVertEdit::draw(const cinolib::GLcanvas& _canvas)
     {
         if (!m_pending)
         {
             return;
         }
         using Utils::Controls::toImGui;
+        using namespace Utils::Drawing;
         ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
         const ImU32 startCol{ ImGui::ColorConvertFloat4ToU32(toImGui(mutedColor)) };
         const ImU32 col{ ImGui::ColorConvertFloat4ToU32(toImGui(color)) };
@@ -253,31 +255,30 @@ namespace HMP::Gui::Widgets
                 }
                 else
                 {
-                    drawList.AddText(font, textSize, toImGui(m_centroid + textMargin), col, "???");
+                    text(drawList, "???", toImGui(m_centroid + textMargin), textSize, col, EAlign::LeftTop, EAlign::LeftTop);
                     break;
                 }
-                drawList.AddText(font, textSize, toImGui(m_centroid + textMargin), startCol, axisStr);
+                text(drawList, axisStr, toImGui(m_centroid + textMargin), textSize, startCol, EAlign::LeftTop, EAlign::LeftTop);
                 const Vec2 startDir{ Utils::Transform::dir(m_centroid, m_start) };
                 const Vec2 dir{ Utils::Transform::dir(m_centroid, m_mouse) };
-                drawList.AddLine(toImGui(m_centroid), toImGui(m_centroid + startDir * maxLen), startCol, lineThickness);
-                drawList.AddLine(toImGui(m_centroid), toImGui(m_centroid + dir * maxLen), col, lineThickness);
+                line(drawList, toImGui(m_centroid), toImGui(m_centroid + startDir * maxLen), startCol, lineThickness);
+                line(drawList, toImGui(m_centroid), toImGui(m_centroid + dir * maxLen), col, lineThickness);
             }
             break;
             case EKind::Scale:
             {
-                static constexpr unsigned int segCount{ 36 };
                 if (m_onX || m_onY || m_onZ)
                 {
                     std::string axisStr{};
                     if (m_onX) { axisStr += "X"; }
                     if (m_onY) { axisStr += "Y"; }
                     if (m_onZ) { axisStr += "Z"; }
-                    drawList.AddText(font, textSize, toImGui(m_centroid + textMargin), startCol, axisStr.c_str());
+                    text(drawList, axisStr.c_str(), toImGui(m_centroid + textMargin), textSize, startCol, EAlign::LeftTop, EAlign::LeftTop);
                 }
                 const Real startRadius{ m_centroid.dist(m_start) };
                 const Real radius{ m_centroid.dist(m_mouse) };
-                drawList.AddCircle(toImGui(m_centroid), static_cast<float>(startRadius), startCol, segCount, lineThickness);
-                drawList.AddCircle(toImGui(m_centroid), static_cast<float>(radius), col, segCount, lineThickness);
+                circle(drawList, toImGui(m_centroid), static_cast<float>(startRadius), startCol, lineThickness);
+                circle(drawList, toImGui(m_centroid), static_cast<float>(radius), col, lineThickness);
             }
             break;
             case EKind::Translation:
@@ -285,29 +286,28 @@ namespace HMP::Gui::Widgets
                 static constexpr Real crossRadius{ 10.0f };
                 if (m_onX && !m_onY && !m_onZ)
                 {
-                    drawList.AddLine(toImGui(m_start - Vec2{ maxLen, 0 }), toImGui(m_start + Vec2{ maxLen, 0 }), startCol, lineThickness);
-                    drawList.AddLine(toImGui(m_start - Vec2{ 0, crossRadius }), toImGui(m_start + Vec2{ 0, crossRadius }), startCol, lineThickness);
-                    drawList.AddLine(toImGui(Vec2{ m_mouse.x(), m_start.y() } - Vec2{ 0, crossRadius }), toImGui(Vec2{ m_mouse.x(), m_start.y() } + Vec2{ 0, crossRadius }), col, lineThickness);
-                    drawList.AddText(font, textSize, toImGui(m_start + textMargin), startCol, "X");
+                    line(drawList, toImGui(m_start - Vec2{ maxLen, 0 }), toImGui(m_start + Vec2{ maxLen, 0 }), startCol, lineThickness);
+                    line(drawList, toImGui(m_start - Vec2{ 0, crossRadius }), toImGui(m_start + Vec2{ 0, crossRadius }), startCol, lineThickness);
+                    line(drawList, toImGui(Vec2{ m_mouse.x(), m_start.y() } - Vec2{ 0, crossRadius }), toImGui(Vec2{ m_mouse.x(), m_start.y() } + Vec2{ 0, crossRadius }), col, lineThickness);
+                    text(drawList, "X", toImGui(m_start + textMargin), textSize, startCol, EAlign::LeftTop, EAlign::LeftTop);
                 }
                 else if (!m_onX && m_onY && !m_onZ)
                 {
-                    drawList.AddLine(toImGui(m_start - Vec2{ 0, maxLen }), toImGui(m_start + Vec2{ 0, maxLen }), startCol, lineThickness);
-                    drawList.AddLine(toImGui(m_start - Vec2{ crossRadius, 0 }), toImGui(m_start + Vec2{ crossRadius, 0 }), startCol, lineThickness);
-                    drawList.AddLine(toImGui(Vec2{ m_start.x(), m_mouse.y() } - Vec2{ crossRadius, 0 }), toImGui(Vec2{ m_start.x(), m_mouse.y() } + Vec2{ crossRadius, 0 }), col, lineThickness);
-                    drawList.AddText(font, textSize, toImGui(m_start + textMargin), startCol, "Y");
+                    line(drawList, toImGui(m_start - Vec2{ 0, maxLen }), toImGui(m_start + Vec2{ 0, maxLen }), startCol, lineThickness);
+                    line(drawList, toImGui(m_start - Vec2{ crossRadius, 0 }), toImGui(m_start + Vec2{ crossRadius, 0 }), startCol, lineThickness);
+                    line(drawList, toImGui(Vec2{ m_start.x(), m_mouse.y() } - Vec2{ crossRadius, 0 }), toImGui(Vec2{ m_start.x(), m_mouse.y() } + Vec2{ crossRadius, 0 }), col, lineThickness);
+                    text(drawList, "Y", toImGui(m_start + textMargin), textSize, startCol, EAlign::LeftTop, EAlign::LeftTop);
                 }
                 else if (!m_onX && !m_onY && !m_onZ)
                 {
-                    drawList.AddLine(toImGui(m_start - Vec2{ crossRadius, 0 }), toImGui(m_start + Vec2{ crossRadius, 0 }), startCol, lineThickness);
-                    drawList.AddLine(toImGui(m_start - Vec2{ 0, crossRadius }), toImGui(m_start + Vec2{ 0, crossRadius }), startCol, lineThickness);
-                    drawList.AddLine(toImGui(m_start), toImGui(m_mouse), col, lineThickness);
+                    cross(drawList, toImGui(m_start), crossRadius, startCol, lineThickness);
+                    line(drawList, toImGui(m_start), toImGui(m_mouse), col, lineThickness);
                 }
                 else
                 {
-                    drawList.AddLine(toImGui(m_start - Vec2{ crossRadius, 0 }), toImGui(m_start + Vec2{ crossRadius, 0 }), startCol, lineThickness);
-                    drawList.AddLine(toImGui(m_start - Vec2{ 0, crossRadius }), toImGui(m_start + Vec2{ 0, crossRadius }), startCol, lineThickness);
-                    drawList.AddText(font, textSize, toImGui(m_start + textMargin), col, "???");
+                    line(drawList, toImGui(m_start - Vec2{ crossRadius, 0 }), toImGui(m_start + Vec2{ crossRadius, 0 }), startCol, lineThickness);
+                    line(drawList, toImGui(m_start - Vec2{ 0, crossRadius }), toImGui(m_start + Vec2{ 0, crossRadius }), startCol, lineThickness);
+                    text(drawList, "???", toImGui(m_start + textMargin), textSize, col, EAlign::LeftTop, EAlign::LeftTop);
                 }
             }
             break;
