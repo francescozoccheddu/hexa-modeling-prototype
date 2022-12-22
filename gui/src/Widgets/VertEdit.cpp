@@ -252,11 +252,11 @@ namespace HMP::Gui::Widgets
 		{
 			const Vec vert{ m_mesher.mesh().vert(vid) };
 			const ImVec2 pos{ Utils::Drawing::project(_canvas, vert) };
-			Utils::Drawing::circle(drawList, pos, 8.0f, colorU32, 2.0f);
+			Utils::Drawing::circle(drawList, pos, 6.0f, colorU32, 2.0f);
 		}
 		if (!empty())
 		{
-			Utils::Drawing::cross(drawList, Utils::Drawing::project(_canvas, m_centroid), 8.0f, colorU32, 2.0f);
+			Utils::Drawing::cross(drawList, Utils::Drawing::project(_canvas, m_centroid), 6.0f, colorU32, 1.5f);
 		}
 	}
 
