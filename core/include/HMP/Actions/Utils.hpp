@@ -26,9 +26,12 @@ namespace HMP::Actions::Utils
 	void applyDelete(Meshing::Mesher& _mesher, Dag::Delete& _delete);
 	void unapplyDelete(Meshing::Mesher& _mesher, Dag::Delete& _delete, bool _detach = true);
 
+	PolyVerts shapeExtrude(const Meshing::Mesher::Mesh& _mesh, const cpputils::collections::FixedVector<Id, 3>& _pids, const cpputils::collections::FixedVector< Id, 3>& _fids, Id _firstVid, bool _clockwise);
+	PolyVerts shapeExtrude(const Meshing::Mesher& _mesher, const cpputils::collections::FixedVector<const Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id _vertOffset, bool _clockwise);
+	PolyVerts shapeExtrude(const Meshing::Mesher& _mesher, const Dag::Extrude& _extrude);
 	Dag::Extrude& prepareExtrude(Id _vertOffset, bool _clockwise, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets);
-	void applyExtrude(Meshing::Mesher& _mesher, Dag::Extrude& _refine);
-	void unapplyExtrude(Meshing::Mesher& _mesher, Dag::Extrude& _refine, bool _detach = true);
+	void applyExtrude(Meshing::Mesher& _mesher, Dag::Extrude& _extrude);
+	void unapplyExtrude(Meshing::Mesher& _mesher, Dag::Extrude& _extrude, bool _detach = true);
 
 	void applyTree(Meshing::Mesher& _mesher, Dag::Node& _node);
 

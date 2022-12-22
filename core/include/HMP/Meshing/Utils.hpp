@@ -72,6 +72,8 @@ namespace HMP::Meshing::Utils
 	bool areVidsCW(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _vid0, Id _vid1);
 	bool isEdgeForward(const FaceVertIds& _vids, Id _vid0, Id _vid1);
 
+	Real avgFidEdgeLength(const Meshing::Mesher::Mesh& _mesh, Id _fid);
+
 	FaceVertIds pidFidVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, bool _cw = false);
 	FaceVertIds pidFidVidsByFirstEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstEid, bool _cw = false);
 	FaceVertIds pidFidVidsByFirstVid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstVid, bool _cw = false);
