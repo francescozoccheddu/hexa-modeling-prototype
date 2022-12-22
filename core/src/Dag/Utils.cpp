@@ -219,6 +219,20 @@ namespace HMP::Dag::Utils
 		}
 	}
 
+	void transform(Node& _root, const Mat3& _transform)
+	{
+		for (Node* node : descendants(_root))
+		{
+			if (node->isElement())
+			{
+				for (Vec& vert : node->element().vertices())
+				{
+					vert = _transform * vert;
+				}
+			}
+		}
+	}
+
 	Node& cloneNode(const Node& _node)
 	{
 		switch (_node.type())
