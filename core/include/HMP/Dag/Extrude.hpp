@@ -22,6 +22,7 @@ namespace HMP::Dag
 		Id m_vertOffset;
 		cpputils::collections::FixedVector<Id, 3> m_faceOffsets;
 		ESource m_source;
+		bool m_clockwise;
 
 	public:
 
@@ -29,6 +30,9 @@ namespace HMP::Dag
 
 		Id vertOffset() const;
 		Id& vertOffset();
+
+		bool clockwise() const;
+		bool& clockwise();
 
 		const cpputils::collections::FixedVector<Id, 3>& faceOffsets() const;
 		cpputils::collections::FixedVector<Id, 3>& faceOffsets();

@@ -34,8 +34,8 @@ namespace HMP::Actions
 		mesher().updateMesh();
 	}
 
-	Extrude::Extrude(const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id _vertOffset)
-		: m_elements{ _elements }, m_operation{ Utils::prepareExtrude(_vertOffset, _faceOffsets) }
+	Extrude::Extrude(const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id _vertOffset, bool _clockwise)
+		: m_elements{ _elements }, m_operation{ Utils::prepareExtrude(_vertOffset, _clockwise, _faceOffsets) }
 	{}
 
 	Extrude::Elements Extrude::elements() const

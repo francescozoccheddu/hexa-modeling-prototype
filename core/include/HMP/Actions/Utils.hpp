@@ -26,7 +26,7 @@ namespace HMP::Actions::Utils
 	void applyDelete(Meshing::Mesher& _mesher, Dag::Delete& _delete);
 	void unapplyDelete(Meshing::Mesher& _mesher, Dag::Delete& _delete, bool _detach = true);
 
-	Dag::Extrude& prepareExtrude(Id _vertOffset, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets);
+	Dag::Extrude& prepareExtrude(Id _vertOffset, bool _clockwise, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets);
 	void applyExtrude(Meshing::Mesher& _mesher, Dag::Extrude& _refine);
 	void unapplyExtrude(Meshing::Mesher& _mesher, Dag::Extrude& _refine, bool _detach = true);
 

@@ -79,6 +79,7 @@ namespace HMP::Dag::Utils
 							const Extrude& extrudeOperation{ static_cast<const Extrude&>(operation) };
 							_serializer << extrudeOperation.source();
 							_serializer << extrudeOperation.vertOffset();
+							_serializer << extrudeOperation.clockwise();
 							_serializer << extrudeOperation.faceOffsets().size();
 							for (const Id fo : extrudeOperation.faceOffsets())
 							{
@@ -161,6 +162,7 @@ namespace HMP::Dag::Utils
 							Extrude& extrudeOperation{ *new Extrude{} };
 							_deserializer >> extrudeOperation.source();
 							_deserializer >> extrudeOperation.vertOffset();
+							_deserializer >> extrudeOperation.clockwise();
 							extrudeOperation.faceOffsets().resize(_deserializer.get<std::size_t>());
 							for (Id& fo : extrudeOperation.faceOffsets())
 							{
@@ -243,6 +245,7 @@ namespace HMP::Dag::Utils
 						clone.vertOffset() = source.vertOffset();
 						clone.faceOffsets() = source.faceOffsets();
 						clone.source() = source.source();
+						clone.clockwise() = source.clockwise();
 						return clone;
 					}
 					case Operation::EPrimitive::Refine:
