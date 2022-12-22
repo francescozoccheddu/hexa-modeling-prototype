@@ -3,17 +3,30 @@
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Dag/Utils.hpp>
 #include <HMP/Actions/Utils.hpp>
+#include <array>
+#include <cpputils/range/of.hpp>
 
 namespace HMP::Actions
 {
 
+	std::array<Vec, 3> basis(const Meshing::Mesher& _mesher, const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id _firstUpFaceOffset)
+	{
+		throw std::logic_error{ "not implemented yet" };
+	}
+
 	void Paste::apply()
 	{
-		m_operation->parents().attach(m_element);
 		if (!m_prepared)
 		{
 			m_prepared = true;
-			Utils::applyTree(mesher(), *m_operation);
+			Meshing::Mesher& mesher{ this->mesher() };
+			const Meshing::Mesher::Mesh& mesh{ mesher.mesh() };
+			Mat4 transform{ Mat4::TRANS(Vec{0,2,0}) };
+			Dag::Utils::transform(*m_operation, transform);
+		}
+		for (Dag::Element* parent : m_elements)
+		{
+			m_operation->parents().attach(*parent);
 		}
 		Meshing::Utils::addLeafs(mesher(), *m_operation, false);
 		mesher().updateMesh();
@@ -26,17 +39,13 @@ namespace HMP::Actions
 		mesher().updateMesh();
 	}
 
-	Paste::Paste(Dag::Element& _target, Id _targetForwardFaceOffset, Id _targetUpFaceOffset, Dag::Extrude& _source)
-		: m_element{ _target }, m_operation{ static_cast<Dag::Extrude&>(Dag::Utils::clone(_source)) }, m_prepared{ false }
-	{
-		// TODO!
-		//m_operation->forwardFaceOffset() = _targetForwardFaceOffset;
-		//m_operation->upFaceOffset() = _targetUpFaceOffset;
-	}
+	Paste::Paste(const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id _firstUpFaceOffset, const Dag::Extrude& _source)
+		: m_elements{ _elements }, m_operation{ static_cast<Dag::Extrude&>(Dag::Utils::clone(_source)) }, m_prepared{ false }
+	{}
 
-	const Dag::Element& Paste::element() const
+	Paste::Elements Paste::elements() const
 	{
-		return m_element;
+		return cpputils::range::of(m_elements).dereference().immutable();
 	}
 
 	const Dag::Extrude& Paste::operation() const
