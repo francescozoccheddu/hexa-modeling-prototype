@@ -32,8 +32,22 @@ namespace HMP::Actions
 			m_prepared = true;
 			const std::array<Vec, 3> oldBasis{ basis(mesher(), m_sourceOperation) };
 			const std::array<Vec, 3> newBasis{ basis(mesher(), *m_operation) };
-			Mat4 transform{ Mat4::TRANS(Vec{0,2,0}) };
-			Dag::Utils::transform(*m_operation, transform);
+			const Mat3 oldToNorm{ Mat3{oldBasis[0], oldBasis[1], oldBasis[2]}.transpose() };
+			const Mat3 newToNorm{ Mat3{newBasis[0], newBasis[1], newBasis[2]}.transpose() };
+			const Mat3 normToNew{ newToNorm.inverse() };
+			Dag::Utils::transform(*m_operation, normToNew * oldToNorm);
+			if (m_sourceOperation.clockwise() != m_operation->clockwise())
+			{
+				for (Dag::Node* node : Dag::Utils::descendants(*m_operation))
+				{
+					if (node->isElement())
+					{
+						PolyVerts& verts{ node->element().vertices() };
+						std::reverse(verts.begin(), verts.begin() + 4);
+						std::reverse(verts.begin() + 4, verts.end());
+					}
+				}
+			}
 		}
 		Meshing::Utils::addLeafs(mesher(), *m_operation, false);
 		mesher().updateMesh();
