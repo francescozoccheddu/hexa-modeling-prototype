@@ -768,7 +768,7 @@ namespace HMP::Gui
 			<< std::endl;
 	}
 
-	bool App::hoveredExtrudeElements(Dag::Extrude::ESource _source, cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id& _firstUpFaceOffset)
+	bool App::hoveredExtrudeElements(Dag::Extrude::ESource _source, cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id& _vertOffset)
 	{
 		cpputils::collections::FixedVector<Id, 3> pids, fids;
 		if (m_mouse.element)
@@ -847,7 +847,7 @@ namespace HMP::Gui
 				const auto [fid, pid] {_fidAndPid};
 			return m_mesh.poly_face_offset(pid, fid);
 			}).toFixedVector<3>();
-			_firstUpFaceOffset = m_mouse.upFaceOffset;
+			_vertOffset = m_mouse.vertOffset;
 			return true;
 		}
 		return false;
@@ -857,10 +857,10 @@ namespace HMP::Gui
 	{
 		cpputils::collections::FixedVector<Dag::Element*, 3> elements;
 		cpputils::collections::FixedVector<Id, 3> faceOffsets;
-		Id firstUpFaceOffset;
-		if (hoveredExtrudeElements(_source, elements, faceOffsets, firstUpFaceOffset))
+		Id vertOffset;
+		if (hoveredExtrudeElements(_source, elements, faceOffsets, vertOffset))
 		{
-			applyAction(*new Actions::Extrude{ elements, faceOffsets, firstUpFaceOffset });
+			applyAction(*new Actions::Extrude{ elements, faceOffsets, vertOffset });
 		}
 	}
 
@@ -949,12 +949,8 @@ namespace HMP::Gui
 		const cpputils::collections::FixedVector<Dag::Element*, 3> elements{ cpputils::range::of(pids).map([&](Id _pid) {
 			return &m_mesher.pidToElement(_pid); }).toFixedVector<3>()
 		};
-		const Id firstUpFid{ fids.size() >= 2
-			? Meshing::Utils::adjFidInPidByEidAndFid(m_mesh, pids[0], fids[0], m_mesh.face_shared_edge(fids[0], fids[1]))
-			: Meshing::Utils::anyAdjFidInPidByFid(m_mesh, pids[0], fids[0])
-		};
-		const Id firstUpFaceOffset{ m_mesh.poly_face_offset(pids[0], firstUpFid) };
-		action = new Actions::Extrude{ elements, faceOffsets, firstUpFaceOffset };
+		const Id vertOffset{ m_mesh.poly_vert_offset(pids[0], vids[0]) };
+		action = new Actions::Extrude{ elements, faceOffsets, vertOffset };
 		applyAction(*action);
 		m_vertEditWidget.clear();
 		const HMP::Dag::Element& newElement{ action->operation().children().single() };
@@ -993,10 +989,10 @@ namespace HMP::Gui
 		{
 			cpputils::collections::FixedVector<Dag::Element*, 3> elements;
 			cpputils::collections::FixedVector<Id, 3> faceOffsets;
-			Id firstUpFaceOffset;
-			if (hoveredExtrudeElements(_source, elements, faceOffsets, firstUpFaceOffset))
+			Id vertOffset;
+			if (hoveredExtrudeElements(_source, elements, faceOffsets, vertOffset))
 			{
-				applyAction(*new Actions::Paste{ elements, faceOffsets, firstUpFaceOffset, static_cast<const Dag::Extrude&>(m_copy.element->parents().single()) });
+				applyAction(*new Actions::Paste{ elements, faceOffsets, vertOffset, static_cast<const Dag::Extrude&>(m_copy.element->parents().single()) });
 			}
 		}
 	}

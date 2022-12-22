@@ -4,17 +4,17 @@ namespace HMP::Dag
 {
 
 	Extrude::Extrude()
-		: Operation{ EPrimitive::Extrude }, m_source{ ESource::Face }, m_firstUpFaceOffset{ noId }, m_faceOffsets{}
+		: Operation{ EPrimitive::Extrude }, m_source{ ESource::Face }, m_vertOffset{ noId }, m_faceOffsets{}
 	{}
 
-	Id Extrude::firstUpFaceOffset() const
+	Id Extrude::vertOffset() const
 	{
-		return m_firstUpFaceOffset;
+		return m_vertOffset;
 	}
 
-	Id& Extrude::firstUpFaceOffset()
+	Id& Extrude::vertOffset()
 	{
-		return m_firstUpFaceOffset;
+		return m_vertOffset;
 	}
 
 	const cpputils::collections::FixedVector<Id, 3>& Extrude::faceOffsets() const

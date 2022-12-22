@@ -135,6 +135,20 @@ namespace HMP::Meshing::Utils
 		return vids;
 	}
 
+	FaceVertIds pidFidVidsByFirstVid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstVid, bool _winding)
+	{
+		if (!_mesh.face_contains_vert(_fid, _firstVid))
+		{
+			throw std::logic_error{ "vert not in face" };
+		}
+		FaceVertIds vids{ pidFidVids(_mesh, _pid, _fid, _winding) };
+		while (vids[0] != _firstVid)
+		{
+			std::rotate(vids.begin(), vids.begin() + 1, vids.end());
+		}
+		return vids;
+	}
+
 	PolyVertIds polyVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _forwardUpEid)
 	{
 		const FaceVertIds forwardFaceVids{ pidFidVidsByFirstEid(_mesh, _pid, _forwardFid, _forwardUpEid, true) };

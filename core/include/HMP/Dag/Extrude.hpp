@@ -19,7 +19,7 @@ namespace HMP::Dag
 
 	private:
 
-		Id m_firstUpFaceOffset;
+		Id m_vertOffset;
 		cpputils::collections::FixedVector<Id, 3> m_faceOffsets;
 		ESource m_source;
 
@@ -27,8 +27,8 @@ namespace HMP::Dag
 
 		Extrude();
 
-		Id firstUpFaceOffset() const;
-		Id& firstUpFaceOffset();
+		Id vertOffset() const;
+		Id& vertOffset();
 
 		const cpputils::collections::FixedVector<Id, 3>& faceOffsets() const;
 		cpputils::collections::FixedVector<Id, 3>& faceOffsets();

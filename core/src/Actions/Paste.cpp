@@ -9,7 +9,7 @@
 namespace HMP::Actions
 {
 
-	std::array<Vec, 3> basis(const Meshing::Mesher& _mesher, const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id _firstUpFaceOffset)
+	std::array<Vec, 3> basis(const Meshing::Mesher& _mesher, const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id _vertOffset)
 	{
 		throw std::logic_error{ "not implemented yet" };
 	}
@@ -39,7 +39,7 @@ namespace HMP::Actions
 		mesher().updateMesh();
 	}
 
-	Paste::Paste(const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id _firstUpFaceOffset, const Dag::Extrude& _source)
+	Paste::Paste(const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id _vertOffset, const Dag::Extrude& _source)
 		: m_elements{ _elements }, m_operation{ static_cast<Dag::Extrude&>(Dag::Utils::clone(_source)) }, m_prepared{ false }
 	{}
 

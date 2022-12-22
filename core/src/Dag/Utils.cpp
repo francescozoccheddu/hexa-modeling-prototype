@@ -78,7 +78,7 @@ namespace HMP::Dag::Utils
 						{
 							const Extrude& extrudeOperation{ static_cast<const Extrude&>(operation) };
 							_serializer << extrudeOperation.source();
-							_serializer << extrudeOperation.firstUpFaceOffset();
+							_serializer << extrudeOperation.vertOffset();
 							_serializer << extrudeOperation.faceOffsets().size();
 							for (const Id fo : extrudeOperation.faceOffsets())
 							{
@@ -160,7 +160,7 @@ namespace HMP::Dag::Utils
 						{
 							Extrude& extrudeOperation{ *new Extrude{} };
 							_deserializer >> extrudeOperation.source();
-							_deserializer >> extrudeOperation.firstUpFaceOffset();
+							_deserializer >> extrudeOperation.vertOffset();
 							extrudeOperation.faceOffsets().resize(_deserializer.get<std::size_t>());
 							for (Id& fo : extrudeOperation.faceOffsets())
 							{
@@ -240,7 +240,7 @@ namespace HMP::Dag::Utils
 					{
 						const Extrude& source{ static_cast<const Extrude&>(_node) };
 						Extrude& clone{ *new Extrude{} };
-						clone.firstUpFaceOffset() = source.firstUpFaceOffset();
+						clone.vertOffset() = source.vertOffset();
 						clone.faceOffsets() = source.faceOffsets();
 						clone.source() = source.source();
 						return clone;
