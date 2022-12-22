@@ -908,6 +908,8 @@ namespace HMP::Gui
 				m_vertEditWidget.add(m_mesh.face_verts_id(newFid));
 			}
 			break;
+			default:
+				break;
 		}
 	}
 

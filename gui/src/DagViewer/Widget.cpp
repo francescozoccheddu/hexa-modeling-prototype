@@ -38,7 +38,7 @@ namespace HMP::Gui::DagViewer
 	}
 
 	Widget::Widget(const Meshing::Mesher& _mesher, cpputils::collections::Namer<const Dag::Node*>& _namer)
-		: m_center_nl{ 0.5, 0.5 }, m_windowHeight_n{ 1.0 }, m_mesher{ _mesher }, m_namer{ _namer }, cinolib::SideBarItem{ "HMP Dag Widget" }
+		: m_center_nl{ 0.5, 0.5 }, m_windowHeight_n{ 1.0 }, m_mesher{ _mesher }, m_namer{ _namer }, cinolib::SideBarItem{ "Dag" }
 	{
 		initFonts();
 	}
