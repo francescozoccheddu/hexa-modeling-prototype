@@ -160,7 +160,7 @@ namespace HMP::Actions::Utils
 	PolyVerts extrudeFace(const Meshing::Mesher::Mesh& _mesh, const Id _pid, const Id _fid, const FaceVertIds& _vids)
 	{
 		const FaceVerts faceVerts{ Meshing::Utils::verts(_mesh, _vids) };
-		const Real avgEdgeLength{ cpputils::range::of(_mesh.adj_f2e(_fid)).map([&](Id _eid) { return _mesh.edge_length(_eid);}).avg() };
+		const Real avgEdgeLength{ Meshing::Utils::avgFidEdgeLength(_mesh, _fid) };
 		PolyVerts verts;
 		std::copy(faceVerts.begin(), faceVerts.end(), verts.begin());
 		const Vec faceNormal = _mesh.poly_face_normal(_pid, _fid);
@@ -216,31 +216,45 @@ namespace HMP::Actions::Utils
 		};
 	}
 
-	void applyExtrude(Meshing::Mesher& _mesher, Dag::Extrude& _extrude)
+	PolyVerts shapeExtrude(const Meshing::Mesher::Mesh& _mesh, const cpputils::collections::FixedVector<Id, 3>& _pids, const cpputils::collections::FixedVector< Id, 3>& _fids, Id _firstVid, bool _clockwise)
+	{
+		switch (_pids.size())
+		{
+			case 1:
+				return shapeFaceExtrude(_mesh, _pids[0], _fids[0], _firstVid);
+			case 2:
+				return shapeEdgeExtrude(_mesh, cpputils::range::of(_pids).toArray<2>(), cpputils::range::of(_fids).toArray<2>(), _firstVid, _clockwise);
+			case 3:
+				return shapeVertexExtrude(_mesh, cpputils::range::of(_pids).toArray<3>(), cpputils::range::of(_fids).toArray<3>(), _firstVid, _clockwise);
+			default:
+				throw std::logic_error{ "empty" };
+		}
+	}
+
+	PolyVerts shapeExtrude(const Meshing::Mesher& _mesher, const cpputils::collections::FixedVector<const Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id _vertOffset, bool _clockwise)
 	{
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
-		const cpputils::collections::FixedVector<Id, 3> pids{ _extrude.parents().map([&](const Dag::Element& _parent) {
-			return _mesher.elementToPid(_parent);
+		const cpputils::collections::FixedVector<Id, 3> pids{ cpputils::range::of(_elements).map([&](const Dag::Element* _parent) {
+			return _mesher.elementToPid(*_parent);
 		}).toFixedVector<3>() };
-		const cpputils::collections::FixedVector<Id, 3> fids{ cpputils::range::of(_extrude.faceOffsets()).zip(pids).map([&](const auto& foAndPid) {
+		const cpputils::collections::FixedVector<Id, 3> fids{ cpputils::range::of(_faceOffsets).zip(pids).map([&](const auto& foAndPid) {
 			const auto [fo, pid] {foAndPid};
 			return mesh.poly_face_id(pid, fo);
 		}).toFixedVector<3>() };
-		const Id vid{ mesh.poly_vert_id(pids[0], _extrude.vertOffset()) };
-		PolyVerts& verts{ _extrude.children().single().vertices() };
-		switch (_extrude.source())
-		{
-			case Dag::Extrude::ESource::Face:
-				verts = shapeFaceExtrude(mesh, pids[0], fids[0], vid);
-				break;
-			case Dag::Extrude::ESource::Edge:
-				verts = shapeEdgeExtrude(mesh, cpputils::range::of(pids).toArray<2>(), cpputils::range::of(fids).toArray<2>(), vid, _extrude.clockwise());
-				break;
-			case Dag::Extrude::ESource::Vertex:
-				verts = shapeVertexExtrude(mesh, cpputils::range::of(pids).toArray<3>(), cpputils::range::of(fids).toArray<3>(), vid, _extrude.clockwise());
-				break;
-		}
-		_mesher.add(_extrude.children().single());
+		const Id vid{ mesh.poly_vert_id(pids[0], _vertOffset) };
+		return shapeExtrude(mesh, pids, fids, vid, _clockwise);
+	}
+
+	PolyVerts shapeExtrude(const Meshing::Mesher& _mesher, const Dag::Extrude& _extrude)
+	{
+		return shapeExtrude(_mesher, _extrude.parents().address().immutable().toFixedVector<3>(), _extrude.faceOffsets(), _extrude.vertOffset(), _extrude.clockwise());
+	}
+
+	void applyExtrude(Meshing::Mesher& _mesher, Dag::Extrude& _extrude)
+	{
+		Dag::Element& child{ _extrude.children().single() };
+		child.vertices() = shapeExtrude(_mesher, _extrude);
+		_mesher.add(child);
 	}
 
 	void unapplyExtrude(Meshing::Mesher& _mesher, Dag::Extrude& _extrude, bool _detach)

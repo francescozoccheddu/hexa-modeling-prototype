@@ -135,6 +135,11 @@ namespace HMP::Meshing::Utils
 		return vids;
 	}
 
+	Real avgFidEdgeLength(const Meshing::Mesher::Mesh& _mesh, Id _fid)
+	{
+		return cpputils::range::of(_mesh.adj_f2e(_fid)).map([&](Id _eid) { return _mesh.edge_length(_eid);}).avg();
+	}
+
 	FaceVertIds pidFidVidsByFirstVid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstVid, bool _cw)
 	{
 		if (!_mesh.face_contains_vert(_fid, _firstVid))
