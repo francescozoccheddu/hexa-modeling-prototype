@@ -26,7 +26,7 @@ namespace HMP::Actions
 
 		using Elements = decltype(cpputils::range::ofc(m_elements).dereference().immutable());
 
-		Paste(const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id _firstUpFaceOffset, const Dag::Extrude& _source);
+		Paste(const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id _vertOffset, const Dag::Extrude& _source);
 
 		Elements elements() const;
 
