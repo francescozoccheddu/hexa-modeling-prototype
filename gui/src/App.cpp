@@ -768,7 +768,7 @@ namespace HMP::Gui
 			<< std::endl;
 	}
 
-	bool App::hoveredExtrudeElements(Dag::Extrude::ESource _source, cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id& _vertOffset)
+	bool App::hoveredExtrudeElements(Dag::Extrude::ESource _source, cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id& _vertOffset, bool& _clockwise)
 	{
 		cpputils::collections::FixedVector<Id, 3> pids, fids;
 		if (m_mouse.element)
@@ -840,6 +840,7 @@ namespace HMP::Gui
 					}
 				}
 			}
+			_clockwise = Meshing::Utils::isEdgeCW(m_mesh, pids[0], fids[0], commVid, firstEid);
 			_elements = cpputils::range::of(pids).map([&](Id _pid) {
 				return &m_mesher.pidToElement(_pid);
 			}).toFixedVector<3>();
@@ -858,9 +859,10 @@ namespace HMP::Gui
 		cpputils::collections::FixedVector<Dag::Element*, 3> elements;
 		cpputils::collections::FixedVector<Id, 3> faceOffsets;
 		Id vertOffset;
-		if (hoveredExtrudeElements(_source, elements, faceOffsets, vertOffset))
+		bool clockwise;
+		if (hoveredExtrudeElements(_source, elements, faceOffsets, vertOffset, clockwise))
 		{
-			applyAction(*new Actions::Extrude{ elements, faceOffsets, vertOffset });
+			applyAction(*new Actions::Extrude{ elements, faceOffsets, vertOffset, clockwise });
 		}
 	}
 
@@ -950,7 +952,8 @@ namespace HMP::Gui
 			return &m_mesher.pidToElement(_pid); }).toFixedVector<3>()
 		};
 		const Id vertOffset{ m_mesh.poly_vert_offset(pids[0], vids[0]) };
-		action = new Actions::Extrude{ elements, faceOffsets, vertOffset };
+		const bool clockwise{ fids.size() > 1 && Meshing::Utils::isEdgeCW(m_mesh, pids[0], fids[0], vids[0], m_mesh.face_shared_edge(fids[0], fids[1])) };
+		action = new Actions::Extrude{ elements, faceOffsets, vertOffset, clockwise };
 		applyAction(*action);
 		m_vertEditWidget.clear();
 		const HMP::Dag::Element& newElement{ action->operation().children().single() };
@@ -990,9 +993,10 @@ namespace HMP::Gui
 			cpputils::collections::FixedVector<Dag::Element*, 3> elements;
 			cpputils::collections::FixedVector<Id, 3> faceOffsets;
 			Id vertOffset;
-			if (hoveredExtrudeElements(_source, elements, faceOffsets, vertOffset))
+			bool clockwise;
+			if (hoveredExtrudeElements(_source, elements, faceOffsets, vertOffset, clockwise))
 			{
-				applyAction(*new Actions::Paste{ elements, faceOffsets, vertOffset, static_cast<const Dag::Extrude&>(m_copy.element->parents().single()) });
+				applyAction(*new Actions::Paste{ elements, faceOffsets, vertOffset, clockwise, static_cast<const Dag::Extrude&>(m_copy.element->parents().single()) });
 			}
 		}
 	}

@@ -107,27 +107,27 @@ namespace HMP::Meshing::Utils
 		};
 	}
 
-	FaceVertIds pidFidVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, bool _winding)
+	FaceVertIds pidFidVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, bool _cw)
 	{
 		if (!_mesh.poly_contains_face(_pid, _fid))
 		{
 			throw std::logic_error{ "face not in poly" };
 		}
 		std::vector<Id> vids{ _mesh.face_verts_id(_fid) };
-		if (_winding == _mesh.poly_face_winding(_pid, _fid))
+		if (_cw == _mesh.poly_face_winding(_pid, _fid))
 		{
 			std::reverse(vids.begin(), vids.end());
 		}
 		return cpputils::range::of(vids).toArray<4>();
 	}
 
-	FaceVertIds pidFidVidsByFirstEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstEid, bool _winding)
+	FaceVertIds pidFidVidsByFirstEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstEid, bool _cw)
 	{
 		if (!_mesh.face_contains_edge(_fid, _firstEid))
 		{
 			throw std::logic_error{ "edge not in face" };
 		}
-		FaceVertIds vids{ pidFidVids(_mesh, _pid, _fid, _winding) };
+		FaceVertIds vids{ pidFidVids(_mesh, _pid, _fid, _cw) };
 		while (_mesh.edge_id(vids[0], vids[1]) != _firstEid)
 		{
 			std::rotate(vids.begin(), vids.begin() + 1, vids.end());
@@ -135,18 +135,34 @@ namespace HMP::Meshing::Utils
 		return vids;
 	}
 
-	FaceVertIds pidFidVidsByFirstVid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstVid, bool _winding)
+	FaceVertIds pidFidVidsByFirstVid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstVid, bool _cw)
 	{
 		if (!_mesh.face_contains_vert(_fid, _firstVid))
 		{
 			throw std::logic_error{ "vert not in face" };
 		}
-		FaceVertIds vids{ pidFidVids(_mesh, _pid, _fid, _winding) };
+		FaceVertIds vids{ pidFidVids(_mesh, _pid, _fid, _cw) };
 		while (vids[0] != _firstVid)
 		{
 			std::rotate(vids.begin(), vids.begin() + 1, vids.end());
 		}
 		return vids;
+	}
+
+	bool isEdgeCW(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstVid, Id _eid)
+	{
+		return areVidsCW(_mesh, _pid, _fid, _firstVid, _mesh.vert_opposite_to(_eid, _firstVid));
+	}
+
+	bool areVidsCW(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _vid0, Id _vid1)
+	{
+		return !isEdgeForward(pidFidVids(_mesh, _pid, _fid), _vid0, _vid1);
+	}
+
+	bool isEdgeForward(const FaceVertIds& _vids, Id _vid0, Id _vid1)
+	{
+		const std::size_t index0{ static_cast<std::size_t>(std::distance(_vids.begin(), std::find(_vids.begin(), _vids.end(), _vid0))) };
+		return _vids[(index0 + 1) % 4] == _vid1;
 	}
 
 	PolyVertIds polyVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _forwardUpEid)

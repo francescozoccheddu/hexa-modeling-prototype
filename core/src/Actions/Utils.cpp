@@ -133,10 +133,11 @@ namespace HMP::Actions::Utils
 		}
 	}
 
-	Dag::Extrude& prepareExtrude(Id _vertOffset, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets)
+	Dag::Extrude& prepareExtrude(Id _vertOffset, bool _clockwise, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets)
 	{
 		Dag::Extrude& extrude{ *new Dag::Extrude{} };
 		extrude.vertOffset() = _vertOffset;
+		extrude.clockwise() = _clockwise;
 		extrude.faceOffsets() = _faceOffsets;
 		switch (_faceOffsets.size())
 		{
@@ -177,55 +178,41 @@ namespace HMP::Actions::Utils
 		return extrudeFace(_mesh, _pid, _fid, faceVids);
 	}
 
-	PolyVerts shapeEdgeExtrude(const Meshing::Mesher::Mesh& _mesh, const std::array<Id, 2>& _pids, const std::array<Id, 2>& _fids, Id _firstVid)
+	PolyVerts shapeEdgeExtrude(const Meshing::Mesher::Mesh& _mesh, const std::array<Id, 2>& _pids, const std::array<Id, 2>& _fids, Id _firstVid, bool _clockwise)
 	{
-		const std::array<FaceVertIds, 2> vids{
+		const std::array<PolyVerts, 2> verts{
 			cpputils::range::of(_fids).zip(_pids).map([&](const auto& _fidAndPid) {
 				const auto& [fid, pid] {_fidAndPid};
-				return Meshing::Utils::pidFidVidsByFirstVid(_mesh, pid, fid, _firstVid);
+				return shapeFaceExtrude(_mesh, pid, fid, _firstVid);
 			}).toArray()
 		};
-		const std::array<PolyVerts, 2> verts{
-			cpputils::range::of(_fids).zip(_pids, vids).map([&](const auto& _fidAndPidAndVids) {
-				const auto& [fid, pid, vids] {_fidAndPidAndVids};
-				return extrudeFace(_mesh, pid, fid, vids);
-			}).toArray()
-		};
-		const bool secondIsLeft{ vids[0][1] == vids[1][3] };
-		return secondIsLeft
+		return _clockwise
 			? PolyVerts{
 				verts[0][0], verts[0][1], verts[0][2], verts[0][3],
-				verts[1][1], verts[1][2], (verts[0][6] + verts[1][6]) / 2, (verts[0][7] + verts[1][5]) / 2
+				verts[1][3], (verts[0][5] + verts[1][7]) / 2, (verts[0][6] + verts[1][6]) / 2, verts[1][2]
 		}
 			: PolyVerts{
 				verts[0][0], verts[0][1], verts[0][2], verts[0][3],
-				verts[1][3], (verts[0][5] + verts[1][7]) / 2, (verts[0][6] + verts[1][6]) / 2, verts[1][2]
+				verts[1][1], verts[1][2], (verts[0][6] + verts[1][6]) / 2, (verts[0][7] + verts[1][5]) / 2
 		};
 	}
 
-	PolyVerts shapeVertexExtrude(const Meshing::Mesher::Mesh& _mesh, const std::array<Id, 3>& _pids, const std::array<Id, 3>& _fids, Id _firstVid)
+	PolyVerts shapeVertexExtrude(const Meshing::Mesher::Mesh& _mesh, const std::array<Id, 3>& _pids, const std::array<Id, 3>& _fids, Id _firstVid, bool _clockwise)
 	{
-		const std::array<FaceVertIds, 3> vids{
+		const std::array<PolyVerts, 3> verts{
 			cpputils::range::of(_fids).zip(_pids).map([&](const auto& _fidAndPid) {
 				const auto& [fid, pid] {_fidAndPid};
-				return Meshing::Utils::pidFidVidsByFirstVid(_mesh, pid, fid, _firstVid);
+				return shapeFaceExtrude(_mesh, pid, fid, _firstVid);
 			}).toArray()
 		};
-		const std::array<PolyVerts, 3> verts{
-			cpputils::range::of(_fids).zip(_pids, vids).map([&](const auto& _fidAndPidAndVids) {
-				const auto& [fid, pid, vids] {_fidAndPidAndVids};
-				return extrudeFace(_mesh, pid, fid, vids);
-			}).toArray()
-		};
-		const bool secondIsLeft{ vids[0][1] == vids[1][3] };
-		return secondIsLeft
+		return _clockwise
 			? PolyVerts{
 				verts[0][0], verts[0][1], verts[0][2], verts[0][3],
-				verts[1][1], verts[1][2], (verts[0][6] + verts[1][6] + verts[2][6]) / 3, verts[2][2]
+				verts[2][1], verts[2][2], (verts[0][6] + verts[1][6] + verts[2][6]) / 3, verts[1][2]
 		}
 			: PolyVerts{
 				verts[0][0], verts[0][1], verts[0][2], verts[0][3],
-				verts[2][1], verts[2][2], (verts[0][6] + verts[1][6] + verts[2][6]) / 3, verts[1][2]
+				verts[1][1], verts[1][2], (verts[0][6] + verts[1][6] + verts[2][6]) / 3, verts[2][2]
 		};
 	}
 
@@ -247,10 +234,10 @@ namespace HMP::Actions::Utils
 				verts = shapeFaceExtrude(mesh, pids[0], fids[0], vid);
 				break;
 			case Dag::Extrude::ESource::Edge:
-				verts = shapeEdgeExtrude(mesh, cpputils::range::of(pids).toArray<2>(), cpputils::range::of(fids).toArray<2>(), vid);
+				verts = shapeEdgeExtrude(mesh, cpputils::range::of(pids).toArray<2>(), cpputils::range::of(fids).toArray<2>(), vid, _extrude.clockwise());
 				break;
 			case Dag::Extrude::ESource::Vertex:
-				verts = shapeVertexExtrude(mesh, cpputils::range::of(pids).toArray<3>(), cpputils::range::of(fids).toArray<3>(), vid);
+				verts = shapeVertexExtrude(mesh, cpputils::range::of(pids).toArray<3>(), cpputils::range::of(fids).toArray<3>(), vid, _extrude.clockwise());
 				break;
 		}
 		_mesher.add(_extrude.children().single());
