@@ -242,7 +242,9 @@ namespace HMP::Gui::DagViewer
 				// nodes
 
 				const float nodeRadius_s{ static_cast<float>(m_layout.nodeRadius() * l2s) };
+				const float copiedNodeRadius_s{ static_cast<float>(m_layout.nodeRadius() * l2s) * 1.1f };
 				const Vec2 nodeHalfDiag_s{ nodeRadius_s, nodeRadius_s };
+				const Vec2 copiedNodeHalfDiag_s{ copiedNodeRadius_s, copiedNodeRadius_s };
 
 				const ImU32 elementColor{ toImCol(m_mesher.polyColor()) };
 				const ImU32 inactiveElementColor{ toImCol(cinolib::Color(
@@ -266,6 +268,10 @@ namespace HMP::Gui::DagViewer
 								: m_mesher.has(element) ? elementColor : inactiveElementColor };
 							drawList->AddRectFilled(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), color);
 							drawList->AddRect(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), strokeColor);
+							if (&element == copied)
+							{
+								drawList->AddRect(toImVec(center - copiedNodeHalfDiag_s), toImVec(center + copiedNodeHalfDiag_s), strokeColor);
+							}
 						}
 						break;
 						case Dag::Node::EType::Operation:
