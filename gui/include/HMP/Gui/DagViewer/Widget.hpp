@@ -12,7 +12,7 @@
 namespace HMP::Gui::DagViewer
 {
 
-	class Widget final : public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
+	class Widget final: public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
 	{
 
 	private:
@@ -36,7 +36,7 @@ namespace HMP::Gui::DagViewer
 
 		Widget(const Meshing::Mesher& _mesher, cpputils::collections::Namer<const Dag::Node*>& _namer);
 
-		const Dag::Element* highlight{};
+		const Dag::Element* highlight{}, * copied{};
 
 		const Meshing::Mesher& mesher() const;
 
