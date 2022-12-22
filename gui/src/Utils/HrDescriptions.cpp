@@ -277,14 +277,31 @@ namespace HMP::Gui::Utils::HrDescriptions
 	std::string describe(const Actions::Paste& _action, DagNamer& _dagNamer)
 	{
 		std::ostringstream stream{};
-		stream
-			<< "Paste"
-			<< " at " << name(_action.element(), _dagNamer)
-			<< " ("
-			<< name(_action.operation(), _dagNamer)
-			<< " towards " << describe(cpputils::range::of(_action.operation().faceOffsets()).toVector()) << " (" << _action.operation().firstUpFaceOffset() << ")"
+		stream << "Paste"
+			<< " at ";
+		for (const auto& [i, element] : cpputils::range::enumerate(_action.elements()))
+		{
+			if (i)
+			{
+				stream << ", ";
+			}
+			stream << name(element, _dagNamer);
+		}
+		switch (_action.operation().source())
+		{
+			case HMP::Dag::Extrude::ESource::Face:
+				stream << " (face)";
+				break;
+			case HMP::Dag::Extrude::ESource::Edge:
+				stream << " (edge)";
+				break;
+			case HMP::Dag::Extrude::ESource::Vertex:
+				stream << " (vertex)";
+				break;
+		}
+		stream << " towards " << describe(cpputils::range::of(_action.operation().faceOffsets()).toVector()) << " (" << _action.operation().firstUpFaceOffset() << ")"
 			<< " into " << name(_action.operation().children().single(), _dagNamer)
-			<< ")";
+			<< " (" << name(_action.operation(), _dagNamer) << ")";
 		return stream.str();
 	}
 

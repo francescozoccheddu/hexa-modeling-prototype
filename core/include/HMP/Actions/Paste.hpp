@@ -4,27 +4,32 @@
 #include <HMP/Dag/NodeHandle.hpp>
 #include <HMP/Dag/Element.hpp>
 #include <HMP/Dag/Extrude.hpp>
+#include <cpputils/collections/FixedVector.hpp>
 
 namespace HMP::Actions
 {
 
-	class Paste final : public Commander::Action
+	class Paste final: public Commander::Action
 	{
 
 	private:
 
-		Dag::Element& m_element;
+		cpputils::collections::FixedVector<Dag::Element*, 3> m_elements;
 		Dag::NodeHandle<Dag::Extrude> m_operation;
 		bool m_prepared;
 
 		void apply() override;
+
 		void unapply() override;
 
 	public:
-		
-		Paste(Dag::Element& _target, Id _targetForwardFaceOffset, Id _targetUpFaceOffset, Dag::Extrude& _source);
 
-		const Dag::Element& element() const;
+		using Elements = decltype(cpputils::range::ofc(m_elements).dereference().immutable());
+
+		Paste(const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id _firstUpFaceOffset, const Dag::Extrude& _source);
+
+		Elements elements() const;
+
 		const Dag::Extrude& operation() const;
 
 	};

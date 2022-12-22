@@ -75,7 +75,9 @@ namespace HMP::Gui
 		static constexpr cinolib::KeyBinding c_kbLoadTarget{ GLFW_KEY_L, GLFW_MOD_CONTROL };
 		static constexpr cinolib::KeyBinding c_kbDelete{ GLFW_KEY_D };
 		static constexpr cinolib::KeyBinding c_kbCopy{ GLFW_KEY_C };
-		static constexpr cinolib::KeyBinding c_kbPaste{ GLFW_KEY_V };
+		static constexpr cinolib::KeyBinding c_kbPasteFace{ GLFW_KEY_V };
+		static constexpr cinolib::KeyBinding c_kbPasteEdge{ GLFW_KEY_V, GLFW_MOD_ALT };
+		static constexpr cinolib::KeyBinding c_kbPasteVertex{ GLFW_KEY_V, GLFW_MOD_ALT | GLFW_MOD_CONTROL };
 		static constexpr cinolib::KeyBinding c_kbMakeConforming{ GLFW_KEY_Q };
 		static constexpr cinolib::KeyBinding c_kbToggleTargetVisibility{ GLFW_KEY_U };
 		static constexpr cinolib::KeyBinding c_kbUndo{ GLFW_KEY_Z, GLFW_MOD_CONTROL };
@@ -189,7 +191,7 @@ namespace HMP::Gui
 		void onExtrude(Dag::Extrude::ESource _source);
 		void onExtrudeSelected();
 		void onCopy();
-		void onPaste();
+		void onPaste(Dag::Extrude::ESource _source);
 		void onRefineElement(bool _twice);
 		void onDelete();
 		void onRefineFace();

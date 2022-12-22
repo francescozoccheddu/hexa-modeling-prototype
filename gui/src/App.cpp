@@ -54,7 +54,9 @@ namespace HMP::Gui
 		cinolib::print_binding(c_kbFaceRefine.name(), "refine face");
 		cinolib::print_binding(c_kbDelete.name(), "delete");
 		cinolib::print_binding(c_kbCopy.name(), "copy");
-		cinolib::print_binding(c_kbPaste.name(), "paste");
+		cinolib::print_binding(c_kbPasteFace.name(), "paste face");
+		cinolib::print_binding(c_kbPasteEdge.name(), "paste edge");
+		cinolib::print_binding(c_kbPasteVertex.name(), "paste vertex");
 		cinolib::print_binding(c_kbClear.name(), "clear");
 		cinolib::print_binding(c_kbMakeConforming.name(), "make conforming");
 		cinolib::print_binding(c_kbSelectVertex.name(), "select vertex");
@@ -258,9 +260,17 @@ namespace HMP::Gui
 			onCopy();
 		}
 		// paste
-		else if (key == c_kbPaste)
+		else if (key == c_kbPasteFace)
 		{
-			onPaste();
+			onPaste(Dag::Extrude::ESource::Face);
+		}
+		else if (key == c_kbPasteEdge)
+		{
+			onPaste(Dag::Extrude::ESource::Edge);
+		}
+		else if (key == c_kbPasteVertex)
+		{
+			onPaste(Dag::Extrude::ESource::Vertex);
 		}
 		// load target mesh
 		else if (key == c_kbLoadTarget)
@@ -977,13 +987,16 @@ namespace HMP::Gui
 #endif
 	}
 
-	void App::onPaste()
+	void App::onPaste(Dag::Extrude::ESource _source)
 	{
-		if (m_mouse.element && m_copy.element && m_mesher.has(*m_copy.element))
+		if (m_copy.element)
 		{
-			if (m_copy.element->parents().size() == 1 && m_copy.element->parents().single().primitive() == HMP::Dag::Operation::EPrimitive::Extrude)
+			cpputils::collections::FixedVector<Dag::Element*, 3> elements;
+			cpputils::collections::FixedVector<Id, 3> faceOffsets;
+			Id firstUpFaceOffset;
+			if (hoveredExtrudeElements(_source, elements, faceOffsets, firstUpFaceOffset))
 			{
-				applyAction(*new Actions::Paste{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset, static_cast<HMP::Dag::Extrude&>(m_copy.element->parents().single()) });
+				applyAction(*new Actions::Paste{ elements, faceOffsets, firstUpFaceOffset, static_cast<const Dag::Extrude&>(m_copy.element->parents().single()) });
 			}
 		}
 	}
