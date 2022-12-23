@@ -124,7 +124,7 @@ namespace HMP::Gui
 		{
 			m_mouse.element = nullptr;
 		}
-		if (m_copy.element == &_element)
+		if (m_copy.element == &_element || (m_copy.element && m_copy.element->parents().single().parents().has(_element)))
 		{
 			m_copy.element = nullptr;
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
@@ -505,20 +505,28 @@ namespace HMP::Gui
 		if (m_copy.element && !m_mouse.element)
 		{
 			const Id pid{ m_mesher.elementToPid(*m_copy.element) };
+			const Dag::Extrude& extrude{ m_copy.element->parents().cast<const Dag::Extrude&>().single() };
 			const ImVec2 center{ project(m_canvas, m_mesh.poly_centroid(pid)) };
-			const bool showingName{ m_options.showNames && m_mesh.poly_is_on_surf(pid) };
-			if (!showingName)
-			{
-				circle(drawList, center, 4.0f, mutedColorU32, 1.5f);
-			}
-			const Dag::Extrude& extrude{ static_cast<const Dag::Extrude&>(m_copy.element->parents().single()) };
 			for (const auto& [parent, faceOffset] : extrude.parents().zip(extrude.faceOffsets()))
 			{
 				const Id parentPid{ m_mesher.elementToPid(parent) };
 				const Id parentFid{ m_mesh.poly_face_id(parentPid, faceOffset) };
-				const ImVec2 parentCenter{ project(m_canvas, m_mesh.face_centroid(parentFid)) };
-				dashedLine(drawList, parentCenter, center, mutedColorU32, 1.5f);
+				const ImVec2 parentFidCenter{ project(m_canvas, m_mesh.face_centroid(parentFid)) };
+				dashedLine(drawList, parentFidCenter, center, mutedColorU32, 1.5f);
 			}
+			if (!m_options.showNames || !m_mesh.poly_is_on_surf(pid))
+			{
+				circle(drawList, center, 4.0f, m_mouse.element == m_copy.element ? colorU32 : mutedColorU32, 1.5f);
+			}
+			const Dag::Element& firstParent{ extrude.parents().first() };
+			const Id firstParentPid{ m_mesher.elementToPid(firstParent) };
+			const Id firstParentFid{ m_mesh.poly_face_id(firstParentPid, extrude.faceOffsets()[0]) };
+			const Id firstParentVid{ m_mesh.poly_vert_id(firstParentPid, extrude.vertOffset()) };
+			const FaceVertIds firstParentVids{ Meshing::Utils::pidFidVidsByFirstVid(m_mesh, firstParentPid, firstParentFid, firstParentVid, extrude.clockwise()) };
+			const ImVec2 eVert1{ project(m_canvas, m_mesh.vert(firstParentVids[0])) };
+			const ImVec2 eVert2{ project(m_canvas, m_mesh.vert(firstParentVids[1])) };
+			dashedLine(drawList, eVert1, eVert2, mutedColorU32, 4.0f);
+			circleFilled(drawList, eVert1, 4.0f, mutedColorU32);
 		}
 		if (m_mouse.element)
 		{
@@ -532,11 +540,15 @@ namespace HMP::Gui
 			{
 				const Id adjFid{ static_cast<Id>(m_mesh.poly_shared_face(pid, adjPid)) };
 				const ImVec2 adjFidCenter{ project(m_canvas, m_mesh.face_centroid(adjFid)) };
+				const ImVec2 adjPidCenter{ project(m_canvas, m_mesh.poly_centroid(adjPid)) };
 				if (m_options.showNames)
 				{
-					const ImVec2 adjPidCenter{ project(m_canvas, m_mesh.poly_centroid(adjPid)) };
 					const Dag::Element& element{ m_mesher.pidToElement(adjPid) };
 					text(drawList, m_dagNamer(&element).c_str(), adjPidCenter, 20.0f, colorU32);
+				}
+				else
+				{
+					circle(drawList, adjPidCenter, 4.0f, colorU32, 1.5f);
 				}
 				dashedLine(drawList, adjFidCenter, pidCenter, colorU32, 1.5f);
 			}
@@ -973,7 +985,10 @@ namespace HMP::Gui
 
 	void App::onCopy()
 	{
-		if (m_mouse.element && m_mouse.element->parents().isSingle() && m_mouse.element->parents().first().primitive() == Dag::Operation::EPrimitive::Extrude)
+		if (m_mouse.element
+			&& m_mouse.element->parents().isSingle()
+			&& m_mouse.element->parents().first().primitive() == Dag::Operation::EPrimitive::Extrude
+			&& m_mouse.element->parents().first().parents().filter([&](const Dag::Element& _parent) { return !m_mesher.has(_parent); }).empty())
 		{
 			m_copy.element = m_mouse.element;
 		}

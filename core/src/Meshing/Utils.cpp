@@ -86,6 +86,12 @@ namespace HMP::Meshing::Utils
 		};
 	}
 
+	Id nextVidInFid(const FaceVertIds& _vids, Id _vid, bool _backwards)
+	{
+		const int index{ static_cast<int>(std::distance(_vids.begin(), std::find(_vids.begin(), _vids.end(), _vid))) };
+		return _vids[(index + (_backwards ? -1 : 1)) % 4];
+	}
+
 	EdgeVertIds edgeVids(const Meshing::Mesher::Mesh& _mesh, Id _eid)
 	{
 		return {

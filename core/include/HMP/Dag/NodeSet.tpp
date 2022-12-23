@@ -49,7 +49,7 @@ namespace HMP::Dag
 		template<typename TNode>
 		bool NodeSetBase<TNode>::has(const TNode& _node) const
 		{
-			return m_handle.m_data.m_map.contains(_node);
+			return m_handle.m_data.m_map.contains(const_cast<TNode*>(&_node));
 		}
 
 		template<typename TNode>
