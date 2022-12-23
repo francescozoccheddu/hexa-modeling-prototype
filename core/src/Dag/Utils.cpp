@@ -163,7 +163,7 @@ namespace HMP::Dag::Utils
 							_deserializer >> extrudeOperation.source();
 							_deserializer >> extrudeOperation.vertOffset();
 							_deserializer >> extrudeOperation.clockwise();
-							extrudeOperation.faceOffsets().resize(_deserializer.get<std::size_t>());
+							extrudeOperation.faceOffsets().resize(_deserializer.get<I>());
 							for (Id& fo : extrudeOperation.faceOffsets())
 							{
 								_deserializer >> fo;
