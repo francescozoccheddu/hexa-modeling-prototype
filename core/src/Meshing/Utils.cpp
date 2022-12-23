@@ -172,7 +172,7 @@ namespace HMP::Meshing::Utils
 
 	bool isEdgeForward(const FaceVertIds& _vids, Id _vid0, Id _vid1)
 	{
-		const std::size_t index0{ static_cast<std::size_t>(std::distance(_vids.begin(), std::find(_vids.begin(), _vids.end(), _vid0))) };
+		const I index0{ static_cast<I>(std::distance(_vids.begin(), std::find(_vids.begin(), _vids.end(), _vid0))) };
 		return _vids[(index0 + 1) % 4] == _vid1;
 	}
 
