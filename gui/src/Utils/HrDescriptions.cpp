@@ -29,17 +29,17 @@ namespace HMP::Gui::Utils::HrDescriptions
 		}
 	}
 
-	std::string describe(Meshing::ERefinementScheme _scheme)
+	std::string describe(Refinement::EScheme _scheme)
 	{
 		switch (_scheme)
 		{
-			case Meshing::ERefinementScheme::Inset:
+			case Refinement::EScheme::Inset:
 				return "Inset";
-			case Meshing::ERefinementScheme::Subdivide3x3:
+			case Refinement::EScheme::Subdivide3x3:
 				return "Subdivide3x3";
-			case Meshing::ERefinementScheme::AdapterEdgeSubdivide3x3:
+			case Refinement::EScheme::AdapterEdgeSubdivide3x3:
 				return "AdapterEdgeSubdivide3x3";
-			case Meshing::ERefinementScheme::AdapterFaceSubdivide3x3:
+			case Refinement::EScheme::AdapterFaceSubdivide3x3:
 				return "AdapterFaceSubdivide3x3";
 			default:
 				return "Unknown";

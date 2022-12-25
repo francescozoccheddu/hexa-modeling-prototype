@@ -22,7 +22,7 @@ namespace HMP::Actions
 
 	public:
 
-		Refine(Dag::Element& _element, I _forwardFi, I _firstVi, Meshing::ERefinementScheme _scheme, I _depth = 1);
+		Refine(Dag::Element& _element, I _forwardFi, I _firstVi, Refinement::EScheme _scheme, I _depth = 1);
 
 		const Dag::Element& element() const;
 		const Dag::Refine& operation() const;

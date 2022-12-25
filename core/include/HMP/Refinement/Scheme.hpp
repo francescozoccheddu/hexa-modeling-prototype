@@ -7,10 +7,10 @@
 #include <vector>
 #include <array>
 
-namespace HMP::Meshing
+namespace HMP::Refinement
 {
 
-	class Refinement final: public cpputils::mixins::ReferenceClass
+	class Scheme final: public cpputils::mixins::ReferenceClass
 	{
 
 	private:
@@ -21,7 +21,7 @@ namespace HMP::Meshing
 
 	public:
 
-		explicit Refinement(I _gridSize, const std::vector<IVec>& _verts, const std::vector<PolyVertData<I>>& _polys);
+		explicit Scheme(I _gridSize, const std::vector<IVec>& _verts, const std::vector<PolyVertData<I>>& _polys);
 
 		I gridSize() const;
 
@@ -29,7 +29,7 @@ namespace HMP::Meshing
 
 		const std::vector<PolyVertData<I>>& polys() const;
 
-		std::vector<PolyVertIds> apply(Mesher& _mesher, const PolyVerts& _sourceVerts) const;
+		std::vector<PolyVertIds> apply(Meshing::Mesher& _mesher, const PolyVerts& _sourceVerts) const;
 
 	};
 

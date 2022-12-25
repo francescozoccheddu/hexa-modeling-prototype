@@ -25,7 +25,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 	using DagNamer = cpputils::collections::Namer<const HMP::Dag::Node*>;
 
 	std::string name(const HMP::Dag::Node& _node, DagNamer& _dagNamer);
-	std::string describe(Meshing::ERefinementScheme _scheme);
+	std::string describe(Refinement::EScheme _scheme);
 	std::string describe(const Vec& _vec);
 	std::string describe(const Mat4& _mat);
 	std::string describe(const std::vector<I>& _is);

@@ -1,6 +1,6 @@
 #include <HMP/Actions/Refine.hpp>
 
-#include <HMP/Actions/Utils.hpp>
+#include <HMP/Refinement/Utils.hpp>
 #include <stdexcept>
 
 namespace HMP::Actions
@@ -16,18 +16,18 @@ namespace HMP::Actions
 			}
 		}
 		m_operation->parents().attach(m_element);
-		Utils::applyRefineRecursive(mesher(), *m_operation);
+		Refinement::Utils::applyRefineRecursive(mesher(), *m_operation);
 		mesher().updateMesh();
 	}
 
 	void Refine::unapply()
 	{
-		Utils::unapplyRefineRecursive(mesher(), *m_operation);
+		Refinement::Utils::unapplyRefineRecursive(mesher(), *m_operation);
 		mesher().updateMesh();
 	}
 
-	Refine::Refine(Dag::Element& _element, I _forwardFi, I _firstVi, Meshing::ERefinementScheme _scheme, I _depth)
-		: m_element{ _element }, m_operation{ Utils::prepareRefine(_forwardFi, _firstVi, _scheme, _depth) }, m_depth{ _depth }
+	Refine::Refine(Dag::Element& _element, I _forwardFi, I _firstVi, Refinement::EScheme _scheme, I _depth)
+		: m_element{ _element }, m_operation{ Refinement::Utils::prepareRefine(_forwardFi, _firstVi, _scheme, _depth) }, m_depth{ _depth }
 	{
 		if (_depth < 1 || _depth > 3)
 		{

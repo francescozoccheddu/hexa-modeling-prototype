@@ -1,12 +1,12 @@
-#include <HMP/Meshing/refinementSchemes.hpp>
+#include <HMP/Refinement/Schemes.hpp>
 
-namespace HMP::Meshing
+namespace HMP::Refinement
 {
 
-	namespace RefinementSchemes
+	namespace Schemes
 	{
 
-		const Refinement inset{
+		const Scheme inset{
 			3,
 			std::vector<IVec>{
 				IVec{2, 1, 0},
@@ -36,7 +36,7 @@ namespace HMP::Meshing
 			}
 		};
 
-		const Refinement subdivide3x3{
+		const Scheme subdivide3x3{
 			3,
 			std::vector<IVec>{
 				IVec{0, 0, 0},
@@ -135,7 +135,7 @@ namespace HMP::Meshing
 			}
 		};
 
-		const Refinement adapterEdgeSubdivide3x3{
+		const Scheme adapterEdgeSubdivide3x3{
 			3,
 			std::vector<IVec>{
 				IVec{1, 2, 0},
@@ -164,7 +164,7 @@ namespace HMP::Meshing
 			}
 		};
 
-		const Refinement adapterFaceSubdivide3x3{
+		const Scheme adapterFaceSubdivide3x3{
 			3,
 			std::vector<IVec>{
 				IVec{0, 0, 0},
@@ -217,7 +217,7 @@ namespace HMP::Meshing
 			}
 		};
 
-		const Refinement adapter2FacesSubdivide3x3{
+		const Scheme adapter2FacesSubdivide3x3{
 			3,
 			std::vector<IVec>{
 				IVec{0, 0, 0},
@@ -285,12 +285,12 @@ namespace HMP::Meshing
 
 	}
 
-	const std::unordered_map<ERefinementScheme, const Refinement&> refinementSchemes{
-		{ERefinementScheme::Subdivide3x3, RefinementSchemes::subdivide3x3},
-		{ERefinementScheme::AdapterFaceSubdivide3x3, RefinementSchemes::adapterFaceSubdivide3x3},
-		{ERefinementScheme::Adapter2FacesSubdivide3x3, RefinementSchemes::adapter2FacesSubdivide3x3},
-		{ERefinementScheme::AdapterEdgeSubdivide3x3, RefinementSchemes::adapterEdgeSubdivide3x3},
-		{ERefinementScheme::Inset, RefinementSchemes::inset}
+	const std::unordered_map<EScheme, const Scheme&> schemes{
+		{EScheme::Subdivide3x3, Schemes::subdivide3x3},
+		{EScheme::AdapterFaceSubdivide3x3, Schemes::adapterFaceSubdivide3x3},
+		{EScheme::Adapter2FacesSubdivide3x3, Schemes::adapter2FacesSubdivide3x3},
+		{EScheme::AdapterEdgeSubdivide3x3, Schemes::adapterEdgeSubdivide3x3},
+		{EScheme::Inset, Schemes::inset}
 	};
 
 }

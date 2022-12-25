@@ -4,7 +4,7 @@ namespace HMP::Dag
 {
 
 	Refine::Refine()
-		: Operation{ EPrimitive::Refine }, m_forwardFi{}, m_firstVi{}, m_scheme{ Meshing::ERefinementScheme::Subdivide3x3 }
+		: Operation{ EPrimitive::Refine }, m_forwardFi{}, m_firstVi{}, m_scheme{ Refinement::EScheme::Subdivide3x3 }
 	{}
 
 	I& Refine::forwardFi()
@@ -27,12 +27,12 @@ namespace HMP::Dag
 		return m_firstVi;
 	}
 
-	Meshing::ERefinementScheme& Refine::scheme()
+	Refinement::EScheme& Refine::scheme()
 	{
 		return m_scheme;
 	}
 
-	Meshing::ERefinementScheme Refine::scheme() const
+	Refinement::EScheme Refine::scheme() const
 	{
 		return m_scheme;
 	}
