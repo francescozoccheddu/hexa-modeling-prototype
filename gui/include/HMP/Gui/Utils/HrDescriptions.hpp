@@ -6,16 +6,14 @@
 #include <HMP/Dag/Extrude.hpp>
 #include <HMP/Dag/Operation.hpp>
 #include <HMP/Dag/Refine.hpp>
-#include <HMP/Actions/Clear.hpp>
-#include <HMP/Actions/Load.hpp>
+#include <HMP/Actions/Root.hpp>
 #include <HMP/Actions/Delete.hpp>
 #include <HMP/Actions/Extrude.hpp>
 #include <HMP/Actions/MakeConforming.hpp>
 #include <HMP/Actions/Paste.hpp>
 #include <HMP/Actions/Project.hpp>
 #include <HMP/Actions/Refine.hpp>
-#include <HMP/Actions/TransformAll.hpp>
-#include <HMP/Actions/TransformVerts.hpp>
+#include <HMP/Actions/Transform.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <cpputils/collections/FixedVector.hpp>
 #include <cpputils/collections/Namer.hpp>
@@ -41,16 +39,14 @@ namespace HMP::Gui::Utils::HrDescriptions
 	std::string describe(const HMP::Dag::Extrude& _operation, DagNamer& _dagNamer);
 	std::string describe(const HMP::Dag::Refine& _operation, DagNamer& _dagNamer);
 
-	std::string describe(const Actions::Clear& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::Delete& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::Extrude& _action, DagNamer& _dagNamer);
-	std::string describe(const Actions::Load& _action, DagNamer& _dagNamer);
+	std::string describe(const Actions::Root& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::MakeConforming& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::Paste& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::Project& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::Refine& _action, DagNamer& _dagNamer);
-	std::string describe(const Actions::TransformVerts& _action, DagNamer& _dagNamer);
-	std::string describe(const Actions::TransformAll& _action, DagNamer& _dagNamer);
+	std::string describe(const Actions::Transform& _action, DagNamer& _dagNamer);
 	std::string describe(const Commander::Action& _action, DagNamer& _dagNamer);
 
 }

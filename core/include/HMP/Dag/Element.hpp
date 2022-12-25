@@ -6,7 +6,7 @@
 namespace HMP::Dag
 {
 
-	class Element final : public Node
+	class Element final: public Node
 	{
 
 	public:
@@ -27,6 +27,11 @@ namespace HMP::Dag
 	public:
 
 		Element();
+
+		PolyVertIds vids;
+		Id pid;
+
+		FaceVertIds faceVids(I _faceOffset) const;
 
 		PolyVerts& vertices();
 		const PolyVerts& vertices() const;

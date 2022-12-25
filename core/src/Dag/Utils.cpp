@@ -61,6 +61,10 @@ namespace HMP::Dag::Utils
 					{
 						_serializer << vertex;
 					}
+					for (const Id vid : element.vids)
+					{
+						_serializer << vid;
+					}
 				}
 				break;
 				case Node::EType::Operation:
@@ -140,6 +144,10 @@ namespace HMP::Dag::Utils
 					for (Vec& vertex : element.vertices())
 					{
 						_deserializer >> vertex;
+					}
+					for (Id& vid : element.vids)
+					{
+						_deserializer >> vid;
 					}
 					nodes.push_back(&element);
 				}
@@ -239,8 +247,11 @@ namespace HMP::Dag::Utils
 		{
 			case Node::EType::Element:
 			{
+				const Element& source{ _node.element() };
 				Element& clone{ *new Element{} };
-				clone.vertices() = _node.element().vertices();
+				clone.vertices() = source.vertices();
+				clone.vids = source.vids;
+				clone.pid = source.pid;
 				return clone;
 			}
 			case Node::EType::Operation:

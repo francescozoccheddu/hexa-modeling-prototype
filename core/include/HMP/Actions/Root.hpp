@@ -3,26 +3,31 @@
 #include <HMP/Commander.hpp>
 #include <HMP/Dag/NodeHandle.hpp>
 #include <HMP/Dag/Element.hpp>
+#include <vector>
 
 namespace HMP::Actions
 {
 
-	class Load final : public Commander::Action
+	class Root final: public Commander::Action
 	{
 
 	private:
 
 		Dag::NodeHandle<Dag::Element> m_otherRoot;
+		std::vector<Vec> m_otherVerts;
 		Dag::Element& m_newRoot;
+		std::vector<Vec> m_newVerts;
 
 		void apply() override;
 		void unapply() override;
 
 	public:
-		
-		Load(Dag::Element& _root);
+
+		Root(Dag::Element& _root, const std::vector<Vec>& _verts);
 
 		const Dag::Element& newRoot() const;
+
+		const std::vector<Vec>& newVerts() const;
 
 	};
 

@@ -1,16 +1,14 @@
 ﻿cmake_minimum_required (VERSION 3.14)
 
 add_library (core STATIC
-    "src/Actions/Clear.cpp"
     "src/Actions/Delete.cpp"
     "src/Actions/Extrude.cpp"
-    "src/Actions/Load.cpp"
+    "src/Actions/Root.cpp"
     "src/Actions/MakeConforming.cpp"
     "src/Actions/Paste.cpp"
     "src/Actions/Project.cpp"
     "src/Actions/Refine.cpp"
-    "src/Actions/TransformVerts.cpp"
-    "src/Actions/TransformAll.cpp"
+    "src/Actions/Transform.cpp"
     "src/Actions/Utils.cpp"
     "src/Dag/Delete.cpp"
     "src/Dag/Element.cpp"

@@ -303,13 +303,16 @@ namespace HMP::Meshing::Utils
 		return closestEid;
 	}
 
-	void addLeafs(Mesher& _mesher, Dag::Node& _root, bool _clear)
+	void addVerts(Mesher& _mesher, const std::vector<Vec>& _verts)
 	{
-		if (_clear)
+		for (const Vec& vert : _verts)
 		{
-			_mesher.clear();
+			_mesher.addVert(vert);
 		}
+	}
 
+	void addLeafs(Mesher& _mesher, Dag::Node& _root)
+	{
 		for (Dag::Node* node : Dag::Utils::descendants(_root))
 		{
 			if (node->isElement())
@@ -325,7 +328,7 @@ namespace HMP::Meshing::Utils
 				}
 				if (active)
 				{
-					_mesher.add(element);
+					_mesher.add_TOPM(element);
 				}
 			}
 		}

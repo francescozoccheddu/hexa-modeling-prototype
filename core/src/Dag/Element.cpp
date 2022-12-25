@@ -1,12 +1,15 @@
 #include <HMP/Dag/Element.hpp>
 
+#include <stdexcept>
+
 namespace HMP::Dag
 {
 
 	Element::Element()
-		: Node{ EType::Element }, m_parents{ parentsHandle() }, m_children{ childrenHandle() }
+		: Node{ EType::Element }, m_parents{ parentsHandle() }, m_children{ childrenHandle() }, vids{}, pid{ noId }
 	{
 		m_vertices.fill(Vec{ 0,0,0 });
+		vids.fill(noId);
 	}
 
 	PolyVerts& Element::vertices()
@@ -58,5 +61,27 @@ namespace HMP::Dag
 	{
 		return m_children;
 	}
+
+	FaceVertIds Element::faceVids(I _faceOffset) const
+	{
+		switch (_faceOffset)
+		{
+			case 0:
+				return { vids[0], vids[1], vids[2], vids[3] };
+			case 1:
+				return { vids[4], vids[7], vids[6], vids[5] };
+			case 2:
+				return { vids[1], vids[5], vids[6], vids[2] };
+			case 3:
+				return { vids[0], vids[3], vids[7], vids[4] };
+			case 4:
+				return { vids[0], vids[4], vids[5], vids[1] };
+			case 5:
+				return { vids[3], vids[2], vids[6], vids[7] };
+			default:
+				throw std::range_error{ "out of range" };
+		}
+	}
+
 
 }

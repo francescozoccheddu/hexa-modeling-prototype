@@ -211,11 +211,6 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return describe(_operation, _operation.parents().single(), _dagNamer);
 	}
 
-	std::string describe(const Actions::Clear& _action, DagNamer& _dagNamer)
-	{
-		return "Clear";
-	}
-
 	std::string describe(const Actions::Delete& _action, DagNamer& _dagNamer)
 	{
 		return describe(_action.operation(), _action.element(), _dagNamer);
@@ -226,11 +221,11 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return describe(_action.operation(), _action.elements().address().toFixedVector<3>(), _dagNamer);
 	}
 
-	std::string describe(const Actions::Load& _action, DagNamer& _dagNamer)
+	std::string describe(const Actions::Root& _action, DagNamer& _dagNamer)
 	{
 		std::ostringstream stream{};
 		stream
-			<< "Load"
+			<< "Root"
 			<< " " << name(_action.newRoot(), _dagNamer);
 		return stream.str();
 	}
@@ -263,15 +258,6 @@ namespace HMP::Gui::Utils::HrDescriptions
 			}
 		}
 		stream << ")";
-		return stream.str();
-	}
-
-	std::string describe(const Actions::TransformVerts& _action, DagNamer& _dagNamer)
-	{
-		std::ostringstream stream{};
-		stream
-			<< "Transform " << _action.verts().size() << " verts "
-			<< " " << describe(_action.transform());
 		return stream.str();
 	}
 
@@ -327,21 +313,24 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return stream.str();
 	}
 
-	std::string describe(const Actions::TransformAll& _action, DagNamer& _dagNamer)
+	std::string describe(const Actions::Transform& _action, DagNamer& _dagNamer)
 	{
 		std::ostringstream stream{};
-		stream
-			<< "Transform all "
-			<< " " << describe(_action.transform());
+		stream << "Transform ";
+		if (_action.vids())
+		{
+			stream << _action.vids()->size();
+		}
+		else
+		{
+			stream << "all";
+		}
+		stream << " verts " << describe(_action.transform());
 		return stream.str();
 	}
 
 	std::string describe(const Commander::Action& _action, DagNamer& _dagNamer)
 	{
-		if (const Actions::Clear* action{ dynamic_cast<const Actions::Clear*>(&_action) }; action)
-		{
-			return describe(*action, _dagNamer);
-		}
 		if (const Actions::Delete* action{ dynamic_cast<const Actions::Delete*>(&_action) }; action)
 		{
 			return describe(*action, _dagNamer);
@@ -350,7 +339,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 		{
 			return describe(*action, _dagNamer);
 		}
-		if (const Actions::Load* action{ dynamic_cast<const Actions::Load*>(&_action) }; action)
+		if (const Actions::Root* action{ dynamic_cast<const Actions::Root*>(&_action) }; action)
 		{
 			return describe(*action, _dagNamer);
 		}
@@ -370,11 +359,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 		{
 			return describe(*action, _dagNamer);
 		}
-		if (const Actions::TransformVerts* action{ dynamic_cast<const Actions::TransformVerts*>(&_action) }; action)
-		{
-			return describe(*action, _dagNamer);
-		}
-		if (const Actions::TransformAll* action{ dynamic_cast<const Actions::TransformAll*>(&_action) }; action)
+		if (const Actions::Transform* action{ dynamic_cast<const Actions::Transform*>(&_action) }; action)
 		{
 			return describe(*action, _dagNamer);
 		}

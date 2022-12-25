@@ -59,6 +59,7 @@ namespace HMP::Meshing
 	public:
 
 		void add(Dag::Element& _element);
+		void add_TOPM(Dag::Element& _element);
 
 		struct RemovedIds final
 		{
@@ -74,6 +75,7 @@ namespace HMP::Meshing
 		private:
 
 			friend void Mesher::add(Dag::Element& _element);
+			friend void Mesher::add_TOPM(Dag::Element& _element);
 
 			Dag::Element* m_element;
 
@@ -207,6 +209,7 @@ namespace HMP::Meshing
 		Dag::Element& pidToElement(Id _pid);
 		const Dag::Element& pidToElement(Id _pid) const;
 		//void add(Dag::Element& _element);
+		Id addVert(const Vec& _vert);
 		void remove(Dag::Element& _element);
 		void moveVert(Id _vid, const Vec& _position);
 		void clear();
