@@ -159,7 +159,6 @@ namespace HMP::Gui
 
 		// mesher events
 		void onElementRemove(const HMP::Dag::Element& _element, const std::vector<Id>& _removedVids);
-		void onElementRemoved(const HMP::Dag::Element& _element, const std::vector<Id>& _removedVids);
 		void onClearElements();
 
 		// vert edit events

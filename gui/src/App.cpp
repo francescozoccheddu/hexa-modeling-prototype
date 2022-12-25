@@ -11,15 +11,14 @@
 #include <cinolib/gl/file_dialog_save.h>
 #include <utility>
 #include <HMP/Dag/Operation.hpp>
-#include <HMP/Actions/Clear.hpp>
-#include <HMP/Actions/Load.hpp>
+#include <HMP/Actions/Root.hpp>
 #include <HMP/Actions/Delete.hpp>
 #include <HMP/Actions/Extrude.hpp>
 #include <HMP/Actions/MakeConforming.hpp>
 #include <HMP/Actions/Project.hpp>
 #include <HMP/Actions/Refine.hpp>
 #include <HMP/Actions/Paste.hpp>
-#include <HMP/Actions/TransformAll.hpp>
+#include <HMP/Actions/Transform.hpp>
 #include <HMP/Utils/Serialization.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Gui/Utils/HrDescriptions.hpp>
@@ -134,15 +133,6 @@ namespace HMP::Gui
 		m_vertEditWidget.remove(_removedVids);
 	}
 
-	void App::onElementRemoved(const HMP::Dag::Element& _element, const std::vector<Id>& _removedVids)
-	{
-		Id meshVertCount{ m_mesh.num_verts() + toId(_removedVids.size()) };
-		for (const Id vid : _removedVids)
-		{
-			m_vertEditWidget.replace(--meshVertCount, vid);
-		}
-	}
-
 	void App::onClearElements()
 	{
 		m_mouse.element = nullptr;
@@ -157,15 +147,7 @@ namespace HMP::Gui
 
 	void App::onApplyVertEdit(const std::vector<Id>& _vids, const Mat4& _transform)
 	{
-		std::vector<Actions::TransformVerts::Vert> verts{};
-		verts.reserve(_vids.size());
-		for (const Id vid : _vids)
-		{
-			const Id pid{ m_mesh.adj_v2p(vid)[0] };
-			const Id vertOffs{ m_mesh.poly_vert_offset(pid, vid) };
-			verts.push_back({ m_mesher.pidToElement(pid), vertOffs });
-		}
-		applyAction(*new Actions::TransformVerts{ _transform, verts });
+		applyAction(*new Actions::Transform{ _transform, _vids });
 	}
 
 	void App::onVertEditPendingActionChanged()
@@ -189,6 +171,11 @@ namespace HMP::Gui
 		file.open(_filename);
 		HMP::Utils::Serialization::Serializer serializer{ file };
 		HMP::Dag::Utils::serialize(serializer, *m_project.root());
+		serializer << toI(m_mesh.num_verts());
+		for (const Vec& vert : m_mesh.vector_verts())
+		{
+			serializer << vert;
+		}
 		m_targetWidget.serialize(serializer);
 		file.close();
 	}
@@ -199,9 +186,14 @@ namespace HMP::Gui
 		file.open(_filename);
 		HMP::Utils::Serialization::Deserializer deserializer{ file };
 		HMP::Dag::Element& root = HMP::Dag::Utils::deserialize(deserializer).element();
+		std::vector<Vec> verts(deserializer.get<I>());
+		for (Vec& vert : verts)
+		{
+			deserializer >> vert;
+		}
 		m_targetWidget.deserialize(deserializer);
 		file.close();
-		applyAction(*new Actions::Load{ root });
+		applyAction(*new Actions::Root{ root, verts });
 		m_canvas.reset_camera();
 	}
 
@@ -1086,7 +1078,7 @@ namespace HMP::Gui
 
 	void App::onApplyTargetTransform(const Mat4& _transform)
 	{
-		applyAction(*new Actions::TransformAll{ _transform });
+		applyAction(*new Actions::Transform{ _transform });
 		m_canvas.reset_camera();
 	}
 
@@ -1120,7 +1112,12 @@ namespace HMP::Gui
 
 	void App::onClear()
 	{
-		applyAction(*new Actions::Clear());
+		Dag::Element& root{ *new Dag::Element{} };
+		root.vids = { 0,1,2,3,4,5,6,7 };
+		applyAction(*new Actions::Root{ root, {
+			Vec{-1,-1,-1}, Vec{+1,-1,-1}, Vec{+1,+1,-1}, Vec{-1,+1,-1},
+			Vec{-1,-1,+1}, Vec{+1,-1,+1}, Vec{+1,+1,+1}, Vec{-1,+1,+1},
+		} });
 	}
 
 	void App::onSelect(ESelectionSource _source, ESelectionMode _mode)
@@ -1260,10 +1257,9 @@ namespace HMP::Gui
 		m_mesher.edgeColor() = c_edgeColor;
 
 		m_mesher.onElementRemove += [this](const HMP::Dag::Element& _element, const Meshing::Mesher::RemovedIds& _removedIds) { onElementRemove(_element, _removedIds.vids); };
-		m_mesher.onElementRemoved += [this](const HMP::Dag::Element& _element, const Meshing::Mesher::RemovedIds& _removedIds) { onElementRemoved(_element, _removedIds.vids); };
 		m_mesher.onClear += [this]() { onClearElements(); };
 
-		m_commander.apply(*new Actions::Clear());
+		onClear();
 		m_commander.applied().clear();
 
 		m_commander.applied().limit(100);

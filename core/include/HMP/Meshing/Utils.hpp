@@ -92,7 +92,8 @@ namespace HMP::Meshing::Utils
 	Id closestFaceEid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _midpoint);
 	Id closestFaceVid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _position);
 
-	void addLeafs(Mesher& _mesher, Dag::Node& _root, bool _clear = true);
+	void addVerts(Mesher& _mesher, const std::vector<Vec>& _verts);
+	void addLeafs(Mesher& _mesher, Dag::Node& _root);
 	void removeLeafs(Mesher& _mesher, Dag::Node& _root);
 
 }

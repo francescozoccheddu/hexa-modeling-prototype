@@ -97,7 +97,8 @@ namespace HMP::Actions
 				weld(mesher(), *m_operation, i, indices[i]);
 			}
 		}
-		Meshing::Utils::addLeafs(mesher(), *m_operation, false);
+		mesher().clear();
+		Meshing::Utils::addLeafs(mesher(), *m_operation);
 		mesher().updateMesh();
 	}
 

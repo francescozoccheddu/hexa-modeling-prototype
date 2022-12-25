@@ -20,6 +20,7 @@ namespace HMP::Dag::Utils
 
 	void transform(Node& _root, const Mat4& _transform);
 	void transform(Node& _root, const Mat3& _transform);
+
 	Node& cloneNode(const Node& _node);
 	Node& clone(const Node& _root);
 

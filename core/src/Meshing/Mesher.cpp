@@ -4,6 +4,7 @@
 #include <cinolib/Moller_Trumbore_intersection.h>
 #include <limits>
 #include <cinolib/octree.h>
+#include <queue>
 
 namespace HMP::Meshing
 {
@@ -280,7 +281,8 @@ namespace HMP::Meshing
 		{
 			vids[i] = getOrAddVert(_element.vertices()[i]);
 		}
-		//vids = Utils::sortVids(m_mesh, vids);
+		_element.vids = vids;
+		_element.pid = m_mesh.num_polys();
 		onElementAdd(_element);
 		const Id pid{ m_mesh.poly_add(cpputils::range::of(vids).toVector()) };
 		m_mesh.poly_data(pid).m_element = &_element;
@@ -302,6 +304,35 @@ namespace HMP::Meshing
 		onElementAdded(_element);
 	}
 
+	void Mesher::add_TOPM(Dag::Element& _element)
+	{
+		_element.pid = m_mesh.num_polys();
+		onElementAdd(_element);
+		const Id pid{ m_mesh.poly_add(cpputils::range::of(_element.vids).toVector()) };
+		m_mesh.poly_data(pid).m_element = &_element;
+		m_mesh.poly_data(pid).color = m_polyColor;
+		m_edgesPainted.resize(toI(m_mesh.num_edges()), false);
+		for (const Id eid : m_mesh.adj_p2e(pid))
+		{
+			if (!m_edgesPainted[toI(eid)])
+			{
+				m_mesh.edge_data(eid).color = m_edgeColor;
+			}
+		}
+		for (I vo{}; vo < 8; vo++)
+		{
+			_element.vertices()[vo] = m_mesh.vert(m_mesh.poly_vert_id(pid, toId(vo)));
+		}
+		m_elementToPid[&_element] = pid;
+		m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
+		onElementAdded(_element);
+	}
+
+	Id Mesher::addVert(const Vec& _vert)
+	{
+		return m_mesh.vert_add(_vert);
+	}
+
 	void Mesher::remove(Dag::Element& _element)
 	{
 		const Id pid{ elementToPid(_element) };
@@ -313,6 +344,7 @@ namespace HMP::Meshing
 		m_removedIds.pid = pid;
 		onElementRemove(_element, m_removedIds);
 		m_elementToPid.erase(&_element);
+		_element.pid = noId;
 		for (const Id eid : m_removedIds.eids)
 		{
 			m_edgesPainted[toI(eid)] = m_edgesPainted.back();
@@ -326,7 +358,6 @@ namespace HMP::Meshing
 		m_mesh.poly_disconnect(pid, m_removedIds.vids, m_removedIds.eids, m_removedIds.fids);
 		for (const Id fid : m_removedIds.fids) m_mesh.face_remove_unreferenced(fid);
 		for (const Id eid : m_removedIds.eids) m_mesh.edge_remove_unreferenced(eid);
-		for (const Id vid : m_removedIds.vids) m_mesh.vert_remove_unreferenced(vid);
 		m_mesh.poly_remove_unreferenced(pid);
 		m_polyMarkerSet.m_data.erase(&_element);
 		for (Id o{ 0 }; o < 6; o++)
