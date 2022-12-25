@@ -1,35 +1,33 @@
-#include <HMP/Meshing/Refinement.hpp>
+#include <HMP/Refinement/Scheme.hpp>
 
-#include <HMP/Meshing/Utils.hpp>
-#include <utility>
 #include <cinolib/geometry/lerp.hpp>
 #include <limits>
 
-namespace HMP::Meshing
+namespace HMP::Refinement
 {
 
-	Refinement::Refinement(I _gridSize, const std::vector<IVec>& _verts, const std::vector<PolyVertData<I>>& _polys)
+	Scheme::Scheme(I _gridSize, const std::vector<IVec>& _verts, const std::vector<PolyVertData<I>>& _polys)
 		: m_gridSize{ _gridSize }, m_verts{ _verts }, m_polys{ _polys }
 	{}
 
-	I Refinement::gridSize() const
+	I Scheme::gridSize() const
 	{
 		return m_gridSize;
 	}
 
-	const std::vector<IVec>& Refinement::verts() const
+	const std::vector<IVec>& Scheme::verts() const
 	{
 		return m_verts;
 	}
 
-	const std::vector<PolyVertData<I>>& Refinement::polys() const
+	const std::vector<PolyVertData<I>>& Scheme::polys() const
 	{
 		return m_polys;
 	}
 
-	Id getOrAddVert(Mesher& _mesher, const Vec& _vert)
+	Id getOrAddVert(Meshing::Mesher& _mesher, const Vec& _vert)
 	{
-		const Mesher::Mesh& mesh{ _mesher.mesh() };
+		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
 		Real minDist{ std::numeric_limits<Real>::infinity() };
 		Id minVid{ noId };
 		for (Id vid{}; vid < mesh.num_verts(); vid++)
@@ -52,7 +50,7 @@ namespace HMP::Meshing
 		}
 	}
 
-	std::vector<PolyVertIds> Refinement::apply(Mesher& _mesher, const PolyVerts& _sourceVerts) const
+	std::vector<PolyVertIds> Scheme::apply(Meshing::Mesher& _mesher, const PolyVerts& _sourceVerts) const
 	{
 		std::vector<Id> vidsPool;
 		vidsPool.reserve(m_verts.size());

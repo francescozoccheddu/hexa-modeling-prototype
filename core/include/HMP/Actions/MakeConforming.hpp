@@ -23,9 +23,9 @@ namespace HMP::Actions
 		void apply() override;
 		void unapply() override;
 
-		using RefinementMap = std::unordered_map<Meshing::ERefinementScheme, std::vector<Dag::Refine*>>;
+		using RefinementMap = std::unordered_map<Refinement::EScheme, std::vector<Dag::Refine*>>;
 
-		RefinementMap findStandardRefinements(const std::set<Meshing::ERefinementScheme>& _schemes);
+		RefinementMap findStandardRefinements(const std::set<Refinement::EScheme>& _schemes);
 
 		void installInsetAdapters(std::vector<Dag::Refine*>& _insets);
 		void installSubdivide3x3Adapters(std::vector<Dag::Refine*>& _sub3x3s);

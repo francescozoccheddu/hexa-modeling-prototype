@@ -1,6 +1,6 @@
 #include <HMP/Actions/MakeConforming.hpp>
 
-#include <HMP/Meshing/refinementSchemes.hpp>
+#include <HMP/Refinement/Schemes.hpp>
 #include <HMP/Dag/Utils.hpp>
 #include <unordered_map>
 #include <unordered_set>
@@ -9,24 +9,25 @@
 #include <optional>
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Actions/Utils.hpp>
+#include <HMP/Refinement/Utils.hpp>
 
 namespace HMP::Actions
 {
 
-	using Meshing::ERefinementScheme;
+	using Refinement::EScheme;
 
-	MakeConforming::RefinementMap MakeConforming::findStandardRefinements(const std::set<Meshing::ERefinementScheme>& _schemes)
+	MakeConforming::RefinementMap MakeConforming::findStandardRefinements(const std::set<Refinement::EScheme>& _schemes)
 	{
 		Meshing::Mesher& mesher{ this->mesher() };
-		std::unordered_map<ERefinementScheme, std::vector<Dag::Refine*>> standardRefines{};
+		std::unordered_map<EScheme, std::vector<Dag::Refine*>> standardRefines{};
 		// find standard subdivide3x3 and inset refinements
 		constexpr static std::array schemesToFind{
-			ERefinementScheme::Subdivide3x3,
-			ERefinementScheme::Inset,
+			EScheme::Subdivide3x3,
+			EScheme::Inset,
 		};
 		// map scheme -> refinements
 		standardRefines.reserve(schemesToFind.size());
-		for (ERefinementScheme scheme : schemesToFind)
+		for (EScheme scheme : schemesToFind)
 		{
 			standardRefines.insert({ scheme, {} });
 		}
@@ -86,9 +87,9 @@ namespace HMP::Actions
 				const Id candUpFid{ Meshing::Utils::adjFidInPidByEidAndFid(mesh, candPid, candForwardFid, mesh.face_edge_id(candForwardFid, 0)) };
 				const Id candUpFaceOffset{ mesh.poly_face_offset(candPid, candUpFid) };
 				// apply the refinement
-				Dag::Refine& adapterRef{ Utils::prepareRefine(candForwardFaceOffset, candUpFaceOffset, ERefinementScheme::Inset) };
+				Dag::Refine& adapterRef{ Refinement::Utils::prepareRefine(candForwardFaceOffset, candUpFaceOffset, EScheme::Inset) };
 				adapterRef.parents().attach(candEl);
-				Utils::applyRefine(mesher, adapterRef);
+				Refinement::Utils::applyRefine(mesher, adapterRef);
 				m_operations.push_back({ &adapterRef, &candEl });
 				_insets.push_back(&adapterRef);
 			}
@@ -104,7 +105,7 @@ namespace HMP::Actions
 		bool didSomething{ false };
 		do
 		{
-			Utils::Sub3x3AdapterCandidateSet set{};
+			Refinement::Utils::Sub3x3AdapterCandidateSet set{};
 			// build a set of candidates based on the source refinements
 			for (Dag::Refine* refine : _sub3x3s)
 			{
@@ -115,13 +116,13 @@ namespace HMP::Actions
 			while (!set.empty())
 			{
 				// prepare and apply its refinement
-				const Utils::Sub3x3AdapterCandidate candidate{ set.pop() };
+				const Refinement::Utils::Sub3x3AdapterCandidate candidate{ set.pop() };
 				Dag::Refine& adapterRefine{ candidate.prepareAdapter(mesher) };
 				adapterRefine.parents().attach(candidate.element());
-				Utils::applyRefine(mesher, adapterRefine);
+				Refinement::Utils::applyRefine(mesher, adapterRefine);
 				m_operations.push_back({ &adapterRefine, &candidate.element() });
 				// if the refinement is a new Subdivide3x3, then add it to the set
-				if (candidate.scheme() == ERefinementScheme::Subdivide3x3)
+				if (candidate.scheme() == EScheme::Subdivide3x3)
 				{
 					set.addAdjacency(mesher, adapterRefine);
 					_sub3x3s.push_back(&adapterRefine);
@@ -139,15 +140,15 @@ namespace HMP::Actions
 			for (auto [operation, element] : m_operations)
 			{
 				operation->parents().attach(*element);
-				Utils::applyRefine(mesher, *operation);
+				Refinement::Utils::applyRefine(mesher, *operation);
 			}
 		}
 		else
 		{
 			m_prepared = true;
-			RefinementMap refinesMap{ findStandardRefinements({ERefinementScheme::Subdivide3x3, ERefinementScheme::Inset }) };
-			installSubdivide3x3Adapters(refinesMap.at(ERefinementScheme::Subdivide3x3));
-			installInsetAdapters(refinesMap.at(ERefinementScheme::Inset));
+			RefinementMap refinesMap{ findStandardRefinements({EScheme::Subdivide3x3, EScheme::Inset }) };
+			installSubdivide3x3Adapters(refinesMap.at(EScheme::Subdivide3x3));
+			installInsetAdapters(refinesMap.at(EScheme::Inset));
 		}
 		mesher.updateMesh();
 	}
@@ -157,7 +158,7 @@ namespace HMP::Actions
 		for (auto it{ m_operations.rbegin() }; it != m_operations.rend(); ++it)
 		{
 			auto& [operation, element] {*it};
-			Utils::unapplyRefine(mesher(), *operation);
+			Refinement::Utils::unapplyRefine(mesher(), *operation);
 		}
 		mesher().updateMesh();
 	}

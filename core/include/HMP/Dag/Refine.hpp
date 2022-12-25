@@ -2,7 +2,7 @@
 
 #include <HMP/Dag/Operation.hpp>
 #include <HMP/Meshing/types.hpp>
-#include <HMP/Meshing/refinementSchemes.hpp>
+#include <HMP/Refinement/Schemes.hpp>
 
 namespace HMP::Dag
 {
@@ -13,7 +13,7 @@ namespace HMP::Dag
 	private:
 
 		I m_forwardFi, m_firstVi;
-		Meshing::ERefinementScheme m_scheme;
+		Refinement::EScheme m_scheme;
 
 	public:
 
@@ -25,8 +25,8 @@ namespace HMP::Dag
 		I& firstVi();
 		I firstVi() const;
 
-		Meshing::ERefinementScheme& scheme();
-		Meshing::ERefinementScheme scheme() const;
+		Refinement::EScheme& scheme();
+		Refinement::EScheme scheme() const;
 
 	};
 

@@ -1015,7 +1015,7 @@ namespace HMP::Gui
 	{
 		if (m_mouse.element)
 		{
-			applyAction(*new Actions::Refine{ *m_mouse.element, m_mouse.fi, m_mouse.vi, Meshing::ERefinementScheme::Subdivide3x3, _twice ? 2u : 1u });
+			applyAction(*new Actions::Refine{ *m_mouse.element, m_mouse.fi, m_mouse.vi, Refinement::EScheme::Subdivide3x3, _twice ? 2u : 1u });
 		}
 	}
 
@@ -1036,7 +1036,7 @@ namespace HMP::Gui
 	{
 		if (m_mouse.element)
 		{
-			applyAction(*new Actions::Refine{ *m_mouse.element, m_mouse.fi, m_mouse.vi, Meshing::ERefinementScheme::Inset });
+			applyAction(*new Actions::Refine{ *m_mouse.element, m_mouse.fi, m_mouse.vi, Refinement::EScheme::Inset });
 		}
 	}
 
