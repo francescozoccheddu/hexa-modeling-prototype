@@ -28,6 +28,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 	std::string describe(Meshing::ERefinementScheme _scheme);
 	std::string describe(const Vec& _vec);
 	std::string describe(const Mat4& _mat);
+	std::string describe(const std::vector<I>& _is);
 	std::string describe(const std::vector<Id>& _ids);
 	std::string describe(const std::vector<bool>& _flags);
 	std::string describe(const std::vector<HMP::Meshing::Utils::PolyVertLoc>& _locs);

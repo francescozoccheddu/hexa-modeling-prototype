@@ -7,23 +7,23 @@
 namespace HMP::Dag
 {
 
-	class Refine final : public Operation
+	class Refine final: public Operation
 	{
 
 	private:
 
-		Id m_forwardFaceOffset, m_upFaceOffset;
+		I m_forwardFi, m_firstVi;
 		Meshing::ERefinementScheme m_scheme;
 
 	public:
 
 		Refine();
 
-		Id& forwardFaceOffset();
-		Id forwardFaceOffset() const;
+		I& forwardFi();
+		I forwardFi() const;
 
-		Id& upFaceOffset();
-		Id upFaceOffset() const;
+		I& firstVi();
+		I firstVi() const;
 
 		Meshing::ERefinementScheme& scheme();
 		Meshing::ERefinementScheme scheme() const;

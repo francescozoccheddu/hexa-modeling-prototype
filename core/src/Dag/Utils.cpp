@@ -95,8 +95,8 @@ namespace HMP::Dag::Utils
 						{
 							const Refine& refineOperation{ static_cast<const Refine&>(operation) };
 							_serializer
-								<< refineOperation.forwardFaceOffset()
-								<< refineOperation.upFaceOffset()
+								<< refineOperation.forwardFi()
+								<< refineOperation.firstVi()
 								<< refineOperation.scheme();
 						}
 						break;
@@ -183,8 +183,8 @@ namespace HMP::Dag::Utils
 						{
 							Refine& refineOperation{ *new Refine{} };
 							_deserializer
-								>> refineOperation.forwardFaceOffset()
-								>> refineOperation.upFaceOffset()
+								>> refineOperation.forwardFi()
+								>> refineOperation.firstVi()
 								>> refineOperation.scheme();
 							operation = &refineOperation;
 						}
@@ -278,8 +278,8 @@ namespace HMP::Dag::Utils
 						const Refine& source{ static_cast<const Refine&>(_node) };
 						Refine& clone{ *new Refine{} };
 						clone.scheme() = source.scheme();
-						clone.forwardFaceOffset() = source.forwardFaceOffset();
-						clone.upFaceOffset() = source.upFaceOffset();
+						clone.forwardFi() = source.forwardFi();
+						clone.firstVi() = source.firstVi();
 						return clone;
 					}
 				}

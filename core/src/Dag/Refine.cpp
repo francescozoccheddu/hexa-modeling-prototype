@@ -4,27 +4,27 @@ namespace HMP::Dag
 {
 
 	Refine::Refine()
-		: Operation{ EPrimitive::Refine }, m_forwardFaceOffset{}, m_upFaceOffset{}, m_scheme{ Meshing::ERefinementScheme::Subdivide3x3 }
+		: Operation{ EPrimitive::Refine }, m_forwardFi{}, m_firstVi{}, m_scheme{ Meshing::ERefinementScheme::Subdivide3x3 }
 	{}
 
-	Id& Refine::forwardFaceOffset()
+	I& Refine::forwardFi()
 	{
-		return m_forwardFaceOffset;
+		return m_forwardFi;
 	}
 
-	Id Refine::forwardFaceOffset() const
+	I Refine::forwardFi() const
 	{
-		return m_forwardFaceOffset;
+		return m_forwardFi;
 	}
 
-	Id& Refine::upFaceOffset()
+	I& Refine::firstVi()
 	{
-		return m_upFaceOffset;
+		return m_firstVi;
 	}
 
-	Id Refine::upFaceOffset() const
+	I Refine::firstVi() const
 	{
-		return m_upFaceOffset;
+		return m_firstVi;
 	}
 
 	Meshing::ERefinementScheme& Refine::scheme()

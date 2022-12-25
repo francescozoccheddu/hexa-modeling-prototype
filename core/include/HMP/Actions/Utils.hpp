@@ -15,16 +15,12 @@
 namespace HMP::Actions::Utils
 {
 
-	Dag::Refine& prepareRefine(Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme, I _depth = 1);
-	std::vector<PolyVerts> previewRefine(const Meshing::Mesher& _mesher, const Dag::Refine& _refine);
+	Dag::Refine& prepareRefine(I _forwardFi, I _firstVi, Meshing::ERefinementScheme _scheme, I _depth = 1);
 	void applyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine);
 	void applyRefineRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine);
+
 	void unapplyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach = true);
 	void unapplyRefineRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach = true);
-
-	Dag::Delete& prepareDelete();
-	void applyDelete(Meshing::Mesher& _mesher, Dag::Delete& _delete);
-	void unapplyDelete(Meshing::Mesher& _mesher, Dag::Delete& _delete, bool _detach = true);
 
 	PolyVerts shapeExtrude(const Meshing::Mesher::Mesh& _mesh, const cpputils::collections::FixedVector<Id, 3>& _pids, const cpputils::collections::FixedVector< Id, 3>& _fids, Id _firstVid, bool _clockwise);
 	PolyVerts shapeExtrude(const Meshing::Mesher& _mesher, const cpputils::collections::FixedVector<const Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id _vertOffset, bool _clockwise);

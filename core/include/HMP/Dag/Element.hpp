@@ -31,8 +31,6 @@ namespace HMP::Dag
 		PolyVertIds vids;
 		Id pid;
 
-		FaceVertIds faceVids(I _faceOffset) const;
-
 		PolyVerts& vertices();
 		const PolyVerts& vertices() const;
 

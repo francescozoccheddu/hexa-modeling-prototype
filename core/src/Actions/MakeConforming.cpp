@@ -38,72 +38,6 @@ namespace HMP::Actions
 				const auto mapIt{ standardRefines.find(refine.scheme()) };
 				if (mapIt != standardRefines.end())
 				{
-					// check if no move operations were applied
-					if (c_requireNoMove)
-					{
-						// get parent vids
-						std::unordered_set<Id> vids{};
-						{
-							// temporarily add the parent, just to get its vertices
-							mesher.add(refine.parents().single());
-							// get its hypothetical vertices
-							const std::vector<PolyVerts> polys{ Utils::previewRefine(mesher, refine) };
-							// remove the temporarily added parent element
-							mesher.remove(refine.parents().single());
-							// map vertices to vids
-							for (const PolyVerts verts : polys)
-							{
-								for (const Vec& vert : verts)
-								{
-									const Id vid{ mesher.getVert(vert) };
-									// this vertex is no more in the mesh, so a move operation happened
-									if (vid == noId)
-									{
-										goto nextRefine;
-									}
-									vids.insert(vid);
-								}
-							}
-						}
-						// check if children vertices have not moved with respect to the original refine
-						for (const Dag::Element& child : refine.children())
-						{
-							const Id childPid{ mesher.elementToPid(child) };
-							// if child is still in the mesh, check its vids
-							if (childPid != noId)
-							{
-								for (const Id vid : mesher.mesh().poly_verts_id(mesher.elementToPid(child)))
-								{
-									if (!vids.contains(vid))
-									{
-										goto nextRefine;
-									}
-								}
-							}
-							// otherwise, check its vertex positions
-							else
-							{
-								for (const Vec& vert : child.vertices())
-								{
-									if (!vids.contains(mesher.getVert(vert)))
-									{
-										goto nextRefine;
-									}
-								}
-							}
-						}
-					}
-					// check if no delete operations were applied
-					if (c_requireNoDelete)
-					{
-						for (const Dag::Element& child : refine.children())
-						{
-							if (!child.children().filter([](const Dag::Operation& _childOperation) { return _childOperation.primitive() == Dag::Operation::EPrimitive::Delete; }).empty())
-							{
-								goto nextRefine;
-							}
-						}
-					}
 					// add to the list of standard refinements
 					mapIt->second.push_back(&refine);
 				}
@@ -141,7 +75,7 @@ namespace HMP::Actions
 					continue;
 				}
 				// skip if the shared face is not the refined one
-				if (sharedFid != mesh.poly_face_id(refPid, ref.forwardFaceOffset()))
+				if (sharedFid != mesh.poly_face_id(refPid, ref.forwardFi()))
 				{
 					continue;
 				}
