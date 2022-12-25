@@ -116,7 +116,8 @@ namespace HMP::Gui
 		{
 			cinolib::vec2d position{};
 			HMP::Dag::Element* element{};
-			Id faceOffset{}, upFaceOffset{}, vertOffset{};
+			Id faceOffset, upFaceOffset, vertOffset;
+			I fi, vi, ei;
 		} m_mouse;
 
 		struct

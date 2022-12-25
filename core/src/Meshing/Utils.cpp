@@ -3,6 +3,7 @@
 #include <HMP/Dag/Utils.hpp>
 #include <cpputils/range/of.hpp>
 #include <stdexcept>
+#include <cassert>
 
 namespace HMP::Meshing::Utils
 {
@@ -176,10 +177,24 @@ namespace HMP::Meshing::Utils
 		return _vids[(index0 + 1) % 4] == _vid1;
 	}
 
-	PolyVertIds polyVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _forwardUpEid)
+	PolyVertIds pidVidsByForwardFidAndFirstEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _forwardUpEid)
 	{
 		const FaceVertIds forwardFaceVids{ pidFidVidsByFirstEid(_mesh, _pid, _forwardFid, _forwardUpEid, true) };
 		FaceVertIds backFaceVids{ pidFidVids(_mesh, _pid, _mesh.poly_face_opposite_to(_pid, _forwardFid), false) };
+		while (_mesh.edge_id(forwardFaceVids[0], backFaceVids[0]) == noId)
+		{
+			std::rotate(backFaceVids.begin(), backFaceVids.begin() + 1, backFaceVids.end());
+		}
+		PolyVertIds vids;
+		std::copy(forwardFaceVids.begin(), forwardFaceVids.end(), vids.begin());
+		std::copy(backFaceVids.begin(), backFaceVids.end(), vids.begin() + 4);
+		return vids;
+	}
+
+	PolyVertIds pidVidsByForwardFidAndFirstVid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _firstVid)
+	{
+		FaceVertIds forwardFaceVids{ pidFidVidsByFirstVid(_mesh, _pid, _forwardFid, _firstVid) };
+		FaceVertIds backFaceVids{ pidFidVids(_mesh, _pid, _mesh.poly_face_opposite_to(_pid, _forwardFid), true) };
 		while (_mesh.edge_id(forwardFaceVids[0], backFaceVids[0]) == noId)
 		{
 			std::rotate(backFaceVids.begin(), backFaceVids.begin() + 1, backFaceVids.end());
@@ -355,6 +370,141 @@ namespace HMP::Meshing::Utils
 				}
 			}
 		}
+	}
+
+	FaceVertIds faceVids(const Dag::Element& _element, I _fi)
+	{
+		const PolyVertIds vids{ _element.vids };
+		switch (_fi)
+		{
+			case 0:
+				return { vids[0], vids[1], vids[2], vids[3] };
+			case 1:
+				return { vids[4], vids[7], vids[6], vids[5] };
+			case 2:
+				return { vids[1], vids[5], vids[6], vids[2] };
+			case 3:
+				return { vids[0], vids[3], vids[7], vids[4] };
+			case 4:
+				return { vids[0], vids[4], vids[5], vids[1] };
+			case 5:
+				return { vids[3], vids[2], vids[6], vids[7] };
+			default:
+				assert(false);
+		}
+	}
+
+	FaceVertIds align(const FaceVertIds& _vids, Id _firstVid)
+	{
+		FaceVertIds vids{ _vids };
+		while (vids[0] != _firstVid)
+		{
+			std::rotate(vids.begin(), vids.begin() + 1, vids.end());
+		}
+		return vids;
+	}
+
+	PolyVertIds align(const PolyVertIds& _vids, Id _firstVid)
+	{
+		PolyVertIds vids{ _vids };
+		while (vids[0] != _firstVid)
+		{
+			std::rotate(vids.begin(), vids.begin() + 1, vids.begin() + 4);
+			std::rotate(vids.begin() + 4, vids.begin() + 4 + 1, vids.end());
+		}
+		return vids;
+	}
+
+	I vi(const Dag::Element& _element, Id _vid)
+	{
+		for (I vi{}; vi < 8; vi++)
+		{
+			if (_element.vids[vi] == _vid)
+			{
+				return vi;
+			}
+		}
+		assert(false);
+	}
+
+	I fi(const Dag::Element& _element, const FaceVertIds& _vids)
+	{
+		FaceVertIds qVids{ _vids };
+		std::sort(qVids.begin(), qVids.end());
+		for (I fi{}; fi < 6; fi++)
+		{
+			FaceVertIds vids{ faceVids(_element, fi) };
+			std::sort(vids.begin(), vids.end());
+			if (vids == qVids)
+			{
+				return fi;
+			}
+		}
+		assert(false);
+	}
+
+	EdgeVertIds edgeVids(const Dag::Element& _element, I _ei)
+	{
+		const PolyVertIds vids{ _element.vids };
+		switch (_ei)
+		{
+			case 0:
+				return { vids[0], vids[1] };
+			case 1:
+				return { vids[1], vids[2] };
+			case 2:
+				return { vids[2], vids[3] };
+			case 3:
+				return { vids[3], vids[0] };
+			case 4:
+				return { vids[4], vids[5] };
+			case 5:
+				return { vids[5], vids[6] };
+			case 6:
+				return { vids[6], vids[7] };
+			case 7:
+				return { vids[7], vids[4] };
+			case 8:
+				return { vids[0], vids[4] };
+			case 9:
+				return { vids[1], vids[5] };
+			case 10:
+				return { vids[2], vids[6] };
+			case 11:
+				return { vids[3], vids[7] };
+			default:
+				assert(false);
+		}
+	}
+
+	I ei(const Dag::Element& _element, const EdgeVertIds& _vids)
+	{
+		EdgeVertIds qVids{ _vids };
+		std::sort(qVids.begin(), qVids.end());
+		for (I ei{}; ei < 12; ei++)
+		{
+			EdgeVertIds vids{ edgeVids(_element, ei) };
+			std::sort(vids.begin(), vids.end());
+			if (vids == qVids)
+			{
+				return ei;
+			}
+		}
+		assert(false);
+	}
+
+	Id eid(const Mesher::Mesh& _mesh, const Dag::Element& _element, I _ei)
+	{
+		const int eid{ _mesh.edge_id(cpputils::range::of(edgeVids(_element, _ei)).toVector()) };
+		assert(eid != -1);
+		return static_cast<Id>(eid);
+	}
+
+	Id fid(const Mesher::Mesh& _mesh, const Dag::Element& _element, I _fi)
+	{
+		const int fid{ _mesh.face_id(cpputils::range::of(faceVids(_element, _fi)).toVector()) };
+		assert(fid != -1);
+		return static_cast<Id>(fid);
 	}
 
 }

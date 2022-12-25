@@ -13,7 +13,7 @@
 namespace HMP::Actions::Utils
 {
 
-	Dag::Refine& prepareRefine(Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme, I _depth)
+	Dag::Refine& prepareRefine(I _forwardFi, I _firstVi, Meshing::ERefinementScheme _scheme, I _depth)
 	{
 		if (_depth < 1 || _depth > 3)
 		{
@@ -21,27 +21,27 @@ namespace HMP::Actions::Utils
 		}
 		Dag::Refine& refine{ *new Dag::Refine{} };
 		refine.scheme() = _scheme;
-		refine.forwardFaceOffset() = _forwardFaceOffset;
-		refine.upFaceOffset() = _upFaceOffset;
+		refine.forwardFi() = _forwardFi;
+		refine.firstVi() = _firstVi;
 		const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(_scheme) };
-		for (I i{ 0 }; i < refinement.polyCount(); i++)
+		for (I i{ 0 }; i < refinement.polys().size(); i++)
 		{
 			Dag::Element& child{ *new Dag::Element{} };
 			if (_depth > 1)
 			{
-				child.children().attach(prepareRefine(_forwardFaceOffset, _upFaceOffset, _scheme, _depth - 1));
+				child.children().attach(prepareRefine(_forwardFi, _firstVi, _scheme, _depth - 1));
 			}
 			refine.children().attach(child);
 		}
 		return refine;
 	}
 
-	std::vector<PolyVerts> previewRefine(const Meshing::Mesher& _mesher, const Dag::Refine& _refine)
+	std::vector<PolyVertIds> previewRefine(Meshing::Mesher& _mesher, const Dag::Refine& _refine)
 	{
 		const Dag::Element& element{ _refine.parents().single() };
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
 		const Meshing::Refinement& refinement{ Meshing::refinementSchemes.at(_refine.scheme()) };
-		if (refinement.polyCount() != _refine.children().size())
+		if (refinement.polys().size() != _refine.children().size())
 		{
 			throw std::logic_error{ "wrong number of children" };
 		}
@@ -50,22 +50,21 @@ namespace HMP::Actions::Utils
 		{
 			throw std::logic_error{ "not an element" };
 		}
-		const Id forwardFid{ mesh.poly_face_id(pid, _refine.forwardFaceOffset()) };
-		const Id upFid{ mesh.poly_face_id(pid, _refine.upFaceOffset()) };
-		const Id upEid{ mesh.face_shared_edge(forwardFid, upFid) };
-		const PolyVertIds sourceVids{ Meshing::Utils::polyVids(mesh, pid, forwardFid, upEid) };
-		const PolyVerts source{ Meshing::Utils::verts(mesh, sourceVids) };
-		const std::vector<PolyVerts> polys{ refinement.apply(source) };
+		const Id forwardFid{ Meshing::Utils::fid(mesh, element, _refine.forwardFi()) };
+		const Id firstVid{ element.vids[_refine.firstVi()] };
+		const PolyVertIds sourceVids{ Meshing::Utils::pidVidsByForwardFidAndFirstVid(mesh, pid, forwardFid, firstVid) };
+		const PolyVerts sourceVerts{ Meshing::Utils::verts(mesh, sourceVids) };
+		const std::vector<PolyVertIds> polys{ refinement.apply(_mesher, sourceVerts) };
 		return polys;
 	}
 
 	void applyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine)
 	{
-		const std::vector<PolyVerts> polys{ previewRefine(_mesher, _refine) };
-		for (const auto& [child, verts] : cpputils::range::zip(_refine.children(), polys))
+		const std::vector<PolyVertIds> polys{ previewRefine(_mesher, _refine) };
+		for (const auto& [child, vids] : cpputils::range::zip(_refine.children(), polys))
 		{
-			child.vertices() = verts;
-			_mesher.add(child);
+			child.vids = vids;
+			_mesher.add_TOPM(child);
 		}
 		_mesher.remove(_refine.parents().single());
 	}

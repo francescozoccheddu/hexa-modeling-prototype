@@ -26,8 +26,8 @@ namespace HMP::Actions
 		mesher().updateMesh();
 	}
 
-	Refine::Refine(Dag::Element& _element, Id _forwardFaceOffset, Id _upFaceOffset, Meshing::ERefinementScheme _scheme, I _depth)
-		: m_element{ _element }, m_operation{ Utils::prepareRefine(_forwardFaceOffset, _upFaceOffset, _scheme, _depth) }, m_depth{ _depth }
+	Refine::Refine(Dag::Element& _element, I _forwardFi, I _firstVi, Meshing::ERefinementScheme _scheme, I _depth)
+		: m_element{ _element }, m_operation{ Utils::prepareRefine(_forwardFi, _firstVi, _scheme, _depth) }, m_depth{ _depth }
 	{
 		if (_depth < 1 || _depth > 3)
 		{

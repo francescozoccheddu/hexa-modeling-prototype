@@ -86,6 +86,22 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return stream.str();
 	}
 
+	std::string describe(const std::vector<I>& _is)
+	{
+		std::ostringstream stream{};
+		stream << "[";
+		if (!_is.empty())
+		{
+			stream << _is[0];
+			for (I i{ 1 }; i < _is.size(); i++)
+			{
+				stream << "," << _is[i];
+			}
+		}
+		stream << "]";
+		return stream.str();
+	}
+
 	std::string describe(const std::vector<Id>& _ids)
 	{
 		std::ostringstream stream{};
@@ -191,7 +207,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 			<< "Refine"
 			<< " " << name(_element, _dagNamer)
 			<< " with scheme " << describe(_operation.scheme())
-			<< " towards " << describe(std::vector<Id>{ _operation.forwardFaceOffset(), _operation.upFaceOffset() })
+			<< " towards " << describe(std::vector<I>{ _operation.forwardFi(), _operation.firstVi() })
 			<< " (" << name(_operation, _dagNamer) << ")";
 		return stream.str();
 	}

@@ -7,15 +7,16 @@
 namespace HMP
 {
 
+	using Id = unsigned int;
+	using I = std::size_t;
+
 	using Real = double;
 	using Vec = cinolib::vec<3, Real>;
+	using IVec = cinolib::vec<3, I>;
 	using Vec2 = cinolib::vec<2, Real>;
 	using Vec4 = cinolib::vec<4, Real>;
 	using Mat4 = cinolib::mat4d;
 	using Mat3 = cinolib::mat3d;
-
-	using Id = unsigned int;
-	using I = std::size_t;
 
 	constexpr Id noId{ static_cast<Id>(-1) };
 

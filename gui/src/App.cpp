@@ -659,6 +659,9 @@ namespace HMP::Gui
 				const Id upFid{ Meshing::Utils::adjFidInPidByEidAndFid(m_mesh, pid, fid, eid) };
 				m_mouse.upFaceOffset = m_mesh.poly_face_offset(pid, upFid);
 				m_mouse.vertOffset = m_mesh.poly_vert_offset(pid, vid);
+				m_mouse.fi = Meshing::Utils::fi(*m_mouse.element, cpputils::range::of(m_mesh.face_verts_id(fid)).toArray<4>());
+				m_mouse.ei = Meshing::Utils::ei(*m_mouse.element, cpputils::range::of(m_mesh.edge_vert_ids(eid)).toArray<2>());
+				m_mouse.vi = Meshing::Utils::vi(*m_mouse.element, vid);
 			}
 		}
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
@@ -1012,7 +1015,7 @@ namespace HMP::Gui
 	{
 		if (m_mouse.element)
 		{
-			applyAction(*new Actions::Refine{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset, Meshing::ERefinementScheme::Subdivide3x3, _twice ? 2u : 1u });
+			applyAction(*new Actions::Refine{ *m_mouse.element, m_mouse.fi, m_mouse.vi, Meshing::ERefinementScheme::Subdivide3x3, _twice ? 2u : 1u });
 		}
 	}
 
@@ -1033,7 +1036,7 @@ namespace HMP::Gui
 	{
 		if (m_mouse.element)
 		{
-			applyAction(*new Actions::Refine{ *m_mouse.element, m_mouse.faceOffset, m_mouse.upFaceOffset, Meshing::ERefinementScheme::Inset });
+			applyAction(*new Actions::Refine{ *m_mouse.element, m_mouse.fi, m_mouse.vi, Meshing::ERefinementScheme::Inset });
 		}
 	}
 

@@ -12,13 +12,11 @@
 namespace HMP::Actions
 {
 
-	class MakeConforming final : public Commander::Action
+	class MakeConforming final: public Commander::Action
 	{
 
 	private:
 
-		static constexpr bool c_requireNoMove{ false };
-		static constexpr bool c_requireNoDelete{ false };
 		std::vector<std::pair<Dag::NodeHandle<Dag::Refine>, Dag::Element*>> m_operations;
 		bool m_prepared;
 
