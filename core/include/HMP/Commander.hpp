@@ -30,7 +30,6 @@ namespace HMP
 
 			ActionBase();
 
-			void ensureAttached() const;
 			void attach(Commander& _commander);
 
 			void prepareAndApply();
@@ -90,7 +89,6 @@ namespace HMP
 
 			friend class Commander;
 
-			using ActionBase::ensureAttached;
 			using ActionBase::attach;
 			using ActionBase::prepareAndApply;
 			using ActionBase::prepareAndUnapply;

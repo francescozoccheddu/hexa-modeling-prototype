@@ -1,11 +1,11 @@
 #include <HMP/Dag/Node.hpp>
 
-#include <stdexcept>
+#include <cassert>
 
 namespace HMP::Dag
 {
 
-	Node::Node(EType _type) :
+	Node::Node(EType _type):
 		m_type{ _type },
 		m_parentsImpl{}, m_childrenImpl{},
 		m_parents{
@@ -13,23 +13,15 @@ namespace HMP::Dag
 			[this](auto && ..._args) { return onParentAttach(_args...); },
 			[this](auto && ..._args) { return onParentDetach(_args...); },
 			[this](auto && ..._args) { return onParentsDetachAll(_args...); }
-	},
+		},
 		m_children{
 			m_childrenImpl,
 			[this](auto && ..._args) { return onChildAttach(_args...); },
 			[this](auto && ..._args) { return onChildDetach(_args...); },
 			[this](auto && ..._args) { return onChildrenDetachAll(_args...); }
-	},
+		},
 		m_handles{ 0 }
 	{}
-
-	void assertSync(bool _condition)
-	{
-		if (!_condition)
-		{
-			throw std::logic_error{ "desync" };
-		}
-	}
 
 	void Node::deleteDangling(std::queue<Node*>& _dangling, bool _descending)
 	{
@@ -37,10 +29,10 @@ namespace HMP::Dag
 		{
 			Node& node{ *_dangling.front() };
 			_dangling.pop();
-			assertSync(node.back(_descending).empty());
+			assert(node.back(_descending).empty());
 			for (Node& next : node.forward(_descending))
 			{
-				assertSync(next.back(_descending).data().remove(node));
+				assert(next.back(_descending).data().remove(node));
 				if (next.back(_descending).empty() && !next.m_handles)
 				{
 					_dangling.push(&next);
@@ -55,7 +47,7 @@ namespace HMP::Dag
 	{
 		if (forward(_descending).data().add(_node))
 		{
-			assertSync(_node.back(_descending).data().add(*this));
+			assert(_node.back(_descending).data().add(*this));
 			return true;
 		}
 		return false;
@@ -65,7 +57,7 @@ namespace HMP::Dag
 	{
 		if (forward(_descending).data().remove(_node))
 		{
-			assertSync(_node.back(_descending).data().remove(*this));
+			assert(_node.back(_descending).data().remove(*this));
 			if (_deleteDangling && _node.back(_descending).empty())
 			{
 				std::queue<Node*> dangling{};
@@ -83,7 +75,7 @@ namespace HMP::Dag
 		const bool wasEmpty{ forward(_descending).empty() };
 		for (Node& next : forward(_descending))
 		{
-			assertSync(next.back(_descending).data().remove(*this));
+			assert(next.back(_descending).data().remove(*this));
 			if (_deleteDangling && next.back(_descending).empty())
 			{
 				dangling.push(&next);

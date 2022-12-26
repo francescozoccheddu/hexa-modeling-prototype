@@ -12,6 +12,7 @@
 #include <HMP/Projection/smooth.hpp>
 #include <array>
 #include <cinolib/parallel_for.h>
+#include <cassert>
 
 #define HMP_PROJECTION_PROJECT_DEBUG_LOG
 
@@ -168,7 +169,7 @@ namespace HMP::Projection
                 case EDisplaceMode::NormDirAvgAndDirNormAvg:
                     return sourceVert + normDirSum * dirLengthSum / weightSum / weightSum;
                 default:
-                    throw std::domain_error{ "unknown displace mode" };
+                    assert(false);
             }
         }
     }
@@ -280,7 +281,7 @@ namespace HMP::Projection
                 case EDisplaceMode::NormDirAvgAndDirNormAvg:
                     return sourceVert + normDirSum * dirLengthSum / weightSum / weightSum;
                 default:
-                    throw std::domain_error{ "unknown displace mode" };
+                    assert(false);
             }
         }
     }

@@ -6,7 +6,6 @@
 #include <cpputils/range/join.hpp>
 #include <cpputils/range/enumerate.hpp>
 #include <cpputils/collections/FixedVector.hpp>
-#include <stdexcept>
 #include <vector>
 #include <cstddef>
 #include <algorithm>

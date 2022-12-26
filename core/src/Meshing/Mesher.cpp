@@ -5,6 +5,7 @@
 #include <limits>
 #include <cinolib/octree.h>
 #include <queue>
+#include <cassert>
 
 namespace HMP::Meshing
 {
@@ -336,10 +337,7 @@ namespace HMP::Meshing
 	void Mesher::remove(Dag::Element& _element, bool _removeVids)
 	{
 		const Id pid{ elementToPid(_element) };
-		if (pid == noId)
-		{
-			throw std::logic_error{ "not an element" };
-		}
+		assert(pid != noId);
 		m_mesh.poly_dangling_ids(pid, m_removedIds.vids, m_removedIds.eids, m_removedIds.fids);
 		m_removedIds.pid = pid;
 		m_removedIds.vidsActuallyRemoved = _removeVids;

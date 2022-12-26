@@ -206,10 +206,7 @@ namespace HMP::Dag::Utils
 				node->parents().attach(*nodes[parentIndex]);
 			}
 		}
-		if (nodes.empty())
-		{
-			throw std::logic_error{ "empty" };
-		}
+		assert(!nodes.empty());
 		return *nodes[0];
 	}
 
@@ -284,8 +281,9 @@ namespace HMP::Dag::Utils
 					}
 				}
 			}
+			default:
+				assert(false);
 		}
-		throw std::domain_error{ "unknown node" };
 	}
 
 	Node& clone(const Node& _root)
