@@ -2,7 +2,7 @@
 
 #include <imgui.h>
 #include <utility>
-#include <stdexcept>
+#include <cassert>
 #include <HMP/Actions/Project.hpp>
 #include <cinolib/export_surface.h>
 #include <limits>
@@ -69,10 +69,7 @@ namespace HMP::Gui::Widgets
 
 	void Projection::requestProjection()
 	{
-		if (!m_targetWidget.hasMesh())
-		{
-			throw std::logic_error{ "no target mesh" };
-		}
+		assert(m_targetWidget.hasMesh());
 		std::vector<HMP::Projection::Utils::Point> points;
 		points.reserve(m_paths.size() * 2);
 		std::vector<HMP::Projection::Utils::EidsPath> paths;
@@ -104,10 +101,7 @@ namespace HMP::Gui::Widgets
 
 	void Projection::requestReprojection()
 	{
-		if (!canReproject())
-		{
-			throw std::logic_error{ "no projection to undo" };
-		}
+		assert(canReproject());
 		m_commander.undo();
 		requestProjection();
 	}

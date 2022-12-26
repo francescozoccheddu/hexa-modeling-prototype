@@ -1,7 +1,7 @@
 #include <HMP/Gui/Widgets/VertEdit.hpp>
 
 #include <imgui.h>
-#include <stdexcept>
+#include <cassert>
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <HMP/Gui/Utils/Drawing.hpp>
 
@@ -111,10 +111,7 @@ namespace HMP::Gui::Widgets
 
 	const Vec& VertEdit::centroid() const
 	{
-		if (empty())
-		{
-			throw std::logic_error{ "empty" };
-		}
+		assert(!empty());
 		return m_centroid;
 	}
 

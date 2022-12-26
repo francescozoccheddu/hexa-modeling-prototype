@@ -80,10 +80,7 @@ namespace HMP::Projection::Utils
 
     Tweak::Tweak(Real _min, Real _power): m_min{ _min }, m_power{ _power }
     {
-        if (_power < 0.0 || _power > 10.0)
-        {
-            throw std::logic_error{ "power out of range" };
-        }
+        assert(_power >= 0.0 && _power <= 10.0);
     }
 
     Real Tweak::min() const

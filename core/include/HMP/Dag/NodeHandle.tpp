@@ -4,8 +4,6 @@
 
 #include <HMP/Dag/NodeHandle.hpp>
 
-#include <stdexcept>
-
 namespace HMP::Dag
 {
 

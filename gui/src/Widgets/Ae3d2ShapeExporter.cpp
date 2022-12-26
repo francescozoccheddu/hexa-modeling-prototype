@@ -6,9 +6,9 @@
 #include <imgui.h>
 #include <string>
 #include <fstream>
-#include <stdexcept>
 #include <sstream>
 #include <ctime>
+#include <cassert>
 #include <iomanip>
 
 namespace HMP::Gui::Widgets
@@ -47,10 +47,7 @@ namespace HMP::Gui::Widgets
 	bool Ae3d2ShapeExporter::requestExport() const
 	{
 		static constexpr double c_keyframeDuration{ 1.0 };
-		if (empty())
-		{
-			throw std::logic_error{ "empty" };
-		}
+		assert(!empty());
 		const std::string filename{ cinolib::file_dialog_save() };
 		if (!filename.empty())
 		{

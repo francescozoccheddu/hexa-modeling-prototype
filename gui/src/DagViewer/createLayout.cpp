@@ -10,7 +10,6 @@
 #include <ogdf/layered/SugiyamaLayout.h>
 #include <memory>
 #include <utility>
-#include <stdexcept>
 #include <HMP/Dag/Utils.hpp>
 #include <HMP/Meshing/types.hpp>
 

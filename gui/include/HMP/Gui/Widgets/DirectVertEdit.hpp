@@ -32,8 +32,6 @@ namespace HMP::Gui::Widgets
         Vec2 m_centroid;
         Vec2 m_mouse;
 
-        void ensurePending() const;
-
     public:
 
         cinolib::Color mutedColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 1.0f, 0.2f) };

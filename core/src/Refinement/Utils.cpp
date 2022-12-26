@@ -5,7 +5,7 @@
 #include <cpputils/range/zip.hpp>
 #include <cpputils/range/enumerate.hpp>
 #include <cpputils/collections/FixedVector.hpp>
-#include <stdexcept>
+#include <cassert>
 #include <vector>
 #include <cstddef>
 #include <algorithm>
@@ -15,10 +15,7 @@ namespace HMP::Refinement::Utils
 
 	Dag::Refine& prepare(I _forwardFi, I _firstVi, Refinement::EScheme _scheme, I _depth)
 	{
-		if (_depth < 1 || _depth > 3)
-		{
-			throw std::logic_error{ "depth must fall in range [1,3]" };
-		}
+		assert(_depth >= 1 && _depth <= 3);
 		Dag::Refine& refine{ *new Dag::Refine{} };
 		refine.scheme() = _scheme;
 		refine.forwardFi() = _forwardFi;
@@ -41,15 +38,9 @@ namespace HMP::Refinement::Utils
 		const Dag::Element& element{ _refine.parents().single() };
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
 		const Refinement::Scheme& refinement{ Refinement::schemes.at(_refine.scheme()) };
-		if (refinement.polys().size() != _refine.children().size())
-		{
-			throw std::logic_error{ "wrong number of children" };
-		}
+		assert(refinement.polys().size() == _refine.children().size());
 		const Id pid{ _mesher.elementToPid(element) };
-		if (pid == noId)
-		{
-			throw std::logic_error{ "not an element" };
-		}
+		assert(pid != noId);
 		const Id forwardFid{ Meshing::Utils::fid(mesh, element, _refine.forwardFi()) };
 		const Id firstVid{ element.vids[_refine.firstVi()] };
 		const PolyVertIds sourceVids{ Meshing::Utils::pidVidsByForwardFidAndFirstVid(mesh, pid, forwardFid, firstVid) };
@@ -175,7 +166,7 @@ namespace HMP::Refinement::Utils
 				break;
 			}
 			default:
-				throw std::logic_error{ "unexpected number of adjacent faces" };
+				assert(false);
 		}
 		// now consider adjacent edges too
 		// if the scheme is Subdivide3x3, leave it as it is (no edge adjacency can change this)

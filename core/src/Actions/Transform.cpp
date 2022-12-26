@@ -6,7 +6,6 @@
 #include <HMP/Meshing/Utils.hpp>
 #include <algorithm>
 #include <utility>
-#include <stdexcept>
 #include <cpputils/range/of.hpp>
 #include <cpputils/range/zip.hpp>
 

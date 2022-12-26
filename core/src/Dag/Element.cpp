@@ -1,7 +1,5 @@
 #include <HMP/Dag/Element.hpp>
 
-#include <stdexcept>
-
 namespace HMP::Dag
 {
 

@@ -44,7 +44,6 @@ namespace HMP::Gui::DagViewer
 		Real m_lineThickness;
 		Real m_nodeRadius;
 
-		void validate() const;
 		void calculateBoundingBox();
 		void expandBoundingBox(const Vec2& _center, Real _extent);
 

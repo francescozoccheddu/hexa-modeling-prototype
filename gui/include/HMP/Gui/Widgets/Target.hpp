@@ -31,8 +31,6 @@ namespace HMP::Gui::Widgets
 		bool m_missingMeshFile;
 		std::vector<bool> m_edgesPainted;
 
-		void ensureHasMesh() const;
-
 		void updateEdgeColor(Id _eid, const cinolib::Color& _color);
 
 	public:

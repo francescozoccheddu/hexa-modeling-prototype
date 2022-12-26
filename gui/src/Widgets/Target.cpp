@@ -4,7 +4,7 @@
 #include <imgui.h>
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <vector>
-#include <stdexcept>
+#include <cassert>
 #include <filesystem>
 
 namespace HMP::Gui::Widgets
@@ -24,14 +24,6 @@ namespace HMP::Gui::Widgets
 		m_missingMeshFile{ false }
 	{}
 
-	void Target::ensureHasMesh() const
-	{
-		if (!hasMesh())
-		{
-			throw std::logic_error{ "no mesh" };
-		}
-	}
-
 	const Meshing::Mesher::Mesh& Target::sourceMesh() const
 	{
 		return m_sourceMesh;
@@ -49,7 +41,7 @@ namespace HMP::Gui::Widgets
 
 	cinolib::Polygonmesh<> Target::meshForProjection() const
 	{
-		ensureHasMesh();
+		assert(hasMesh());
 		cinolib::Polygonmesh<> mesh{ m_mesh };
 		for (Id vid{}; vid < mesh.num_verts(); vid++)
 		{
@@ -134,7 +126,7 @@ namespace HMP::Gui::Widgets
 
 	void Target::fit(bool _origin, bool _translation, bool _scale)
 	{
-		ensureHasMesh();
+		assert(hasMesh());
 		if (_origin)
 		{
 			m_transform.origin = m_mesh.bbox().center();
@@ -152,20 +144,20 @@ namespace HMP::Gui::Widgets
 
 	void Target::updateTransform()
 	{
-		ensureHasMesh();
+		assert(hasMesh());
 		m_mesh.transform = m_transform.matrix();
 		onMeshChanged();
 	}
 
 	void Target::updateVisibility()
 	{
-		ensureHasMesh();
+		assert(hasMesh());
 		m_mesh.show_mesh(m_visible);
 	}
 
 	void Target::updateColor(bool _face, bool _edge)
 	{
-		ensureHasMesh();
+		assert(hasMesh());
 		if (_face)
 		{
 			m_mesh.poly_set_color(m_faceColor);
@@ -226,7 +218,7 @@ namespace HMP::Gui::Widgets
 
 	void Target::requestApplyTransformToSource()
 	{
-		ensureHasMesh();
+		assert(hasMesh());
 		updateTransform();
 		onApplyTransformToSource(m_mesh.transform.inverse());
 		identity();

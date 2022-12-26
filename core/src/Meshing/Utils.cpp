@@ -2,7 +2,6 @@
 
 #include <HMP/Dag/Utils.hpp>
 #include <cpputils/range/of.hpp>
-#include <stdexcept>
 #include <cassert>
 
 namespace HMP::Meshing::Utils
@@ -30,10 +29,7 @@ namespace HMP::Meshing::Utils
 
 	Id anyAdjFidInPidByEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _eid)
 	{
-		if (!_mesh.poly_contains_edge(_pid, _eid))
-		{
-			throw std::logic_error{ "edge not in poly" };
-		}
+		assert(_mesh.poly_contains_edge(_pid, _eid));
 		for (const Id fid : _mesh.adj_e2f(_eid))
 		{
 			if (_mesh.poly_contains_face(_pid, fid))
@@ -41,19 +37,13 @@ namespace HMP::Meshing::Utils
 				return fid;
 			}
 		}
-		throw std::runtime_error{ "unexpected" };
+		assert(false);
 	}
 
 	Id adjFidInPidByEidAndFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _eid)
 	{
-		if (!_mesh.poly_contains_face(_pid, _fid))
-		{
-			throw std::logic_error{ "face not in poly" };
-		}
-		if (!_mesh.face_contains_edge(_fid, _eid))
-		{
-			throw std::logic_error{ "edge not in face" };
-		}
+		assert(_mesh.poly_contains_face(_pid, _fid));
+		assert(_mesh.face_contains_edge(_fid, _eid));
 		for (const Id fid : _mesh.poly_faces_id(_pid))
 		{
 			if (fid != _fid && _mesh.face_shared_edge(fid, _fid) == _eid)
@@ -61,7 +51,7 @@ namespace HMP::Meshing::Utils
 				return fid;
 			}
 		}
-		throw std::runtime_error{ "unexpected" };
+		assert(false);
 	}
 
 	Id sharedEid(const Meshing::Mesher::Mesh& _mesh, Id _pid1, Id _pid2)
@@ -76,7 +66,7 @@ namespace HMP::Meshing::Utils
 				}
 			}
 		}
-		throw std::logic_error{ "not adjacent" };
+		assert(false);
 	}
 
 	EdgeVertIds edgeVids(const Meshing::Mesher::Mesh& _mesh, const EdgeVertIds& _edgeVertOffsets, Id _pid)
@@ -116,10 +106,7 @@ namespace HMP::Meshing::Utils
 
 	FaceVertIds pidFidVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, bool _cw)
 	{
-		if (!_mesh.poly_contains_face(_pid, _fid))
-		{
-			throw std::logic_error{ "face not in poly" };
-		}
+		assert(_mesh.poly_contains_face(_pid, _fid));
 		std::vector<Id> vids{ _mesh.face_verts_id(_fid) };
 		if (_cw == _mesh.poly_face_winding(_pid, _fid))
 		{
@@ -130,10 +117,7 @@ namespace HMP::Meshing::Utils
 
 	FaceVertIds pidFidVidsByFirstEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstEid, bool _cw)
 	{
-		if (!_mesh.face_contains_edge(_fid, _firstEid))
-		{
-			throw std::logic_error{ "edge not in face" };
-		}
+		assert(_mesh.face_contains_edge(_fid, _firstEid));
 		FaceVertIds vids{ pidFidVids(_mesh, _pid, _fid, _cw) };
 		while (_mesh.edge_id(vids[0], vids[1]) != _firstEid)
 		{
@@ -149,10 +133,7 @@ namespace HMP::Meshing::Utils
 
 	FaceVertIds pidFidVidsByFirstVid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstVid, bool _cw)
 	{
-		if (!_mesh.face_contains_vert(_fid, _firstVid))
-		{
-			throw std::logic_error{ "vert not in face" };
-		}
+		assert(_mesh.face_contains_vert(_fid, _firstVid));
 		FaceVertIds vids{ pidFidVids(_mesh, _pid, _fid, _cw) };
 		while (vids[0] != _firstVid)
 		{

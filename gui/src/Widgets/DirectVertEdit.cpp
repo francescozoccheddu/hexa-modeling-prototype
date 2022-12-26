@@ -3,19 +3,11 @@
 #include <HMP/Gui/Utils/Transform.hpp>
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <HMP/Gui/Utils/Drawing.hpp>
-#include <stdexcept>
+#include <cassert>
 #include <imgui.h>
 
 namespace HMP::Gui::Widgets
 {
-
-    void DirectVertEdit::ensurePending() const
-    {
-        if (!m_pending)
-        {
-            throw std::logic_error{ "not pending" };
-        }
-    }
 
     DirectVertEdit::DirectVertEdit(VertEdit& _vertEdit, const cinolib::GLcanvas& _canvas):
         m_vertEdit{ _vertEdit }, m_canvas{ _canvas }, m_pending{ false },
@@ -202,7 +194,7 @@ namespace HMP::Gui::Widgets
 
     DirectVertEdit::EKind DirectVertEdit::kind() const
     {
-        ensurePending();
+        assert(m_pending);
         return m_kind;
     }
 
