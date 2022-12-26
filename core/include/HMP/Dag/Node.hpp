@@ -16,7 +16,7 @@ namespace HMP::Dag
 	class Element;
 	class Operation;
 
-	class Node : public cpputils::mixins::ReferenceClass
+	class Node: public cpputils::mixins::ReferenceClass
 	{
 
 	public:
@@ -33,10 +33,7 @@ namespace HMP::Dag
 		template <cpputils::concepts::DerivedSimpleClass<Node>, bool>
 		friend class NodeHandle;
 
-		const EType m_type;
-
 		Internal::NodeSetData m_parentsImpl, m_childrenImpl;
-		Set m_parents, m_children;
 
 		I m_handles;
 
@@ -65,7 +62,8 @@ namespace HMP::Dag
 
 	public:
 
-		EType type() const;
+		const EType type;
+		Set parents, children;
 
 		bool isElement() const;
 		bool isOperation() const;
@@ -82,11 +80,6 @@ namespace HMP::Dag
 		const Set& forward(bool _descending) const;
 		Set& back(bool _descending);
 		const Set& back(bool _descending) const;
-
-		Set& parents();
-		Set& children();
-		const Set& parents() const;
-		const Set& children() const;
 
 	};
 

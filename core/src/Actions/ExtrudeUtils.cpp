@@ -34,7 +34,7 @@ namespace HMP::Actions::ExtrudeUtils
 			default:
 				assert(false);
 		}
-		extrude.children().attach(*new Dag::Element{});
+		extrude.children.attach(*new Dag::Element{});
 		return extrude;
 	}
 
@@ -137,17 +137,17 @@ namespace HMP::Actions::ExtrudeUtils
 	{
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
 		const cpputils::collections::FixedVector<Id, 3> pids{
-			cpputils::range::of(_extrude.parents()).map([&](const Dag::Element& _parent) {
+			cpputils::range::of(_extrude.parents).map([&](const Dag::Element& _parent) {
 				return _mesher.elementToPid(_parent);
 			}).toFixedVector<3>()
 		};
 		const cpputils::collections::FixedVector<Id, 3> fids{
-			cpputils::range::zip(_extrude.parents(), _extrude.fis).map([&](const auto& _parentAndFi) {
+			cpputils::range::zip(_extrude.parents, _extrude.fis).map([&](const auto& _parentAndFi) {
 				const auto& [parent, fi] {_parentAndFi};
 		return Meshing::Utils::fid(mesh, parent, fi);
 			}).toFixedVector<3>()
 		};
-		const Id firstVid{ _extrude.parents().first().vids[_extrude.firstVi] };
+		const Id firstVid{ _extrude.parents.first().vids[_extrude.firstVi] };
 		switch (_extrude.source)
 		{
 			case Dag::Extrude::ESource::Face:

@@ -7,7 +7,7 @@ namespace HMP::Actions
 
 	void Refine::apply()
 	{
-		m_operation->parents().attach(m_element);
+		m_operation->parents.attach(m_element);
 		Refinement::Utils::applyRecursive(mesher(), *m_operation);
 		mesher().updateMesh();
 	}

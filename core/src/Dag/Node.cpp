@@ -6,15 +6,15 @@ namespace HMP::Dag
 {
 
 	Node::Node(EType _type):
-		m_type{ _type },
+		type{ _type },
 		m_parentsImpl{}, m_childrenImpl{},
-		m_parents{
+		parents{
 			m_parentsImpl,
 			[this](auto && ..._args) { return onParentAttach(_args...); },
 			[this](auto && ..._args) { return onParentDetach(_args...); },
 			[this](auto && ..._args) { return onParentsDetachAll(_args...); }
 		},
-		m_children{
+		children{
 			m_childrenImpl,
 			[this](auto && ..._args) { return onChildAttach(_args...); },
 			[this](auto && ..._args) { return onChildDetach(_args...); },
@@ -124,43 +124,38 @@ namespace HMP::Dag
 
 	Internal::NodeSetHandle& Node::parentsHandle()
 	{
-		return m_parents.handle();
+		return parents.handle();
 	}
 
 	Internal::NodeSetHandle& Node::childrenHandle()
 	{
-		return m_children.handle();
+		return children.handle();
 	}
 
 	Node::~Node()
 	{
-		m_parents.detachAll(false);
-		m_children.detachAll(false);
-	}
-
-	Node::EType Node::type() const
-	{
-		return m_type;
+		parents.detachAll(false);
+		children.detachAll(false);
 	}
 
 	bool Node::isElement() const
 	{
-		return m_type == EType::Element;
+		return type == EType::Element;
 	}
 
 	bool Node::isOperation() const
 	{
-		return m_type == EType::Operation;
+		return type == EType::Operation;
 	}
 
 	bool Node::isRoot() const
 	{
-		return m_parents.empty();
+		return parents.empty();
 	}
 
 	bool Node::isLeaf() const
 	{
-		return m_children.empty();
+		return children.empty();
 	}
 
 	Element& Node::element()
@@ -185,7 +180,7 @@ namespace HMP::Dag
 
 	Node::Set& Node::forward(bool _descending)
 	{
-		return _descending ? m_children : m_parents;
+		return _descending ? children : parents;
 	}
 
 	const Node::Set& Node::forward(bool _descending) const
@@ -201,26 +196,6 @@ namespace HMP::Dag
 	const Node::Set& Node::back(bool _descending) const
 	{
 		return const_cast<Node*>(this)->back(_descending);
-	}
-
-	Node::Set& Node::parents()
-	{
-		return m_parents;
-	}
-
-	const Node::Set& Node::parents() const
-	{
-		return m_parents;
-	}
-
-	Node::Set& Node::children()
-	{
-		return m_children;
-	}
-
-	const Node::Set& Node::children() const
-	{
-		return m_children;
 	}
 
 }

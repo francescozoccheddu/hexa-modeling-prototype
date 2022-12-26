@@ -315,9 +315,9 @@ namespace HMP::Meshing::Utils
 			{
 				Dag::Element& element{ node->element() };
 				bool active{ true };
-				for (const Dag::Operation& child : element.children())
+				for (const Dag::Operation& child : element.children)
 				{
-					if (child.primitive() != Dag::Operation::EPrimitive::Extrude)
+					if (child.primitive != Dag::Operation::EPrimitive::Extrude)
 					{
 						active = false;
 					}
@@ -338,9 +338,9 @@ namespace HMP::Meshing::Utils
 			{
 				Dag::Element& element{ node->element() };
 				bool active{ true };
-				for (const Dag::Operation& child : element.children())
+				for (const Dag::Operation& child : element.children)
 				{
-					if (child.primitive() != Dag::Operation::EPrimitive::Extrude)
+					if (child.primitive != Dag::Operation::EPrimitive::Extrude)
 					{
 						active = false;
 					}

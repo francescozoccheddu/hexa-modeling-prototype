@@ -258,7 +258,7 @@ namespace HMP::Gui::DagViewer
 				{
 					constexpr ImU32 textColor{ backgroundColor };
 					const Vec2 center{ ll2ss(node.center()) };
-					switch (node.node().type())
+					switch (node.node().type)
 					{
 						case Dag::Node::EType::Element:
 						{
@@ -278,7 +278,7 @@ namespace HMP::Gui::DagViewer
 						{
 							constexpr int circleSegments{ 10 };
 							ImU32 operationColor{};
-							switch (node.node().operation().primitive())
+							switch (node.node().operation().primitive)
 							{
 								case Dag::Operation::EPrimitive::Extrude:
 									operationColor = IM_COL32(252, 109, 171, 255);

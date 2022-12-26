@@ -27,7 +27,7 @@ namespace HMP::Dag::Utils
 		{
 			Node& node{ *toVisit.front() };
 			toVisit.pop_front();
-			for (Node& child : node.children())
+			for (Node& child : node.children)
 			{
 				if (_branchSelector(child) && visited.emplace(&child).second)
 				{
@@ -51,8 +51,8 @@ namespace HMP::Dag::Utils
 		_serializer << nodes.size();
 		for (const Node* node : nodes)
 		{
-			_serializer << node->type();
-			switch (node->type())
+			_serializer << node->type;
+			switch (node->type)
 			{
 				case Node::EType::Element:
 				{
@@ -70,8 +70,8 @@ namespace HMP::Dag::Utils
 				case Node::EType::Operation:
 				{
 					const Operation& operation{ node->operation() };
-					_serializer << operation.primitive();
-					switch (operation.primitive())
+					_serializer << operation.primitive;
+					switch (operation.primitive)
 					{
 						case Operation::EPrimitive::Delete:
 						{
@@ -95,9 +95,9 @@ namespace HMP::Dag::Utils
 						{
 							const Refine& refineOperation{ static_cast<const Refine&>(operation) };
 							_serializer
-								<< refineOperation.forwardFi()
-								<< refineOperation.firstVi()
-								<< refineOperation.scheme();
+								<< refineOperation.forwardFi
+								<< refineOperation.firstVi
+								<< refineOperation.scheme;
 						}
 						break;
 					}
@@ -117,8 +117,8 @@ namespace HMP::Dag::Utils
 			}
 			for (const Node* node : nodes)
 			{
-				_serializer << node->parents().size();
-				for (const Node& parent : node->parents())
+				_serializer << node->parents.size();
+				for (const Node& parent : node->parents)
 				{
 					_serializer << nodeMap.at(&parent);
 				}
@@ -183,9 +183,9 @@ namespace HMP::Dag::Utils
 						{
 							Refine& refineOperation{ *new Refine{} };
 							_deserializer
-								>> refineOperation.forwardFi()
-								>> refineOperation.firstVi()
-								>> refineOperation.scheme();
+								>> refineOperation.forwardFi
+								>> refineOperation.firstVi
+								>> refineOperation.scheme;
 							operation = &refineOperation;
 						}
 						break;
@@ -203,7 +203,7 @@ namespace HMP::Dag::Utils
 			{
 				I parentIndex;
 				_deserializer >> parentIndex;
-				node->parents().attach(*nodes[parentIndex]);
+				node->parents.attach(*nodes[parentIndex]);
 			}
 		}
 		assert(!nodes.empty());
@@ -240,7 +240,7 @@ namespace HMP::Dag::Utils
 
 	Node& cloneNode(const Node& _node)
 	{
-		switch (_node.type())
+		switch (_node.type)
 		{
 			case Node::EType::Element:
 			{
@@ -253,7 +253,7 @@ namespace HMP::Dag::Utils
 			}
 			case Node::EType::Operation:
 			{
-				switch (_node.operation().primitive())
+				switch (_node.operation().primitive)
 				{
 					case Operation::EPrimitive::Delete:
 					{
@@ -274,9 +274,9 @@ namespace HMP::Dag::Utils
 					{
 						const Refine& source{ static_cast<const Refine&>(_node) };
 						Refine& clone{ *new Refine{} };
-						clone.scheme() = source.scheme();
-						clone.forwardFi() = source.forwardFi();
-						clone.firstVi() = source.firstVi();
+						clone.scheme = source.scheme;
+						clone.forwardFi = source.forwardFi;
+						clone.firstVi = source.firstVi;
 						return clone;
 					}
 				}
@@ -298,9 +298,9 @@ namespace HMP::Dag::Utils
 		for (const Node* source : sources)
 		{
 			Node& clone{ *cloneMap.at(source) };
-			for (const Node& sourceChild : source->children())
+			for (const Node& sourceChild : source->children)
 			{
-				clone.children().attach(*cloneMap.at(&sourceChild));
+				clone.children.attach(*cloneMap.at(&sourceChild));
 			}
 		}
 		return *cloneMap.at(&_root);
