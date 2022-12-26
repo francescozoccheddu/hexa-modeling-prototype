@@ -17,7 +17,6 @@ namespace HMP::Dag
 
 		PolyVerts m_vertices;
 
-		Set m_parents, m_children;
 
 		using Node::isElement;
 		using Node::isOperation;
@@ -28,6 +27,7 @@ namespace HMP::Dag
 
 		Element();
 
+		Set parents, children;
 		PolyVertIds vids;
 		Id pid;
 
@@ -38,11 +38,6 @@ namespace HMP::Dag
 		const Set& forward(bool _descending) const;
 		Set& back(bool _descending);
 		const Set& back(bool _descending) const;
-
-		Set& parents();
-		const Set& parents() const;
-		Set& children();
-		const Set& children() const;
 
 	};
 

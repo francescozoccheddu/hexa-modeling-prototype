@@ -10,12 +10,12 @@ namespace HMP::Gui::Utils::HrDescriptions
 
 	std::string name(const HMP::Dag::Node& _node, DagNamer& _dagNamer)
 	{
-		switch (_node.type())
+		switch (_node.type)
 		{
 			case HMP::Dag::Node::EType::Element:
 				return _dagNamer(&_node);
 			case HMP::Dag::Node::EType::Operation:
-				switch (_node.operation().primitive())
+				switch (_node.operation().primitive)
 				{
 					case HMP::Dag::Operation::EPrimitive::Delete:
 						return "D-" + _dagNamer(&_node);
@@ -195,7 +195,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 		}
 		stream << " towards " << describe(cpputils::range::of(_operation.fis).toVector())
 			<< " (" << _operation.firstVi << " " << (_operation.clockwise ? "CW" : " CCW") << ")"
-			<< " into " << name(_operation.children().single(), _dagNamer)
+			<< " into " << name(_operation.children.single(), _dagNamer)
 			<< " (" << name(_operation, _dagNamer) << ")";
 		return stream.str();
 	}
@@ -206,25 +206,25 @@ namespace HMP::Gui::Utils::HrDescriptions
 		stream
 			<< "Refine"
 			<< " " << name(_element, _dagNamer)
-			<< " with scheme " << describe(_operation.scheme())
-			<< " towards " << describe(std::vector<I>{ _operation.forwardFi(), _operation.firstVi() })
+			<< " with scheme " << describe(_operation.scheme)
+			<< " towards " << describe(std::vector<I>{ _operation.forwardFi, _operation.firstVi })
 			<< " (" << name(_operation, _dagNamer) << ")";
 		return stream.str();
 	}
 
 	std::string describe(const HMP::Dag::Delete& _operation, DagNamer& _dagNamer)
 	{
-		return describe(_operation, _operation.parents().single(), _dagNamer);
+		return describe(_operation, _operation.parents.single(), _dagNamer);
 	}
 
 	std::string describe(const HMP::Dag::Extrude& _operation, DagNamer& _dagNamer)
 	{
-		return describe(_operation, _operation.parents().address().toFixedVector<3>(), _dagNamer);
+		return describe(_operation, _operation.parents.address().toFixedVector<3>(), _dagNamer);
 	}
 
 	std::string describe(const HMP::Dag::Refine& _operation, DagNamer& _dagNamer)
 	{
-		return describe(_operation, _operation.parents().single(), _dagNamer);
+		return describe(_operation, _operation.parents.single(), _dagNamer);
 	}
 
 	std::string describe(const Actions::Delete& _action, DagNamer& _dagNamer)
@@ -304,7 +304,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 		}
 		stream << " towards " << describe(cpputils::range::of(_action.operation().fis).toVector())
 			<< " (" << _action.operation().firstVi << " " << (_action.operation().clockwise ? "CW" : "CCW") << ")"
-			<< " into " << name(_action.operation().children().single(), _dagNamer)
+			<< " into " << name(_action.operation().children.single(), _dagNamer)
 			<< " (" << name(_action.operation(), _dagNamer) << ")";
 		return stream.str();
 	}

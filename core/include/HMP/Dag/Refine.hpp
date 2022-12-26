@@ -10,23 +10,13 @@ namespace HMP::Dag
 	class Refine final: public Operation
 	{
 
-	private:
-
-		I m_forwardFi, m_firstVi;
-		Refinement::EScheme m_scheme;
-
 	public:
 
 		Refine();
 
-		I& forwardFi();
-		I forwardFi() const;
-
-		I& firstVi();
-		I firstVi() const;
-
-		Refinement::EScheme& scheme();
-		Refinement::EScheme scheme() const;
+		Refinement::EScheme scheme;
+		I forwardFi;
+		I firstVi;
 
 	};
 

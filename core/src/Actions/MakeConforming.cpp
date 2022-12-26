@@ -32,10 +32,10 @@ namespace HMP::Actions
 		}
 		for (Dag::Node* node : Dag::Utils::descendants(*root()))
 		{
-			if (node->isOperation() && node->operation().primitive() == Dag::Operation::EPrimitive::Refine)
+			if (node->isOperation() && node->operation().primitive == Dag::Operation::EPrimitive::Refine)
 			{
 				Dag::Refine& refine{ static_cast<Dag::Refine&>(node->operation()) };
-				const auto mapIt{ standardRefines.find(refine.scheme()) };
+				const auto mapIt{ standardRefines.find(refine.scheme) };
 				if (mapIt != standardRefines.end())
 				{
 					// add to the list of standard refinements
@@ -56,7 +56,7 @@ namespace HMP::Actions
 		for (Dag::Refine* const refine : refines)
 		{
 			Dag::Refine& ref = *refine;
-			Dag::Element& refEl = ref.parents().single();
+			Dag::Element& refEl = ref.parents.single();
 			// temporarily add the element just to examine the adjacencies
 			mesher.add(refEl);
 			const Id refPid{ mesher.elementToPid(refEl) };
@@ -75,7 +75,7 @@ namespace HMP::Actions
 					continue;
 				}
 				// skip if the shared face is not the refined one
-				if (sharedFid != mesh.poly_face_id(refPid, ref.forwardFi()))
+				if (sharedFid != mesh.poly_face_id(refPid, ref.forwardFi))
 				{
 					continue;
 				}
@@ -87,7 +87,7 @@ namespace HMP::Actions
 				const Id candUpFaceOffset{ mesh.poly_face_offset(candPid, candUpFid) };
 				// apply the refinement
 				Dag::Refine& adapterRef{ Refinement::Utils::prepare(candForwardFaceOffset, candUpFaceOffset, EScheme::Inset) };
-				adapterRef.parents().attach(candEl);
+				adapterRef.parents.attach(candEl);
 				Refinement::Utils::apply(mesher, adapterRef);
 				m_operations.push_back({ &adapterRef, &candEl });
 				_insets.push_back(&adapterRef);
@@ -117,7 +117,7 @@ namespace HMP::Actions
 				// prepare and apply its refinement
 				const Refinement::Utils::Sub3x3AdapterCandidate candidate{ set.pop() };
 				Dag::Refine& adapterRefine{ candidate.prepareAdapter(mesher) };
-				adapterRefine.parents().attach(candidate.element());
+				adapterRefine.parents.attach(candidate.element());
 				Refinement::Utils::apply(mesher, adapterRefine);
 				m_operations.push_back({ &adapterRefine, &candidate.element() });
 				// if the refinement is a new Subdivide3x3, then add it to the set
@@ -138,7 +138,7 @@ namespace HMP::Actions
 		{
 			for (auto [operation, element] : m_operations)
 			{
-				operation->parents().attach(*element);
+				operation->parents.attach(*element);
 				Refinement::Utils::apply(mesher, *operation);
 			}
 		}

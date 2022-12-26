@@ -110,7 +110,7 @@ namespace HMP::Actions
 	void Paste::unapply()
 	{
 		Meshing::Utils::removeLeafs(mesher(), *m_operation, true);
-		m_operation->parents().detachAll(false);
+		m_operation->parents.detachAll(false);
 		mesher().updateMesh();
 	}
 

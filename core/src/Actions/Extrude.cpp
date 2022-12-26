@@ -12,18 +12,18 @@ namespace HMP::Actions
 	{
 		for (Dag::Element* parent : m_elements)
 		{
-			m_operation->parents().attach(*parent);
+			m_operation->parents.attach(*parent);
 		}
-		Dag::Element& child{ m_operation->children().single() };
-		m_operation->children().single().vids = ExtrudeUtils::apply(mesher(), *m_operation);
+		Dag::Element& child{ m_operation->children.single() };
+		m_operation->children.single().vids = ExtrudeUtils::apply(mesher(), *m_operation);
 		mesher().add_TOPM(child);
 		mesher().updateMesh();
 	}
 
 	void Extrude::unapply()
 	{
-		m_operation->parents().detachAll(false);
-		mesher().remove(m_operation->children().single(), true);
+		m_operation->parents.detachAll(false);
+		mesher().remove(m_operation->children.single(), true);
 		mesher().updateMesh();
 	}
 

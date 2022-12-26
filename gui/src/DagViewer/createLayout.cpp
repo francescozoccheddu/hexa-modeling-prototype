@@ -40,7 +40,7 @@ namespace HMP::Gui::DagViewer
 		{
 			for (auto const& [dagNode, graphNode] : dagToGraphNodePairs)
 			{
-				for (const Dag::Node& dagParent : dagNode->parents())
+				for (const Dag::Node& dagParent : dagNode->parents)
 				{
 					const ogdf::node graphParent{ dagToGraphNodeMap[&dagParent] };
 					_graph.newEdge(graphParent, graphNode);

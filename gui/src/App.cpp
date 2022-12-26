@@ -123,7 +123,7 @@ namespace HMP::Gui
 		{
 			m_mouse.element = nullptr;
 		}
-		if (m_copy.element == &_element || (m_copy.element && m_copy.element->parents().single().parents().has(_element)))
+		if (m_copy.element == &_element || (m_copy.element && m_copy.element->parents.single().parents.has(_element)))
 		{
 			m_copy.element = nullptr;
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
@@ -509,9 +509,9 @@ namespace HMP::Gui
 		if (m_copy.element && !m_mouse.element)
 		{
 			const Id pid{ m_mesher.elementToPid(*m_copy.element) };
-			const Dag::Extrude& extrude{ m_copy.element->parents().cast<const Dag::Extrude&>().single() };
+			const Dag::Extrude& extrude{ m_copy.element->parents.cast<const Dag::Extrude&>().single() };
 			const ImVec2 center{ project(m_canvas, m_mesh.poly_centroid(pid)) };
-			for (const auto& [parent, fi] : extrude.parents().zip(extrude.fis))
+			for (const auto& [parent, fi] : extrude.parents.zip(extrude.fis))
 			{
 				const FaceVertIds parentFidVids{ Meshing::Utils::faceVids(parent, fi) };
 				const FaceVerts parentFidVerts{ Meshing::Utils::verts(m_mesh, parentFidVids) };
@@ -523,7 +523,7 @@ namespace HMP::Gui
 			{
 				circle(drawList, center, 4.0f, m_mouse.element == m_copy.element ? colorU32 : mutedColorU32, 1.5f);
 			}
-			const Dag::Element& firstParent{ extrude.parents().first() };
+			const Dag::Element& firstParent{ extrude.parents.first() };
 			const Id firstVid{ firstParent.vids[extrude.firstVi] };
 			const FaceVertIds firstParentVids{ Meshing::Utils::align(Meshing::Utils::faceVids(firstParent, extrude.fis[0]), firstVid, extrude.clockwise) };
 			const ImVec2 eVert1{ project(m_canvas, m_mesh.vert(firstParentVids[0])) };
@@ -907,7 +907,7 @@ namespace HMP::Gui
 		const I vi{ Meshing::Utils::vi(element, vids[0]) };
 		Actions::Extrude& action{ *new Actions::Extrude{ {&element}, {fi}, vi, false } };
 		applyAction(action);
-		const Id newPid{ m_mesher.elementToPid(action.operation().children().single()) };
+		const Id newPid{ m_mesher.elementToPid(action.operation().children.single()) };
 		const Id newFid{ m_mesh.poly_face_opposite_to(newPid, fid) };
 		m_vertEditWidget.clear();
 		m_vertEditWidget.add(m_mesh.face_verts_id(newFid));
@@ -916,9 +916,9 @@ namespace HMP::Gui
 	void App::onCopy()
 	{
 		if (m_mouse.element
-			&& m_mouse.element->parents().isSingle()
-			&& m_mouse.element->parents().first().primitive() == Dag::Operation::EPrimitive::Extrude
-			&& m_mouse.element->parents().first().parents().filter([&](const Dag::Element& _parent) { return !m_mesher.has(_parent); }).empty())
+			&& m_mouse.element->parents.isSingle()
+			&& m_mouse.element->parents.first().primitive == Dag::Operation::EPrimitive::Extrude
+			&& m_mouse.element->parents.first().parents.filter([&](const Dag::Element& _parent) { return !m_mesher.has(_parent); }).empty())
 		{
 			m_copy.element = m_mouse.element;
 		}
@@ -941,7 +941,7 @@ namespace HMP::Gui
 			bool clockwise;
 			if (hoveredExtrudeElements(_source, elements, fis, firstVi, clockwise))
 			{
-				applyAction(*new Actions::Paste{ elements, fis, firstVi, clockwise, static_cast<const Dag::Extrude&>(m_copy.element->parents().single()) });
+				applyAction(*new Actions::Paste{ elements, fis, firstVi, clockwise, static_cast<const Dag::Extrude&>(m_copy.element->parents.single()) });
 			}
 		}
 	}

@@ -17,32 +17,32 @@ namespace HMP::Refinement::Utils
 	{
 		assert(_depth >= 1 && _depth <= 3);
 		Dag::Refine& refine{ *new Dag::Refine{} };
-		refine.scheme() = _scheme;
-		refine.forwardFi() = _forwardFi;
-		refine.firstVi() = _firstVi;
+		refine.scheme = _scheme;
+		refine.forwardFi = _forwardFi;
+		refine.firstVi = _firstVi;
 		const Refinement::Scheme& refinement{ Refinement::schemes.at(_scheme) };
 		for (I i{ 0 }; i < refinement.polys().size(); i++)
 		{
 			Dag::Element& child{ *new Dag::Element{} };
 			if (_depth > 1)
 			{
-				child.children().attach(prepare(_forwardFi, _firstVi, _scheme, _depth - 1));
+				child.children.attach(prepare(_forwardFi, _firstVi, _scheme, _depth - 1));
 			}
-			refine.children().attach(child);
+			refine.children.attach(child);
 		}
 		return refine;
 	}
 
 	std::vector<PolyVertIds> previewRefine(Meshing::Mesher& _mesher, const Dag::Refine& _refine)
 	{
-		const Dag::Element& element{ _refine.parents().single() };
+		const Dag::Element& element{ _refine.parents.single() };
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
-		const Refinement::Scheme& refinement{ Refinement::schemes.at(_refine.scheme()) };
-		assert(refinement.polys().size() == _refine.children().size());
+		const Refinement::Scheme& refinement{ Refinement::schemes.at(_refine.scheme) };
+		assert(refinement.polys().size() == _refine.children.size());
 		const Id pid{ _mesher.elementToPid(element) };
 		assert(pid != noId);
-		const Id forwardFid{ Meshing::Utils::fid(mesh, element, _refine.forwardFi()) };
-		const Id firstVid{ element.vids[_refine.firstVi()] };
+		const Id forwardFid{ Meshing::Utils::fid(mesh, element, _refine.forwardFi) };
+		const Id firstVid{ element.vids[_refine.firstVi] };
 		const PolyVertIds sourceVids{ Meshing::Utils::pidVidsByForwardFidAndFirstVid(mesh, pid, forwardFid, firstVid) };
 		const PolyVerts sourceVerts{ Meshing::Utils::verts(mesh, sourceVids) };
 		const std::vector<PolyVertIds> polys{ refinement.apply(_mesher, sourceVerts) };
@@ -52,22 +52,22 @@ namespace HMP::Refinement::Utils
 	void apply(Meshing::Mesher& _mesher, Dag::Refine& _refine)
 	{
 		const std::vector<PolyVertIds> polys{ previewRefine(_mesher, _refine) };
-		for (const auto& [child, vids] : cpputils::range::zip(_refine.children(), polys))
+		for (const auto& [child, vids] : cpputils::range::zip(_refine.children, polys))
 		{
 			child.vids = vids;
 			_mesher.add_TOPM(child);
 		}
-		_mesher.remove(_refine.parents().single(), false);
+		_mesher.remove(_refine.parents.single(), false);
 	}
 
 	void applyRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine)
 	{
 		apply(_mesher, _refine);
-		for (Dag::Element& child : _refine.children())
+		for (Dag::Element& child : _refine.children)
 		{
-			for (Dag::Operation& operation : child.children())
+			for (Dag::Operation& operation : child.children)
 			{
-				if (operation.primitive() == Dag::Operation::EPrimitive::Refine)
+				if (operation.primitive == Dag::Operation::EPrimitive::Refine)
 				{
 					applyRecursive(_mesher, static_cast<Dag::Refine&>(operation));
 				}
@@ -77,24 +77,24 @@ namespace HMP::Refinement::Utils
 
 	void unapply(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach)
 	{
-		for (Dag::Element& child : _refine.children())
+		for (Dag::Element& child : _refine.children)
 		{
 			_mesher.remove(child, true);
 		}
-		_mesher.add(_refine.parents().single());
+		_mesher.add(_refine.parents.single());
 		if (_detach)
 		{
-			_refine.parents().detachAll(false);
+			_refine.parents.detachAll(false);
 		}
 	}
 
 	void unapplyRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach)
 	{
-		for (Dag::Element& child : _refine.children())
+		for (Dag::Element& child : _refine.children)
 		{
-			for (Dag::Operation& operation : child.children())
+			for (Dag::Operation& operation : child.children)
 			{
-				if (operation.primitive() == Dag::Operation::EPrimitive::Refine)
+				if (operation.primitive == Dag::Operation::EPrimitive::Refine)
 				{
 					unapplyRecursive(_mesher, static_cast<Dag::Refine&>(operation), false);
 				}
@@ -279,7 +279,7 @@ namespace HMP::Refinement::Utils
 	void Sub3x3AdapterCandidateSet::addAdjacency(Meshing::Mesher& _mesher, Dag::Refine& _refine)
 	{
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
-		Dag::Element& refEl = _refine.parents().single();
+		Dag::Element& refEl = _refine.parents.single();
 		// temporarily add the element just to examine the adjacencies
 		_mesher.add(refEl);
 		const Id refPid{ _mesher.elementToPid(refEl) };
