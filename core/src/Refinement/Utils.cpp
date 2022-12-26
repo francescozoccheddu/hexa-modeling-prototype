@@ -77,11 +77,11 @@ namespace HMP::Refinement::Utils
 
 	void unapply(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach)
 	{
+		_mesher.add(_refine.parents.single());
 		for (Dag::Element& child : _refine.children)
 		{
 			_mesher.remove(child, true);
 		}
-		_mesher.add(_refine.parents.single());
 		if (_detach)
 		{
 			_refine.parents.detachAll(false);
