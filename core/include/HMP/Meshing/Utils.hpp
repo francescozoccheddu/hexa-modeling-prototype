@@ -57,5 +57,7 @@ namespace HMP::Meshing::Utils
 	PolyVertIds reverse(const PolyVertIds& _vids);
 	Id eid(const Mesher::Mesh& _mesh, const Dag::Element& _element, I _ei);
 	Id fid(const Mesher::Mesh& _mesh, const Dag::Element& _element, I _fi);
+	Vec normal(const FaceVerts& _verts);
+	Real avgEdgeLength(const FaceVerts& _verts);
 
 }

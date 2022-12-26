@@ -123,7 +123,7 @@ namespace HMP::Gui
 		{
 			m_mouse.element = nullptr;
 		}
-		if (m_copy.element == &_element || (m_copy.element && m_copy.element->parents.single().parents.has(_element)))
+		if (m_copy.element == &_element)
 		{
 			m_copy.element = nullptr;
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
@@ -898,10 +898,7 @@ namespace HMP::Gui
 
 	void App::onCopy()
 	{
-		if (m_mouse.element
-			&& m_mouse.element->parents.isSingle()
-			&& m_mouse.element->parents.first().primitive == Dag::Operation::EPrimitive::Extrude
-			&& m_mouse.element->parents.first().parents.filter([&](const Dag::Element& _parent) { return !m_mesher.has(_parent); }).empty())
+		if (m_mouse.element && m_mouse.element->parents.isSingle() && m_mouse.element->parents.first().primitive == Dag::Operation::EPrimitive::Extrude)
 		{
 			m_copy.element = m_mouse.element;
 		}
