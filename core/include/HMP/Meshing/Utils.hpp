@@ -95,15 +95,17 @@ namespace HMP::Meshing::Utils
 
 	void addVerts(Mesher& _mesher, const std::vector<Vec>& _verts);
 	void addLeafs(Mesher& _mesher, Dag::Node& _root);
-	void removeLeafs(Mesher& _mesher, Dag::Node& _root);
+	void removeLeafs(Mesher& _mesher, Dag::Node& _root, bool _removeVerts);
 
 	FaceVertIds faceVids(const Dag::Element& _element, I _fi);
 	EdgeVertIds edgeVids(const Dag::Element& _element, I _ei);
 	I vi(const Dag::Element& _element, Id _vid);
 	I fi(const Dag::Element& _element, const FaceVertIds& _vids);
 	I ei(const Dag::Element& _element, const EdgeVertIds& _vids);
-	FaceVertIds align(const FaceVertIds& _vids, Id _firstVid);
-	PolyVertIds align(const PolyVertIds& _vids, Id _firstVid);
+	FaceVertIds align(const FaceVertIds& _vids, Id _firstVid, bool _reverse = false);
+	PolyVertIds align(const PolyVertIds& _vids, Id _firstVid, bool _reverse = false);
+	FaceVertIds reverse(const FaceVertIds& _vids);
+	PolyVertIds reverse(const PolyVertIds& _vids);
 	Id eid(const Mesher::Mesh& _mesh, const Dag::Element& _element, I _ei);
 	Id fid(const Mesher::Mesh& _mesh, const Dag::Element& _element, I _fi);
 

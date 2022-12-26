@@ -3,9 +3,7 @@
 #include <HMP/Meshing/types.hpp>
 #include <HMP/Meshing/Mesher.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
-#include <cstddef>
 #include <vector>
-#include <array>
 
 namespace HMP::Refinement
 {
@@ -28,6 +26,8 @@ namespace HMP::Refinement
 		const std::vector<IVec>& verts() const;
 
 		const std::vector<PolyVertData<I>>& polys() const;
+
+		std::vector<PolyVertIds> apply(const Meshing::Mesher::Mesh& _mesh, const PolyVerts& _sourceVerts, std::vector<Vec>& _newVerts) const;
 
 		std::vector<PolyVertIds> apply(Meshing::Mesher& _mesher, const PolyVerts& _sourceVerts) const;
 

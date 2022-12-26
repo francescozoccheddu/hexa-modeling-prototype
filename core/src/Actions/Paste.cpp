@@ -2,7 +2,6 @@
 
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Dag/Utils.hpp>
-#include <HMP/Actions/Utils.hpp>
 #include <array>
 #include <algorithm>
 #include <utility>
@@ -11,6 +10,8 @@
 
 namespace HMP::Actions
 {
+
+	/*
 
 	std::array<Vec, 3> basis(const Meshing::Mesher& _mesher, const Dag::Extrude& _extrude)
 	{
@@ -47,8 +48,11 @@ namespace HMP::Actions
 		}
 	}
 
+*/
+
 	void Paste::apply()
 	{
+		/*
 		for (Dag::Element* parent : m_elements)
 		{
 			m_operation->parents().attach(*parent);
@@ -88,7 +92,7 @@ namespace HMP::Actions
 				std::array<I, 4>{0,4,5,1},
 				std::array<I, 4>{0,3,7,4}
 			};
-			if (m_operation->clockwise())
+			if (m_operation->clockwise)
 			{
 				std::swap(indices[1], indices[2]);
 			}
@@ -100,31 +104,32 @@ namespace HMP::Actions
 		mesher().clear();
 		Meshing::Utils::addLeafs(mesher(), *m_operation);
 		mesher().updateMesh();
+*/
 	}
 
 	void Paste::unapply()
 	{
-		Meshing::Utils::removeLeafs(mesher(), *m_operation);
+		Meshing::Utils::removeLeafs(mesher(), *m_operation, true);
 		m_operation->parents().detachAll(false);
 		mesher().updateMesh();
 	}
 
-	Paste::Paste(const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id _vertOffset, bool _clockwise, const Dag::Extrude& _source)
+	Paste::Paste(const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<I, 3>& _fis, I _firstVi, bool _clockwise, const Dag::Extrude& _source)
 		: m_elements{ _elements }, m_operation{ static_cast<Dag::Extrude&>(Dag::Utils::clone(_source)) }, m_prepared{ false }, m_sourceOperation{ _source }
 	{
-		m_operation->faceOffsets() = _faceOffsets;
-		m_operation->clockwise() = _clockwise;
-		m_operation->vertOffset() = _vertOffset;
+		m_operation->fis = _fis;
+		m_operation->clockwise = _clockwise;
+		m_operation->firstVi = _firstVi;
 		switch (m_elements.size())
 		{
 			case 1:
-				m_operation->source() = Dag::Extrude::ESource::Face;
+				m_operation->source = Dag::Extrude::ESource::Face;
 				break;
 			case 2:
-				m_operation->source() = Dag::Extrude::ESource::Edge;
+				m_operation->source = Dag::Extrude::ESource::Edge;
 				break;
 			case 4:
-				m_operation->source() = Dag::Extrude::ESource::Vertex;
+				m_operation->source = Dag::Extrude::ESource::Vertex;
 				break;
 		}
 	}

@@ -181,7 +181,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 			}
 			stream << name(*element, _dagNamer);
 		}
-		switch (_operation.source())
+		switch (_operation.source)
 		{
 			case HMP::Dag::Extrude::ESource::Face:
 				stream << " (face)";
@@ -193,8 +193,8 @@ namespace HMP::Gui::Utils::HrDescriptions
 				stream << " (vertex)";
 				break;
 		}
-		stream << " towards " << describe(cpputils::range::of(_operation.faceOffsets()).toVector())
-			<< " (" << _operation.vertOffset() << " " << (_operation.clockwise() ? "CW" : " CCW") << ")"
+		stream << " towards " << describe(cpputils::range::of(_operation.fis).toVector())
+			<< " (" << _operation.firstVi << " " << (_operation.clockwise ? "CW" : " CCW") << ")"
 			<< " into " << name(_operation.children().single(), _dagNamer)
 			<< " (" << name(_operation, _dagNamer) << ")";
 		return stream.str();
@@ -290,7 +290,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 			}
 			stream << name(element, _dagNamer);
 		}
-		switch (_action.operation().source())
+		switch (_action.operation().source)
 		{
 			case HMP::Dag::Extrude::ESource::Face:
 				stream << " (face)";
@@ -302,8 +302,8 @@ namespace HMP::Gui::Utils::HrDescriptions
 				stream << " (vertex)";
 				break;
 		}
-		stream << " towards " << describe(cpputils::range::of(_action.operation().faceOffsets()).toVector())
-			<< " (" << _action.operation().vertOffset() << " " << (_action.operation().clockwise() ? "CW" : "CCW") << ")"
+		stream << " towards " << describe(cpputils::range::of(_action.operation().fis).toVector())
+			<< " (" << _action.operation().firstVi << " " << (_action.operation().clockwise ? "CW" : "CCW") << ")"
 			<< " into " << name(_action.operation().children().single(), _dagNamer)
 			<< " (" << name(_action.operation(), _dagNamer) << ")";
 		return stream.str();

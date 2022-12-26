@@ -133,6 +133,18 @@ namespace HMP::Gui
 		m_vertEditWidget.remove(_removedVids);
 	}
 
+	void App::onElementRemoved(const HMP::Dag::Element& _element, const std::vector<Id>& _removedVids, bool _actuallyRemovedVids)
+	{
+		if (_actuallyRemovedVids)
+		{
+			Id meshVertCount{ m_mesh.num_verts() + toId(_removedVids.size()) };
+			for (const Id vid : _removedVids)
+			{
+				m_vertEditWidget.replace(--meshVertCount, vid);
+			}
+		}
+	}
+
 	void App::onClearElements()
 	{
 		m_mouse.element = nullptr;
@@ -499,11 +511,12 @@ namespace HMP::Gui
 			const Id pid{ m_mesher.elementToPid(*m_copy.element) };
 			const Dag::Extrude& extrude{ m_copy.element->parents().cast<const Dag::Extrude&>().single() };
 			const ImVec2 center{ project(m_canvas, m_mesh.poly_centroid(pid)) };
-			for (const auto& [parent, faceOffset] : extrude.parents().zip(extrude.faceOffsets()))
+			for (const auto& [parent, fi] : extrude.parents().zip(extrude.fis))
 			{
-				const Id parentPid{ m_mesher.elementToPid(parent) };
-				const Id parentFid{ m_mesh.poly_face_id(parentPid, faceOffset) };
-				const ImVec2 parentFidCenter{ project(m_canvas, m_mesh.face_centroid(parentFid)) };
+				const FaceVertIds parentFidVids{ Meshing::Utils::faceVids(parent, fi) };
+				const FaceVerts parentFidVerts{ Meshing::Utils::verts(m_mesh, parentFidVids) };
+				const Vec parentFidCentroid{ cpputils::range::of(parentFidVerts).sum() / 4.0 };
+				const ImVec2 parentFidCenter{ project(m_canvas, parentFidCentroid) };
 				dashedLine(drawList, parentFidCenter, center, mutedColorU32, 1.5f);
 			}
 			if (!m_options.showNames || !m_mesh.poly_is_on_surf(pid))
@@ -511,10 +524,8 @@ namespace HMP::Gui
 				circle(drawList, center, 4.0f, m_mouse.element == m_copy.element ? colorU32 : mutedColorU32, 1.5f);
 			}
 			const Dag::Element& firstParent{ extrude.parents().first() };
-			const Id firstParentPid{ m_mesher.elementToPid(firstParent) };
-			const Id firstParentFid{ m_mesh.poly_face_id(firstParentPid, extrude.faceOffsets()[0]) };
-			const Id firstParentVid{ m_mesh.poly_vert_id(firstParentPid, extrude.vertOffset()) };
-			const FaceVertIds firstParentVids{ Meshing::Utils::pidFidVidsByFirstVid(m_mesh, firstParentPid, firstParentFid, firstParentVid, extrude.clockwise()) };
+			const Id firstVid{ firstParent.vids[extrude.firstVi] };
+			const FaceVertIds firstParentVids{ Meshing::Utils::align(Meshing::Utils::faceVids(firstParent, extrude.fis[0]), firstVid, extrude.clockwise) };
 			const ImVec2 eVert1{ project(m_canvas, m_mesh.vert(firstParentVids[0])) };
 			const ImVec2 eVert2{ project(m_canvas, m_mesh.vert(firstParentVids[1])) };
 			dashedLine(drawList, eVert1, eVert2, mutedColorU32, 4.0f);
@@ -775,7 +786,7 @@ namespace HMP::Gui
 			<< std::endl;
 	}
 
-	bool App::hoveredExtrudeElements(Dag::Extrude::ESource _source, cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id& _vertOffset, bool& _clockwise)
+	bool App::hoveredExtrudeElements(Dag::Extrude::ESource _source, cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, cpputils::collections::FixedVector<I, 3>& _fis, I& _firstVi, bool& _clockwise)
 	{
 		cpputils::collections::FixedVector<Id, 3> pids, fids;
 		if (m_mouse.element)
@@ -851,11 +862,12 @@ namespace HMP::Gui
 			_elements = cpputils::range::of(pids).map([&](Id _pid) {
 				return &m_mesher.pidToElement(_pid);
 			}).toFixedVector<3>();
-			_faceOffsets = cpputils::range::of(fids).zip(pids).map([&](const auto& _fidAndPid) {
-				const auto [fid, pid] {_fidAndPid};
-			return m_mesh.poly_face_offset(pid, fid);
+			_fis = cpputils::range::zip(fids, _elements).map([&](const auto& _fidAndElement) {
+				const auto& [fid, element] {_fidAndElement};
+			const FaceVertIds vids{ cpputils::range::of(m_mesh.face_verts_id(fid)).template toArray<4>() };
+			return Meshing::Utils::fi(*element, vids);
 			}).toFixedVector<3>();
-			_vertOffset = m_mouse.vertOffset;
+			_firstVi = m_mouse.vi;
 			return true;
 		}
 		return false;
@@ -864,118 +876,41 @@ namespace HMP::Gui
 	void App::onExtrude(Dag::Extrude::ESource _source)
 	{
 		cpputils::collections::FixedVector<Dag::Element*, 3> elements;
-		cpputils::collections::FixedVector<Id, 3> faceOffsets;
-		Id vertOffset;
+		cpputils::collections::FixedVector<I, 3> fis;
+		I firstVi;
 		bool clockwise;
-		if (hoveredExtrudeElements(_source, elements, faceOffsets, vertOffset, clockwise))
+		if (hoveredExtrudeElements(_source, elements, fis, firstVi, clockwise))
 		{
-			applyAction(*new Actions::Extrude{ elements, faceOffsets, vertOffset, clockwise });
+			applyAction(*new Actions::Extrude{ elements, fis, firstVi, clockwise });
 		}
 	}
 
 	void App::onExtrudeSelected()
 	{
 		const std::vector<Id> vids{ m_vertEditWidget.vids().toVector() };
-		Actions::Extrude* action{};
-		cpputils::collections::FixedVector<Id, 3> pids, fids;
-		switch (vids.size())
+		if (vids.size() != 4)
 		{
-			case 4:
-			{
-				const Id fid{ static_cast<Id>(m_mesh.face_id(vids)) };
-				if (fid != noId)
-				{
-					Id pid;
-					if (m_mesh.face_is_visible(fid, pid))
-					{
-						pids.addLast(pid);
-						fids.addLast(fid);
-						break;
-					}
-				}
-			}
 			return;
-			case 2:
-			{
-				const Id eid{ static_cast<Id>(m_mesh.edge_id(vids)) };
-				if (eid != noId)
-				{
-					if (m_mesh.edge_is_on_srf(eid))
-					{
-						for (const Id fid : m_mesh.adj_e2f(eid))
-						{
-							Id pid;
-							if (m_mesh.face_is_visible(fid, pid))
-							{
-								if (pids.size() == 2)
-								{
-									return;
-								}
-								pids.addLast(pid);
-								fids.addLast(fid);
-							}
-						}
-						if (pids.size() == 2 && cpputils::range::of(pids).isSet())
-						{
-							break;
-						}
-					}
-				}
-			}
-			return;
-			case 1:
-			{
-				const Id vid{ vids[0] };
-				if (m_mesh.vert_is_on_srf(vid))
-				{
-					for (const Id fid : m_mesh.adj_v2f(vid))
-					{
-						Id pid;
-						if (m_mesh.face_is_visible(fid, pid))
-						{
-							if (pids.size() == 3)
-							{
-								return;
-							}
-							pids.addLast(pid);
-							fids.addLast(fid);
-						}
-					}
-					if (pids.size() == 3 && cpputils::range::of(pids).isSet())
-					{
-						break;
-					}
-				}
-			}
-			return;
-			default:
-				return;
 		}
-		const cpputils::collections::FixedVector<Id, 3> faceOffsets{ cpputils::range::of(fids).zip(pids).map([&](const auto& _fidAndPid) {
-			const auto [fid, pid] {_fidAndPid};
-			return m_mesh.poly_face_offset(pid, fid);
-		}).toFixedVector<3>() };
-		const cpputils::collections::FixedVector<Dag::Element*, 3> elements{ cpputils::range::of(pids).map([&](Id _pid) {
-			return &m_mesher.pidToElement(_pid); }).toFixedVector<3>()
-		};
-		const Id vertOffset{ m_mesh.poly_vert_offset(pids[0], vids[0]) };
-		const bool clockwise{ fids.size() > 1 && Meshing::Utils::isEdgeCW(m_mesh, pids[0], fids[0], vids[0], m_mesh.face_shared_edge(fids[0], fids[1])) };
-		action = new Actions::Extrude{ elements, faceOffsets, vertOffset, clockwise };
-		applyAction(*action);
+		const Id fid{ static_cast<Id>(m_mesh.face_id(vids)) };
+		if (fid == noId)
+		{
+			return;
+		}
+		Id pid;
+		if (!m_mesh.face_is_visible(fid, pid))
+		{
+			return;
+		}
+		Dag::Element& element{ m_mesher.pidToElement(pid) };
+		const I fi{ Meshing::Utils::fi(element, cpputils::range::of(m_mesh.face_verts_id(fid)).toArray<4>()) };
+		const I vi{ Meshing::Utils::vi(element, vids[0]) };
+		Actions::Extrude& action{ *new Actions::Extrude{ {&element}, {fi}, vi, false } };
+		applyAction(action);
+		const Id newPid{ m_mesher.elementToPid(action.operation().children().single()) };
+		const Id newFid{ m_mesh.poly_face_opposite_to(newPid, fid) };
 		m_vertEditWidget.clear();
-		const HMP::Dag::Element& newElement{ action->operation().children().single() };
-		const Id newPid{ m_mesher.elementToPid(newElement) };
-		switch (action->operation().source())
-		{
-			case Dag::Extrude::ESource::Face:
-			{
-				const Id newFid{ m_mesh.poly_face_opposite_to(newPid, fids[0]) };
-				m_vertEditWidget.add(m_mesh.face_verts_id(newFid));
-			}
-			break;
-			default:
-				break;
-		}
+		m_vertEditWidget.add(m_mesh.face_verts_id(newFid));
 	}
 
 	void App::onCopy()
@@ -1001,12 +936,12 @@ namespace HMP::Gui
 		if (m_copy.element)
 		{
 			cpputils::collections::FixedVector<Dag::Element*, 3> elements;
-			cpputils::collections::FixedVector<Id, 3> faceOffsets;
-			Id vertOffset;
+			cpputils::collections::FixedVector<I, 3> fis;
+			I firstVi;
 			bool clockwise;
-			if (hoveredExtrudeElements(_source, elements, faceOffsets, vertOffset, clockwise))
+			if (hoveredExtrudeElements(_source, elements, fis, firstVi, clockwise))
 			{
-				applyAction(*new Actions::Paste{ elements, faceOffsets, vertOffset, clockwise, static_cast<const Dag::Extrude&>(m_copy.element->parents().single()) });
+				applyAction(*new Actions::Paste{ elements, fis, firstVi, clockwise, static_cast<const Dag::Extrude&>(m_copy.element->parents().single()) });
 			}
 		}
 	}
@@ -1260,6 +1195,7 @@ namespace HMP::Gui
 		m_mesher.edgeColor() = c_edgeColor;
 
 		m_mesher.onElementRemove += [this](const HMP::Dag::Element& _element, const Meshing::Mesher::RemovedIds& _removedIds) { onElementRemove(_element, _removedIds.vids); };
+		m_mesher.onElementRemoved += [this](const HMP::Dag::Element& _element, const Meshing::Mesher::RemovedIds& _removedIds) { onElementRemoved(_element, _removedIds.vids, _removedIds.vidsActuallyRemoved); };
 		m_mesher.onClear += [this]() { onClearElements(); };
 
 		onClear();

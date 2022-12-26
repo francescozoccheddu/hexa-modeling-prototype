@@ -1,14 +1,12 @@
 #include <HMP/Actions/Delete.hpp>
 
-#include <HMP/Actions/Utils.hpp>
-
 namespace HMP::Actions
 {
 
 	void Delete::apply()
 	{
 		m_operation->parents().attach(m_element);
-		mesher().remove(m_element);
+		mesher().remove(m_element, false);
 		mesher().updateMesh();
 	}
 

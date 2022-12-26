@@ -81,13 +81,13 @@ namespace HMP::Dag::Utils
 						case Operation::EPrimitive::Extrude:
 						{
 							const Extrude& extrudeOperation{ static_cast<const Extrude&>(operation) };
-							_serializer << extrudeOperation.source();
-							_serializer << extrudeOperation.vertOffset();
-							_serializer << extrudeOperation.clockwise();
-							_serializer << extrudeOperation.faceOffsets().size();
-							for (const Id fo : extrudeOperation.faceOffsets())
+							_serializer << extrudeOperation.source;
+							_serializer << extrudeOperation.firstVi;
+							_serializer << extrudeOperation.clockwise;
+							_serializer << extrudeOperation.fis.size();
+							for (const I fi : extrudeOperation.fis)
 							{
-								_serializer << fo;
+								_serializer << fi;
 							}
 						}
 						break;
@@ -168,13 +168,13 @@ namespace HMP::Dag::Utils
 						case Operation::EPrimitive::Extrude:
 						{
 							Extrude& extrudeOperation{ *new Extrude{} };
-							_deserializer >> extrudeOperation.source();
-							_deserializer >> extrudeOperation.vertOffset();
-							_deserializer >> extrudeOperation.clockwise();
-							extrudeOperation.faceOffsets().resize(_deserializer.get<I>());
-							for (Id& fo : extrudeOperation.faceOffsets())
+							_deserializer >> extrudeOperation.source;
+							_deserializer >> extrudeOperation.firstVi;
+							_deserializer >> extrudeOperation.clockwise;
+							extrudeOperation.fis.resize(_deserializer.get<I>());
+							for (I& fi : extrudeOperation.fis)
 							{
-								_deserializer >> fo;
+								_deserializer >> fi;
 							}
 							operation = &extrudeOperation;
 						}
@@ -267,10 +267,10 @@ namespace HMP::Dag::Utils
 					{
 						const Extrude& source{ static_cast<const Extrude&>(_node) };
 						Extrude& clone{ *new Extrude{} };
-						clone.vertOffset() = source.vertOffset();
-						clone.faceOffsets() = source.faceOffsets();
-						clone.source() = source.source();
-						clone.clockwise() = source.clockwise();
+						clone.firstVi = source.firstVi;
+						clone.fis = source.fis;
+						clone.source = source.source;
+						clone.clockwise = source.clockwise;
 						return clone;
 					}
 					case Operation::EPrimitive::Refine:

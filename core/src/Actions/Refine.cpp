@@ -16,18 +16,18 @@ namespace HMP::Actions
 			}
 		}
 		m_operation->parents().attach(m_element);
-		Refinement::Utils::applyRefineRecursive(mesher(), *m_operation);
+		Refinement::Utils::applyRecursive(mesher(), *m_operation);
 		mesher().updateMesh();
 	}
 
 	void Refine::unapply()
 	{
-		Refinement::Utils::unapplyRefineRecursive(mesher(), *m_operation);
+		Refinement::Utils::unapplyRecursive(mesher(), *m_operation);
 		mesher().updateMesh();
 	}
 
 	Refine::Refine(Dag::Element& _element, I _forwardFi, I _firstVi, Refinement::EScheme _scheme, I _depth)
-		: m_element{ _element }, m_operation{ Refinement::Utils::prepareRefine(_forwardFi, _firstVi, _scheme, _depth) }, m_depth{ _depth }
+		: m_element{ _element }, m_operation{ Refinement::Utils::prepare(_forwardFi, _firstVi, _scheme, _depth) }, m_depth{ _depth }
 	{
 		if (_depth < 1 || _depth > 3)
 		{

@@ -8,7 +8,6 @@
 #include <vector>
 #include <optional>
 #include <HMP/Meshing/Utils.hpp>
-#include <HMP/Actions/Utils.hpp>
 #include <HMP/Refinement/Utils.hpp>
 
 namespace HMP::Actions
@@ -87,14 +86,14 @@ namespace HMP::Actions
 				const Id candUpFid{ Meshing::Utils::adjFidInPidByEidAndFid(mesh, candPid, candForwardFid, mesh.face_edge_id(candForwardFid, 0)) };
 				const Id candUpFaceOffset{ mesh.poly_face_offset(candPid, candUpFid) };
 				// apply the refinement
-				Dag::Refine& adapterRef{ Refinement::Utils::prepareRefine(candForwardFaceOffset, candUpFaceOffset, EScheme::Inset) };
+				Dag::Refine& adapterRef{ Refinement::Utils::prepare(candForwardFaceOffset, candUpFaceOffset, EScheme::Inset) };
 				adapterRef.parents().attach(candEl);
-				Refinement::Utils::applyRefine(mesher, adapterRef);
+				Refinement::Utils::apply(mesher, adapterRef);
 				m_operations.push_back({ &adapterRef, &candEl });
 				_insets.push_back(&adapterRef);
 			}
 			// remove the temporarily added element
-			mesher.remove(refEl);
+			mesher.remove(refEl, false);
 		}
 	}
 
@@ -119,7 +118,7 @@ namespace HMP::Actions
 				const Refinement::Utils::Sub3x3AdapterCandidate candidate{ set.pop() };
 				Dag::Refine& adapterRefine{ candidate.prepareAdapter(mesher) };
 				adapterRefine.parents().attach(candidate.element());
-				Refinement::Utils::applyRefine(mesher, adapterRefine);
+				Refinement::Utils::apply(mesher, adapterRefine);
 				m_operations.push_back({ &adapterRefine, &candidate.element() });
 				// if the refinement is a new Subdivide3x3, then add it to the set
 				if (candidate.scheme() == EScheme::Subdivide3x3)
@@ -140,7 +139,7 @@ namespace HMP::Actions
 			for (auto [operation, element] : m_operations)
 			{
 				operation->parents().attach(*element);
-				Refinement::Utils::applyRefine(mesher, *operation);
+				Refinement::Utils::apply(mesher, *operation);
 			}
 		}
 		else
@@ -158,7 +157,7 @@ namespace HMP::Actions
 		for (auto it{ m_operations.rbegin() }; it != m_operations.rend(); ++it)
 		{
 			auto& [operation, element] {*it};
-			Refinement::Utils::unapplyRefine(mesher(), *operation);
+			Refinement::Utils::unapply(mesher(), *operation);
 		}
 		mesher().updateMesh();
 	}

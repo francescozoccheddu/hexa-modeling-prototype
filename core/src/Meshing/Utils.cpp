@@ -349,7 +349,7 @@ namespace HMP::Meshing::Utils
 		}
 	}
 
-	void removeLeafs(Mesher& _mesher, Dag::Node& _root)
+	void removeLeafs(Mesher& _mesher, Dag::Node& _root, bool _removeVerts)
 	{
 		for (Dag::Node* node : Dag::Utils::descendants(_root))
 		{
@@ -366,7 +366,7 @@ namespace HMP::Meshing::Utils
 				}
 				if (active)
 				{
-					_mesher.remove(element);
+					_mesher.remove(element, _removeVerts);
 				}
 			}
 		}
@@ -378,33 +378,37 @@ namespace HMP::Meshing::Utils
 		switch (_fi)
 		{
 			case 0:
-				return { vids[0], vids[1], vids[2], vids[3] };
+				return { vids[0], vids[3], vids[2], vids[1] };
 			case 1:
-				return { vids[4], vids[7], vids[6], vids[5] };
+				return { vids[4], vids[5], vids[6], vids[7] };
 			case 2:
-				return { vids[1], vids[5], vids[6], vids[2] };
+				return { vids[1], vids[2], vids[6], vids[5] };
 			case 3:
-				return { vids[0], vids[3], vids[7], vids[4] };
+				return { vids[0], vids[4], vids[7], vids[3] };
 			case 4:
-				return { vids[0], vids[4], vids[5], vids[1] };
+				return { vids[0], vids[1], vids[5], vids[4] };
 			case 5:
-				return { vids[3], vids[2], vids[6], vids[7] };
+				return { vids[3], vids[7], vids[6], vids[2] };
 			default:
 				assert(false);
 		}
 	}
 
-	FaceVertIds align(const FaceVertIds& _vids, Id _firstVid)
+	FaceVertIds align(const FaceVertIds& _vids, Id _firstVid, bool _reverse)
 	{
 		FaceVertIds vids{ _vids };
 		while (vids[0] != _firstVid)
 		{
 			std::rotate(vids.begin(), vids.begin() + 1, vids.end());
 		}
+		if (_reverse)
+		{
+			vids = reverse(vids);
+		}
 		return vids;
 	}
 
-	PolyVertIds align(const PolyVertIds& _vids, Id _firstVid)
+	PolyVertIds align(const PolyVertIds& _vids, Id _firstVid, bool _reverse)
 	{
 		PolyVertIds vids{ _vids };
 		while (vids[0] != _firstVid)
@@ -412,7 +416,35 @@ namespace HMP::Meshing::Utils
 			std::rotate(vids.begin(), vids.begin() + 1, vids.begin() + 4);
 			std::rotate(vids.begin() + 4, vids.begin() + 4 + 1, vids.end());
 		}
+		if (_reverse)
+		{
+			vids = reverse(vids);
+		}
 		return vids;
+	}
+
+	FaceVertIds reverse(const FaceVertIds& _vids)
+	{
+		return {
+			_vids[0],
+			_vids[3],
+			_vids[2],
+			_vids[1]
+		};
+	}
+
+	PolyVertIds reverse(const PolyVertIds& _vids)
+	{
+		return {
+			_vids[0],
+			_vids[3],
+			_vids[2],
+			_vids[1],
+			_vids[4],
+			_vids[7],
+			_vids[6],
+			_vids[5]
+		};
 	}
 
 	I vi(const Dag::Element& _element, Id _vid)

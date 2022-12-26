@@ -1,6 +1,7 @@
 #include <HMP/Refinement/Scheme.hpp>
 
 #include <cinolib/geometry/lerp.hpp>
+#include <HMP/Meshing/Utils.hpp>
 #include <limits>
 
 namespace HMP::Refinement
@@ -25,14 +26,13 @@ namespace HMP::Refinement
 		return m_polys;
 	}
 
-	Id getOrAddVert(Meshing::Mesher& _mesher, const Vec& _vert)
+	Id getOrAddVert(const Meshing::Mesher::Mesh& _mesh, const Vec& _vert, std::vector<Vec>& _newVerts)
 	{
-		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
 		Real minDist{ std::numeric_limits<Real>::infinity() };
 		Id minVid{ noId };
-		for (Id vid{}; vid < mesh.num_verts(); vid++)
+		for (Id vid{}; vid < _mesh.num_verts(); vid++)
 		{
-			const Real dist{ mesh.vert(vid).dist(_vert) };
+			const Real dist{ _mesh.vert(vid).dist(_vert) };
 			if (dist < minDist)
 			{
 				minDist = dist;
@@ -46,11 +46,13 @@ namespace HMP::Refinement
 		}
 		else
 		{
-			return _mesher.addVert(_vert);
+			const Id vid{ _mesh.num_verts() + toId(_newVerts.size()) };
+			_newVerts.push_back(_vert);
+			return vid;
 		}
 	}
 
-	std::vector<PolyVertIds> Scheme::apply(Meshing::Mesher& _mesher, const PolyVerts& _sourceVerts) const
+	std::vector<PolyVertIds> Scheme::apply(const Meshing::Mesher::Mesh& _mesh, const PolyVerts& _sourceVerts, std::vector<Vec>& _newVerts) const
 	{
 		std::vector<Id> vidsPool;
 		vidsPool.reserve(m_verts.size());
@@ -68,7 +70,7 @@ namespace HMP::Refinement
 		{
 			const Vec progress{ ivert.cast<Real>() / static_cast<Real>(m_gridSize) };
 			const Vec vert{ cinolib::lerp3(sourceVerts, progress) };
-			vidsPool.push_back(getOrAddVert(_mesher, vert));
+			vidsPool.push_back(getOrAddVert(_mesh, vert, _newVerts));
 		}
 		std::vector<PolyVertIds> polys;
 		polys.reserve(m_polys.size());
@@ -81,6 +83,14 @@ namespace HMP::Refinement
 			}
 			polys.push_back(polyVids);
 		}
+		return polys;
+	}
+
+	std::vector<PolyVertIds> Scheme::apply(Meshing::Mesher& _mesher, const PolyVerts& _sourceVerts) const
+	{
+		std::vector<Vec> newVerts;
+		const std::vector<PolyVertIds> polys{ apply(_mesher.mesh(), _sourceVerts, newVerts) };
+		Meshing::Utils::addVerts(_mesher, newVerts);
 		return polys;
 	}
 
