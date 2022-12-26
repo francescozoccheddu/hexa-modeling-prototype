@@ -33,7 +33,7 @@ namespace HMP::Refinement::Utils
 		return refine;
 	}
 
-	std::vector<PolyVertIds> previewRefine(Meshing::Mesher& _mesher, const Dag::Refine& _refine)
+	void apply(Meshing::Mesher& _mesher, Dag::Refine& _refine)
 	{
 		const Dag::Element& element{ _refine.parents.single() };
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
@@ -46,12 +46,6 @@ namespace HMP::Refinement::Utils
 		const PolyVertIds sourceVids{ Meshing::Utils::pidVidsByForwardFidAndFirstVid(mesh, pid, forwardFid, firstVid) };
 		const PolyVerts sourceVerts{ Meshing::Utils::verts(mesh, sourceVids) };
 		const std::vector<PolyVertIds> polys{ refinement.apply(_mesher, sourceVerts) };
-		return polys;
-	}
-
-	void apply(Meshing::Mesher& _mesher, Dag::Refine& _refine)
-	{
-		const std::vector<PolyVertIds> polys{ previewRefine(_mesher, _refine) };
 		for (const auto& [child, vids] : cpputils::range::zip(_refine.children, polys))
 		{
 			child.vids = vids;
