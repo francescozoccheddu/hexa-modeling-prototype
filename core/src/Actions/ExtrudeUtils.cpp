@@ -38,11 +38,11 @@ namespace HMP::Actions::ExtrudeUtils
 		return extrude;
 	}
 
-	FaceVerts extrudeFace(const Meshing::Mesher::Mesh& _mesh, const Id _pid, const Id _fid, const FaceVertIds& _vids)
+	FaceVerts extrudeFace(const Meshing::Mesher::Mesh& _mesh, const FaceVertIds& _vids)
 	{
 		const FaceVerts inVerts{ Meshing::Utils::verts(_mesh, _vids) };
-		const Real avgEdgeLength{ Meshing::Utils::avgFidEdgeLength(_mesh, _fid) };
-		const Vec faceNormal = _mesh.poly_face_normal(_pid, _fid);
+		const Real avgEdgeLength{ Meshing::Utils::avgEdgeLength(inVerts) };
+		const Vec faceNormal = Meshing::Utils::normal(inVerts);
 		FaceVerts outVerts;
 		for (const auto& [in, out] : cpputils::range::zip(inVerts, outVerts))
 		{
@@ -51,10 +51,10 @@ namespace HMP::Actions::ExtrudeUtils
 		return outVerts;
 	}
 
-	PolyVertIds applyFaceExtrude(const Meshing::Mesher::Mesh& _mesh, const Id _pid, const Id _fid, Id _firstVid, std::vector<Vec>& _newVerts)
+	PolyVertIds applyFaceExtrude(const Meshing::Mesher::Mesh& _mesh, const Dag::Element& _element, I _fi, Id _firstVid, std::vector<Vec>& _newVerts)
 	{
-		const FaceVertIds faceVids{ Meshing::Utils::pidFidVidsByFirstVid(_mesh, _pid, _fid, _firstVid) };
-		const FaceVerts newVerts{ extrudeFace(_mesh, _pid, _fid, faceVids) };
+		const FaceVertIds faceVids{ Meshing::Utils::align(Meshing::Utils::faceVids(_element, _fi), _firstVid) };
+		const FaceVerts newVerts{ extrudeFace(_mesh, faceVids) };
 		PolyVertIds vids;
 		std::copy(faceVids.begin(), faceVids.end(), vids.begin());
 		const Id firstNewVid{ _mesh.num_verts() + toId(_newVerts.size()) };
@@ -66,18 +66,17 @@ namespace HMP::Actions::ExtrudeUtils
 		return vids;
 	}
 
-	PolyVertIds applyEdgeExtrude(const Meshing::Mesher::Mesh& _mesh, const std::array<Id, 2>& _pids, const std::array<Id, 2>& _fids, Id _firstVid, bool _clockwise, std::vector<Vec>& _newVerts)
+	PolyVertIds applyEdgeExtrude(const Meshing::Mesher::Mesh& _mesh, const std::array<const Dag::Element*, 2>& _elements, const std::array<I, 2>& _fis, Id _firstVid, bool _clockwise, std::vector<Vec>& _newVerts)
 	{
 		const std::array<FaceVertIds, 2> faceVids{
-			cpputils::range::zip(_fids, _pids).map([&](const auto& _fidAndPid) {
-				const auto& [fid, pid] {_fidAndPid};
-				return Meshing::Utils::pidFidVidsByFirstVid(_mesh, pid, fid, _firstVid);
+			cpputils::range::zip(_elements, _fis).map([&](const auto& _elAndFi) {
+				const auto& [element, fi] {_elAndFi};
+				return Meshing::Utils::align(Meshing::Utils::faceVids(*element, fi), _firstVid);
 			}).toArray()
 		};
 		const std::array<FaceVerts, 2> newFaceVerts{
-			cpputils::range::zip(_fids, _pids, faceVids).map([&](const auto& _fidAndPidAndVids) {
-				const auto& [fid, pid, vids] {_fidAndPidAndVids};
-				return extrudeFace(_mesh, pid, fid, vids);
+			cpputils::range::of(faceVids).map([&](const FaceVertIds& _vids) {
+				return extrudeFace(_mesh, _vids);
 			}).toArray()
 		};
 		const Id firstNewVid{ _mesh.num_verts() + toId(_newVerts.size()) };
@@ -101,18 +100,17 @@ namespace HMP::Actions::ExtrudeUtils
 		}
 	}
 
-	PolyVertIds applyVertexExtrude(const Meshing::Mesher::Mesh& _mesh, const std::array<Id, 3>& _pids, const std::array<Id, 3>& _fids, Id _firstVid, bool _clockwise, std::vector<Vec>& _newVerts)
+	PolyVertIds applyVertexExtrude(const Meshing::Mesher::Mesh& _mesh, const std::array<const Dag::Element*, 3>& _elements, const std::array<I, 3>& _fis, Id _firstVid, bool _clockwise, std::vector<Vec>& _newVerts)
 	{
 		const std::array<FaceVertIds, 3> faceVids{
-			cpputils::range::zip(_fids,_pids).map([&](const auto& _fidAndPid) {
-				const auto& [fid, pid] {_fidAndPid};
-				return Meshing::Utils::pidFidVidsByFirstVid(_mesh, pid, fid, _firstVid);
+			cpputils::range::zip(_elements, _fis).map([&](const auto& _elAndFi) {
+				const auto& [element, fi] {_elAndFi};
+				return Meshing::Utils::align(Meshing::Utils::faceVids(*element, fi), _firstVid);
 			}).toArray()
 		};
 		const std::array<FaceVerts, 3> newFaceVerts{
-			cpputils::range::zip(_fids, _pids, faceVids).map([&](const auto& _fidAndPidAndVids) {
-				const auto& [fid, pid, vids] {_fidAndPidAndVids};
-				return extrudeFace(_mesh, pid, fid, vids);
+			cpputils::range::of(faceVids).map([&](const FaceVertIds& _vids) {
+				return extrudeFace(_mesh, _vids);
 			}).toArray()
 		};
 		const Id newVid{ _mesh.num_verts() + toId(_newVerts.size()) };
@@ -136,26 +134,15 @@ namespace HMP::Actions::ExtrudeUtils
 	PolyVertIds apply(const Meshing::Mesher& _mesher, const Dag::Extrude& _extrude, std::vector<Vec>& _newVerts)
 	{
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
-		const cpputils::collections::FixedVector<Id, 3> pids{
-			cpputils::range::of(_extrude.parents).map([&](const Dag::Element& _parent) {
-				return _mesher.elementToPid(_parent);
-			}).toFixedVector<3>()
-		};
-		const cpputils::collections::FixedVector<Id, 3> fids{
-			cpputils::range::zip(_extrude.parents, _extrude.fis).map([&](const auto& _parentAndFi) {
-				const auto& [parent, fi] {_parentAndFi};
-		return Meshing::Utils::fid(mesh, parent, fi);
-			}).toFixedVector<3>()
-		};
 		const Id firstVid{ _extrude.parents.first().vids[_extrude.firstVi] };
 		switch (_extrude.source)
 		{
 			case Dag::Extrude::ESource::Face:
-				return applyFaceExtrude(mesh, pids[0], fids[0], firstVid, _newVerts);
+				return applyFaceExtrude(mesh, _extrude.parents.first(), _extrude.fis.first(), firstVid, _newVerts);
 			case Dag::Extrude::ESource::Edge:
-				return applyEdgeExtrude(mesh, cpputils::range::of(pids).toArray<2>(), cpputils::range::of(fids).toArray<2>(), firstVid, _extrude.clockwise, _newVerts);
+				return applyEdgeExtrude(mesh, _extrude.parents.address().toArray<2>(), cpputils::range::of(_extrude.fis).toArray<2>(), firstVid, _extrude.clockwise, _newVerts);
 			case Dag::Extrude::ESource::Vertex:
-				return applyVertexExtrude(mesh, cpputils::range::of(pids).toArray<3>(), cpputils::range::of(fids).toArray<3>(), firstVid, _extrude.clockwise, _newVerts);
+				return applyVertexExtrude(mesh, _extrude.parents.address().toArray<3>(), cpputils::range::of(_extrude.fis).toArray<3>(), firstVid, _extrude.clockwise, _newVerts);
 			default:
 				assert(false);
 		}

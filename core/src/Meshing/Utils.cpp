@@ -2,6 +2,7 @@
 
 #include <HMP/Dag/Utils.hpp>
 #include <cpputils/range/of.hpp>
+#include <cinolib/geometry/polygon_utils.h>
 #include <cassert>
 
 namespace HMP::Meshing::Utils
@@ -492,6 +493,21 @@ namespace HMP::Meshing::Utils
 		const int fid{ _mesh.face_id(cpputils::range::of(faceVids(_element, _fi)).toVector()) };
 		assert(fid != -1);
 		return static_cast<Id>(fid);
+	}
+
+	Vec normal(const FaceVerts& _verts)
+	{
+		return cinolib::polygon_normal(cpputils::range::of(_verts).toVector());
+	}
+
+	Real avgEdgeLength(const FaceVerts& _verts)
+	{
+		Real sum{};
+		for (I i{}; i < 4; i++)
+		{
+			sum += _verts[i].dist(_verts[(i + 1) % 4]);
+		}
+		return sum / 4.0;
 	}
 
 }
