@@ -327,6 +327,16 @@ namespace HMP::Meshing
 		{
 			for (const Id vid : m_removedIds.vids) m_mesh.vert_remove_unreferenced(vid);
 		}
+		else
+		{
+			for (const Id vid : m_removedIds.vids)
+			{
+				m_mesh.adj_v2e(vid).clear();
+				m_mesh.adj_v2f(vid).clear();
+				m_mesh.adj_v2v(vid).clear();
+				m_mesh.adj_v2p(vid).clear();
+			}
+		}
 		m_mesh.poly_remove_unreferenced(pid);
 		m_polyMarkerSet.m_data.erase(&_element);
 		for (Id o{ 0 }; o < 6; o++)
