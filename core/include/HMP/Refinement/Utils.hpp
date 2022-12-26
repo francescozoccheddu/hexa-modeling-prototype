@@ -15,12 +15,12 @@
 namespace HMP::Refinement::Utils
 {
 
-    Dag::Refine& prepareRefine(I _forwardFi, I _firstVi, Refinement::EScheme _scheme, I _depth = 1);
-    void applyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine);
-    void applyRefineRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine);
+    Dag::Refine& prepare(I _forwardFi, I _firstVi, Refinement::EScheme _scheme, I _depth = 1);
+    void apply(Meshing::Mesher& _mesher, Dag::Refine& _refine);
+    void applyRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine);
 
-    void unapplyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach = true);
-    void unapplyRefineRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach = true);
+    void unapply(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach = true);
+    void unapplyRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach = true);
 
     class Sub3x3AdapterCandidate final
     {

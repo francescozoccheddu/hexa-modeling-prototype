@@ -333,7 +333,7 @@ namespace HMP::Meshing
 		return m_mesh.vert_add(_vert);
 	}
 
-	void Mesher::remove(Dag::Element& _element)
+	void Mesher::remove(Dag::Element& _element, bool _removeVids)
 	{
 		const Id pid{ elementToPid(_element) };
 		if (pid == noId)
@@ -342,6 +342,7 @@ namespace HMP::Meshing
 		}
 		m_mesh.poly_dangling_ids(pid, m_removedIds.vids, m_removedIds.eids, m_removedIds.fids);
 		m_removedIds.pid = pid;
+		m_removedIds.vidsActuallyRemoved = _removeVids;
 		onElementRemove(_element, m_removedIds);
 		m_elementToPid.erase(&_element);
 		_element.pid = noId;
@@ -358,6 +359,10 @@ namespace HMP::Meshing
 		m_mesh.poly_disconnect(pid, m_removedIds.vids, m_removedIds.eids, m_removedIds.fids);
 		for (const Id fid : m_removedIds.fids) m_mesh.face_remove_unreferenced(fid);
 		for (const Id eid : m_removedIds.eids) m_mesh.edge_remove_unreferenced(eid);
+		if (_removeVids)
+		{
+			for (const Id vid : m_removedIds.vids) m_mesh.vert_remove_unreferenced(vid);
+		}
 		m_mesh.poly_remove_unreferenced(pid);
 		m_polyMarkerSet.m_data.erase(&_element);
 		for (Id o{ 0 }; o < 6; o++)

@@ -160,6 +160,7 @@ namespace HMP::Gui
 
 		// mesher events
 		void onElementRemove(const HMP::Dag::Element& _element, const std::vector<Id>& _removedVids);
+		void onElementRemoved(const HMP::Dag::Element& _element, const std::vector<Id>& _removedVids, bool _actuallyRemovedVids);
 		void onClearElements();
 
 		// vert edit events
@@ -177,7 +178,7 @@ namespace HMP::Gui
 		void onDagViewerDraw();
 		void updateMouse();
 		void onFilesDropped(const std::vector<std::string>& _files);
-		bool hoveredExtrudeElements(Dag::Extrude::ESource _source, cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id& _vertOffset, bool& _clockwise);
+		bool hoveredExtrudeElements(Dag::Extrude::ESource _source, cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, cpputils::collections::FixedVector<I, 3>& _fis, I& _firstVi, bool& _clockwise);
 
 		// save events
 		void onSaveState(const std::string& _filename);

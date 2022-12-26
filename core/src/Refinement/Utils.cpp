@@ -13,7 +13,7 @@
 namespace HMP::Refinement::Utils
 {
 
-	Dag::Refine& prepareRefine(I _forwardFi, I _firstVi, Refinement::EScheme _scheme, I _depth)
+	Dag::Refine& prepare(I _forwardFi, I _firstVi, Refinement::EScheme _scheme, I _depth)
 	{
 		if (_depth < 1 || _depth > 3)
 		{
@@ -29,7 +29,7 @@ namespace HMP::Refinement::Utils
 			Dag::Element& child{ *new Dag::Element{} };
 			if (_depth > 1)
 			{
-				child.children().attach(prepareRefine(_forwardFi, _firstVi, _scheme, _depth - 1));
+				child.children().attach(prepare(_forwardFi, _firstVi, _scheme, _depth - 1));
 			}
 			refine.children().attach(child);
 		}
@@ -58,7 +58,7 @@ namespace HMP::Refinement::Utils
 		return polys;
 	}
 
-	void applyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine)
+	void apply(Meshing::Mesher& _mesher, Dag::Refine& _refine)
 	{
 		const std::vector<PolyVertIds> polys{ previewRefine(_mesher, _refine) };
 		for (const auto& [child, vids] : cpputils::range::zip(_refine.children(), polys))
@@ -66,29 +66,29 @@ namespace HMP::Refinement::Utils
 			child.vids = vids;
 			_mesher.add_TOPM(child);
 		}
-		_mesher.remove(_refine.parents().single());
+		_mesher.remove(_refine.parents().single(), false);
 	}
 
-	void applyRefineRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine)
+	void applyRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine)
 	{
-		applyRefine(_mesher, _refine);
+		apply(_mesher, _refine);
 		for (Dag::Element& child : _refine.children())
 		{
 			for (Dag::Operation& operation : child.children())
 			{
 				if (operation.primitive() == Dag::Operation::EPrimitive::Refine)
 				{
-					applyRefineRecursive(_mesher, static_cast<Dag::Refine&>(operation));
+					applyRecursive(_mesher, static_cast<Dag::Refine&>(operation));
 				}
 			}
 		}
 	}
 
-	void unapplyRefine(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach)
+	void unapply(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach)
 	{
 		for (Dag::Element& child : _refine.children())
 		{
-			_mesher.remove(child);
+			_mesher.remove(child, true);
 		}
 		_mesher.add(_refine.parents().single());
 		if (_detach)
@@ -97,7 +97,7 @@ namespace HMP::Refinement::Utils
 		}
 	}
 
-	void unapplyRefineRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach)
+	void unapplyRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach)
 	{
 		for (Dag::Element& child : _refine.children())
 		{
@@ -105,11 +105,11 @@ namespace HMP::Refinement::Utils
 			{
 				if (operation.primitive() == Dag::Operation::EPrimitive::Refine)
 				{
-					unapplyRefineRecursive(_mesher, static_cast<Dag::Refine&>(operation), false);
+					unapplyRecursive(_mesher, static_cast<Dag::Refine&>(operation), false);
 				}
 			}
 		}
-		unapplyRefine(_mesher, _refine, _detach);
+		unapply(_mesher, _refine, _detach);
 	}
 
 	void Sub3x3AdapterCandidate::setup3x3Subdivide(const Meshing::Mesher& _mesher)
@@ -260,7 +260,7 @@ namespace HMP::Refinement::Utils
 
 	Dag::Refine& Sub3x3AdapterCandidate::prepareAdapter(const Meshing::Mesher& _mesher) const
 	{
-		return Utils::prepareRefine(m_forwardFaceOffset, m_upFaceOffset, *m_scheme);
+		return Utils::prepare(m_forwardFaceOffset, m_upFaceOffset, *m_scheme);
 	}
 
 	void Sub3x3AdapterCandidateSet::addAdjacency(const Meshing::Mesher& _mesher, Dag::Element& _candidate, const Dag::Element& _refined, bool _edge)
@@ -310,7 +310,7 @@ namespace HMP::Refinement::Utils
 			}
 		}
 		// remove the temporarily added element
-		_mesher.remove(refEl);
+		_mesher.remove(refEl, false);
 	}
 
 	Sub3x3AdapterCandidate Sub3x3AdapterCandidateSet::pop()

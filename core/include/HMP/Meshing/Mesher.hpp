@@ -67,6 +67,7 @@ namespace HMP::Meshing
 			std::vector<Id> eids;
 			std::vector<Id> fids;
 			Id pid;
+			bool vidsActuallyRemoved;
 		};
 
 		class PolyAttributes final: public cinolib::Polyhedron_std_attributes
@@ -210,7 +211,7 @@ namespace HMP::Meshing
 		const Dag::Element& pidToElement(Id _pid) const;
 		//void add(Dag::Element& _element);
 		Id addVert(const Vec& _vert);
-		void remove(Dag::Element& _element);
+		void remove(Dag::Element& _element, bool _removeVids);
 		void moveVert(Id _vid, const Vec& _position);
 		void clear();
 

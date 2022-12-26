@@ -17,28 +17,12 @@ namespace HMP::Dag
 			Face, Edge, Vertex
 		};
 
-	private:
-
-		Id m_vertOffset;
-		cpputils::collections::FixedVector<Id, 3> m_faceOffsets;
-		ESource m_source;
-		bool m_clockwise;
-
-	public:
-
 		Extrude();
 
-		Id vertOffset() const;
-		Id& vertOffset();
-
-		bool clockwise() const;
-		bool& clockwise();
-
-		const cpputils::collections::FixedVector<Id, 3>& faceOffsets() const;
-		cpputils::collections::FixedVector<Id, 3>& faceOffsets();
-
-		ESource source() const;
-		ESource& source();
+		I firstVi;
+		cpputils::collections::FixedVector<I, 3> fis;
+		ESource source;
+		bool clockwise;
 
 	};
 
