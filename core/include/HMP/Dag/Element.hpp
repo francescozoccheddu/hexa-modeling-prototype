@@ -25,7 +25,7 @@ namespace HMP::Dag
 		Element();
 
 		Set parents, children;
-		PolyVertIds vids;
+		HexVertIds vids;
 		Id pid;
 
 		Set& forward(bool _descending);

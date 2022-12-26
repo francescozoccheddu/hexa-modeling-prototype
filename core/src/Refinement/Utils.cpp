@@ -43,9 +43,9 @@ namespace HMP::Refinement::Utils
 		assert(pid != noId);
 		const Id forwardFid{ Meshing::Utils::fid(mesh, element, _refine.forwardFi) };
 		const Id firstVid{ element.vids[_refine.firstVi] };
-		const PolyVertIds sourceVids{ Meshing::Utils::pidVidsByForwardFidAndFirstVid(mesh, pid, forwardFid, firstVid) };
-		const PolyVerts sourceVerts{ Meshing::Utils::verts(mesh, sourceVids) };
-		const std::vector<PolyVertIds> polys{ refinement.apply(_mesher, sourceVerts) };
+		const HexVertIds sourceVids{ Meshing::Utils::pidVidsByForwardFidAndFirstVid(mesh, pid, forwardFid, firstVid) };
+		const HexVerts sourceVerts{ Meshing::Utils::verts(mesh, sourceVids) };
+		const std::vector<HexVertIds> polys{ refinement.apply(_mesher, sourceVerts) };
 		for (const auto& [child, vids] : cpputils::range::zip(_refine.children, polys))
 		{
 			child.vids = vids;
@@ -231,7 +231,7 @@ namespace HMP::Refinement::Utils
 			{
 				// add the shared edge to the adjacency list
 				const Id sharedEid{ Meshing::Utils::sharedEid(mesh, pid, refPid) };
-				const EdgeVertIds edgeVertOffsets{ Meshing::Utils::edgePolyVertOffsets(mesh, sharedEid, pid) };
+				const EdgeVertIds edgeVertOffsets{ Meshing::Utils::edgeHexVertOffsets(mesh, sharedEid, pid) };
 				m_adjacentEdgeVertOffsets.push_back(edgeVertOffsets);
 			}
 		}

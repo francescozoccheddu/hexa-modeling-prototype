@@ -17,26 +17,26 @@ namespace HMP::Meshing::Utils
 	Id sharedEid(const Meshing::Mesher::Mesh& _mesh, Id _pid1, Id _pid2);
 	EdgeVertIds edgeVids(const Meshing::Mesher::Mesh& _mesh, Id _eid);
 	EdgeVertIds edgeVids(const Meshing::Mesher::Mesh& _mesh, const EdgeVertIds& _edgeVertOffsets, Id _pid);
-	EdgeVertIds edgePolyVertOffsets(const Meshing::Mesher::Mesh& _mesh, Id _eid, Id _pid);
-	EdgeVertIds edgePolyVertOffsets(const Meshing::Mesher::Mesh& _mesh, const EdgeVertIds& _edgeVids, Id _pid);
+	EdgeVertIds edgeHexVertOffsets(const Meshing::Mesher::Mesh& _mesh, Id _eid, Id _pid);
+	EdgeVertIds edgeHexVertOffsets(const Meshing::Mesher::Mesh& _mesh, const EdgeVertIds& _edgeVids, Id _pid);
 
 	bool isEdgeCW(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstVid, Id _eid);
 	bool areVidsCW(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _vid0, Id _vid1);
-	bool isEdgeForward(const FaceVertIds& _vids, Id _vid0, Id _vid1);
-	Id nextVidInFid(const FaceVertIds& _vids, Id _vid, bool _backwards = false);
+	bool isEdgeForward(const QuadVertIds& _vids, Id _vid0, Id _vid1);
+	Id nextVidInFid(const QuadVertIds& _vids, Id _vid, bool _backwards = false);
 
 	Real avgFidEdgeLength(const Meshing::Mesher::Mesh& _mesh, Id _fid);
 
-	FaceVertIds pidFidVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, bool _cw = false);
-	FaceVertIds pidFidVidsByFirstEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstEid, bool _cw = false);
-	FaceVertIds pidFidVidsByFirstVid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstVid, bool _cw = false);
-	PolyVertIds pidVidsByForwardFidAndFirstEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _forwardUpEid);
-	PolyVertIds pidVidsByForwardFidAndFirstVid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _firstVid);
+	QuadVertIds pidFidVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, bool _cw = false);
+	QuadVertIds pidFidVidsByFirstEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstEid, bool _cw = false);
+	QuadVertIds pidFidVidsByFirstVid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstVid, bool _cw = false);
+	HexVertIds pidVidsByForwardFidAndFirstEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _forwardUpEid);
+	HexVertIds pidVidsByForwardFidAndFirstVid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _firstVid);
 
-	FaceVerts verts(const Meshing::Mesher::Mesh& _mesh, const FaceVertIds& _vids);
-	PolyVerts verts(const Meshing::Mesher::Mesh& _mesh, const PolyVertIds& _vids);
+	QuadVerts verts(const Meshing::Mesher::Mesh& _mesh, const QuadVertIds& _vids);
+	HexVerts verts(const Meshing::Mesher::Mesh& _mesh, const HexVertIds& _vids);
 	Vec midpoint(const Meshing::Mesher::Mesh& _mesh, Id _eid);
-	Vec centroid(const PolyVerts& _verts);
+	Vec centroid(const HexVerts& _verts);
 
 	Id closestPolyFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, const Vec& _centroid);
 	Id closestFaceEid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _midpoint);
@@ -46,18 +46,18 @@ namespace HMP::Meshing::Utils
 	void addLeafs(Mesher& _mesher, Dag::Node& _root);
 	void removeLeafs(Mesher& _mesher, Dag::Node& _root, bool _removeVerts);
 
-	FaceVertIds faceVids(const Dag::Element& _element, I _fi);
+	QuadVertIds faceVids(const Dag::Element& _element, I _fi);
 	EdgeVertIds edgeVids(const Dag::Element& _element, I _ei);
 	I vi(const Dag::Element& _element, Id _vid);
-	I fi(const Dag::Element& _element, const FaceVertIds& _vids);
+	I fi(const Dag::Element& _element, const QuadVertIds& _vids);
 	I ei(const Dag::Element& _element, const EdgeVertIds& _vids);
-	FaceVertIds align(const FaceVertIds& _vids, Id _firstVid, bool _reverse = false);
-	PolyVertIds align(const PolyVertIds& _vids, Id _firstVid, bool _reverse = false);
-	FaceVertIds reverse(const FaceVertIds& _vids);
-	PolyVertIds reverse(const PolyVertIds& _vids);
+	QuadVertIds align(const QuadVertIds& _vids, Id _firstVid, bool _reverse = false);
+	HexVertIds align(const HexVertIds& _vids, Id _firstVid, bool _reverse = false);
+	QuadVertIds reverse(const QuadVertIds& _vids);
+	HexVertIds reverse(const HexVertIds& _vids);
 	Id eid(const Mesher::Mesh& _mesh, const Dag::Element& _element, I _ei);
 	Id fid(const Mesher::Mesh& _mesh, const Dag::Element& _element, I _fi);
-	Vec normal(const FaceVerts& _verts);
-	Real avgEdgeLength(const FaceVerts& _verts);
+	Vec normal(const QuadVerts& _verts);
+	Real avgEdgeLength(const QuadVerts& _verts);
 
 }
