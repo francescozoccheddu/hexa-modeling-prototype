@@ -38,12 +38,12 @@ namespace HMP::Actions::ExtrudeUtils
 		return extrude;
 	}
 
-	FaceVerts extrudeFace(const Meshing::Mesher::Mesh& _mesh, const FaceVertIds& _vids)
+	QuadVerts extrudeFace(const Meshing::Mesher::Mesh& _mesh, const QuadVertIds& _vids)
 	{
-		const FaceVerts inVerts{ Meshing::Utils::verts(_mesh, _vids) };
+		const QuadVerts inVerts{ Meshing::Utils::verts(_mesh, _vids) };
 		const Real avgEdgeLength{ Meshing::Utils::avgEdgeLength(inVerts) };
 		const Vec faceNormal = Meshing::Utils::normal(inVerts);
-		FaceVerts outVerts;
+		QuadVerts outVerts;
 		for (const auto& [in, out] : cpputils::range::zip(inVerts, outVerts))
 		{
 			out = in + faceNormal * avgEdgeLength;
@@ -51,11 +51,11 @@ namespace HMP::Actions::ExtrudeUtils
 		return outVerts;
 	}
 
-	PolyVertIds applyFaceExtrude(const Meshing::Mesher::Mesh& _mesh, const Dag::Element& _element, I _fi, Id _firstVid, std::vector<Vec>& _newVerts)
+	HexVertIds applyFaceExtrude(const Meshing::Mesher::Mesh& _mesh, const Dag::Element& _element, I _fi, Id _firstVid, std::vector<Vec>& _newVerts)
 	{
-		const FaceVertIds faceVids{ Meshing::Utils::align(Meshing::Utils::faceVids(_element, _fi), _firstVid) };
-		const FaceVerts newVerts{ extrudeFace(_mesh, faceVids) };
-		PolyVertIds vids;
+		const QuadVertIds faceVids{ Meshing::Utils::align(Meshing::Utils::faceVids(_element, _fi), _firstVid) };
+		const QuadVerts newVerts{ extrudeFace(_mesh, faceVids) };
+		HexVertIds vids;
 		std::copy(faceVids.begin(), faceVids.end(), vids.begin());
 		const Id firstNewVid{ _mesh.num_verts() + toId(_newVerts.size()) };
 		_newVerts.insert(_newVerts.end(), newVerts.begin(), newVerts.end());
@@ -66,24 +66,24 @@ namespace HMP::Actions::ExtrudeUtils
 		return vids;
 	}
 
-	PolyVertIds applyEdgeExtrude(const Meshing::Mesher::Mesh& _mesh, const std::array<const Dag::Element*, 2>& _elements, const std::array<I, 2>& _fis, Id _firstVid, bool _clockwise, std::vector<Vec>& _newVerts)
+	HexVertIds applyEdgeExtrude(const Meshing::Mesher::Mesh& _mesh, const std::array<const Dag::Element*, 2>& _elements, const std::array<I, 2>& _fis, Id _firstVid, bool _clockwise, std::vector<Vec>& _newVerts)
 	{
-		const std::array<FaceVertIds, 2> faceVids{
+		const std::array<QuadVertIds, 2> faceVids{
 			cpputils::range::zip(_elements, _fis).map([&](const auto& _elAndFi) {
 				const auto& [element, fi] {_elAndFi};
 				return Meshing::Utils::align(Meshing::Utils::faceVids(*element, fi), _firstVid);
 			}).toArray()
 		};
-		const std::array<FaceVerts, 2> newFaceVerts{
-			cpputils::range::of(faceVids).map([&](const FaceVertIds& _vids) {
+		const std::array<QuadVerts, 2> newQuadVerts{
+			cpputils::range::of(faceVids).map([&](const QuadVertIds& _vids) {
 				return extrudeFace(_mesh, _vids);
 			}).toArray()
 		};
 		const Id firstNewVid{ _mesh.num_verts() + toId(_newVerts.size()) };
 		if (_clockwise)
 		{
-			_newVerts.push_back((newFaceVerts[0][1] + newFaceVerts[1][3]) / 2);
-			_newVerts.push_back((newFaceVerts[0][2] + newFaceVerts[1][2]) / 2);
+			_newVerts.push_back((newQuadVerts[0][1] + newQuadVerts[1][3]) / 2);
+			_newVerts.push_back((newQuadVerts[0][2] + newQuadVerts[1][2]) / 2);
 			return {
 				faceVids[0][0], faceVids[0][1], faceVids[0][2], faceVids[0][3],
 				faceVids[1][3], firstNewVid + 0, firstNewVid + 1, faceVids[1][2]
@@ -91,8 +91,8 @@ namespace HMP::Actions::ExtrudeUtils
 		}
 		else
 		{
-			_newVerts.push_back((newFaceVerts[0][2] + newFaceVerts[1][2]) / 2);
-			_newVerts.push_back((newFaceVerts[0][3] + newFaceVerts[1][1]) / 2);
+			_newVerts.push_back((newQuadVerts[0][2] + newQuadVerts[1][2]) / 2);
+			_newVerts.push_back((newQuadVerts[0][3] + newQuadVerts[1][1]) / 2);
 			return {
 				faceVids[0][0], faceVids[0][1], faceVids[0][2], faceVids[0][3],
 				faceVids[1][1], faceVids[1][2], firstNewVid + 0, firstNewVid + 1
@@ -100,21 +100,21 @@ namespace HMP::Actions::ExtrudeUtils
 		}
 	}
 
-	PolyVertIds applyVertexExtrude(const Meshing::Mesher::Mesh& _mesh, const std::array<const Dag::Element*, 3>& _elements, const std::array<I, 3>& _fis, Id _firstVid, bool _clockwise, std::vector<Vec>& _newVerts)
+	HexVertIds applyVertexExtrude(const Meshing::Mesher::Mesh& _mesh, const std::array<const Dag::Element*, 3>& _elements, const std::array<I, 3>& _fis, Id _firstVid, bool _clockwise, std::vector<Vec>& _newVerts)
 	{
-		const std::array<FaceVertIds, 3> faceVids{
+		const std::array<QuadVertIds, 3> faceVids{
 			cpputils::range::zip(_elements, _fis).map([&](const auto& _elAndFi) {
 				const auto& [element, fi] {_elAndFi};
 				return Meshing::Utils::align(Meshing::Utils::faceVids(*element, fi), _firstVid);
 			}).toArray()
 		};
-		const std::array<FaceVerts, 3> newFaceVerts{
-			cpputils::range::of(faceVids).map([&](const FaceVertIds& _vids) {
+		const std::array<QuadVerts, 3> newQuadVerts{
+			cpputils::range::of(faceVids).map([&](const QuadVertIds& _vids) {
 				return extrudeFace(_mesh, _vids);
 			}).toArray()
 		};
 		const Id newVid{ _mesh.num_verts() + toId(_newVerts.size()) };
-		_newVerts.push_back((newFaceVerts[0][2] + newFaceVerts[1][2] + newFaceVerts[2][2]) / 3);
+		_newVerts.push_back((newQuadVerts[0][2] + newQuadVerts[1][2] + newQuadVerts[2][2]) / 3);
 		if (_clockwise)
 		{
 			return {
@@ -131,7 +131,7 @@ namespace HMP::Actions::ExtrudeUtils
 		}
 	}
 
-	PolyVertIds apply(const Meshing::Mesher& _mesher, const Dag::Extrude& _extrude, std::vector<Vec>& _newVerts)
+	HexVertIds apply(const Meshing::Mesher& _mesher, const Dag::Extrude& _extrude, std::vector<Vec>& _newVerts)
 	{
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
 		const Id firstVid{ _extrude.parents.first().vids[_extrude.firstVi] };
@@ -148,10 +148,10 @@ namespace HMP::Actions::ExtrudeUtils
 		}
 	}
 
-	PolyVertIds apply(Meshing::Mesher& _mesher, const Dag::Extrude& _extrude)
+	HexVertIds apply(Meshing::Mesher& _mesher, const Dag::Extrude& _extrude)
 	{
 		std::vector<Vec> newVerts;
-		PolyVertIds vids{ apply(_mesher, _extrude, newVerts) };
+		HexVertIds vids{ apply(_mesher, _extrude, newVerts) };
 		Meshing::Utils::addVerts(_mesher, newVerts);
 		return vids;
 	}

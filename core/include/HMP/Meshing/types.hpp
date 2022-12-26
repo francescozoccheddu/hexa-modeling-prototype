@@ -24,30 +24,30 @@ namespace HMP
 	inline constexpr I toI(Id _id) { return static_cast<I>(_id); }
 
 	template<typename TData>
-	using PolyFaceData = std::array<TData, 6>;
+	using HexFaceData = std::array<TData, 6>;
 
 	template<typename TData>
-	using PolyEdgeData = std::array<TData, 12>;
+	using HexEdgeData = std::array<TData, 12>;
 
 	template<typename TData>
-	using PolyVertData = std::array<TData, 8>;
+	using HexVertData = std::array<TData, 8>;
 
 	template<typename TData>
-	using FaceVertData = std::array<TData, 4>;
+	using QuadVertData = std::array<TData, 4>;
 
 	template<typename TData>
-	using FaceEdgeData = std::array<TData, 4>;
+	using QuadEdgeData = std::array<TData, 4>;
 
 	template<typename TData>
 	using EdgeVertData = std::array<TData, 2>;
 
-	using PolyVerts = PolyVertData<Vec>;
-	using PolyVertIds = PolyVertData<Id>;
-	using PolyFaceIds = PolyFaceData<Id>;
-	using PolyEdgeIds = PolyEdgeData<Id>;
-	using FaceVerts = FaceVertData<Vec>;
-	using FaceVertIds = FaceVertData<Id>;
-	using FaceEdgeIds = FaceEdgeData<Id>;
+	using HexVerts = HexVertData<Vec>;
+	using HexVertIds = HexVertData<Id>;
+	using HexFaceIds = HexFaceData<Id>;
+	using HexEdgeIds = HexEdgeData<Id>;
+	using QuadVerts = QuadVertData<Vec>;
+	using QuadVertIds = QuadVertData<Id>;
+	using QuadEdgeIds = QuadEdgeData<Id>;
 	using EdgeVerts = EdgeVertData<Vec>;
 	using EdgeVertIds = EdgeVertData<Id>;
 

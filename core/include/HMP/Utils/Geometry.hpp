@@ -24,6 +24,6 @@ namespace HMP::Utils::Geometry
 
 	Id reflectFid(EAxis _axis, Id _fid, int _times = 1);
 
-	void sortVertices(PolyVerts& _verts);
+	void sortVertices(HexVerts& _verts);
 
 }

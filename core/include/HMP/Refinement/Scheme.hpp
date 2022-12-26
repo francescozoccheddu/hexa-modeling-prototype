@@ -15,21 +15,21 @@ namespace HMP::Refinement
 
 		const I m_gridSize;
 		const std::vector<IVec> m_verts;
-		const std::vector<PolyVertData<I>> m_polys;
+		const std::vector<HexVertData<I>> m_polys;
 
 	public:
 
-		explicit Scheme(I _gridSize, const std::vector<IVec>& _verts, const std::vector<PolyVertData<I>>& _polys);
+		explicit Scheme(I _gridSize, const std::vector<IVec>& _verts, const std::vector<HexVertData<I>>& _polys);
 
 		I gridSize() const;
 
 		const std::vector<IVec>& verts() const;
 
-		const std::vector<PolyVertData<I>>& polys() const;
+		const std::vector<HexVertData<I>>& polys() const;
 
-		std::vector<PolyVertIds> apply(const Meshing::Mesher::Mesh& _mesh, const PolyVerts& _sourceVerts, std::vector<Vec>& _newVerts) const;
+		std::vector<HexVertIds> apply(const Meshing::Mesher::Mesh& _mesh, const HexVerts& _sourceVerts, std::vector<Vec>& _newVerts) const;
 
-		std::vector<PolyVertIds> apply(Meshing::Mesher& _mesher, const PolyVerts& _sourceVerts) const;
+		std::vector<HexVertIds> apply(Meshing::Mesher& _mesher, const HexVerts& _sourceVerts) const;
 
 	};
 

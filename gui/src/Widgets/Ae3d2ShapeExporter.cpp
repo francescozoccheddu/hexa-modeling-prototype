@@ -114,7 +114,7 @@ namespace HMP::Gui::Widgets
 					{
 						file << JProp{ "polygons" } << '['; // project.keyframes[k].polygons
 						bool firstPolygon{ true };
-						for (const FaceVerts& face : m_keyframes[k].polygons)
+						for (const QuadVerts& face : m_keyframes[k].polygons)
 						{
 							if (!firstPolygon)
 							{

@@ -78,7 +78,7 @@ namespace HMP::Meshing::Utils
 		};
 	}
 
-	Id nextVidInFid(const FaceVertIds& _vids, Id _vid, bool _backwards)
+	Id nextVidInFid(const QuadVertIds& _vids, Id _vid, bool _backwards)
 	{
 		const int index{ static_cast<int>(std::distance(_vids.begin(), std::find(_vids.begin(), _vids.end(), _vid))) };
 		return _vids[(index + (_backwards ? -1 : 1)) % 4];
@@ -92,12 +92,12 @@ namespace HMP::Meshing::Utils
 		};
 	}
 
-	EdgeVertIds edgePolyVertOffsets(const Meshing::Mesher::Mesh& _mesh, Id _eid, Id _pid)
+	EdgeVertIds edgeHexVertOffsets(const Meshing::Mesher::Mesh& _mesh, Id _eid, Id _pid)
 	{
-		return edgePolyVertOffsets(_mesh, edgeVids(_mesh, _eid), _pid);
+		return edgeHexVertOffsets(_mesh, edgeVids(_mesh, _eid), _pid);
 	}
 
-	EdgeVertIds edgePolyVertOffsets(const Meshing::Mesher::Mesh& _mesh, const EdgeVertIds& _edgeVids, Id _pid)
+	EdgeVertIds edgeHexVertOffsets(const Meshing::Mesher::Mesh& _mesh, const EdgeVertIds& _edgeVids, Id _pid)
 	{
 		return {
 			_mesh.poly_vert_offset(_pid, _edgeVids[0]),
@@ -105,7 +105,7 @@ namespace HMP::Meshing::Utils
 		};
 	}
 
-	FaceVertIds pidFidVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, bool _cw)
+	QuadVertIds pidFidVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, bool _cw)
 	{
 		assert(_mesh.poly_contains_face(_pid, _fid));
 		std::vector<Id> vids{ _mesh.face_verts_id(_fid) };
@@ -116,10 +116,10 @@ namespace HMP::Meshing::Utils
 		return cpputils::range::of(vids).toArray<4>();
 	}
 
-	FaceVertIds pidFidVidsByFirstEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstEid, bool _cw)
+	QuadVertIds pidFidVidsByFirstEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstEid, bool _cw)
 	{
 		assert(_mesh.face_contains_edge(_fid, _firstEid));
-		FaceVertIds vids{ pidFidVids(_mesh, _pid, _fid, _cw) };
+		QuadVertIds vids{ pidFidVids(_mesh, _pid, _fid, _cw) };
 		while (_mesh.edge_id(vids[0], vids[1]) != _firstEid)
 		{
 			std::rotate(vids.begin(), vids.begin() + 1, vids.end());
@@ -132,10 +132,10 @@ namespace HMP::Meshing::Utils
 		return cpputils::range::of(_mesh.adj_f2e(_fid)).map([&](Id _eid) { return _mesh.edge_length(_eid);}).avg();
 	}
 
-	FaceVertIds pidFidVidsByFirstVid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstVid, bool _cw)
+	QuadVertIds pidFidVidsByFirstVid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstVid, bool _cw)
 	{
 		assert(_mesh.face_contains_vert(_fid, _firstVid));
-		FaceVertIds vids{ pidFidVids(_mesh, _pid, _fid, _cw) };
+		QuadVertIds vids{ pidFidVids(_mesh, _pid, _fid, _cw) };
 		while (vids[0] != _firstVid)
 		{
 			std::rotate(vids.begin(), vids.begin() + 1, vids.end());
@@ -153,43 +153,43 @@ namespace HMP::Meshing::Utils
 		return !isEdgeForward(pidFidVids(_mesh, _pid, _fid), _vid0, _vid1);
 	}
 
-	bool isEdgeForward(const FaceVertIds& _vids, Id _vid0, Id _vid1)
+	bool isEdgeForward(const QuadVertIds& _vids, Id _vid0, Id _vid1)
 	{
 		const I index0{ static_cast<I>(std::distance(_vids.begin(), std::find(_vids.begin(), _vids.end(), _vid0))) };
 		return _vids[(index0 + 1) % 4] == _vid1;
 	}
 
-	PolyVertIds pidVidsByForwardFidAndFirstEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _forwardUpEid)
+	HexVertIds pidVidsByForwardFidAndFirstEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _forwardUpEid)
 	{
-		const FaceVertIds forwardFaceVids{ pidFidVidsByFirstEid(_mesh, _pid, _forwardFid, _forwardUpEid, true) };
-		FaceVertIds backFaceVids{ pidFidVids(_mesh, _pid, _mesh.poly_face_opposite_to(_pid, _forwardFid), false) };
+		const QuadVertIds forwardFaceVids{ pidFidVidsByFirstEid(_mesh, _pid, _forwardFid, _forwardUpEid, true) };
+		QuadVertIds backFaceVids{ pidFidVids(_mesh, _pid, _mesh.poly_face_opposite_to(_pid, _forwardFid), false) };
 		while (_mesh.edge_id(forwardFaceVids[0], backFaceVids[0]) == noId)
 		{
 			std::rotate(backFaceVids.begin(), backFaceVids.begin() + 1, backFaceVids.end());
 		}
-		PolyVertIds vids;
+		HexVertIds vids;
 		std::copy(forwardFaceVids.begin(), forwardFaceVids.end(), vids.begin());
 		std::copy(backFaceVids.begin(), backFaceVids.end(), vids.begin() + 4);
 		return vids;
 	}
 
-	PolyVertIds pidVidsByForwardFidAndFirstVid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _firstVid)
+	HexVertIds pidVidsByForwardFidAndFirstVid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _firstVid)
 	{
-		FaceVertIds forwardFaceVids{ pidFidVidsByFirstVid(_mesh, _pid, _forwardFid, _firstVid) };
-		FaceVertIds backFaceVids{ pidFidVids(_mesh, _pid, _mesh.poly_face_opposite_to(_pid, _forwardFid), true) };
+		QuadVertIds forwardFaceVids{ pidFidVidsByFirstVid(_mesh, _pid, _forwardFid, _firstVid) };
+		QuadVertIds backFaceVids{ pidFidVids(_mesh, _pid, _mesh.poly_face_opposite_to(_pid, _forwardFid), true) };
 		while (_mesh.edge_id(forwardFaceVids[0], backFaceVids[0]) == noId)
 		{
 			std::rotate(backFaceVids.begin(), backFaceVids.begin() + 1, backFaceVids.end());
 		}
-		PolyVertIds vids;
+		HexVertIds vids;
 		std::copy(forwardFaceVids.begin(), forwardFaceVids.end(), vids.begin());
 		std::copy(backFaceVids.begin(), backFaceVids.end(), vids.begin() + 4);
 		return vids;
 	}
 
-	FaceVerts verts(const Meshing::Mesher::Mesh& _mesh, const FaceVertIds& _vids)
+	QuadVerts verts(const Meshing::Mesher::Mesh& _mesh, const QuadVertIds& _vids)
 	{
-		FaceVerts verts;
+		QuadVerts verts;
 		for (I i{}; i < 4; i++)
 		{
 			verts[i] = _mesh.vert(_vids[i]);
@@ -197,9 +197,9 @@ namespace HMP::Meshing::Utils
 		return verts;
 	}
 
-	PolyVerts verts(const Meshing::Mesher::Mesh& _mesh, const PolyVertIds& _vids)
+	HexVerts verts(const Meshing::Mesher::Mesh& _mesh, const HexVertIds& _vids)
 	{
-		PolyVerts verts;
+		HexVerts verts;
 		for (I i{}; i < 8; i++)
 		{
 			verts[i] = _mesh.vert(_vids[i]);
@@ -213,7 +213,7 @@ namespace HMP::Meshing::Utils
 		return (verts[0] + verts[1]) / 2;
 	}
 
-	Vec centroid(const PolyVerts& _verts)
+	Vec centroid(const HexVerts& _verts)
 	{
 		Vec centroid{ 0,0,0 };
 		for (const Vec& vert : _verts)
@@ -328,9 +328,9 @@ namespace HMP::Meshing::Utils
 		}
 	}
 
-	FaceVertIds faceVids(const Dag::Element& _element, I _fi)
+	QuadVertIds faceVids(const Dag::Element& _element, I _fi)
 	{
-		const PolyVertIds vids{ _element.vids };
+		const HexVertIds vids{ _element.vids };
 		switch (_fi)
 		{
 			case 0:
@@ -350,9 +350,9 @@ namespace HMP::Meshing::Utils
 		}
 	}
 
-	FaceVertIds align(const FaceVertIds& _vids, Id _firstVid, bool _reverse)
+	QuadVertIds align(const QuadVertIds& _vids, Id _firstVid, bool _reverse)
 	{
-		FaceVertIds vids{ _vids };
+		QuadVertIds vids{ _vids };
 		while (vids[0] != _firstVid)
 		{
 			std::rotate(vids.begin(), vids.begin() + 1, vids.end());
@@ -364,9 +364,9 @@ namespace HMP::Meshing::Utils
 		return vids;
 	}
 
-	PolyVertIds align(const PolyVertIds& _vids, Id _firstVid, bool _reverse)
+	HexVertIds align(const HexVertIds& _vids, Id _firstVid, bool _reverse)
 	{
-		PolyVertIds vids{ _vids };
+		HexVertIds vids{ _vids };
 		while (vids[0] != _firstVid)
 		{
 			std::rotate(vids.begin(), vids.begin() + 1, vids.begin() + 4);
@@ -379,7 +379,7 @@ namespace HMP::Meshing::Utils
 		return vids;
 	}
 
-	FaceVertIds reverse(const FaceVertIds& _vids)
+	QuadVertIds reverse(const QuadVertIds& _vids)
 	{
 		return {
 			_vids[0],
@@ -389,7 +389,7 @@ namespace HMP::Meshing::Utils
 		};
 	}
 
-	PolyVertIds reverse(const PolyVertIds& _vids)
+	HexVertIds reverse(const HexVertIds& _vids)
 	{
 		return {
 			_vids[0],
@@ -415,13 +415,13 @@ namespace HMP::Meshing::Utils
 		assert(false);
 	}
 
-	I fi(const Dag::Element& _element, const FaceVertIds& _vids)
+	I fi(const Dag::Element& _element, const QuadVertIds& _vids)
 	{
-		FaceVertIds qVids{ _vids };
+		QuadVertIds qVids{ _vids };
 		std::sort(qVids.begin(), qVids.end());
 		for (I fi{}; fi < 6; fi++)
 		{
-			FaceVertIds vids{ faceVids(_element, fi) };
+			QuadVertIds vids{ faceVids(_element, fi) };
 			std::sort(vids.begin(), vids.end());
 			if (vids == qVids)
 			{
@@ -433,7 +433,7 @@ namespace HMP::Meshing::Utils
 
 	EdgeVertIds edgeVids(const Dag::Element& _element, I _ei)
 	{
-		const PolyVertIds vids{ _element.vids };
+		const HexVertIds vids{ _element.vids };
 		switch (_ei)
 		{
 			case 0:
@@ -495,12 +495,12 @@ namespace HMP::Meshing::Utils
 		return static_cast<Id>(fid);
 	}
 
-	Vec normal(const FaceVerts& _verts)
+	Vec normal(const QuadVerts& _verts)
 	{
 		return cinolib::polygon_normal(cpputils::range::of(_verts).toVector());
 	}
 
-	Real avgEdgeLength(const FaceVerts& _verts)
+	Real avgEdgeLength(const QuadVerts& _verts)
 	{
 		Real sum{};
 		for (I i{}; i < 4; i++)

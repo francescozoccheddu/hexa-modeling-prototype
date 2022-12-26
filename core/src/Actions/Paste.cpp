@@ -15,7 +15,7 @@ namespace HMP::Actions
 
 	std::array<Vec, 3> basis(const Meshing::Mesher& _mesher, const Dag::Extrude& _extrude)
 	{
-		const PolyVerts verts{ Utils::shapeExtrude(_mesher, _extrude) };
+		const HexVerts verts{ Utils::shapeExtrude(_mesher, _extrude) };
 		std::array<I, 3> indices{ 1,4,3 };
 		if (_extrude.clockwise())
 		{
@@ -40,8 +40,8 @@ namespace HMP::Actions
 		Dag::Element& parent{ _extrude.parents()[_parentIndex] };
 		const Id parentPid{ _mesher.elementToPid(parent) };
 		const Id parentFid{ _mesher.mesh().poly_face_id(parentPid, _extrude.faceOffsets()[_parentIndex]) };
-		const FaceVerts sourceVerts{ Meshing::Utils::verts(_mesher.mesh(), Meshing::Utils::pidFidVidsByFirstVid(_mesher.mesh(), parentPid, parentFid, vid)) };
-		PolyVerts& verts{ _extrude.children().single().vertices() };
+		const QuadVerts sourceVerts{ Meshing::Utils::verts(_mesher.mesh(), Meshing::Utils::pidFidVidsByFirstVid(_mesher.mesh(), parentPid, parentFid, vid)) };
+		HexVerts& verts{ _extrude.children().single().vertices() };
 		for (const auto& [sourceVert, targetI] : cpputils::range::zip(sourceVerts, _is))
 		{
 			verts[targetI] = sourceVert;
@@ -74,8 +74,8 @@ namespace HMP::Actions
 				{
 					if (node->isElement())
 					{
-						PolyVerts& verts{ node->element().vertices() };
-						const PolyVerts oldVerts{ verts };
+						HexVerts& verts{ node->element().vertices() };
+						const HexVerts oldVerts{ verts };
 						verts[0] = oldVerts[0];
 						verts[1] = oldVerts[3];
 						verts[2] = oldVerts[2];

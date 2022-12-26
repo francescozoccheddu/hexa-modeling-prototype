@@ -513,8 +513,8 @@ namespace HMP::Gui
 			const ImVec2 center{ project(m_canvas, m_mesh.poly_centroid(pid)) };
 			for (const auto& [parent, fi] : extrude.parents.zip(extrude.fis))
 			{
-				const FaceVertIds parentFidVids{ Meshing::Utils::faceVids(parent, fi) };
-				const FaceVerts parentFidVerts{ Meshing::Utils::verts(m_mesh, parentFidVids) };
+				const QuadVertIds parentFidVids{ Meshing::Utils::faceVids(parent, fi) };
+				const QuadVerts parentFidVerts{ Meshing::Utils::verts(m_mesh, parentFidVids) };
 				const Vec parentFidCentroid{ cpputils::range::of(parentFidVerts).sum() / 4.0 };
 				const ImVec2 parentFidCenter{ project(m_canvas, parentFidCentroid) };
 				dashedLine(drawList, parentFidCenter, center, mutedColorU32, 1.5f);
@@ -525,7 +525,7 @@ namespace HMP::Gui
 			}
 			const Dag::Element& firstParent{ extrude.parents.first() };
 			const Id firstVid{ firstParent.vids[extrude.firstVi] };
-			const FaceVertIds firstParentVids{ Meshing::Utils::align(Meshing::Utils::faceVids(firstParent, extrude.fis[0]), firstVid, extrude.clockwise) };
+			const QuadVertIds firstParentVids{ Meshing::Utils::align(Meshing::Utils::faceVids(firstParent, extrude.fis[0]), firstVid, extrude.clockwise) };
 			const ImVec2 eVert1{ project(m_canvas, m_mesh.vert(firstParentVids[0])) };
 			const ImVec2 eVert2{ project(m_canvas, m_mesh.vert(firstParentVids[1])) };
 			dashedLine(drawList, eVert1, eVert2, mutedColorU32, 4.0f);
@@ -847,7 +847,7 @@ namespace HMP::Gui
 			}).toFixedVector<3>();
 			_fis = cpputils::range::zip(fids, _elements).map([&](const auto& _fidAndElement) {
 				const auto& [fid, element] {_fidAndElement};
-			const FaceVertIds vids{ cpputils::range::of(m_mesh.face_verts_id(fid)).template toArray<4>() };
+			const QuadVertIds vids{ cpputils::range::of(m_mesh.face_verts_id(fid)).template toArray<4>() };
 			return Meshing::Utils::fi(*element, vids);
 			}).toFixedVector<3>();
 			_firstVi = m_mouse.vi;

@@ -23,7 +23,7 @@ namespace HMP::Projection
 
     // surface
 
-    std::vector<Real> surfaceVertBaseWeights(const cinolib::AbstractPolygonMesh<>& _source, const Id _vid, const std::vector<std::vector<Match::SourceToTargetVid>>& _matches, const EBaseWeightMode _baseWeightMode)
+    std::vector<Real> surQuadVertBaseWeights(const cinolib::AbstractPolygonMesh<>& _source, const Id _vid, const std::vector<std::vector<Match::SourceToTargetVid>>& _matches, const EBaseWeightMode _baseWeightMode)
     {
         const std::vector<Id>& adjFids{ _source.adj_v2p(_vid) };
         std::vector<Real> weights;
@@ -55,15 +55,15 @@ namespace HMP::Projection
                 for (const Id adjFid : adjFids)
                 {
                     const Id adjFO{ _source.poly_vert_offset(adjFid, _vid) };
-                    const std::vector<Vec>& sourceFaceVerts{ _source.poly_verts(adjFid) };
+                    const std::vector<Vec>& sourceQuadVerts{ _source.poly_verts(adjFid) };
                     for (const Match::SourceToTargetVid& match : _matches[toI(adjFid)])
                     {
                         cinolib::vec4<Real> sourceFaceWeights;
                         cinolib::quad_barycentric_coords(
-                            sourceFaceVerts[0],
-                            sourceFaceVerts[1],
-                            sourceFaceVerts[2],
-                            sourceFaceVerts[3],
+                            sourceQuadVerts[0],
+                            sourceQuadVerts[1],
+                            sourceQuadVerts[2],
+                            sourceQuadVerts[3],
                             match.pos,
                             sourceFaceWeights
                         );
@@ -77,7 +77,7 @@ namespace HMP::Projection
         return weights;
     }
 
-    std::vector<Real> surfaceVertNormDistances(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const Id _vid, const std::vector<std::vector<Match::SourceToTargetVid>>& _matches)
+    std::vector<Real> surQuadVertNormDistances(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const Id _vid, const std::vector<std::vector<Match::SourceToTargetVid>>& _matches)
     {
         const std::vector<Id>& adjFids{ _source.adj_v2p(_vid) };
         std::vector<Real> weights;
@@ -106,12 +106,12 @@ namespace HMP::Projection
         return weights;
     }
 
-    std::optional<Vec> projectSurfaceVert(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const Id _vid, const std::vector<std::vector<Match::SourceToTargetVid>>& _matches, const Options& _options)
+    std::optional<Vec> projectSurQuadVert(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const Id _vid, const std::vector<std::vector<Match::SourceToTargetVid>>& _matches, const Options& _options)
     {
         const std::vector<Id>& adjFids{ _source.adj_v2p(_vid) };
         const Vec& sourceVert{ _source.vert(_vid) };
-        const std::vector<Real>& baseWeights{ surfaceVertBaseWeights(_source, _vid, _matches, _options.baseWeightMode) };
-        const std::vector<Real>& normDistances{ surfaceVertNormDistances(_source, _target, _vid, _matches) };
+        const std::vector<Real>& baseWeights{ surQuadVertBaseWeights(_source, _vid, _matches, _options.baseWeightMode) };
+        const std::vector<Real>& normDistances{ surQuadVertNormDistances(_source, _target, _vid, _matches) };
         const Vec sourceNorm{ _source.vert_data(_vid).normal };
         Vec targetVertSum{};
         Vec dirSum{};
@@ -179,7 +179,7 @@ namespace HMP::Projection
         const std::vector<std::vector<Match::SourceToTargetVid>>& matches{ Match::matchSurfaceFid(_source, _target) };
         std::vector<std::optional<Vec>> projected(toI(_source.num_verts()));
         const auto func{ [&](const Id _vid) {
-            projected[toI(_vid)] = projectSurfaceVert(_source, _target, _vid, matches, _options);
+            projected[toI(_vid)] = projectSurQuadVert(_source, _target, _vid, matches, _options);
         } };
         cinolib::PARALLEL_FOR(0, _source.num_verts(), c_minVertsForParallelFor, func);
         return fill(_source, projected, _options.unsetVertsDistWeightTweak);
