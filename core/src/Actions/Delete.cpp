@@ -13,7 +13,7 @@ namespace HMP::Actions
 	void Delete::unapply()
 	{
 		m_operation->parents.detachAll(false);
-		mesher().add_TOPM(m_element);
+		mesher().add(m_element);
 		mesher().updateMesh();
 	}
 

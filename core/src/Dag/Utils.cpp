@@ -57,10 +57,6 @@ namespace HMP::Dag::Utils
 				case Node::EType::Element:
 				{
 					const Element& element{ node->element() };
-					for (const Vec& vertex : element.vertices())
-					{
-						_serializer << vertex;
-					}
 					for (const Id vid : element.vids)
 					{
 						_serializer << vid;
@@ -141,10 +137,6 @@ namespace HMP::Dag::Utils
 				case Node::EType::Element:
 				{
 					Element& element{ *new Element{} };
-					for (Vec& vertex : element.vertices())
-					{
-						_deserializer >> vertex;
-					}
 					for (Id& vid : element.vids)
 					{
 						_deserializer >> vid;
@@ -210,34 +202,6 @@ namespace HMP::Dag::Utils
 		return *nodes[0];
 	}
 
-	void transform(Node& _root, const Mat4& _transform)
-	{
-		for (Node* node : descendants(_root))
-		{
-			if (node->isElement())
-			{
-				for (Vec& vert : node->element().vertices())
-				{
-					vert = _transform * vert;
-				}
-			}
-		}
-	}
-
-	void transform(Node& _root, const Mat3& _transform)
-	{
-		for (Node* node : descendants(_root))
-		{
-			if (node->isElement())
-			{
-				for (Vec& vert : node->element().vertices())
-				{
-					vert = _transform * vert;
-				}
-			}
-		}
-	}
-
 	Node& cloneNode(const Node& _node)
 	{
 		switch (_node.type)
@@ -246,7 +210,6 @@ namespace HMP::Dag::Utils
 			{
 				const Element& source{ _node.element() };
 				Element& clone{ *new Element{} };
-				clone.vertices() = source.vertices();
 				clone.vids = source.vids;
 				clone.pid = source.pid;
 				return clone;

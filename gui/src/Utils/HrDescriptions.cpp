@@ -134,31 +134,6 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return stream.str();
 	}
 
-	std::string describe(const std::vector<HMP::Meshing::Utils::PolyVertLoc>& _locs)
-	{
-		std::ostringstream stream{};
-		stream << "[";
-		if (!_locs.empty())
-		{
-			stream << describe(_locs[0]);
-			for (I i{ 1 }; i < _locs.size(); i++)
-			{
-				stream << "," << describe(_locs[i]);
-			}
-		}
-		stream << "]";
-		return stream.str();
-	}
-
-	std::string describe(const HMP::Meshing::Utils::PolyVertLoc _loc)
-	{
-		std::ostringstream stream{};
-		stream << (_loc.x() ? 'x' : '-');
-		stream << (_loc.y() ? 'y' : '-');
-		stream << (_loc.z() ? 'z' : '-');
-		return stream.str();
-	}
-
 	std::string describe(const HMP::Dag::Delete& _operation, const HMP::Dag::Element& _element, DagNamer& _dagNamer)
 	{
 		std::ostringstream stream{};

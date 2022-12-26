@@ -223,32 +223,6 @@ namespace HMP::Meshing::Utils
 		return centroid;
 	}
 
-	PolyVertLoc polyVertLoc(const Vec& _vert, const Vec& _centroid)
-	{
-		return PolyVertLoc{
-			_vert.x() > _centroid.x(),
-			_vert.y() > _centroid.y(),
-			_vert.z() > _centroid.z()
-		};
-	}
-
-	PolyVertIds sortVids(const Meshing::Mesher::Mesh& _mesh, const PolyVertIds& _vids)
-	{
-		PolyVertData<char> indices{};
-		for (I i{ 0 }; i < 8; i++)
-		{
-			indices[sortedPolyVertLocs[i].bits()] = static_cast<char>(i);
-		}
-		PolyVertIds sortedVids{};
-		const PolyVerts verts{ Utils::verts(_mesh, _vids) };
-		const Vec centroid(Utils::centroid(verts));
-		for (I i{ 0 }; i < 8; i++)
-		{
-			sortedVids[indices[polyVertLoc(verts[i], centroid).bits()]] = _vids[i];
-		}
-		return sortedVids;
-	}
-
 	Id closestPolyFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, const Vec& _centroid)
 	{
 		Real closestDist{ cinolib::inf_double };
@@ -324,7 +298,7 @@ namespace HMP::Meshing::Utils
 				}
 				if (active)
 				{
-					_mesher.add_TOPM(element);
+					_mesher.add(element);
 				}
 			}
 		}

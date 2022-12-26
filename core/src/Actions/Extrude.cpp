@@ -16,7 +16,7 @@ namespace HMP::Actions
 		}
 		Dag::Element& child{ m_operation->children.single() };
 		m_operation->children.single().vids = ExtrudeUtils::apply(mesher(), *m_operation);
-		mesher().add_TOPM(child);
+		mesher().add(child);
 		mesher().updateMesh();
 	}
 
