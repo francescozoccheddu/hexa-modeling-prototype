@@ -16,7 +16,7 @@ namespace HMP::Actions
 	void Transform::apply()
 	{
 		const Meshing::Mesher::Mesh& mesh{ mesher().mesh() };
-		if (m_prepared)
+		if (!m_prepared)
 		{
 			m_prepared = true;
 			if (m_vids)
