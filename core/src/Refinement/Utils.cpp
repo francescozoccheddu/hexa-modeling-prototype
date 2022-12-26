@@ -55,7 +55,7 @@ namespace HMP::Refinement::Utils
 		for (const auto& [child, vids] : cpputils::range::zip(_refine.children, polys))
 		{
 			child.vids = vids;
-			_mesher.add_TOPM(child);
+			_mesher.add(child);
 		}
 		_mesher.remove(_refine.parents.single(), false);
 	}

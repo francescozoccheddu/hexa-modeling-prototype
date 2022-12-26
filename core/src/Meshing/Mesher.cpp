@@ -277,36 +277,6 @@ namespace HMP::Meshing
 
 	void Mesher::add(Dag::Element& _element)
 	{
-		PolyVertIds vids;
-		for (I i{ 0 }; i < 8; i++)
-		{
-			vids[i] = getOrAddVert(_element.vertices()[i]);
-		}
-		_element.vids = vids;
-		_element.pid = m_mesh.num_polys();
-		onElementAdd(_element);
-		const Id pid{ m_mesh.poly_add(cpputils::range::of(vids).toVector()) };
-		m_mesh.poly_data(pid).m_element = &_element;
-		m_mesh.poly_data(pid).color = m_polyColor;
-		m_edgesPainted.resize(toI(m_mesh.num_edges()), false);
-		for (const Id eid : m_mesh.adj_p2e(pid))
-		{
-			if (!m_edgesPainted[toI(eid)])
-			{
-				m_mesh.edge_data(eid).color = m_edgeColor;
-			}
-		}
-		for (I vo{}; vo < 8; vo++)
-		{
-			_element.vertices()[vo] = m_mesh.vert(m_mesh.poly_vert_id(pid, toId(vo)));
-		}
-		m_elementToPid[&_element] = pid;
-		m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
-		onElementAdded(_element);
-	}
-
-	void Mesher::add_TOPM(Dag::Element& _element)
-	{
 		_element.pid = m_mesh.num_polys();
 		onElementAdd(_element);
 		const Id pid{ m_mesh.poly_add(cpputils::range::of(_element.vids).toVector()) };
@@ -319,10 +289,6 @@ namespace HMP::Meshing
 			{
 				m_mesh.edge_data(eid).color = m_edgeColor;
 			}
-		}
-		for (I vo{}; vo < 8; vo++)
-		{
-			_element.vertices()[vo] = m_mesh.vert(m_mesh.poly_vert_id(pid, toId(vo)));
 		}
 		m_elementToPid[&_element] = pid;
 		m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
@@ -376,10 +342,6 @@ namespace HMP::Meshing
 		if (m_mesh.vert(_vid) != _position)
 		{
 			m_mesh.vert(_vid) = _position;
-			for (const Id pid : m_mesh.adj_v2p(_vid))
-			{
-				pidToElement(pid).vertices()[m_mesh.poly_vert_offset(pid, _vid)] = _position;
-			}
 			m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
 		}
 	}

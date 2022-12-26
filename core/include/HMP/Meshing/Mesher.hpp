@@ -59,7 +59,6 @@ namespace HMP::Meshing
 	public:
 
 		void add(Dag::Element& _element);
-		void add_TOPM(Dag::Element& _element);
 
 		struct RemovedIds final
 		{
@@ -76,7 +75,6 @@ namespace HMP::Meshing
 		private:
 
 			friend void Mesher::add(Dag::Element& _element);
-			friend void Mesher::add_TOPM(Dag::Element& _element);
 
 			Dag::Element* m_element;
 
@@ -185,6 +183,7 @@ namespace HMP::Meshing
 		std::unique_ptr<cinolib::Octree> m_octree;
 
 		Id getOrAddVert(const Vec& _vert);
+		Id getVert(const Vec& _vert) const;
 
 		void updateEdgeColor(Id _eid, const cinolib::Color& _color);
 
@@ -202,8 +201,6 @@ namespace HMP::Meshing
 		cpputils::collections::Event<Mesher> onCleared;
 
 		const Mesh& mesh() const;
-
-		Id getVert(const Vec& _vert) const;
 
 		bool has(const Dag::Element& _element) const;
 		Id elementToPid(const Dag::Element& _element) const;

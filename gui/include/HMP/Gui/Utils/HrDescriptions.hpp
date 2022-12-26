@@ -31,8 +31,6 @@ namespace HMP::Gui::Utils::HrDescriptions
 	std::string describe(const std::vector<I>& _is);
 	std::string describe(const std::vector<Id>& _ids);
 	std::string describe(const std::vector<bool>& _flags);
-	std::string describe(const std::vector<HMP::Meshing::Utils::PolyVertLoc>& _locs);
-	std::string describe(const HMP::Meshing::Utils::PolyVertLoc _loc);
 	std::string describe(const HMP::Dag::Delete& _operation, const HMP::Dag::Element& _element, DagNamer& _dagNamer);
 	std::string describe(const HMP::Dag::Extrude& _operation, const cpputils::collections::FixedVector<const HMP::Dag::Element*, 3>& _elements, DagNamer& _dagNamer);
 	std::string describe(const HMP::Dag::Refine& _operation, const HMP::Dag::Element& _element, DagNamer& _dagNamer);

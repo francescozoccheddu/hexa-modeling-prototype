@@ -6,18 +6,7 @@ namespace HMP::Dag
 	Element::Element()
 		: Node{ EType::Element }, parents{ parentsHandle() }, children{ childrenHandle() }, vids{}, pid{ noId }
 	{
-		m_vertices.fill(Vec{ 0,0,0 });
 		vids.fill(noId);
-	}
-
-	PolyVerts& Element::vertices()
-	{
-		return m_vertices;
-	}
-
-	const PolyVerts& Element::vertices() const
-	{
-		return m_vertices;
 	}
 
 	Element::Set& Element::forward(bool _descending)
