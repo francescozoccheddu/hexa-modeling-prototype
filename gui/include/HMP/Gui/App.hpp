@@ -36,38 +36,6 @@ namespace HMP::Gui
 
 	private:
 
-		static constexpr float c_hue{ 0.1f };
-
-#ifdef HMP_GUI_LIGHT_THEME
-		static constexpr cinolib::Color c_warningTextColor{ cinolib::Color::hsv2rgb(0.1f, 1.0f, 0.75f) };
-		static constexpr cinolib::Color c_backgroundColor{ cinolib::Color::hsv2rgb(c_hue, 0.0f, 0.95f) };
-		static constexpr cinolib::Color c_overlayColor{ cinolib::Color::hsv2rgb(c_hue, 0.8f, 1.0f) };
-		static constexpr cinolib::Color c_mutedOverlayColor{ cinolib::Color::hsv2rgb(c_hue, 0.0f, 0.0f, 0.25f) };
-		static constexpr cinolib::Color c_faceColor{ cinolib::Color::hsv2rgb(c_hue, 0.0f, 0.75f) };
-		static constexpr cinolib::Color c_edgeColor{ cinolib::Color::hsv2rgb(c_hue, 0.0f, 0.1f) };
-		static constexpr cinolib::Color c_highlightedPolyColor{ cinolib::Color::hsv2rgb(c_hue, 0.3f, 0.85f, 0.1f) };
-		static constexpr cinolib::Color c_highlightedFaceColor{ cinolib::Color::hsv2rgb(c_hue, 0.75f, 1.0f, 0.2f) };
-		static constexpr cinolib::Color c_targetFaceColor{ cinolib::Color::hsv2rgb(c_hue, 0.0f, 0.0f, 0.1f) };
-		static constexpr cinolib::Color c_targetEdgeColor{ cinolib::Color::hsv2rgb(c_hue, 0.0f, 0.0f, 0.3f) };
-		static constexpr cinolib::Color c_dagElementColor{ cinolib::Color::hsv2rgb(c_hue, 0.0f, 0.75f) };
-		static constexpr cinolib::Color c_dagHighlightedElementColor{ cinolib::Color::hsv2rgb(c_hue, 0.8f, 1.0f) };
-		static constexpr float c_axesColorSat{ 0.9f }, c_axesColorVal{ 0.8f };
-#else
-		static constexpr cinolib::Color c_warningTextColor{ cinolib::Color::hsv2rgb(0.2f, 0.6f, 0.6f) };
-		static constexpr cinolib::Color c_backgroundColor{ cinolib::Color::hsv2rgb(c_hue, 0.0f, 0.1f) };
-		static constexpr cinolib::Color c_overlayColor{ cinolib::Color::hsv2rgb(c_hue, 0.5f, 1.0f) };
-		static constexpr cinolib::Color c_mutedOverlayColor{ cinolib::Color::hsv2rgb(c_hue, 0.0f, 1.0f, 0.25f) };
-		static constexpr cinolib::Color c_faceColor{ cinolib::Color::hsv2rgb(c_hue, 0.0f, 0.35f) };
-		static constexpr cinolib::Color c_edgeColor{ cinolib::Color::hsv2rgb(c_hue, 0.0f, 0.0f) };
-		static constexpr cinolib::Color c_highlightedPolyColor{ cinolib::Color::hsv2rgb(c_hue, 0.75f, 0.5f, 0.1f) };
-		static constexpr cinolib::Color c_highlightedFaceColor{ cinolib::Color::hsv2rgb(c_hue, 0.75f, 1.0f, 0.2f) };
-		static constexpr cinolib::Color c_targetFaceColor{ cinolib::Color::hsv2rgb(c_hue, 0.0f, 1.0f, 0.1f) };
-		static constexpr cinolib::Color c_targetEdgeColor{ cinolib::Color::hsv2rgb(c_hue, 0.0f, 1.0f, 0.3f) };
-		static constexpr cinolib::Color c_dagElementColor{ cinolib::Color::hsv2rgb(c_hue, 0.0f, 0.35f) };
-		static constexpr cinolib::Color c_dagHighlightedElementColor{ cinolib::Color::hsv2rgb(c_hue, 0.5f, 1.0f) };
-		static constexpr float c_axesColorSat{ 0.9f }, c_axesColorVal{ 0.8f };
-#endif
-
 		static constexpr cinolib::KeyBinding c_kbCancelDirectEdit{ GLFW_KEY_ESCAPE };
 		static constexpr cinolib::KeyBinding c_kbDirectTranslation{ GLFW_KEY_T };
 		static constexpr cinolib::KeyBinding c_kbDirectScale{ GLFW_KEY_S };
@@ -163,6 +131,12 @@ namespace HMP::Gui
 		Widgets::Ae3d2ShapeExporter m_ae3d2ShapeExporter;
 #endif
 
+		bool m_darkTheme;
+		float m_themeHueDeg;
+
+		// other
+		void updateTheme();
+
 		// actions
 		void onActionApplied();
 		void applyAction(Commander::Action& _action);
@@ -221,6 +195,12 @@ namespace HMP::Gui
 		void onSelectAll(bool _selected);
 
 	public:
+
+		cinolib::Color warningTextColor;
+		cinolib::Color overlayColor;
+		cinolib::Color mutedOverlayColor;
+		cinolib::Color highlightedPolyColor;
+		cinolib::Color highlightedFaceColor;
 
 		App();
 
