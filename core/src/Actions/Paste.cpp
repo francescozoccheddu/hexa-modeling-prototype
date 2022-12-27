@@ -144,7 +144,7 @@ namespace HMP::Actions
 			case 2:
 				m_operation->source = Dag::Extrude::ESource::Edge;
 				break;
-			case 4:
+			case 3:
 				m_operation->source = Dag::Extrude::ESource::Vertex;
 				break;
 			default:
