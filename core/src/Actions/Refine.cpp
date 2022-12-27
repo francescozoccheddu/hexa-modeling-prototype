@@ -1,12 +1,14 @@
 #include <HMP/Actions/Refine.hpp>
 
 #include <HMP/Refinement/Utils.hpp>
+#include <cassert>
 
 namespace HMP::Actions
 {
 
 	void Refine::apply()
 	{
+		assert(mesher().shown(m_element));
 		m_oldState = mesher().state();
 		m_operation->parents.attach(m_element);
 		Refinement::Utils::applyRecursive(mesher(), *m_operation);
@@ -15,8 +17,8 @@ namespace HMP::Actions
 
 	void Refine::unapply()
 	{
-		Refinement::Utils::unhideRecursive(mesher(), *m_operation);
 		m_operation->parents.detachAll(false);
+		mesher().show(m_element, true);
 		mesher().restore(m_oldState);
 		mesher().updateMesh();
 	}
@@ -25,6 +27,9 @@ namespace HMP::Actions
 		: m_element{ _element }, m_operation{ Refinement::Utils::prepare(_forwardFi, _firstVi, _scheme, _depth) }, m_depth{ _depth }
 	{
 		assert(_depth >= 1 && _depth <= 3);
+		assert(_forwardFi >= 0 && _forwardFi < 6);
+		assert(_firstVi >= 0 && _firstVi < 8);
+		assert(Refinement::schemes.contains(_scheme));
 	}
 
 	const Dag::Element& Refine::element() const

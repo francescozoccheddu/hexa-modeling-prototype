@@ -187,36 +187,6 @@ namespace HMP::Meshing::Utils
 		return vids;
 	}
 
-	QuadVerts verts(const Meshing::Mesher::Mesh& _mesh, const QuadVertIds& _vids)
-	{
-		QuadVerts verts;
-		for (I i{}; i < 4; i++)
-		{
-			verts[i] = _mesh.vert(_vids[i]);
-		}
-		return verts;
-	}
-
-	HexVerts verts(const Meshing::Mesher::Mesh& _mesh, const HexVertIds& _vids)
-	{
-		HexVerts verts;
-		for (I i{}; i < 8; i++)
-		{
-			verts[i] = _mesh.vert(_vids[i]);
-		}
-		return verts;
-	}
-
-	EdgeVerts verts(const Meshing::Mesher::Mesh& _mesh, const EdgeVertIds& _vids)
-	{
-		EdgeVerts verts;
-		for (I i{}; i < 2; i++)
-		{
-			verts[i] = _mesh.vert(_vids[i]);
-		}
-		return verts;
-	}
-
 	Vec midpoint(const Meshing::Mesher::Mesh& _mesh, Id _eid)
 	{
 		const std::vector<Vec> verts{ _mesh.edge_verts(_eid) };
