@@ -17,7 +17,6 @@ namespace HMP::Actions
 		cpputils::collections::FixedVector<Dag::Element*, 3> m_elements;
 		Dag::NodeHandle<Dag::Extrude> m_operation;
 		const Dag::Extrude& m_sourceOperation;
-		bool m_prepared;
 
 		void apply() override;
 

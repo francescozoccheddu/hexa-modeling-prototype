@@ -24,21 +24,19 @@ namespace HMP::Gui::Widgets
 
 		cinolib::DrawablePolygonmesh<> m_mesh;
 		const Meshing::Mesher::Mesh& m_sourceMesh;
-		bool m_visible;
 		std::string m_filename;
-		Utils::Transform m_transform;
-		cinolib::Color m_faceColor, m_edgeColor;
 		bool m_missingMeshFile;
-		std::vector<bool> m_edgesPainted;
-
-		void updateEdgeColor(Id _eid, const cinolib::Color& _color);
 
 	public:
 
+		cinolib::Color faceColor{ cinolib::Color::WHITE() }, edgeColor{ cinolib::Color::BLACK() };
+		Utils::Transform transform;
+		bool visible;
+
 		Target(const Meshing::Mesher::Mesh& _sourceMesh);
 
-		cpputils::collections::Event<Target> onMeshChanged;
-		cpputils::collections::Event<Target, const Mat4&> onApplyTransformToSource;
+		mutable cpputils::collections::Event<Target> onMeshChanged;
+		mutable cpputils::collections::Event<Target, const Mat4&> onApplyTransformToSource;
 
 		const Meshing::Mesher::Mesh& sourceMesh() const;
 
@@ -46,22 +44,6 @@ namespace HMP::Gui::Widgets
 		const cinolib::DrawablePolygonmesh<>& meshForDisplay() const;
 
 		cinolib::Polygonmesh<> meshForProjection() const;
-
-		void paintEdge(Id _eid, const cinolib::Color& _color);
-		void unpaintEdge(Id _eid);
-
-		void show(bool _visible);
-		bool visible() const;
-		bool& visible();
-
-		cinolib::Color& faceColor();
-		const cinolib::Color& faceColor() const;
-
-		cinolib::Color& edgeColor();
-		const cinolib::Color& edgeColor() const;
-
-		Utils::Transform& transform();
-		const Utils::Transform& transform() const;
 
 		void identity(bool _origin = true, bool _translation = true, bool _rotation = true, bool _scale = true);
 		void fit(bool _origin = true, bool _translation = true, bool _scale = true);

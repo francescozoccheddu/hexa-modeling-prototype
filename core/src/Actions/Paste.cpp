@@ -1,10 +1,12 @@
 #include <HMP/Actions/Paste.hpp>
 
 #include <HMP/Meshing/Utils.hpp>
+#include <HMP/Actions/ExtrudeUtils.hpp>
 #include <HMP/Dag/Utils.hpp>
 #include <array>
 #include <algorithm>
 #include <utility>
+#include <cassert>
 #include <cpputils/range/of.hpp>
 #include <cpputils/range/zip.hpp>
 
@@ -15,26 +17,36 @@ namespace HMP::Actions
 
 	std::array<Vec, 3> basis(const Meshing::Mesher& _mesher, const Dag::Extrude& _extrude)
 	{
-		const HexVerts verts{ Utils::shapeExtrude(_mesher, _extrude) };
+		std::vector<Vec> newVerts;
+		const HexVerts verts{ Meshing::Utils::verts(_mesher.mesh(), ExtrudeUtils::apply(_mesher, _extrude, newVerts)) };
 		std::array<I, 3> indices{ 1,4,3 };
-		if (_extrude.clockwise())
+		if (_extrude.clockwise)
 		{
 			std::reverse(indices.begin(), indices.end());
 		}
 		return cpputils::range::of(indices).map([&](I _i) { return (verts[_i] - verts[0]).normalized(); }).toArray();
 	}
 
-	Vec origin(const Meshing::Mesher& _mesher, const Dag::Extrude& _extrude)
+	Vec origin(const Meshing::Mesher::Mesh& _mesh, const Dag::Extrude& _extrude)
 	{
-		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
-		const Id pid{ _mesher.elementToPid(_extrude.parents().first()) };
-		const Id vid{ mesh.poly_vert_id(pid, _extrude.vertOffset()) };
-		return mesh.vert(vid);
+		Id vid{ _extrude.parents.first().vids[_extrude.firstVi] };
+		return _mesh.vert(vid);
+	}
+
+	Mat4 transformMat(const Meshing::Mesher& _mesher, const Dag::Extrude& _source, const Dag::Extrude& _target)
+	{
+		const std::array<Vec, 3> oldBasis{ basis(_mesher, _source) };
+		const std::array<Vec, 3> newBasis{ basis(_mesher, _target) };
+		const Mat3 oldToNorm{ Mat3{oldBasis[0], oldBasis[1], oldBasis[2]}.transpose() };
+		const Mat3 newToNorm{ Mat3{newBasis[0], newBasis[1], newBasis[2]}.transpose() };
+		const Mat3 oldToNew{ newToNorm.inverse() * oldToNorm };
+		const Mat4 oldToNewHom{}; // TODO
+		return Mat4::TRANS(origin(_mesher.mesh(), _target)) * oldToNewHom * Mat4::TRANS(-origin(_mesher.mesh(), _source));
 	}
 
 	void weld(const Meshing::Mesher& _mesher, Dag::Extrude& _extrude, const I _parentIndex, const std::array<I, 4>& _is)
 	{
-		Dag::Element& firstParent{ _extrude.parents().first() };
+		Dag::Element& firstParent{ _extrude.parents.first() };
 		const Id firstPid{ _mesher.elementToPid(firstParent) };
 		const Id vid{ _mesher.mesh().poly_vert_id(firstPid, _extrude.vertOffset()) };
 		Dag::Element& parent{ _extrude.parents()[_parentIndex] };
@@ -115,7 +127,7 @@ namespace HMP::Actions
 	}
 
 	Paste::Paste(const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<I, 3>& _fis, I _firstVi, bool _clockwise, const Dag::Extrude& _source)
-		: m_elements{ _elements }, m_operation{ static_cast<Dag::Extrude&>(Dag::Utils::clone(_source)) }, m_prepared{ false }, m_sourceOperation{ _source }
+		: m_elements{ _elements }, m_operation{ static_cast<Dag::Extrude&>(Dag::Utils::clone(_source)) }, m_sourceOperation{ _source }
 	{
 		m_operation->fis = _fis;
 		m_operation->clockwise = _clockwise;
@@ -131,6 +143,8 @@ namespace HMP::Actions
 			case 4:
 				m_operation->source = Dag::Extrude::ESource::Vertex;
 				break;
+			default:
+				assert(false);
 		}
 	}
 

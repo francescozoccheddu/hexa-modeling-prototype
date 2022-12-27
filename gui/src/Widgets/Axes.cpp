@@ -4,6 +4,7 @@
 #include <imgui.h>
 #include <cinolib/deg_rad.h>
 #include <cinolib/gl/glcanvas.h>
+#include <cinolib/color.h>
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <HMP/Gui/Utils/Drawing.hpp>
 #include <cmath>
@@ -46,26 +47,17 @@ namespace HMP::Gui::Widgets
 			return proj;
 		} };
 		origin = project(origin);
-#ifdef HMP_GUI_LIGHT_THEME
-#define HMP_GUI_WIDGETS_AXES_COL_VAL 240
-#define HMP_GUI_WIDGETS_AXES_COL_NVAL 100
-#else
-#define HMP_GUI_WIDGETS_AXES_COL_VAL 255
-#define HMP_GUI_WIDGETS_AXES_COL_NVAL 100
-#endif
 		std::array<std::pair<Vec, ImColor>, 3> tips{
-			std::pair<Vec, ImColor>{project(right), IM_COL32(HMP_GUI_WIDGETS_AXES_COL_VAL,HMP_GUI_WIDGETS_AXES_COL_NVAL,HMP_GUI_WIDGETS_AXES_COL_NVAL,255)},
-			std::pair<Vec, ImColor>{project(up), IM_COL32(HMP_GUI_WIDGETS_AXES_COL_NVAL,HMP_GUI_WIDGETS_AXES_COL_VAL,HMP_GUI_WIDGETS_AXES_COL_NVAL,255)},
-			std::pair<Vec, ImColor>{project(forward), IM_COL32(HMP_GUI_WIDGETS_AXES_COL_NVAL,HMP_GUI_WIDGETS_AXES_COL_NVAL,HMP_GUI_WIDGETS_AXES_COL_VAL,255)}
+			std::pair<Vec, ImColor>{project(right), Utils::Drawing::toU32(cinolib::Color::hsv2rgb(0.0f / 3.0f, colorSat, colorVal)) },
+			std::pair<Vec, ImColor>{project(up), Utils::Drawing::toU32(cinolib::Color::hsv2rgb(1.0f / 3.0f, colorSat, colorVal)) },
+			std::pair<Vec, ImColor>{project(forward), Utils::Drawing::toU32(cinolib::Color::hsv2rgb(2.0f / 3.0f, colorSat, colorVal)) }
 		};
-#undef HMP_GUI_WIDGETS_AXES_COL_VAL
-#undef HMP_GUI_WIDGETS_AXES_COL_NVAL
 		std::sort(tips.begin(), tips.end(), [](const std::pair<Vec, ImColor>& _a, const std::pair<Vec, ImColor>& _b) { return _a.first.z() > _b.first.z(); });
 		for (const auto& [tip, color] : tips)
 		{
-			Utils::Drawing::line(drawList, toImGui(origin.rem_coord()), toImGui(tip.rem_coord()), color, 3.0f);
+			Utils::Drawing::line(drawList, { toImGui(origin.rem_coord()), toImGui(tip.rem_coord()) }, color, 3.0f);
 			Utils::Drawing::circleFilled(drawList, toImGui(tip.rem_coord()), 5.0f, color);
 		}
-		}
-
 	}
+
+}

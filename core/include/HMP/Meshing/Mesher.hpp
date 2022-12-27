@@ -22,19 +22,6 @@ namespace HMP::Meshing
 	namespace Internal
 	{
 
-		struct FaceMarkerHasher final
-		{
-			I operator () (const std::pair<const Dag::Element*, Id>& _faceMarker) const
-			{
-				return std::hash<const Dag::Element*>{}(_faceMarker.first);
-			}
-		};
-
-		constexpr std::pair<const Dag::Element&, Id> faceMarkerConvert(const std::pair<const Dag::Element*, Id>& _entry)
-		{
-			return std::pair<const Dag::Element&, Id>{*_entry.first, _entry.second};
-		}
-
 		constexpr std::pair<Dag::Element&, Id> mesherEntryConvert(std::unordered_map<Dag::Element*, Id>::value_type& _entry)
 		{
 			return std::pair<Dag::Element&, Id>{*_entry.first, _entry.second};
@@ -87,118 +74,31 @@ namespace HMP::Meshing
 
 		using Mesh = cinolib::DrawableHexmesh<cinolib::Mesh_std_attributes, cinolib::Vert_std_attributes, cinolib::Edge_std_attributes, cinolib::Polygon_std_attributes, PolyAttributes>;
 
-		class PolyMarkerSet;
-		class FaceMarkerSet;
-
-		class MarkerSetBase: public cpputils::mixins::ReferenceClass
-		{
-
-		private:
-
-			friend class PolyMarkerSet;
-			friend class FaceMarkerSet;
-
-			Mesher& m_mesher;
-			bool m_dirty;
-			cinolib::Color m_color;
-
-			MarkerSetBase(Mesher& _mesher);
-
-		public:
-
-			cinolib::Color& color();
-			const cinolib::Color& color() const;
-
-			void requestUpdate();
-
-		};
-
-		class PolyMarkerSet final: public MarkerSetBase, public HMP::Utils::ConstDerefRanged<std::unordered_set<const Dag::Element*>>
-		{
-
-		private:
-
-			friend class Mesher;
-
-			using MarkerSetBase::m_dirty;
-
-			std::unordered_set<const Dag::Element*> m_data;
-
-			PolyMarkerSet(Mesher& _mesher);
-
-			void mark(const Dag::Element& _element, bool _marked);
-
-		public:
-
-			bool has(const Dag::Element& _element) const;
-			bool add(const Dag::Element& _element);
-			bool remove(const Dag::Element& _element);
-			bool clear();
-
-		};
-
-		class FaceMarkerSet final: public MarkerSetBase, public HMP::Utils::ConstMapRanged<
-			std::unordered_set < std::pair<const Dag::Element*, Id>, Internal::FaceMarkerHasher>,
-			std::pair<const Dag::Element&, Id>,
-			Internal::faceMarkerConvert
-		>
-		{
-
-		private:
-
-			friend class Mesher;
-
-			using MarkerSetBase::m_dirty;
-
-			std::unordered_set < std::pair<const Dag::Element*, Id>, Internal::FaceMarkerHasher> m_data;
-
-			FaceMarkerSet(Mesher& _mesher);
-
-			void mark(const Dag::Element& _element, Id _faceOffset, bool _marked);
-
-		public:
-
-			bool has(const Dag::Element& _element, Id _faceOffset) const;
-			bool add(const Dag::Element& _element, Id _faceOffset);
-			bool addAll(const Dag::Element& _element);
-			bool remove(const Dag::Element& _element, Id _faceOffset);
-			bool removeAll(const Dag::Element& _element);
-			bool clear();
-
-		};
-
 	private:
 
 		static constexpr Real c_maxVertDistance{ 1e-3 };
 
 		Mesh m_mesh;
 		std::unordered_map<Dag::Element*, Id> m_elementToPid;
-		FaceMarkerSet m_faceMarkerSet;
-		PolyMarkerSet m_polyMarkerSet;
 		bool m_dirty;
-		cinolib::Color m_polyColor, m_edgeColor;
 		std::vector<Id> m_visibleFaceIndices, m_visibleEdgeIndices;
-		std::vector<bool> m_edgesPainted;
 		RemovedIds m_removedIds;
 		std::unique_ptr<cinolib::Octree> m_octree;
-
-		Id getOrAddVert(const Vec& _vert);
-		Id getVert(const Vec& _vert) const;
-
-		void updateEdgeColor(Id _eid, const cinolib::Color& _color);
 
 		void updateOctree();
 
 	public:
 
+		cinolib::Color edgeColor, faceColor;
+
 		Mesher();
 
-		cpputils::collections::Event<Mesher, const Dag::Element&, const RemovedIds&> onElementRemove;
-		cpputils::collections::Event<Mesher, const Dag::Element&, const RemovedIds&> onElementRemoved;
-		cpputils::collections::Event<Mesher, const Dag::Element&> onElementAdd;
-		cpputils::collections::Event<Mesher, const Dag::Element&> onElementAdded;
-		cpputils::collections::Event<Mesher> onClear;
-		cpputils::collections::Event<Mesher> onCleared;
+		mutable cpputils::collections::Event<Mesher, const Dag::Element&, const RemovedIds&> onElementRemove;
+		mutable cpputils::collections::Event<Mesher, const Dag::Element&, const RemovedIds&> onElementRemoved;
+		mutable cpputils::collections::Event<Mesher, const Dag::Element&> onElementAdd;
+		mutable cpputils::collections::Event<Mesher, const Dag::Element&> onElementAdded;
+		mutable cpputils::collections::Event<Mesher> onClear;
+		mutable cpputils::collections::Event<Mesher> onCleared;
 
 		const Mesh& mesh() const;
 
@@ -212,25 +112,10 @@ namespace HMP::Meshing
 		void moveVert(Id _vid, const Vec& _position);
 		void clear();
 
-		void paintEdge(Id _eid, const cinolib::Color& _color);
-		void unpaintEdge(Id _eid);
-
-		PolyMarkerSet& polyMarkerSet();
-		const PolyMarkerSet& polyMarkerSet() const;
-		FaceMarkerSet& faceMarkerSet();
-		const FaceMarkerSet& faceMarkerSet() const;
-
-		cinolib::Color& polyColor();
-		const cinolib::Color& polyColor() const;
-
-		cinolib::Color& edgeColor();
-		const cinolib::Color& edgeColor() const;
-
 		void updateColors(bool _poly = true, bool _edge = true);
 
 		void updateMesh();
 		void updateMeshTemp(const std::unordered_set<Id>& _changedVids);
-		void updateMeshMarkers();
 
 		bool pick(const Vec& _from, const Vec& _dir, Id& _pid, Id& _fid, Id& _eid, Id& _vid, bool _allowBehind = false) const;
 

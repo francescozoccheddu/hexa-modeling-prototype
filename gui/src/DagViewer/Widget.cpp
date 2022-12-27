@@ -13,7 +13,9 @@
 #include <string>
 #include <string>
 #include <HMP/Gui/Utils/HrDescriptions.hpp>
+#include <HMP/Gui/Utils/Drawing.hpp>
 #include <limits>
+#include <HMP/Meshing/Utils.hpp>
 
 namespace HMP::Gui::DagViewer
 {
@@ -37,15 +39,10 @@ namespace HMP::Gui::DagViewer
 		}
 	}
 
-	Widget::Widget(const Meshing::Mesher& _mesher, cpputils::collections::Namer<const Dag::Node*>& _namer)
-		: m_center_nl{ 0.5, 0.5 }, m_windowHeight_n{ 1.0 }, m_mesher{ _mesher }, m_namer{ _namer }, cinolib::SideBarItem{ "Dag" }
+	Widget::Widget(cpputils::collections::Namer<const Dag::Node*>& _namer)
+		: m_center_nl{ 0.5, 0.5 }, m_windowHeight_n{ 1.0 }, m_namer{ _namer }, cinolib::SideBarItem{ "Dag" }
 	{
 		initFonts();
-	}
-
-	const Meshing::Mesher& Widget::mesher() const
-	{
-		return m_mesher;
 	}
 
 	const cpputils::collections::Namer<const Dag::Node*>& Widget::namer() const
@@ -185,30 +182,18 @@ namespace HMP::Gui::DagViewer
 
 		// drawing
 
-		static constexpr auto toImCol{ [](const cinolib::Color& _color) {
-			return IM_COL32(_color.r_uchar(), _color.g_uchar(), _color.b_uchar(), _color.a_uchar());
-		} };
-
 		{
-			ImDrawList* drawList = ImGui::GetWindowDrawList();
+			ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
+			const ImGuiStyle& style{ ImGui::GetStyle() };
+			const ImU32 borderColor{ ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]) };
+			const ImU32 gridColor{ ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_TableBorderLight]) };
+			const ImU32 strokeColor{ ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_PlotLines]) };
+			const ImU32 backgroundColor{ ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_PopupBg]) };
 
-#ifdef HMP_GUI_LIGHT_THEME
-			static constexpr float backgroundColorVal{ 230 };
-			static constexpr ImU32 borderColor{ IM_COL32(20, 20, 20, 255) };
-			static constexpr ImU32 gridColor{ IM_COL32(210, 210, 210, 255) };
-			static constexpr ImU32 strokeColor{ IM_COL32(60, 60, 60, 255) };
-#else
-			static constexpr float backgroundColorVal{ 40 };
-			static constexpr ImU32 borderColor{ IM_COL32(255, 255, 255, 255) };
-			static constexpr ImU32 gridColor{ IM_COL32(60, 60, 60, 255) };
-			static constexpr ImU32 strokeColor{ IM_COL32(220, 220, 220, 255) };
-#endif
-			static constexpr ImU32 backgroundColor{ IM_COL32(backgroundColorVal, backgroundColorVal, backgroundColorVal, 255) };
+			drawList.AddRectFilled(toImVec(topLeft_sw), toImVec(bottomRight_sw), backgroundColor);
+			drawList.AddRect(toImVec(topLeft_sw), toImVec(bottomRight_sw), borderColor);
 
-			drawList->AddRectFilled(toImVec(topLeft_sw), toImVec(bottomRight_sw), backgroundColor);
-			drawList->AddRect(toImVec(topLeft_sw), toImVec(bottomRight_sw), borderColor);
-
-			drawList->PushClipRect(toImVec(topLeft_sw + Vec2{ 1,1 }), toImVec(bottomRight_sw - Vec2{ 1,1 }), true);
+			drawList.PushClipRect(toImVec(topLeft_sw + Vec2{ 1,1 }), toImVec(bottomRight_sw - Vec2{ 1,1 }), true);
 			{
 				const auto ll2ss{ [&](const Vec2& _point_ll) {
 					return sw2ss(nw2sw(nl2nw(ll2nl(_point_ll))));
@@ -224,11 +209,11 @@ namespace HMP::Gui::DagViewer
 					const Vec2 origin_ss{ sw2ss(nw2sw(nl2nw(Vec2{0,1}))) };
 					for (Real x_s{ std::fmod(origin_ss.x(), gridStep_s) }; x_s <= bottomRight_sw.x(); x_s += gridStep_s)
 					{
-						drawList->AddLine(toImVec(Vec2{ x_s, topLeft_sw.y() }), toImVec(Vec2{ x_s, bottomRight_sw.y() }), gridColor);
+						drawList.AddLine(toImVec(Vec2{ x_s, topLeft_sw.y() }), toImVec(Vec2{ x_s, bottomRight_sw.y() }), gridColor);
 					}
 					for (Real y_s{ std::fmod(origin_ss.y(), gridStep_s) }; y_s <= bottomRight_sw.y(); y_s += gridStep_s)
 					{
-						drawList->AddLine(toImVec(Vec2{ topLeft_sw.x(), y_s }), toImVec(Vec2{ bottomRight_sw.x(), y_s }), gridColor);
+						drawList.AddLine(toImVec(Vec2{ topLeft_sw.x(), y_s }), toImVec(Vec2{ bottomRight_sw.x(), y_s }), gridColor);
 					}
 				}
 
@@ -236,7 +221,7 @@ namespace HMP::Gui::DagViewer
 
 				for (const auto& [lineA, lineB] : m_layout.lines())
 				{
-					drawList->AddLine(toImVec(ll2ss(lineA)), toImVec(ll2ss(lineB)), strokeColor);
+					drawList.AddLine(toImVec(ll2ss(lineA)), toImVec(ll2ss(lineB)), strokeColor);
 				}
 
 				// nodes
@@ -246,17 +231,12 @@ namespace HMP::Gui::DagViewer
 				const Vec2 nodeHalfDiag_s{ nodeRadius_s, nodeRadius_s };
 				const Vec2 copiedNodeHalfDiag_s{ copiedNodeRadius_s, copiedNodeRadius_s };
 
-				const ImU32 elementColor{ toImCol(m_mesher.polyColor()) };
-				const ImU32 inactiveElementColor{ toImCol(cinolib::Color(
-					m_mesher.polyColor().r() * 0.75f + backgroundColorVal * 0.25f,
-					m_mesher.polyColor().g() * 0.75f + backgroundColorVal * 0.25f,
-					m_mesher.polyColor().b() * 0.75f + backgroundColorVal * 0.25f,
-					m_mesher.polyColor().a())) };
-				const ImU32 highlightedElementColor{ toImCol(m_mesher.faceMarkerSet().color()) };
+				const ImU32 elementColor{ Utils::Drawing::toU32(this->elementColor) };
+				const ImU32 inactiveElementColor{ Utils::Drawing::toU32(cinolib::Color::lerp(this->elementColor, Utils::Drawing::toVec(backgroundColor), 0.5f)) };
+				const ImU32 highlightedElementColor{ Utils::Drawing::toU32(this->highlightedElementColor) };
 
 				for (const Layout::Node& node : m_layout.nodes())
 				{
-					constexpr ImU32 textColor{ backgroundColor };
 					const Vec2 center{ ll2ss(node.center()) };
 					switch (node.node().type)
 					{
@@ -265,12 +245,12 @@ namespace HMP::Gui::DagViewer
 							const Dag::Element& element{ node.node().element() };
 							const ImU32 color{ highlight == &node.node()
 								? highlightedElementColor
-								: m_mesher.has(element) ? elementColor : inactiveElementColor };
-							drawList->AddRectFilled(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), color);
-							drawList->AddRect(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), strokeColor);
+								: Meshing::Utils::isMeshed(element) ? elementColor : inactiveElementColor };
+							drawList.AddRectFilled(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), color);
+							drawList.AddRect(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), strokeColor);
 							if (&element == copied)
 							{
-								drawList->AddRect(toImVec(center - copiedNodeHalfDiag_s), toImVec(center + copiedNodeHalfDiag_s), strokeColor);
+								drawList.AddRect(toImVec(center - copiedNodeHalfDiag_s), toImVec(center + copiedNodeHalfDiag_s), strokeColor);
 							}
 						}
 						break;
@@ -290,8 +270,8 @@ namespace HMP::Gui::DagViewer
 									operationColor = IM_COL32(94, 43, 255, 255);
 									break;
 							}
-							drawList->AddCircleFilled(toImVec(center), nodeRadius_s, operationColor, circleSegments);
-							drawList->AddCircle(toImVec(center), nodeRadius_s, strokeColor, circleSegments);
+							drawList.AddCircleFilled(toImVec(center), nodeRadius_s, operationColor, circleSegments);
+							drawList.AddCircle(toImVec(center), nodeRadius_s, strokeColor, circleSegments);
 						}
 						break;
 					}
@@ -299,15 +279,10 @@ namespace HMP::Gui::DagViewer
 					const Vec2 textSize{ toVec(ImGui::CalcTextSize(text.c_str())) / ImGui::GetFontSize() };
 					const Real maxTextSize{ std::max(textSize.x(), textSize.y()) };
 					const Real fontSize{ nodeRadius_s * 1.25 / maxTextSize };
-					drawList->AddText(
-						ImGui::GetFont(),
-						static_cast<float>(fontSize),
-						toImVec(center - textSize * fontSize / 2),
-						textColor,
-						text.c_str());
+					Utils::Drawing::text(drawList, text.c_str(), toImVec(center), fontSize, backgroundColor);
 				}
 			}
-			drawList->PopClipRect();
+			drawList.PopClipRect();
 		}
 
 		ImGui::PopFont();
