@@ -4,6 +4,7 @@
 #include <cpputils/range/zip.hpp>
 #include <cpputils/range/index.hpp>
 #include <cpputils/range/enumerate.hpp>
+#include <cassert>
 
 namespace HMP::Actions
 {
@@ -31,7 +32,10 @@ namespace HMP::Actions
 
 	Extrude::Extrude(const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<I, 3>& _fis, I _firstVi, bool _clockwise)
 		: m_elements{ _elements }, m_operation{ ExtrudeUtils::prepare(_fis, _firstVi, _clockwise) }
-	{}
+	{
+		assert(_elements.size() == _fis.size());
+		assert(_firstVi >= 0 && _firstVi < 8);
+	}
 
 	Extrude::Elements Extrude::elements() const
 	{

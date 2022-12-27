@@ -3,6 +3,7 @@
 #include <HMP/Meshing/types.hpp>
 #include <HMP/Meshing/Mesher.hpp>
 #include <HMP/Dag/Element.hpp>
+#include <cpputils/range/of.hpp>
 #include <utility>
 
 namespace HMP::Meshing::Utils
@@ -33,9 +34,14 @@ namespace HMP::Meshing::Utils
 	HexVertIds pidVidsByForwardFidAndFirstEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _forwardUpEid);
 	HexVertIds pidVidsByForwardFidAndFirstVid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _firstVid);
 
-	QuadVerts verts(const Meshing::Mesher::Mesh& _mesh, const QuadVertIds& _vids);
-	HexVerts verts(const Meshing::Mesher::Mesh& _mesh, const HexVertIds& _vids);
-	EdgeVerts verts(const Meshing::Mesher::Mesh& _mesh, const EdgeVertIds& _vids);
+	template<I TSize>
+	std::array<Vec, TSize> verts(const Meshing::Mesher::Mesh& _mesh, const std::array<Id, TSize>& _vids, const std::vector<Vec>& _newVerts = {})
+	{
+		return cpputils::range::of(_vids).map([&](const Id _vid) {
+			return _vid >= _mesh.num_verts() ? _newVerts[toI(_vid - _mesh.num_verts())] : _mesh.vert(_vid);
+		}).toArray();
+	}
+
 	Vec midpoint(const Meshing::Mesher::Mesh& _mesh, Id _eid);
 	Vec centroid(const HexVerts& _verts);
 

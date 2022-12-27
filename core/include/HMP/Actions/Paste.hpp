@@ -5,6 +5,7 @@
 #include <HMP/Dag/Element.hpp>
 #include <HMP/Dag/Extrude.hpp>
 #include <cpputils/collections/FixedVector.hpp>
+#include <HMP/Meshing/Mesher.hpp>
 
 namespace HMP::Actions
 {
@@ -17,6 +18,9 @@ namespace HMP::Actions
 		cpputils::collections::FixedVector<Dag::Element*, 3> m_elements;
 		Dag::NodeHandle<Dag::Extrude> m_operation;
 		const Dag::Extrude& m_sourceOperation;
+		Meshing::Mesher::State m_oldState;
+		bool m_prepared{ false };
+		std::vector<Vec> m_newVerts;
 
 		void apply() override;
 

@@ -5,6 +5,7 @@ namespace HMP::Actions
 
 	void Delete::apply()
 	{
+		assert(mesher().shown(m_element));
 		m_operation->parents.attach(m_element);
 		mesher().show(m_element, false);
 		mesher().updateMesh();

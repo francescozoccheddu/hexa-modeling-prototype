@@ -67,26 +67,6 @@ namespace HMP::Refinement::Utils
 		}
 	}
 
-	void unhide(Meshing::Mesher& _mesher, Dag::Refine& _refine)
-	{
-		_mesher.show(_refine.parents.single(), true);
-	}
-
-	void unhideRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine)
-	{
-		for (Dag::Element& child : _refine.children)
-		{
-			for (Dag::Operation& operation : child.children)
-			{
-				if (operation.primitive == Dag::Operation::EPrimitive::Refine)
-				{
-					unhideRecursive(_mesher, static_cast<Dag::Refine&>(operation));
-				}
-			}
-		}
-		unhide(_mesher, _refine);
-	}
-
 	void Sub3x3AdapterCandidate::setup3x3Subdivide(const Meshing::Mesher& _mesher)
 	{
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };

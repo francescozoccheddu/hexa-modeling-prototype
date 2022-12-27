@@ -62,3 +62,11 @@ FetchContent_MakeAvailable (cpputils)
 # hexa-modeling-prototype
 add_subdirectory ("core")
 add_subdirectory ("gui")
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(core PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(gui PRIVATE -Wall -Wextra -Wpedantic)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    target_compile_options(core PRIVATE /W4 /WX)
+    target_compile_options(gui PRIVATE /W4 /WX)
+endif()
