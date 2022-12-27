@@ -33,6 +33,8 @@
 #include <ctime>
 #include <cstring>
 #include <cinolib/geometry/plane.h>
+#include <HMP/Gui/Utils/Theme.hpp>
+#include <cinolib/memory_usage.h>
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 #include <HMP/Gui/DagViewer/createLayout.hpp>
@@ -474,25 +476,59 @@ namespace HMP::Gui
 	{
 		// names
 		{
-			ImGui::Checkbox("Show element names", &m_options.showNames);
+			ImGui::TextDisabled("Element names");
+			ImGui::Checkbox("Show", &m_options.showNames);
 			ImGui::SameLine();
-			if (ImGui::Button("Reset names"))
+			if (ImGui::Button("Reset"))
 			{
 				m_dagNamer.reset();
 			}
 		}
-		if (ImGui::Button("Crash me!"))
+		// theme
+		ImGui::Spacing();
 		{
-			throw std::runtime_error{ "user requested crash" };
+			ImGui::TextDisabled("Theme");
+			if (ImGui::Checkbox("Dark", &m_darkTheme))
+			{
+				updateTheme();
+			}
+			if (ImGui::SliderFloat("Hue", &m_themeHueDeg, 0.0f, 360.0f, "%.0f deg", ImGuiSliderFlags_AlwaysClamp))
+			{
+				updateTheme();
+			}
+		}
+		// debug
+		ImGui::Spacing();
+		if (ImGui::TreeNode("Stats"))
+		{
+#ifdef NDEBUG
+			ImGui::TextDisabled("Release build");
+#else
+			ImGui::TextDisabled("Debug build");
+#endif
+			ImGui::TextDisabled("Date: " __DATE__);
+			ImGui::TextDisabled("Time: " __TIME__);
+			ImGui::TextDisabled("Compiler ID: " HMP_GUI_COMPILER_ID);
+			ImGui::TextDisabled("Memory usage: %dMB", static_cast<int>(cinolib::memory_usage_in_mega_bytes() + 0.5f));
+			ImGui::TextDisabled("Poly count: %u", static_cast<unsigned int>(m_mesh.num_polys()));
+			ImGui::TextDisabled("Faces count: %u", static_cast<unsigned int>(m_mesh.num_faces()));
+			ImGui::TextDisabled("Edges count: %u", static_cast<unsigned int>(m_mesh.num_edges()));
+			ImGui::TextDisabled("Vert count: %u", static_cast<unsigned int>(m_mesh.num_verts()));
+			ImGui::Spacing();
+			if (ImGui::Button("Crash me!"))
+			{
+				throw std::runtime_error{ "user requested crash" };
+			}
+			ImGui::TreePop();
 		}
 	}
 
 	void App::onDrawCustomGui()
 	{
-		const ImVec4 warningColor{ Utils::Controls::toImGui(c_warningTextColor) };
+		const ImVec4 warningColor{ Utils::Controls::toImGui(warningTextColor) };
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
 		using namespace Utils::Drawing;
-		static constexpr ImU32 colorU32{ toU32(c_overlayColor) }, mutedColorU32{ toU32(c_mutedOverlayColor) }, hPolyColorU32{ toU32(c_highlightedPolyColor) }, hFaceColorU32{ toU32(c_highlightedFaceColor) };
+		const ImU32 colorU32{ toU32(overlayColor) }, mutedColorU32{ toU32(mutedOverlayColor) }, hPolyColorU32{ toU32(highlightedPolyColor) }, hFaceColorU32{ toU32(highlightedFaceColor) };
 		if (m_copy.element && !m_mouse.element)
 		{
 			const Id cPid{ m_copy.element->pid };
@@ -559,18 +595,6 @@ namespace HMP::Gui
 			}
 			const ImVec2 hVert2d{ project(m_canvas, m_mesh.vert(m_mouse.vid)) };
 			circleFilled(drawList, hVert2d, 4.0f, colorU32);
-		}
-		else if (m_options.showNames)
-		{
-			for (Id pid{}; pid < m_mesh.num_polys(); pid++)
-			{
-				if (m_mesh.poly_is_on_surf(pid))
-				{
-					const ImVec2 pidCenter2d{ project(m_canvas, m_mesh.poly_centroid(pid)) };
-					const Dag::Element& element{ m_mesher.pidToElement(pid) };
-					text(drawList, m_dagNamer(&element).c_str(), pidCenter2d, 20.0f, mutedColorU32);
-				}
-			}
 		}
 		if (m_mouse.element)
 		{
@@ -1087,51 +1111,47 @@ namespace HMP::Gui
 		}
 	}
 
+	void App::updateTheme()
+	{
+		const Utils::Theme theme{ Utils::Theme::make(m_darkTheme, m_themeHueDeg) };
+		theme.applyImGui();
+		theme.apply(m_mesher);
+		theme.apply(m_axesWidget);
+		theme.apply(m_directVertEditWidget);
+		theme.apply(m_targetWidget);
+		theme.apply(m_vertEditWidget);
+		theme.apply(*this);
+		theme.apply(m_canvas);
+#ifdef HMP_GUI_ENABLE_DAG_VIEWER
+		theme.apply(m_dagViewerWidget);
+#endif
+	}
+
 	// launch
 
 	App::App():
 		m_project{}, m_canvas{ 700, 600, 13, 1.0f }, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() },
 		m_dagNamer{}, m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{}, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher },
-		m_directVertEditWidget{ m_vertEditWidget, m_canvas }, m_saveWidget{}, m_projectionWidget{ m_targetWidget, m_commander, m_mesher }
+		m_directVertEditWidget{ m_vertEditWidget, m_canvas }, m_saveWidget{}, m_projectionWidget{ m_targetWidget, m_commander, m_mesher },
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
-		, m_dagViewerWidget{ m_dagNamer }, m_dagViewerNeedsUpdate{ true }
+		m_dagViewerWidget{ m_dagNamer }, m_dagViewerNeedsUpdate{ true },
 #endif
 #ifdef HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER
-		, m_ae3d2ShapeExporter{ m_mesh, m_canvas.camera }
+		m_ae3d2ShapeExporter{ m_mesh, m_canvas.camera },
 #endif
+		m_darkTheme{ true }, m_themeHueDeg{ 36.0f },
+		warningTextColor{ cinolib::Color::YELLOW() }, overlayColor{ cinolib::Color::YELLOW() }, mutedOverlayColor{ cinolib::Color::GRAY() },
+		highlightedPolyColor{ cinolib::Color::PASTEL_YELLOW() }, highlightedFaceColor{ cinolib::Color::YELLOW() }
 	{
-
-		{
-#ifdef HMP_GUI_LIGHT_THEME
-			ImGui::StyleColorsLight();
-			static constexpr float styleHue{ 213.0f / 360.0f };
-#else
-			ImGui::StyleColorsDark();
-			static constexpr float styleHue{ 213.0f / 360.0f };
-#endif
-			ImGuiStyle& style{ ImGui::GetStyle() };
-			for (ImVec4& color : style.Colors)
-			{
-				float h, s, v;
-				ImGui::ColorConvertRGBtoHSV(color.x, color.y, color.z, h, s, v);
-				h += c_hue - styleHue;
-				h = static_cast<float>(Utils::Transform::wrapAngle(static_cast<Real>(h * 360.0f))) / 360.0f;
-				ImGui::ColorConvertHSVtoRGB(h, s, v, color.x, color.y, color.z);
-			}
-		}
-
 
 		glfwSetWindowTitle(m_canvas.window, "hexa-modeling-prototype");
 
-		m_canvas.background = c_backgroundColor;
 		m_canvas.key_bindings.reset_camera = GLFW_KEY_P;
 		m_canvas.key_bindings.store_camera = cinolib::KeyBindings::no_key_binding();
 		m_canvas.key_bindings.restore_camera = cinolib::KeyBindings::no_key_binding();
 
 		m_mesher.onRestored += [this](const Meshing::Mesher::State& _oldState) { onMesherRestored(_oldState); };
 		m_mesher.onElementVisibilityChanged += [this](const Dag::Element& _element, bool _visible) { onMesherElementVisibilityChanged(_element, _visible); };
-		m_mesher.faceColor = c_faceColor;
-		m_mesher.edgeColor = c_edgeColor;
 
 		onClear();
 		m_commander.applied().clear();
@@ -1160,9 +1180,6 @@ namespace HMP::Gui
 		m_canvas.push(&m_dagViewerWidget);
 #endif
 
-		m_axesWidget.colorSat = c_axesColorSat;
-		m_axesWidget.colorVal = c_axesColorVal;
-
 		m_saveWidget.onExportMesh += [this](const std::string& _filename) { onExportMesh(_filename); };
 		m_saveWidget.onSave += [this](const std::string& _filename) { onSaveState(_filename); };
 		m_saveWidget.onLoad += [this](const std::string& _filename) { onLoadState(_filename); };
@@ -1171,16 +1188,11 @@ namespace HMP::Gui
 
 		m_targetWidget.onMeshChanged += [this]() { m_canvas.refit_scene(); };
 		m_targetWidget.onApplyTransformToSource += [this](const Mat4& _transform) { onApplyTargetTransform(_transform); };
-		m_targetWidget.edgeColor = c_targetEdgeColor;
-		m_targetWidget.faceColor = c_targetFaceColor;
 
 		m_vertEditWidget.onApplyAction += [this](std::vector<Id> _vids, Mat4 _transform) { onApplyVertEdit(_vids, _transform); };
 		m_vertEditWidget.onPendingActionChanged += [this]() { onVertEditPendingActionChanged(); };
-		m_vertEditWidget.color = c_overlayColor;
 
 		m_directVertEditWidget.onPendingChanged += [this]() { updateMouse(); };
-		m_directVertEditWidget.color = c_overlayColor;
-		m_directVertEditWidget.mutedColor = c_mutedOverlayColor;
 
 		m_canvas.depth_cull_markers = false;
 		m_canvas.callback_mouse_left_click = [this](auto && ..._args) { return onMouseLeftClicked(_args ...); };
@@ -1194,11 +1206,11 @@ namespace HMP::Gui
 		m_canvas.callback_drop_files = [this](std::vector<std::string> _files) { onFilesDropped(_files); };
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
-		m_dagViewerWidget.elementColor = c_dagElementColor;
-		m_dagViewerWidget.highlightedElementColor = c_dagHighlightedElementColor;
 		m_dagViewerWidget.onDraw += [this]() { onDagViewerDraw(); };
 #endif
 		requestDagViewerUpdate();
+
+		updateTheme();
 	}
 
 	int App::launch()
