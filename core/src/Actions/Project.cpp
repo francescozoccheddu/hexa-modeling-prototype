@@ -7,7 +7,7 @@ namespace HMP::Actions
 
 	void Project::apply()
 	{
-		Meshing::Mesher& mesher{ this->mesher() };
+		/*Meshing::Mesher& mesher{ this->mesher() };
 		const Meshing::Mesher::Mesh& source{ mesher.mesh() };
 		if (!m_prepared)
 		{
@@ -34,7 +34,7 @@ namespace HMP::Actions
 			mesher.moveVert(vid, move.position);
 			move.position = oldPosition;
 		}
-		mesher.updateMesh();
+		mesher.updateMesh();*/
 	}
 
 	void Project::unapply()
@@ -43,11 +43,11 @@ namespace HMP::Actions
 	}
 
 	Project::Project(TargetMesh&& _target, const std::vector<Projection::Utils::Point>& _pointFeats, const std::vector<Projection::Utils::EidsPath>& _pathFeats, const Projection::Options& _options)
-		: m_target{ std::move(_target) }, m_vertMoves{}, m_prepared{ false }, m_options{ _options }, m_pointFeats{ _pointFeats }, m_pathFeats{ _pathFeats }
+		: m_target{ std::move(_target) }, m_prepared{ false }, m_options{ _options }, m_pointFeats{ _pointFeats }, m_pathFeats{ _pathFeats }
 	{}
 
 	Project::Project(const TargetMesh& _target, const std::vector<Projection::Utils::Point>& _pointFeats, const std::vector<Projection::Utils::EidsPath>& _pathFeats, const Projection::Options& _options)
-		: m_target{ _target }, m_vertMoves{}, m_prepared{ false }, m_options{ _options }, m_pointFeats{ _pointFeats }, m_pathFeats{ _pathFeats }
+		: m_target{ _target }, m_prepared{ false }, m_options{ _options }, m_pointFeats{ _pointFeats }, m_pathFeats{ _pathFeats }
 	{}
 
 	const Project::TargetMesh& Project::target() const

@@ -52,8 +52,9 @@ namespace HMP::Refinement
 		}
 	}
 
-	std::vector<HexVertIds> Scheme::apply(const Meshing::Mesher::Mesh& _mesh, const HexVerts& _sourceVerts, std::vector<Vec>& _newVerts) const
+	std::vector<HexVertIds> Scheme::apply(const Meshing::Mesher& _mesher, const HexVerts& _sourceVerts, std::vector<Vec>& _newVerts) const
 	{
+		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
 		std::vector<Id> vidsPool;
 		vidsPool.reserve(m_verts.size());
 		const HexVerts sourceVerts{
@@ -70,7 +71,7 @@ namespace HMP::Refinement
 		{
 			const Vec progress{ ivert.cast<Real>() / static_cast<Real>(m_gridSize) };
 			const Vec vert{ cinolib::lerp3(sourceVerts, progress) };
-			vidsPool.push_back(getOrAddVert(_mesh, vert, _newVerts));
+			vidsPool.push_back(getOrAddVert(mesh, vert, _newVerts));
 		}
 		std::vector<HexVertIds> polys;
 		polys.reserve(m_polys.size());
@@ -83,14 +84,6 @@ namespace HMP::Refinement
 			}
 			polys.push_back(polyVids);
 		}
-		return polys;
-	}
-
-	std::vector<HexVertIds> Scheme::apply(Meshing::Mesher& _mesher, const HexVerts& _sourceVerts) const
-	{
-		std::vector<Vec> newVerts;
-		const std::vector<HexVertIds> polys{ apply(_mesher.mesh(), _sourceVerts, newVerts) };
-		Meshing::Utils::addVerts(_mesher, newVerts);
 		return polys;
 	}
 

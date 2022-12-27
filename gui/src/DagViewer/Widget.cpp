@@ -245,7 +245,7 @@ namespace HMP::Gui::DagViewer
 							const Dag::Element& element{ node.node().element() };
 							const ImU32 color{ highlight == &node.node()
 								? highlightedElementColor
-								: Meshing::Utils::isMeshed(element) ? elementColor : inactiveElementColor };
+								: Meshing::Utils::isShown(element) ? elementColor : inactiveElementColor };
 							drawList.AddRectFilled(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), color);
 							drawList.AddRect(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), strokeColor);
 							if (&element == copied)

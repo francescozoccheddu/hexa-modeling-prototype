@@ -121,9 +121,11 @@ namespace HMP::Actions
 
 	void Paste::unapply()
 	{
+		/*
 		Meshing::Utils::removeLeafs(mesher(), *m_operation, true);
 		m_operation->parents.detachAll(false);
 		mesher().updateMesh();
+		*/
 	}
 
 	Paste::Paste(const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<I, 3>& _fis, I _firstVi, bool _clockwise, const Dag::Extrude& _source)

@@ -55,8 +55,6 @@ namespace HMP::Gui::Widgets
 
 		bool remove(const std::vector<Id>& _vids, bool _update = true);
 
-		bool replace(Id _oldVid, Id _newVid);
-
 		bool has(Id _vid) const;
 
 		Vids vids() const;

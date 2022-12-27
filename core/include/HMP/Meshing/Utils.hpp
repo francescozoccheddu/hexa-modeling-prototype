@@ -9,7 +9,7 @@ namespace HMP::Meshing::Utils
 {
 
 	Id anyAdjFidInPidByEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _eid);
-	Id adjFidInPidByEidAndFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _eid);
+	Id adjFidInPidByFidAndEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _eid);
 	Id adjFidInPidByVidAndFids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _vid, Id _fid1, Id _fid2);
 	Id anyAdjFidInPidByFids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid1, Id _fid2);
 	Id anyAdjFidInPidByFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid);
@@ -43,10 +43,6 @@ namespace HMP::Meshing::Utils
 	Id closestFaceEid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _midpoint);
 	Id closestFaceVid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _position);
 
-	void addVerts(Mesher& _mesher, const std::vector<Vec>& _verts);
-	void addLeafs(Mesher& _mesher, Dag::Node& _root);
-	void removeLeafs(Mesher& _mesher, Dag::Node& _root, bool _removeVerts);
-
 	QuadVertIds faceVids(const Dag::Element& _element, I _fi);
 	EdgeVertIds edgeVids(const Dag::Element& _element, I _ei);
 	I vi(const Dag::Element& _element, Id _vid);
@@ -60,10 +56,10 @@ namespace HMP::Meshing::Utils
 	Id fid(const Mesher::Mesh& _mesh, const Dag::Element& _element, I _fi);
 	Vec normal(const QuadVerts& _verts);
 	Real avgEdgeLength(const QuadVerts& _verts);
-	bool isMeshed(const Dag::Node& _node);
+	bool isShown(const Dag::Node& _node);
 	EdgeVertIds eidVids(const Mesher::Mesh& _mesh, Id _eid);
 	QuadVertIds fidVids(const Mesher::Mesh& _mesh, Id _fid);
 	HexVertIds pidVids(const Mesher::Mesh& _mesh, Id _pid);
-
+	void addTree(Mesher& _mesher, Dag::Node& _root, const std::vector<Vec>& _newVerts = {});
 
 }

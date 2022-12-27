@@ -10,20 +10,22 @@ namespace HMP::Actions
 
 	void Extrude::apply()
 	{
+		m_oldState = mesher().state();
 		for (Dag::Element* parent : m_elements)
 		{
 			m_operation->parents.attach(*parent);
 		}
 		Dag::Element& child{ m_operation->children.single() };
-		m_operation->children.single().vids = ExtrudeUtils::apply(mesher(), *m_operation);
-		mesher().add(child);
+		std::vector<Vec> newVerts;
+		child.vids = ExtrudeUtils::apply(mesher(), *m_operation, newVerts);
+		mesher().add({ &child }, newVerts);
 		mesher().updateMesh();
 	}
 
 	void Extrude::unapply()
 	{
 		m_operation->parents.detachAll(false);
-		mesher().remove(m_operation->children.single(), true);
+		mesher().restore(m_oldState);
 		mesher().updateMesh();
 	}
 

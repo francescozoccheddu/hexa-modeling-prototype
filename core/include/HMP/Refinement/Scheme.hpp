@@ -27,9 +27,7 @@ namespace HMP::Refinement
 
 		const std::vector<HexVertData<I>>& polys() const;
 
-		std::vector<HexVertIds> apply(const Meshing::Mesher::Mesh& _mesh, const HexVerts& _sourceVerts, std::vector<Vec>& _newVerts) const;
-
-		std::vector<HexVertIds> apply(Meshing::Mesher& _mesher, const HexVerts& _sourceVerts) const;
+		std::vector<HexVertIds> apply(const Meshing::Mesher& _mesher, const HexVerts& _sourceVerts, std::vector<Vec>& _newVerts) const;
 
 	};
 

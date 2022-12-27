@@ -12,6 +12,8 @@
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <HMP/Gui/Utils/Drawing.hpp>
 #include <HMP/Meshing/Utils.hpp>
+#include <unordered_set>
+#include <cpputils/range/of.hpp>
 
 namespace HMP::Gui::Widgets
 {
@@ -26,12 +28,12 @@ namespace HMP::Gui::Widgets
 				path.targetEids.clear();
 			}
 		};
-		m_mesher.onElementAdd += [this](const Dag::Element& _element) {
+		m_mesher.onAdded += [this](const Meshing::Mesher::State& _oldState) {
 			for (I i{}; i < m_paths.size(); i++)
 			{
 				for (const Id eid : m_paths[i].sourceEids)
 				{
-					if (!m_mesher.mesh().edge_is_on_srf(eid))
+					if (!m_mesher.mesh().edge_is_on_srf(eid) || !m_mesher.mesh().edge_is_visible(eid))
 					{
 						m_paths[i].sourceEids.clear();
 						break;
@@ -39,32 +41,33 @@ namespace HMP::Gui::Widgets
 				}
 			}
 		};
-		m_mesher.onElementRemove += [this](const Dag::Element& _element, const Meshing::Mesher::RemovedIds& _removedIds) {
-			Id lastEid{ m_mesher.mesh().num_edges() };
-			for (const Id removedEid : _removedIds.eids)
+		m_mesher.onElementVisibilityChanged += [this](const Dag::Element& _element, bool _visible) {
+			const std::vector<Id> removedEids{ m_mesher.mesh().poly_dangling_eids(_element.pid) };
+			const std::unordered_set<Id> removedEidsSet{ removedEids.begin(), removedEids.end() };
+			for (I i{}; i < m_paths.size(); i++)
 			{
-				lastEid--;
-				for (I i{}; i < m_paths.size(); i++)
+				for (Id& eid : m_paths[i].sourceEids)
 				{
-					for (Id& eid : m_paths[i].sourceEids)
+					if (removedEidsSet.contains(eid))
 					{
-						if (eid == lastEid)
-						{
-							eid = removedEid;
-						}
-						else if (eid == removedEid)
-						{
-							m_paths[i].sourceEids.clear();
-							break;
-						}
+						m_paths[i].sourceEids.clear();
+						break;
 					}
 				}
 			}
 		};
-		m_mesher.onClear += [this]() {
-			for (auto& path : m_paths)
+		m_mesher.onRestored += [this](const Meshing::Mesher::State& _oldState) {
+			const Id eidCount{ m_mesher.mesh().num_edges() };
+			for (I i{}; i < m_paths.size(); i++)
 			{
-				path.sourceEids.clear();
+				for (const Id eid : m_paths[i].sourceEids)
+				{
+					if (eid >= eidCount)
+					{
+						m_paths[i].sourceEids.clear();
+						break;
+					}
+				}
 			}
 		};
 	}
@@ -131,7 +134,7 @@ namespace HMP::Gui::Widgets
 		}
 		std::unordered_map<Id, Id> surf2vol, vol2surf;
 		cinolib::Polygonmesh<> sourceSurf{};
-		cinolib::export_surface(source, sourceSurf, vol2surf, surf2vol);
+		cinolib::export_surface(source, sourceSurf, vol2surf, surf2vol, false);
 		if (_fromSource)
 		{
 			for (auto& vids : from)
@@ -177,7 +180,7 @@ namespace HMP::Gui::Widgets
 				path.sourceEids.clear();
 			}
 			cinolib::Polygonmesh<> surface{};
-			cinolib::export_surface(m_mesher.mesh(), surface);
+			cinolib::export_surface(m_mesher.mesh(), surface, false);
 			cinolib::feature_network(surface, network, m_featureFinderOptions);
 		}
 		else

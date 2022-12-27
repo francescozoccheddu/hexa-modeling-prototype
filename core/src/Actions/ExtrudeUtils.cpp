@@ -148,12 +148,4 @@ namespace HMP::Actions::ExtrudeUtils
 		}
 	}
 
-	HexVertIds apply(Meshing::Mesher& _mesher, const Dag::Extrude& _extrude)
-	{
-		std::vector<Vec> newVerts;
-		HexVertIds vids{ apply(_mesher, _extrude, newVerts) };
-		Meshing::Utils::addVerts(_mesher, newVerts);
-		return vids;
-	}
-
 }

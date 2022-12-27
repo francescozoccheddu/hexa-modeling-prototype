@@ -117,42 +117,30 @@ namespace HMP::Gui
 
 	// mesher events
 
-	void App::onElementRemove(const HMP::Dag::Element& _element, const std::vector<Id>& _removedVids)
+	void App::onMesherRestored(const Meshing::Mesher::State& _state)
 	{
-		if (m_mouse.element == &_element)
+		if (m_mouse.element && m_mouse.element->pid == noId)
 		{
 			m_mouse.element = nullptr;
 		}
-		if (m_copy.element == &_element)
+		if (m_copy.element && m_copy.element->pid == noId)
 		{
 			m_copy.element = nullptr;
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 			m_dagViewerWidget.copied = nullptr;
 #endif
 		}
-		m_vertEditWidget.remove(_removedVids);
+		m_vertEditWidget.remove(m_vertEditWidget.vids().filter([&](const Id _vid) {
+			return _vid >= m_mesh.num_verts();
+		}).toVector());
 	}
 
-	void App::onElementRemoved(const HMP::Dag::Element& _element, const std::vector<Id>& _removedVids, bool _actuallyRemovedVids)
+	void App::onMesherElementVisibilityChanged(const Dag::Element& _element, bool _visible)
 	{
-		if (_actuallyRemovedVids)
+		if (!_visible)
 		{
-			Id meshVertCount{ m_mesh.num_verts() + toId(_removedVids.size()) };
-			for (const Id vid : _removedVids)
-			{
-				m_vertEditWidget.replace(--meshVertCount, vid);
-			}
+			m_vertEditWidget.remove(m_mesh.poly_dangling_vids(_element.pid));
 		}
-	}
-
-	void App::onClearElements()
-	{
-		m_mouse.element = nullptr;
-		m_copy.element = nullptr;
-#ifdef HMP_GUI_ENABLE_DAG_VIEWER
-		m_dagViewerWidget.copied = nullptr;
-#endif
-		m_vertEditWidget.clear();
 	}
 
 	// vert edit events
@@ -507,7 +495,7 @@ namespace HMP::Gui
 		static constexpr ImU32 colorU32{ toU32(c_overlayColor) }, mutedColorU32{ toU32(c_mutedOverlayColor) }, hPolyColorU32{ toU32(c_highlightedPolyColor) }, hFaceColorU32{ toU32(c_highlightedFaceColor) };
 		if (m_copy.element && !m_mouse.element)
 		{
-			const Id cPid{ m_mesher.elementToPid(*m_copy.element) };
+			const Id cPid{ m_copy.element->pid };
 			const Dag::Extrude& extrude{ m_copy.element->parents.cast<const Dag::Extrude&>().single() };
 			const ImVec2 cPidCenter2d{ project(m_canvas, m_mesh.poly_centroid(cPid)) };
 			for (const auto& [parent, fi] : extrude.parents.zip(extrude.fis))
@@ -531,10 +519,6 @@ namespace HMP::Gui
 		}
 		if (m_mouse.element)
 		{
-			const Id hPid{ m_mesher.elementToPid(*m_mouse.element) };
-			const Id hVid{ m_mouse.element->vids[m_mouse.vi] };
-			const Id hFid{ Meshing::Utils::fid(m_mesh, *m_mouse.element, m_mouse.fi) };
-			const Id hEid{ Meshing::Utils::eid(m_mesh, *m_mouse.element, m_mouse.ei) };
 			for (I i{}; i < 6; i++)
 			{
 				const I fi{ (i + 1 + m_mouse.fi) % 6 };
@@ -542,22 +526,23 @@ namespace HMP::Gui
 				const QuadVertData<ImVec2> fiVerts2d{ project(m_canvas, fiVerts) };
 				quadFilled(drawList, fiVerts2d, fi == m_mouse.fi ? hFaceColorU32 : hPolyColorU32);
 			}
-			const ImVec2 hPidCenter2d{ project(m_canvas, m_mesh.poly_centroid(hPid)) };
-			for (const Id adjPid : m_mesh.adj_p2p(hPid))
+			const ImVec2 hPidCenter2d{ project(m_canvas, m_mesh.poly_centroid(m_mouse.pid)) };
+			for (const Id adjPid : m_mesh.adj_p2p(m_mouse.pid))
 			{
-				const Id adjFid{ static_cast<Id>(m_mesh.poly_shared_face(hPid, adjPid)) };
+				const Id adjFid{ static_cast<Id>(m_mesh.poly_shared_face(m_mouse.pid, adjPid)) };
 				const ImVec2 adjFidCenter2d{ project(m_canvas, m_mesh.face_centroid(adjFid)) };
 				const ImVec2 adjPidCenter2d{ project(m_canvas, m_mesh.poly_centroid(adjPid)) };
+				const ImU32 adjColorU32{ m_mesher.shown(adjPid) ? colorU32 : mutedColorU32 };
 				if (m_options.showNames)
 				{
 					const Dag::Element& element{ m_mesher.pidToElement(adjPid) };
-					text(drawList, m_dagNamer(&element).c_str(), adjPidCenter2d, 20.0f, colorU32);
+					text(drawList, m_dagNamer(&element).c_str(), adjPidCenter2d, 20.0f, adjColorU32);
 				}
 				else
 				{
-					circle(drawList, adjPidCenter2d, 4.0f, colorU32, 1.5f);
+					circle(drawList, adjPidCenter2d, 4.0f, adjColorU32, 1.5f);
 				}
-				dashedLine(drawList, { adjFidCenter2d, hPidCenter2d }, colorU32, 1.5f);
+				dashedLine(drawList, { adjFidCenter2d, hPidCenter2d }, adjColorU32, 1.5f);
 			}
 			if (m_options.showNames)
 			{
@@ -567,12 +552,12 @@ namespace HMP::Gui
 			{
 				circle(drawList, hPidCenter2d, 4.0f, colorU32, 1.5f);
 			}
-			for (const Id adjEid : m_mesh.adj_f2e(hFid))
+			for (const Id adjEid : m_mesh.adj_f2e(m_mouse.fid))
 			{
 				const EdgeVertData<ImVec2> adjEid2d{ project(m_canvas, Meshing::Utils::verts(m_mesh, Meshing::Utils::eidVids(m_mesh, adjEid))) };
-				dashedLine(drawList, adjEid2d, adjEid == hEid ? colorU32 : mutedColorU32, 4.0f);
+				dashedLine(drawList, adjEid2d, adjEid == m_mouse.eid ? colorU32 : mutedColorU32, 4.0f);
 			}
-			const ImVec2 hVert2d{ project(m_canvas, m_mesh.vert(hVid)) };
+			const ImVec2 hVert2d{ project(m_canvas, m_mesh.vert(m_mouse.vid)) };
 			circleFilled(drawList, hVert2d, 4.0f, colorU32);
 		}
 		else if (m_options.showNames)
@@ -661,14 +646,13 @@ namespace HMP::Gui
 		m_mouse.element = nullptr;
 		if (!m_directVertEditWidget.pending())
 		{
-			Id pid, fid, eid, vid;
 			const cinolib::Ray ray{ m_canvas.eye_to_mouse_ray() };
-			if (m_mesher.pick(ray.begin(), ray.dir(), pid, fid, eid, vid, !m_canvas.camera.projection.perspective))
+			if (m_mesher.pick(ray.begin(), ray.dir(), m_mouse.pid, m_mouse.fid, m_mouse.eid, m_mouse.vid, !m_canvas.camera.projection.perspective))
 			{
-				m_mouse.element = &m_mesher.pidToElement(pid);
-				m_mouse.fi = Meshing::Utils::fi(*m_mouse.element, Meshing::Utils::fidVids(m_mesh, fid));
-				m_mouse.ei = Meshing::Utils::ei(*m_mouse.element, Meshing::Utils::eidVids(m_mesh, eid));
-				m_mouse.vi = Meshing::Utils::vi(*m_mouse.element, vid);
+				m_mouse.element = &m_mesher.pidToElement(m_mouse.pid);
+				m_mouse.fi = Meshing::Utils::fi(*m_mouse.element, Meshing::Utils::fidVids(m_mesh, m_mouse.fid));
+				m_mouse.ei = Meshing::Utils::ei(*m_mouse.element, Meshing::Utils::eidVids(m_mesh, m_mouse.eid));
+				m_mouse.vi = Meshing::Utils::vi(*m_mouse.element, m_mouse.vid);
 			}
 		}
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
@@ -686,8 +670,9 @@ namespace HMP::Gui
 	{
 		std::ostringstream ss{};
 		ss << "---- Elements\n";
-		for (const auto& [element, pid] : m_mesher)
+		for (Id pid{}; pid < m_mesh.num_polys(); pid++)
 		{
+			const Dag::Element& element{ m_mesher.pidToElement(pid) };
 			ss
 				<< "name: " << m_dagNamer.nameOrUnknown(&element)
 				<< " pid: " << pid
@@ -753,10 +738,10 @@ namespace HMP::Gui
 		cpputils::collections::FixedVector<Id, 3> pids, fids;
 		if (m_mouse.element)
 		{
-			pids.addLast(m_mesher.elementToPid(*m_mouse.element));
-			fids.addLast(Meshing::Utils::fid(m_mesh, *m_mouse.element, m_mouse.fi));
-			const Id commVid{ m_mouse.element->vids[m_mouse.vi] };
-			const Id firstEid{ Meshing::Utils::eid(m_mesh, *m_mouse.element, m_mouse.ei) };
+			pids.addLast(m_mouse.pid);
+			fids.addLast(m_mouse.fid);
+			const Id commVid{ m_mouse.vid };
+			const Id firstEid{ m_mouse.eid };
 			if (_source != Dag::Extrude::ESource::Face)
 			{
 				const cinolib::Plane firstPlane{
@@ -869,7 +854,7 @@ namespace HMP::Gui
 		const I vi{ Meshing::Utils::vi(element, vids[0]) };
 		Actions::Extrude& action{ *new Actions::Extrude{ {&element}, {fi}, vi, false } };
 		applyAction(action);
-		const Id newPid{ m_mesher.elementToPid(action.operation().children.single()) };
+		const Id newPid{ action.operation().children.single().pid };
 		const Id newFid{ m_mesh.poly_face_opposite_to(newPid, fid) };
 		m_vertEditWidget.clear();
 		m_vertEditWidget.add(m_mesh.face_verts_id(newFid));
@@ -1021,30 +1006,26 @@ namespace HMP::Gui
 	{
 		if (m_mouse.element)
 		{
-			const Id pid{ m_mesher.elementToPid(*m_mouse.element) };
-			const Id vid{ m_mouse.element->vids[m_mouse.vi] };
-			const Id fid{ Meshing::Utils::fid(m_mesh, *m_mouse.element, m_mouse.fi) };
-			const Id eid{ Meshing::Utils::fid(m_mesh, *m_mouse.element, m_mouse.ei) };
 			std::vector<Id> vids{};
 			switch (_source)
 			{
 				case ESelectionSource::Vertex:
-					vids = { vid };
+					vids = { m_mouse.vid };
 					break;
 				case ESelectionSource::Edge:
-					vids = m_mesh.edge_vert_ids(eid);
+					vids = m_mesh.edge_vert_ids(m_mouse.eid);
 					break;
 				case ESelectionSource::Face:
-					vids = m_mesh.face_verts_id(fid);
+					vids = m_mesh.face_verts_id(m_mouse.fid);
 					break;
 				case ESelectionSource::UpFace:
-					vids = m_mesh.face_verts_id(Meshing::Utils::adjFidInPidByEidAndFid(m_mesh, pid, fid, eid));
+					vids = m_mesh.face_verts_id(Meshing::Utils::adjFidInPidByFidAndEid(m_mesh, m_mouse.pid, m_mouse.fid, m_mouse.eid));
 					break;
 				case ESelectionSource::UpEdge:
-					vids = { vid, m_mesh.poly_vert_opposite_to(pid, fid, vid) };
+					vids = { m_mouse.vid, m_mesh.poly_vert_opposite_to(m_mouse.pid, m_mouse.fid, m_mouse.vid) };
 					break;
 				case ESelectionSource::Poly:
-					vids = m_mesh.poly_verts_id(pid);
+					vids = m_mesh.poly_verts_id(m_mouse.pid);
 					break;
 			}
 			if (_mode == ESelectionMode::Set)
@@ -1148,9 +1129,8 @@ namespace HMP::Gui
 		m_canvas.key_bindings.store_camera = cinolib::KeyBindings::no_key_binding();
 		m_canvas.key_bindings.restore_camera = cinolib::KeyBindings::no_key_binding();
 
-		m_mesher.onElementRemove += [this](const HMP::Dag::Element& _element, const Meshing::Mesher::RemovedIds& _removedIds) { onElementRemove(_element, _removedIds.vids); };
-		m_mesher.onElementRemoved += [this](const HMP::Dag::Element& _element, const Meshing::Mesher::RemovedIds& _removedIds) { onElementRemoved(_element, _removedIds.vids, _removedIds.vidsActuallyRemoved); };
-		m_mesher.onClear += [this]() { onClearElements(); };
+		m_mesher.onRestored += [this](const Meshing::Mesher::State& _oldState) { onMesherRestored(_oldState); };
+		m_mesher.onElementVisibilityChanged += [this](const Dag::Element& _element, bool _visible) { onMesherElementVisibilityChanged(_element, _visible); };
 		m_mesher.faceColor = c_faceColor;
 		m_mesher.edgeColor = c_edgeColor;
 

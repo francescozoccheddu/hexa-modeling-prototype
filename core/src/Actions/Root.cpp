@@ -8,12 +8,11 @@ namespace HMP::Actions
 
 	void Root::apply()
 	{
-		std::vector<Vec> oldVerts{ mesher().mesh().vector_verts() };
+		std::vector<Vec> verts{ mesher().mesh().vector_verts() };
 		std::swap(m_otherRoot, root());
-		mesher().clear();
-		Meshing::Utils::addVerts(mesher(), m_otherVerts);
-		m_otherVerts.swap(oldVerts);
-		Meshing::Utils::addLeafs(mesher(), *root());
+		m_otherVerts.swap(verts);
+		mesher().restore({});
+		Meshing::Utils::addTree(mesher(), *root(), verts);
 		mesher().updateMesh();
 	}
 

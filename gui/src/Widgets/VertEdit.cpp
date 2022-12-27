@@ -75,18 +75,6 @@ namespace HMP::Gui::Widgets
 		return false;
 	}
 
-	bool VertEdit::replace(Id _oldVid, Id _newVid)
-	{
-		auto node = m_verts.extract(_oldVid);
-		if (!node.empty())
-		{
-			node.key() = _newVid;
-			m_verts.insert(std::move(node));
-			return true;
-		}
-		return false;
-	}
-
 	bool VertEdit::has(Id _vid) const
 	{
 		return m_verts.contains(_vid);
