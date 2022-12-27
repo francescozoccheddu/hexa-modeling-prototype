@@ -23,6 +23,7 @@ namespace HMP::Meshing
 		m_mesh.show_mesh_flat();
 		m_mesh.show_marked_face(true);
 		m_mesh.show_out_wireframe_width(2.0f);
+		m_mesh.show_in_wireframe_width(2.0f);
 		updateColors();
 	}
 
@@ -291,7 +292,7 @@ namespace HMP::Meshing
 		if (_allowBehind ? m_octree.intersects_line(_from, _normDir, minT, _fid) : m_octree.intersects_ray(_from, _normDir, minT, _fid))
 		{
 			const Vec point{ _from + _normDir * minT };
-			_pid = m_mesh.adj_f2p(_fid)[0];
+			assert(m_mesh.face_is_visible(_fid, _pid));
 			_eid = Meshing::Utils::closestFaceEid(m_mesh, _fid, point);
 			_vid = Meshing::Utils::closestFaceVid(m_mesh, _fid, point);
 			return true;
