@@ -9,7 +9,7 @@
 namespace HMP::Gui::Widgets
 {
 
-    class Save final : public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
+    class Save final: public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
     {
 
     private:
@@ -33,7 +33,7 @@ namespace HMP::Gui::Widgets
         void requestSaveNew();
 
         void requestLoad();
-        
+
         void requestLoad(const std::string& _filename);
 
         void requestExportMesh();

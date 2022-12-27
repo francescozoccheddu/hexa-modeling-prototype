@@ -52,10 +52,10 @@ namespace HMP::Dag
 			template<typename>
 			friend class Dag::NodeSet;
 
+			NodeSetData& m_data;
 			const std::function<bool(Node&)> m_onAttach;
 			const std::function<bool(Node&, bool)> m_onDetach;
 			const std::function<bool(bool)> m_onDetachAll;
-			NodeSetData& m_data;
 
 			NodeSetHandle(Internal::NodeSetData& _data, std::function<bool(Node&)> _onAttach, std::function<bool(Node&, bool)> _onDetach, std::function<bool(bool)> _onDetachAll);
 

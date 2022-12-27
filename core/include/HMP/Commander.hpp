@@ -115,7 +115,7 @@ namespace HMP
 	private:
 
 		Project& m_project;
-		Stack m_unapplied{}, m_applied{};
+		Stack m_applied, m_unapplied;
 
 	public:
 
@@ -135,6 +135,7 @@ namespace HMP
 
 		Stack& applied();
 		const Stack& applied() const;
+
 
 	};
 

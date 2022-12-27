@@ -20,10 +20,10 @@ namespace HMP::Actions
 	private:
 
 		const TargetMesh m_target;
-		bool m_prepared;
 		const std::vector<Projection::Utils::Point> m_pointFeats;
 		const std::vector<Projection::Utils::EidsPath> m_pathFeats;
 		const Projection::Options m_options;
+		bool m_prepared;
 
 		void apply() override;
 		void unapply() override;

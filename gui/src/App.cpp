@@ -117,7 +117,7 @@ namespace HMP::Gui
 
 	// mesher events
 
-	void App::onMesherRestored(const Meshing::Mesher::State& _state)
+	void App::onMesherRestored(const Meshing::Mesher::State&)
 	{
 		if (m_mouse.element && m_mouse.element->pid == noId)
 		{
@@ -205,7 +205,7 @@ namespace HMP::Gui
 		updateMouse();
 	}
 
-	bool App::onMouseLeftClicked(int _modifiers)
+	bool App::onMouseLeftClicked(int)
 	{
 		if (m_directVertEditWidget.pending())
 		{
@@ -215,7 +215,7 @@ namespace HMP::Gui
 		return false;
 	}
 
-	bool App::onMouseRightClicked(int _modifiers)
+	bool App::onMouseRightClicked(int)
 	{
 		if (m_directVertEditWidget.pending())
 		{
@@ -642,7 +642,6 @@ namespace HMP::Gui
 
 	void App::updateMouse()
 	{
-		HMP::Dag::Element* const lastElement{ m_mouse.element };
 		m_mouse.element = nullptr;
 		if (!m_directVertEditWidget.pending())
 		{
@@ -758,7 +757,7 @@ namespace HMP::Gui
 						if (fids.size() == 2)
 						{
 							const auto edgeVec{ [&](const Id _pid, const Id _fid) {
-								return m_mesh.edge_vec(m_mesh.edge_id(commVid, m_mesh.poly_vert_opposite_to(_pid, _fid, commVid)), true);
+								return m_mesh.edge_vec(static_cast<Id>(m_mesh.edge_id(commVid, m_mesh.poly_vert_opposite_to(_pid, _fid, commVid))), true);
 							} };
 							const Vec firstEdge{ edgeVec(pids[0], fids[0]) };
 							const Vec currSecondEdge{ edgeVec(pids[1], fids[1]) };
@@ -1072,7 +1071,7 @@ namespace HMP::Gui
 	{
 		static const std::unordered_set<std::string> targetMeshExts{ ".off", ".obj", ".stl" }, projectExts{ ".hmp" };
 		std::string ext{ std::filesystem::path{_file}.extension().string() };
-		for (char& c : ext) c = std::tolower(c);
+		for (char& c : ext) c = static_cast<char>(std::tolower(c));
 		if (projectExts.contains(ext))
 		{
 			m_saveWidget.requestLoad(_file);
@@ -1188,7 +1187,7 @@ namespace HMP::Gui
 		m_canvas.callback_mouse_right_click = [this](auto && ..._args) { return onMouseRightClicked(_args ...); };
 		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMoved(_args...); };
 		m_canvas.callback_key_pressed = [this](auto && ..._args) { return onKeyPressed(_args...); };
-		m_canvas.callback_key_event = [this](auto && ..._args) { updateMouse(); };
+		m_canvas.callback_key_event = [this](auto && ...) { updateMouse(); };
 		m_canvas.callback_app_controls = [this](auto && ..._args) { return onDrawControls(_args ...); };
 		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChanged(_args...); };
 		m_canvas.callback_custom_gui = [this](auto && ..._args) { return onDrawCustomGui(_args...); };
@@ -1232,5 +1231,6 @@ namespace HMP::Gui
 			throw;
 		}
 	}
+
 
 }

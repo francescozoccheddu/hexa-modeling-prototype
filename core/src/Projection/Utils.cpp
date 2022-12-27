@@ -45,13 +45,13 @@ namespace HMP::Projection::Utils
     Id SurfaceExporter::toSurfEid(Id _volEid) const
     {
         const Id volVid0{ vol.edge_vert_id(_volEid, 0) }, volVid1{ vol.edge_vert_id(_volEid, 1) };
-        return surf.edge_id(toSurfVid(volVid0), toSurfVid(volVid1));
+        return static_cast<Id>(surf.edge_id(toSurfVid(volVid0), toSurfVid(volVid1)));
     }
 
     Id SurfaceExporter::toVolEid(Id _surfEid) const
     {
         const Id surfVid0{ surf.edge_vert_id(_surfEid, 0) }, surfVid1{ surf.edge_vert_id(_surfEid, 1) };
-        return vol.edge_id(toVolVid(surfVid0), toVolVid(surfVid1));
+        return static_cast<Id>(vol.edge_id(toVolVid(surfVid0), toVolVid(surfVid1)));
     }
 
     std::vector<Id> SurfaceExporter::onSurfVolVids() const

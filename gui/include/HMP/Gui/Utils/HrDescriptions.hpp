@@ -43,9 +43,9 @@ namespace HMP::Gui::Utils::HrDescriptions
 	std::string describe(const Actions::Root& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::MakeConforming& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::Paste& _action, DagNamer& _dagNamer);
-	std::string describe(const Actions::Project& _action, DagNamer& _dagNamer);
+	std::string describe(const Actions::Project& _action);
 	std::string describe(const Actions::Refine& _action, DagNamer& _dagNamer);
-	std::string describe(const Actions::Transform& _action, DagNamer& _dagNamer);
+	std::string describe(const Actions::Transform& _action);
 	std::string describe(const Commander::Action& _action, DagNamer& _dagNamer);
 
 }

@@ -17,16 +17,10 @@ namespace HMP::Actions
 
 	MakeConforming::RefinementMap MakeConforming::findStandardRefinements(const std::set<Refinement::EScheme>& _schemes)
 	{
-		Meshing::Mesher& mesher{ this->mesher() };
 		std::unordered_map<EScheme, std::vector<Dag::Refine*>> standardRefines{};
-		// find standard subdivide3x3 and inset refinements
-		constexpr static std::array schemesToFind{
-			EScheme::Subdivide3x3,
-			EScheme::Inset,
-		};
 		// map scheme -> refinements
-		standardRefines.reserve(schemesToFind.size());
-		for (EScheme scheme : schemesToFind)
+		standardRefines.reserve(_schemes.size());
+		for (EScheme scheme : _schemes)
 		{
 			standardRefines.insert({ scheme, {} });
 		}
@@ -42,7 +36,6 @@ namespace HMP::Actions
 					mapIt->second.push_back(&refine);
 				}
 			}
-		nextRefine:;
 		}
 		return standardRefines;
 	}
@@ -66,7 +59,7 @@ namespace HMP::Actions
 				{
 					continue;
 				}
-				const Id sharedFid = mesh.poly_shared_face(refPid, candPid);
+				const Id sharedFid = static_cast<Id>(mesh.poly_shared_face(refPid, candPid));
 				// skip if they do not share a face
 				if (sharedFid == noId)
 				{
@@ -96,7 +89,6 @@ namespace HMP::Actions
 	void MakeConforming::installSubdivide3x3Adapters(std::vector<Dag::Refine*>& _sub3x3s)
 	{
 		Meshing::Mesher& mesher{ this->mesher() };
-		const Meshing::Mesher::Mesh& mesh{ mesher.mesh() };
 		bool didSomething{ false };
 		do
 		{
@@ -112,7 +104,7 @@ namespace HMP::Actions
 			{
 				// prepare and apply its refinement
 				const Refinement::Utils::Sub3x3AdapterCandidate candidate{ set.pop() };
-				Dag::Refine& adapterRefine{ candidate.prepareAdapter(mesher) };
+				Dag::Refine& adapterRefine{ candidate.prepareAdapter() };
 				adapterRefine.parents.attach(candidate.element());
 				Refinement::Utils::apply(mesher, adapterRefine);
 				m_operations.push_back({ &adapterRefine, &candidate.element() });

@@ -32,7 +32,7 @@ namespace HMP::Gui::DagViewer
 			builder.AddText("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-?");
 			builder.BuildRanges(&ranges);
 			ImFontConfig config{};
-			io.Fonts->AddFontFromMemoryCompressedTTF(cinolib::droid_sans_data, cinolib::droid_sans_size, c_minFontSize, &config, ranges.Data);
+			io.Fonts->AddFontFromMemoryCompressedTTF(cinolib::droid_sans_data, static_cast<int>(cinolib::droid_sans_size), c_minFontSize, &config, ranges.Data);
 			io.Fonts->Build();
 			ImGui_ImplOpenGL2_DestroyFontsTexture();
 			ImGui_ImplOpenGL2_CreateFontsTexture();
@@ -40,7 +40,7 @@ namespace HMP::Gui::DagViewer
 	}
 
 	Widget::Widget(cpputils::collections::Namer<const Dag::Node*>& _namer)
-		: m_center_nl{ 0.5, 0.5 }, m_windowHeight_n{ 1.0 }, m_namer{ _namer }, cinolib::SideBarItem{ "Dag" }
+		: cinolib::SideBarItem{ "Dag" }, m_namer{ _namer }, m_center_nl{ 0.5, 0.5 }, m_windowHeight_n{ 1.0 }
 	{
 		initFonts();
 	}
@@ -128,9 +128,9 @@ namespace HMP::Gui::DagViewer
 			return (_point_nl - m_center_nl) / m_windowHeight_n + Vec2{windowAspectRatio, 1} / 2;
 		} };
 
-		const auto nl2ll{ [&](const Vec2& _point_nl) {
+		/*const auto nl2ll{ [&](const Vec2& _point_nl) {
 			return _point_nl * n2l + m_layout.bottomLeft();
-		} };
+		} };*/
 
 		const auto ll2nl{ [&](const Vec2& _point_ll) {
 			return (_point_ll - m_layout.bottomLeft()) * l2n;
@@ -279,7 +279,7 @@ namespace HMP::Gui::DagViewer
 					const Vec2 textSize{ toVec(ImGui::CalcTextSize(text.c_str())) / ImGui::GetFontSize() };
 					const Real maxTextSize{ std::max(textSize.x(), textSize.y()) };
 					const Real fontSize{ nodeRadius_s * 1.25 / maxTextSize };
-					Utils::Drawing::text(drawList, text.c_str(), toImVec(center), fontSize, backgroundColor);
+					Utils::Drawing::text(drawList, text.c_str(), toImVec(center), static_cast<float>(fontSize), backgroundColor);
 				}
 			}
 			drawList.PopClipRect();

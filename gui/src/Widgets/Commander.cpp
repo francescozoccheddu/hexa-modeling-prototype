@@ -12,7 +12,7 @@ namespace HMP::Gui::Widgets
 {
 
 	Commander::Commander(HMP::Commander& _commander, Utils::HrDescriptions::DagNamer& _dagNamer, const VertEdit& _vertEdit)
-		: m_commander{ _commander }, m_dagNamer{ _dagNamer }, m_vertEdit{ _vertEdit }, cinolib::SideBarItem{ "Commander" }
+		: cinolib::SideBarItem{ "Commander" }, m_commander{ _commander }, m_dagNamer{ _dagNamer }, m_vertEdit{ _vertEdit }
 	{}
 
 	const VertEdit& Commander::vertEdit() const
@@ -45,7 +45,7 @@ namespace HMP::Gui::Widgets
 		constexpr auto actionsControl{ [](HMP::Commander::Stack& _stack, const std::string& _name) {
 			int limit{ static_cast<int>(_stack.limit()) };
 			ImGui::SliderInt((_name + " limit").c_str(), &limit, 0, 100, "Max %d actions", ImGuiSliderFlags_AlwaysClamp);
-			_stack.limit(limit);
+			_stack.limit(static_cast<I>(limit));
 			if (!_stack.empty())
 			{
 				ImGui::SameLine();

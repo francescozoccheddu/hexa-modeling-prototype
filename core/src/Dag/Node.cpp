@@ -6,8 +6,9 @@ namespace HMP::Dag
 {
 
 	Node::Node(EType _type):
-		type{ _type },
 		m_parentsImpl{}, m_childrenImpl{},
+		m_handles{ 0 },
+		type{ _type },
 		parents{
 			m_parentsImpl,
 			[this](auto && ..._args) { return onParentAttach(_args...); },
@@ -19,8 +20,7 @@ namespace HMP::Dag
 			[this](auto && ..._args) { return onChildAttach(_args...); },
 			[this](auto && ..._args) { return onChildDetach(_args...); },
 			[this](auto && ..._args) { return onChildrenDetachAll(_args...); }
-		},
-		m_handles{ 0 }
+		}
 	{}
 
 	void Node::deleteDangling(std::queue<Node*>& _dangling, bool _descending)
@@ -118,9 +118,9 @@ namespace HMP::Dag
 		return onDetachAll(_deleteDangling, true);
 	}
 
-	void Node::onParentAttaching(Node& _child) const {}
+	void Node::onParentAttaching(Node&) const {}
 
-	void Node::onChildAttaching(Node& _child) const {}
+	void Node::onChildAttaching(Node&) const {}
 
 	Internal::NodeSetHandle& Node::parentsHandle()
 	{

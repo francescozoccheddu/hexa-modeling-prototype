@@ -43,11 +43,11 @@ namespace HMP::Actions
 	}
 
 	Project::Project(TargetMesh&& _target, const std::vector<Projection::Utils::Point>& _pointFeats, const std::vector<Projection::Utils::EidsPath>& _pathFeats, const Projection::Options& _options)
-		: m_target{ std::move(_target) }, m_prepared{ false }, m_options{ _options }, m_pointFeats{ _pointFeats }, m_pathFeats{ _pathFeats }
+		: m_target{ std::move(_target) }, m_pointFeats{ _pointFeats }, m_pathFeats{ _pathFeats }, m_options{ _options }, m_prepared{ false }
 	{}
 
 	Project::Project(const TargetMesh& _target, const std::vector<Projection::Utils::Point>& _pointFeats, const std::vector<Projection::Utils::EidsPath>& _pathFeats, const Projection::Options& _options)
-		: m_target{ _target }, m_prepared{ false }, m_options{ _options }, m_pointFeats{ _pointFeats }, m_pathFeats{ _pathFeats }
+		: m_target{ _target }, m_pointFeats{ _pointFeats }, m_pathFeats{ _pathFeats }, m_options{ _options }, m_prepared{ false }
 	{}
 
 	const Project::TargetMesh& Project::target() const

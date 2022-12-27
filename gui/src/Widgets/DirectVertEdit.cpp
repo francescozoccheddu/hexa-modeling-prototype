@@ -11,7 +11,7 @@ namespace HMP::Gui::Widgets
 
     DirectVertEdit::DirectVertEdit(VertEdit& _vertEdit, const cinolib::GLcanvas& _canvas):
         m_vertEdit{ _vertEdit }, m_canvas{ _canvas }, m_pending{ false },
-        m_centroid{}, m_kind{}, m_onX{}, m_onY{}, m_onZ{}, m_start{}, onPendingChanged{}, m_mouse{}
+        m_centroid{}, m_kind{}, m_onX{}, m_onY{}, m_onZ{}, m_start{}, m_mouse{}, onPendingChanged{}
     {
         _vertEdit.onVidsChanged += [&]() {
             if (m_vertEdit.empty())
@@ -96,7 +96,6 @@ namespace HMP::Gui::Widgets
             {
                 const Vec2 diff{ m_mouse - m_centroid };
                 const Vec2 startDiff{ m_start - m_centroid };
-                Vec scale{ 1.0 };
                 if (!m_onX && !m_onY && !m_onZ)
                 {
                     const auto scaleDim{ [&diff, &startDiff](unsigned int _dim) {
@@ -218,7 +217,7 @@ namespace HMP::Gui::Widgets
         return m_onZ;
     }
 
-    void DirectVertEdit::draw(const cinolib::GLcanvas& _canvas)
+    void DirectVertEdit::draw(const cinolib::GLcanvas&)
     {
         if (!m_pending)
         {
@@ -230,7 +229,6 @@ namespace HMP::Gui::Widgets
         const ImU32 startCol{ ImGui::ColorConvertFloat4ToU32(toImGui(mutedColor)) };
         const ImU32 col{ ImGui::ColorConvertFloat4ToU32(toImGui(color)) };
         const Real maxLen{ Vec2{static_cast<Real>(m_canvas.canvas_width()), static_cast<Real>(m_canvas.height())}.norm() };
-        const ImFont* const font{ ImGui::GetFont() };
         switch (m_kind)
         {
             case EKind::Rotation:

@@ -13,10 +13,10 @@ namespace HMP::Actions
 
 	private:
 
-		Dag::NodeHandle<Dag::Element> m_otherRoot;
-		std::vector<Vec> m_otherVerts;
 		Dag::Element& m_newRoot;
 		std::vector<Vec> m_newVerts;
+		Dag::NodeHandle<Dag::Element> m_otherRoot;
+		std::vector<Vec> m_otherVerts;
 
 		void apply() override;
 		void unapply() override;

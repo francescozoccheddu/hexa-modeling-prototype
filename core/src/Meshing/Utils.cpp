@@ -81,7 +81,7 @@ namespace HMP::Meshing::Utils
 	Id nextVidInFid(const QuadVertIds& _vids, Id _vid, bool _backwards)
 	{
 		const int index{ static_cast<int>(std::distance(_vids.begin(), std::find(_vids.begin(), _vids.end(), _vid))) };
-		return _vids[(index + (_backwards ? -1 : 1)) % 4];
+		return _vids[static_cast<I>((index + (_backwards ? -1 : 1)) % 4)];
 	}
 
 	EdgeVertIds edgeVids(const Meshing::Mesher::Mesh& _mesh, Id _eid)
@@ -120,7 +120,7 @@ namespace HMP::Meshing::Utils
 	{
 		assert(_mesh.face_contains_edge(_fid, _firstEid));
 		QuadVertIds vids{ pidFidVids(_mesh, _pid, _fid, _cw) };
-		while (_mesh.edge_id(vids[0], vids[1]) != _firstEid)
+		while (static_cast<Id>(_mesh.edge_id(vids[0], vids[1])) != _firstEid)
 		{
 			std::rotate(vids.begin(), vids.begin() + 1, vids.end());
 		}
@@ -163,7 +163,7 @@ namespace HMP::Meshing::Utils
 	{
 		const QuadVertIds forwardFaceVids{ pidFidVidsByFirstEid(_mesh, _pid, _forwardFid, _forwardUpEid, true) };
 		QuadVertIds backFaceVids{ pidFidVids(_mesh, _pid, _mesh.poly_face_opposite_to(_pid, _forwardFid), false) };
-		while (_mesh.edge_id(forwardFaceVids[0], backFaceVids[0]) == noId)
+		while (static_cast<Id>(_mesh.edge_id(forwardFaceVids[0], backFaceVids[0])) == noId)
 		{
 			std::rotate(backFaceVids.begin(), backFaceVids.begin() + 1, backFaceVids.end());
 		}
@@ -177,7 +177,7 @@ namespace HMP::Meshing::Utils
 	{
 		QuadVertIds forwardFaceVids{ pidFidVidsByFirstVid(_mesh, _pid, _forwardFid, _firstVid) };
 		QuadVertIds backFaceVids{ pidFidVids(_mesh, _pid, _mesh.poly_face_opposite_to(_pid, _forwardFid), true) };
-		while (_mesh.edge_id(forwardFaceVids[0], backFaceVids[0]) == noId)
+		while (static_cast<Id>(_mesh.edge_id(forwardFaceVids[0], backFaceVids[0])) == noId)
 		{
 			std::rotate(backFaceVids.begin(), backFaceVids.begin() + 1, backFaceVids.end());
 		}

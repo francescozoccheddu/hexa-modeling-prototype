@@ -20,14 +20,14 @@ namespace HMP::Gui::Widgets
 
 	private:
 
-		HMP::Projection::Options m_options;
 		const Widgets::Target& m_targetWidget;
 		HMP::Commander& m_commander;
 		const HMP::Meshing::Mesher& m_mesher;
+		HMP::Projection::Options m_options;
 		std::vector<HMP::Projection::Utils::EidsPath> m_paths;
 		cinolib::FeatureNetworkOptions m_featureFinderOptions;
-		bool m_showPaths{ true }, m_showAllPaths{ false };
-		I m_currentPath{};
+		bool m_showPaths, m_showAllPaths;
+		I m_currentPath;
 
 		void matchPaths(I _first, I _lastEx, bool _fromSource);
 

@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <cpputils/range/of.hpp>
 #include <cpputils/range/enumerate.hpp>
+#include <cassert>
 
 namespace HMP::Gui::Utils::HrDescriptions
 {
@@ -23,6 +24,8 @@ namespace HMP::Gui::Utils::HrDescriptions
 						return "E-" + _dagNamer(&_node);
 					case HMP::Dag::Operation::EPrimitive::Refine:
 						return "R-" + _dagNamer(&_node);
+					default:
+						assert(false);
 				}
 			default:
 				return "?-" + _dagNamer(&_node);
@@ -284,7 +287,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return stream.str();
 	}
 
-	std::string describe(const Actions::Project& _action, DagNamer& _dagNamer)
+	std::string describe(const Actions::Project& _action)
 	{
 		std::ostringstream stream{};
 		stream
@@ -304,7 +307,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return stream.str();
 	}
 
-	std::string describe(const Actions::Transform& _action, DagNamer& _dagNamer)
+	std::string describe(const Actions::Transform& _action)
 	{
 		std::ostringstream stream{};
 		stream << "Transform ";

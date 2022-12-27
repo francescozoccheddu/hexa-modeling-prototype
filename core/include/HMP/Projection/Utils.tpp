@@ -68,7 +68,7 @@ namespace HMP::Projection::Utils
             eids.reserve(_vids.size() - 1);
             for (I i{ 1 }; i < _vids.size(); i++)
             {
-                eids.push_back(_mesh.edge_id(_vids[i], _vids[i - 1]));
+                eids.push_back(static_cast<Id>(_mesh.edge_id(_vids[i], _vids[i - 1])));
             }
         }
         return eids;

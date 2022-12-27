@@ -69,11 +69,6 @@ namespace HMP::Dag::Utils
 					_serializer << operation.primitive;
 					switch (operation.primitive)
 					{
-						case Operation::EPrimitive::Delete:
-						{
-							const Delete& deleteOperation{ static_cast<const Delete&>(operation) };
-						}
-						break;
 						case Operation::EPrimitive::Extrude:
 						{
 							const Extrude& extrudeOperation{ static_cast<const Extrude&>(operation) };
@@ -96,6 +91,8 @@ namespace HMP::Dag::Utils
 								<< refineOperation.scheme;
 						}
 						break;
+						default:
+							break;
 					}
 				}
 				break;
@@ -242,6 +239,8 @@ namespace HMP::Dag::Utils
 						clone.firstVi = source.firstVi;
 						return clone;
 					}
+					default:
+						assert(false);
 				}
 			}
 			default:

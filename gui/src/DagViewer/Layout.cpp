@@ -13,14 +13,14 @@ namespace HMP::Gui::DagViewer
 		: m_center(_center), m_node{ &_node }
 	{}
 
-	const Dag::Node& Layout::Node::node() const
-	{
-		return *m_node;
-	}
-
 	const Vec2& Layout::Node::center() const
 	{
 		return m_center;
+	}
+
+	const Dag::Node& Layout::Node::node() const
+	{
+		return *m_node;
 	}
 
 	// Layout
@@ -53,7 +53,7 @@ namespace HMP::Gui::DagViewer
 			}
 		}
 		m_size = m_topRight - m_bottomLeft;
-		m_aspectRatio = m_size.y() ? m_size.x() / m_size.y() : 1;
+		m_aspectRatio = m_size.y() != 0.0 ? m_size.x() / m_size.y() : 1.0;
 	}
 
 	void Layout::expandBoundingBox(const Vec2& _center, Real _extent)
@@ -65,13 +65,13 @@ namespace HMP::Gui::DagViewer
 	}
 
 	Layout::Layout()
-		: m_nodes{}, m_lines{}, m_nodeRadius{ 1 }, m_lineThickness{ 0.01 }
+		: m_nodes{}, m_lines{}, m_lineThickness{ 0.01 }, m_nodeRadius{ 1 }
 	{
 		calculateBoundingBox();
 	}
 
 	Layout::Layout(const std::vector<Node>& _nodes, const std::vector<std::pair<Vec2, Vec2>>& _lines, Real _nodeRadius, Real _lineThickness)
-		: m_nodes{ _nodes }, m_lines{ _lines }, m_nodeRadius{ _nodeRadius }, m_lineThickness{ _lineThickness }
+		: m_nodes{ _nodes }, m_lines{ _lines }, m_lineThickness{ _lineThickness }, m_nodeRadius{ _nodeRadius }
 	{
 		assert(m_nodeRadius > 0.f);
 		assert(m_lineThickness > 0.f);
@@ -79,7 +79,7 @@ namespace HMP::Gui::DagViewer
 	}
 
 	Layout::Layout(std::vector<Node>&& _nodes, std::vector<std::pair<Vec2, Vec2>>&& _lines, Real _nodeRadius, Real _lineThickness)
-		: m_nodes{ std::move(_nodes) }, m_lines{ std::move(_lines) }, m_nodeRadius{ _nodeRadius }, m_lineThickness{ _lineThickness }
+		: m_nodes{ std::move(_nodes) }, m_lines{ std::move(_lines) }, m_lineThickness{ _lineThickness }, m_nodeRadius{ _nodeRadius }
 	{
 		assert(m_nodeRadius > 0.f);
 		assert(m_lineThickness > 0.f);

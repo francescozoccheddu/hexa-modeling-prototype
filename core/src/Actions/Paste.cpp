@@ -43,7 +43,7 @@ namespace HMP::Actions
 		return Mat4::TRANS(origin(_mesher.mesh(), _target)) * Mat4::HOMOGENEOUS(oldToNew) * Mat4::TRANS(-origin(_mesher.mesh(), _source));
 	}
 
-	std::unordered_map<Id, Id> weld(const Meshing::Mesher& _mesher, const Dag::Extrude& _extrude, const I _parentIndex, const std::array<I, 4>& _is)
+	std::unordered_map<Id, Id> weld(const Dag::Extrude& _extrude, const I _parentIndex, const std::array<I, 4>& _is)
 	{
 		const Dag::Element& firstParent{ _extrude.parents.first() };
 		const Id firstVid{ firstParent.vids[_extrude.firstVi] };
@@ -95,7 +95,7 @@ namespace HMP::Actions
 			std::unordered_map<Id, Id> vidMap{};
 			for (I i{}; i < m_elements.size(); i++)
 			{
-				vidMap.merge(weld(mesher(), *m_operation, i, indices[i]));
+				vidMap.merge(weld(*m_operation, i, indices[i]));
 			}
 			for (Dag::Node* node : Dag::Utils::descendants(*m_operation))
 			{

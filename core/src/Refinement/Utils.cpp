@@ -213,7 +213,7 @@ namespace HMP::Refinement::Utils
 		findRightAdapter(_mesher);
 	}
 
-	Dag::Refine& Sub3x3AdapterCandidate::prepareAdapter(const Meshing::Mesher& _mesher) const
+	Dag::Refine& Sub3x3AdapterCandidate::prepareAdapter() const
 	{
 		return Utils::prepare(m_forwardFaceOffset, m_upFaceOffset, *m_scheme);
 	}
@@ -256,7 +256,7 @@ namespace HMP::Refinement::Utils
 			for (const Id candPid : mesh.adj_e2p(sharedEid)) // for each adjacent element candPid to sharedEid
 			{
 				// if candPid is not the refined element, nor is adjacent face to face to it
-				if (candPid != refPid && mesh.poly_shared_face(candPid, refPid) == noId)
+				if (candPid != refPid && static_cast<Id>(mesh.poly_shared_face(candPid, refPid)) == noId)
 				{
 					addAdjacency(_mesher, _mesher.pidToElement(candPid), refEl, true);
 				}

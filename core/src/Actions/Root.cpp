@@ -22,7 +22,7 @@ namespace HMP::Actions
 	}
 
 	Root::Root(Dag::Element& _root, const std::vector<Vec>& _verts)
-		: m_otherRoot{ &_root }, m_newRoot{ _root }, m_otherVerts{ _verts }, m_newVerts{ _verts }
+		: m_newRoot{ _root }, m_newVerts{ _verts }, m_otherRoot{ &_root }, m_otherVerts{ _verts }
 	{}
 
 	const Dag::Element& Root::newRoot() const

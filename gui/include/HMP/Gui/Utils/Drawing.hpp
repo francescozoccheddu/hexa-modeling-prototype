@@ -15,7 +15,7 @@ namespace HMP::Gui::Utils::Drawing
         LeftTop, Middle, RightBottom
     };
 
-    ImVec2 project(const cinolib::GLcanvas& _canvas, const Vec& _point);;
+    ImVec2 project(const cinolib::GLcanvas& _canvas, const Vec& _point);
 
     template<I TSize>
     std::array<ImVec2, TSize> project(const cinolib::GLcanvas& _canvas, const std::array<Vec, TSize>& _points)

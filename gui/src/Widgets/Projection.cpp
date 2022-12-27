@@ -20,7 +20,7 @@ namespace HMP::Gui::Widgets
 
 	Projection::Projection(const Widgets::Target& _targetWidget, HMP::Commander& _commander, const Meshing::Mesher& _mesher):
 		cinolib::SideBarItem{ "Projection" }, m_targetWidget{ _targetWidget }, m_commander{ _commander }, m_mesher{ _mesher },
-		onProjectRequest{}, m_options{}, m_paths(1)
+		m_options{}, m_paths(1), m_featureFinderOptions{}, m_showPaths{ true }, m_showAllPaths{ false }, m_currentPath{}, onProjectRequest{}
 	{
 		m_targetWidget.onMeshChanged += [this]() {
 			for (auto& path : m_paths)
@@ -28,7 +28,7 @@ namespace HMP::Gui::Widgets
 				path.targetEids.clear();
 			}
 		};
-		m_mesher.onAdded += [this](const Meshing::Mesher::State& _oldState) {
+		m_mesher.onAdded += [this](const Meshing::Mesher::State&) {
 			for (I i{}; i < m_paths.size(); i++)
 			{
 				for (const Id eid : m_paths[i].sourceEids)
@@ -41,7 +41,7 @@ namespace HMP::Gui::Widgets
 				}
 			}
 		};
-		m_mesher.onElementVisibilityChanged += [this](const Dag::Element& _element, bool _visible) {
+		m_mesher.onElementVisibilityChanged += [this](const Dag::Element& _element, bool) {
 			const std::vector<Id> removedEids{ m_mesher.mesh().poly_dangling_eids(_element.pid) };
 			const std::unordered_set<Id> removedEidsSet{ removedEids.begin(), removedEids.end() };
 			for (I i{}; i < m_paths.size(); i++)
@@ -56,7 +56,7 @@ namespace HMP::Gui::Widgets
 				}
 			}
 		};
-		m_mesher.onRestored += [this](const Meshing::Mesher::State& _oldState) {
+		m_mesher.onRestored += [this](const Meshing::Mesher::State&) {
 			const Id eidCount{ m_mesher.mesh().num_edges() };
 			for (I i{}; i < m_paths.size(); i++)
 			{
@@ -270,7 +270,6 @@ namespace HMP::Gui::Widgets
 			ImGui::TreePop();
 		}
 		ImGui::SetNextItemOpen(m_showPaths, ImGuiCond_Always);
-		bool wasShowingPaths{ m_showPaths };
 		m_showPaths = ImGui::TreeNode("Paths");
 		if (m_showPaths)
 		{

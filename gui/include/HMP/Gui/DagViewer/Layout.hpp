@@ -20,29 +20,29 @@ namespace HMP::Gui::DagViewer
 
 		private:
 
-			const Dag::Node* m_node{};
 			Vec2 m_center{};
+			const Dag::Node* m_node{};
 
 
 		public:
 
 			Node(const Vec2& _center, const Dag::Node& _node);
 
-			const Dag::Node& node() const;
 			const Vec2& center() const;
+			const Dag::Node& node() const;
 
 		};
 
 	private:
 
-		std::vector<std::pair<Vec2, Vec2>> m_lines;
 		std::vector<Node> m_nodes;
+		std::vector<std::pair<Vec2, Vec2>> m_lines;
+		Real m_lineThickness;
+		Real m_nodeRadius;
 		Vec2 m_bottomLeft;
 		Vec2 m_topRight;
 		Vec2 m_size;
 		Real m_aspectRatio;
-		Real m_lineThickness;
-		Real m_nodeRadius;
 
 		void calculateBoundingBox();
 		void expandBoundingBox(const Vec2& _center, Real _extent);

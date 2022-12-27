@@ -29,7 +29,7 @@ namespace HMP::Gui::Widgets
 
 	public:
 
-		cinolib::Color faceColor{ cinolib::Color::WHITE() }, edgeColor{ cinolib::Color::BLACK() };
+		cinolib::Color faceColor, edgeColor;
 		Utils::Transform transform;
 		bool visible;
 

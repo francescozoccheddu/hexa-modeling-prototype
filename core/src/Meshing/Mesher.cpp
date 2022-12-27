@@ -13,9 +13,10 @@ namespace HMP::Meshing
 	// Mesher
 
 	Mesher::Mesher()
-		: m_mesh(),
-		faceColor{ cinolib::Color::WHITE() }, edgeColor{ cinolib::Color::BLACK() },
-		m_dirty{ false }, m_visibleFaceIndices{}, m_visibleEdgeIndices{}, m_octree{}
+		: m_mesh(), m_octree{},
+		m_visibleFaceIndices{}, m_visibleEdgeIndices{},
+		m_dirty{ false },
+		faceColor{ cinolib::Color::WHITE() }, edgeColor{ cinolib::Color::BLACK() }
 	{
 		m_mesh.draw_back_faces = false;
 		m_mesh.show_mesh(true);
@@ -97,7 +98,7 @@ namespace HMP::Meshing
 		if (m_dirty)
 		{
 			static constexpr double c_threshold{ 0.5 };
-			if (_changedVids.size() >= static_cast<I>(toI(m_mesh.num_polys()) * c_threshold))
+			if (_changedVids.size() >= static_cast<I>(static_cast<double>(m_mesh.num_polys()) * c_threshold))
 			{
 				m_mesh.update_normals();
 				m_mesh.updateGL_out();

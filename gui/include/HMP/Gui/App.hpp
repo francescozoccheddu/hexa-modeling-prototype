@@ -132,7 +132,7 @@ namespace HMP::Gui
 
 		struct
 		{
-			HMP::Dag::NodeHandle<HMP::Dag::Element> element{};
+			HMP::Dag::Element* element{};
 		} m_copy;
 
 		struct
@@ -146,17 +146,17 @@ namespace HMP::Gui
 		const Meshing::Mesher::Mesh& m_mesh;
 		Commander& m_commander;
 		cpputils::collections::SetNamer<const HMP::Dag::Node*> m_dagNamer;
+		Widgets::Commander m_commanderWidget;
 		Widgets::Axes m_axesWidget;
 		Widgets::Target m_targetWidget;
 		Widgets::VertEdit m_vertEditWidget;
-		Widgets::Commander m_commanderWidget;
 		Widgets::DirectVertEdit m_directVertEditWidget;
 		Widgets::Save m_saveWidget;
 		Widgets::Projection m_projectionWidget;
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
-		bool m_dagViewerNeedsUpdate;
 		DagViewer::Widget m_dagViewerWidget;
+		bool m_dagViewerNeedsUpdate;
 #endif
 
 #ifdef HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER

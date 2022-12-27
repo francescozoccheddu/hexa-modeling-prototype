@@ -45,8 +45,6 @@ namespace HMP::Dag
 		const TNode* operator->() const;
 		operator const TNode* () const;
 
-		operator bool() const;
-
 		void free();
 
 	};
