@@ -23,6 +23,7 @@ namespace HMP::Actions
 		const std::vector<Projection::Utils::Point> m_pointFeats;
 		const std::vector<Projection::Utils::EidsPath> m_pathFeats;
 		const Projection::Options m_options;
+		std::vector<Vec> m_otherVerts;
 		bool m_prepared;
 
 		void apply() override;
