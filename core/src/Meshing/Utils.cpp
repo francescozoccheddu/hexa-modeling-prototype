@@ -108,7 +108,7 @@ namespace HMP::Meshing::Utils
 	QuadVertIds pidFidVids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, bool _cw)
 	{
 		assert(_mesh.poly_contains_face(_pid, _fid));
-		std::vector<Id> vids{ _mesh.face_verts_id(_fid) };
+		QuadVertIds vids{ fidVids(_mesh, _fid) };
 		if (_cw == _mesh.poly_face_winding(_pid, _fid))
 		{
 			std::reverse(vids.begin(), vids.end());
@@ -207,6 +207,16 @@ namespace HMP::Meshing::Utils
 		return verts;
 	}
 
+	EdgeVerts verts(const Meshing::Mesher::Mesh& _mesh, const EdgeVertIds& _vids)
+	{
+		EdgeVerts verts;
+		for (I i{}; i < 2; i++)
+		{
+			verts[i] = _mesh.vert(_vids[i]);
+		}
+		return verts;
+	}
+
 	Vec midpoint(const Meshing::Mesher::Mesh& _mesh, Id _eid)
 	{
 		const std::vector<Vec> verts{ _mesh.edge_verts(_eid) };
@@ -244,7 +254,7 @@ namespace HMP::Meshing::Utils
 	{
 		Real closestDist{ cinolib::inf_double };
 		Id closestVid{};
-		for (const Id vid : _mesh.face_verts_id(_fid))
+		for (const Id vid : fidVids(_mesh, _fid))
 		{
 			const Real dist{ _position.dist(_mesh.vert(vid)) };
 			if (dist < closestDist)
@@ -286,21 +296,9 @@ namespace HMP::Meshing::Utils
 	{
 		for (Dag::Node* node : Dag::Utils::descendants(_root))
 		{
-			if (node->isElement())
+			if (isMeshed(*node))
 			{
-				Dag::Element& element{ node->element() };
-				bool active{ true };
-				for (const Dag::Operation& child : element.children)
-				{
-					if (child.primitive != Dag::Operation::EPrimitive::Extrude)
-					{
-						active = false;
-					}
-				}
-				if (active)
-				{
-					_mesher.add(element);
-				}
+				_mesher.add(node->element());
 			}
 		}
 	}
@@ -309,21 +307,9 @@ namespace HMP::Meshing::Utils
 	{
 		for (Dag::Node* node : Dag::Utils::descendants(_root))
 		{
-			if (node->isElement())
+			if (isMeshed(*node))
 			{
-				Dag::Element& element{ node->element() };
-				bool active{ true };
-				for (const Dag::Operation& child : element.children)
-				{
-					if (child.primitive != Dag::Operation::EPrimitive::Extrude)
-					{
-						active = false;
-					}
-				}
-				if (active)
-				{
-					_mesher.remove(element, _removeVerts);
-				}
+				_mesher.remove(node->element(), _removeVerts);
 			}
 		}
 	}
@@ -508,6 +494,28 @@ namespace HMP::Meshing::Utils
 			sum += _verts[i].dist(_verts[(i + 1) % 4]);
 		}
 		return sum / 4.0;
+	}
+
+	bool isMeshed(const Dag::Node& _node)
+	{
+		return _node.isElement() && _node.element().children.filter([&](const Dag::Operation& _child) {
+			return _child.primitive != Dag::Operation::EPrimitive::Extrude;
+		}).empty();
+	}
+
+	EdgeVertIds eidVids(const Mesher::Mesh& _mesh, Id _eid)
+	{
+		return cpputils::range::of(_mesh.adj_e2v(_eid)).toArray<2>();
+	}
+
+	QuadVertIds fidVids(const Mesher::Mesh& _mesh, Id _fid)
+	{
+		return cpputils::range::of(_mesh.adj_f2v(_fid)).toArray<4>();
+	}
+
+	HexVertIds pidVids(const Mesher::Mesh& _mesh, Id _pid)
+	{
+		return cpputils::range::of(_mesh.adj_p2v(_pid)).toArray<8>();
 	}
 
 }

@@ -21,13 +21,13 @@ namespace HMP::Gui::Utils::Drawing
         return std::clamp(static_cast<int>(std::round(_radius / 8)), 6, 36);
     }
 
-    void dashedLine(ImDrawList& _drawList, const ImVec2& _from, const ImVec2& _to, ImU32 _color, float _thickness, float _spacing)
+    void dashedLine(ImDrawList& _drawList, const EdgeVertData<ImVec2>& _verts, ImU32 _color, float _thickness, float _spacing)
     {
-        const cinolib::vec2f from{ _from.x, _from.y }, to{ _to.x, _to.y };
+        const cinolib::vec2f from{ _verts[0].x, _verts[0].y }, to{ _verts[1].x, _verts[1].y };
         const float length{ static_cast<float>(from.dist(to)) };
         if (length <= _spacing * 2.0f || _spacing <= 0.0f)
         {
-            line(_drawList, _from, _to, _color, _thickness);
+            line(_drawList, _verts, _color, _thickness);
         }
         else
         {
@@ -36,7 +36,7 @@ namespace HMP::Gui::Utils::Drawing
             while (t1 < length)
             {
                 const cinolib::vec2f v1{ from + dir * t1 }, v2{ from + dir * t2 };
-                line(_drawList, { v1.x(), v1.y() }, { v2.x(), v2.y() }, _color, _thickness);
+                line(_drawList, { ImVec2{ v1.x(), v1.y() }, ImVec2{ v2.x(), v2.y() } }, _color, _thickness);
                 t1 += _spacing * 2.0f;
                 t2 += _spacing * 2.0f;
                 t2 = std::min(length, t2);
@@ -44,9 +44,9 @@ namespace HMP::Gui::Utils::Drawing
         }
     }
 
-    void line(ImDrawList& _drawList, const ImVec2& _from, const ImVec2& _to, ImU32 _color, float _thickness)
+    void line(ImDrawList& _drawList, const EdgeVertData<ImVec2>& _verts, ImU32 _color, float _thickness)
     {
-        _drawList.AddLine(_from, _to, _color, _thickness);
+        _drawList.AddLine(_verts[0], _verts[1], _color, _thickness);
     }
 
     void circle(ImDrawList& _drawList, const ImVec2& _center, float _radius, ImU32 _color, float _thickness)
@@ -61,8 +61,8 @@ namespace HMP::Gui::Utils::Drawing
 
     void cross(ImDrawList& _drawList, const ImVec2& _center, float _radius, ImU32 _color, float _thickness)
     {
-        line(_drawList, { _center.x, _center.y - _radius }, { _center.x, _center.y + _radius }, _color, _thickness);
-        line(_drawList, { _center.x - _radius, _center.y }, { _center.x + _radius, _center.y }, _color, _thickness);
+        line(_drawList, { ImVec2{ _center.x, _center.y - _radius }, ImVec2{ _center.x, _center.y + _radius } }, _color, _thickness);
+        line(_drawList, { ImVec2{ _center.x - _radius, _center.y }, ImVec2{ _center.x + _radius, _center.y } }, _color, _thickness);
     }
 
     float align(float _position, float _size, EAlign _align)
@@ -99,9 +99,14 @@ namespace HMP::Gui::Utils::Drawing
         _drawList.AddText(ImGui::GetFont(), _size, topLeft, _color, _text, nullptr);
     }
 
-    ImU32 toU32(const cinolib::Color& _color)
+    void quad(ImDrawList& _drawList, const QuadVertData<ImVec2>& _verts, ImU32 _color, float _thickness)
     {
-        return ImGui::ColorConvertFloat4ToU32(ImVec4{ _color.r(), _color.g(), _color.b(), _color.a() });
+        _drawList.AddQuad(_verts[0], _verts[1], _verts[2], _verts[3], _color, _thickness);
+    }
+
+    void quadFilled(ImDrawList& _drawList, const QuadVertData<ImVec2>& _verts, ImU32 _color)
+    {
+        _drawList.AddQuadFilled(_verts[0], _verts[1], _verts[2], _verts[3], _color);
     }
 
 }

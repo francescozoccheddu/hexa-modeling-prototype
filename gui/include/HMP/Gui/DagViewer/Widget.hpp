@@ -2,12 +2,12 @@
 
 #include <HMP/Gui/DagViewer/Layout.hpp>
 #include <HMP/Dag/Element.hpp>
-#include <HMP/Meshing/Mesher.hpp>
 #include <HMP/Meshing/types.hpp>
 #include <cinolib/gl/side_bar_item.h>
 #include <cpputils/collections/Namer.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <cpputils/collections/Event.hpp>
+#include <cinolib/color.h>
 
 namespace HMP::Gui::DagViewer
 {
@@ -19,7 +19,6 @@ namespace HMP::Gui::DagViewer
 
 		static void initFonts();
 
-		const Meshing::Mesher& m_mesher;
 		cpputils::collections::Namer<const Dag::Node*>& m_namer;
 
 		Layout m_layout;
@@ -32,13 +31,13 @@ namespace HMP::Gui::DagViewer
 
 	public:
 
-		cpputils::collections::Event<Widget> onDraw{};
+		cinolib::Color elementColor{ cinolib::Color::WHITE() }, highlightedElementColor{ cinolib::Color::YELLOW() };
 
-		Widget(const Meshing::Mesher& _mesher, cpputils::collections::Namer<const Dag::Node*>& _namer);
+		mutable cpputils::collections::Event<Widget> onDraw{};
+
+		Widget(cpputils::collections::Namer<const Dag::Node*>& _namer);
 
 		const Dag::Element* highlight{}, * copied{};
-
-		const Meshing::Mesher& mesher() const;
 
 		Layout& layout();
 		const Layout& layout() const;

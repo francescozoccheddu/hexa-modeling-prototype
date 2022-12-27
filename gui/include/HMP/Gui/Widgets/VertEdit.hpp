@@ -35,7 +35,7 @@ namespace HMP::Gui::Widgets
 
 	public:
 
-		cinolib::Color color{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 1.0f, 0.7f) };
+		cinolib::Color color{ cinolib::Color::YELLOW() };
 
 		using Vids = decltype(cpputils::range::ofc(m_verts).map(&vertsToVidsConvert));
 

@@ -35,6 +35,7 @@ namespace HMP::Meshing::Utils
 
 	QuadVerts verts(const Meshing::Mesher::Mesh& _mesh, const QuadVertIds& _vids);
 	HexVerts verts(const Meshing::Mesher::Mesh& _mesh, const HexVertIds& _vids);
+	EdgeVerts verts(const Meshing::Mesher::Mesh& _mesh, const EdgeVertIds& _vids);
 	Vec midpoint(const Meshing::Mesher::Mesh& _mesh, Id _eid);
 	Vec centroid(const HexVerts& _verts);
 
@@ -59,5 +60,10 @@ namespace HMP::Meshing::Utils
 	Id fid(const Mesher::Mesh& _mesh, const Dag::Element& _element, I _fi);
 	Vec normal(const QuadVerts& _verts);
 	Real avgEdgeLength(const QuadVerts& _verts);
+	bool isMeshed(const Dag::Node& _node);
+	EdgeVertIds eidVids(const Mesher::Mesh& _mesh, Id _eid);
+	QuadVertIds fidVids(const Mesher::Mesh& _mesh, Id _fid);
+	HexVertIds pidVids(const Mesher::Mesh& _mesh, Id _pid);
+
 
 }
