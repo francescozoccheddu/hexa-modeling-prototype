@@ -7,6 +7,7 @@ namespace HMP::Actions
 
 	void Refine::apply()
 	{
+		m_oldState = mesher().state();
 		m_operation->parents.attach(m_element);
 		Refinement::Utils::applyRecursive(mesher(), *m_operation);
 		mesher().updateMesh();
@@ -14,7 +15,9 @@ namespace HMP::Actions
 
 	void Refine::unapply()
 	{
-		Refinement::Utils::unapplyRecursive(mesher(), *m_operation);
+		Refinement::Utils::unhideRecursive(mesher(), *m_operation);
+		m_operation->parents.detachAll(false);
+		mesher().restore(m_oldState);
 		mesher().updateMesh();
 	}
 

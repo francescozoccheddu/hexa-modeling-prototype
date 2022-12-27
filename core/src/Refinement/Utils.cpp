@@ -38,20 +38,18 @@ namespace HMP::Refinement::Utils
 		const Dag::Element& element{ _refine.parents.single() };
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
 		const Refinement::Scheme& refinement{ Refinement::schemes.at(_refine.scheme) };
-		assert(refinement.polys().size() == _refine.children.size());
-		const Id pid{ _mesher.elementToPid(element) };
-		assert(pid != noId);
 		const Id forwardFid{ Meshing::Utils::fid(mesh, element, _refine.forwardFi) };
 		const Id firstVid{ element.vids[_refine.firstVi] };
-		const HexVertIds sourceVids{ Meshing::Utils::pidVidsByForwardFidAndFirstVid(mesh, pid, forwardFid, firstVid) };
+		const HexVertIds sourceVids{ Meshing::Utils::pidVidsByForwardFidAndFirstVid(mesh, element.pid, forwardFid, firstVid) };
 		const HexVerts sourceVerts{ Meshing::Utils::verts(mesh, sourceVids) };
-		const std::vector<HexVertIds> polys{ refinement.apply(_mesher, sourceVerts) };
+		std::vector<Vec> newVerts;
+		const std::vector<HexVertIds> polys{ refinement.apply(_mesher, sourceVerts, newVerts) };
 		for (const auto& [child, vids] : cpputils::range::zip(_refine.children, polys))
 		{
 			child.vids = vids;
-			_mesher.add(child);
 		}
-		_mesher.remove(_refine.parents.single(), false);
+		_mesher.add(_refine.children.address().toVector(), newVerts);
+		_mesher.show(_refine.parents.single(), false);
 	}
 
 	void applyRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine)
@@ -69,20 +67,12 @@ namespace HMP::Refinement::Utils
 		}
 	}
 
-	void unapply(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach)
+	void unhide(Meshing::Mesher& _mesher, Dag::Refine& _refine)
 	{
-		_mesher.add(_refine.parents.single());
-		for (Dag::Element& child : _refine.children)
-		{
-			_mesher.remove(child, true);
-		}
-		if (_detach)
-		{
-			_refine.parents.detachAll(false);
-		}
+		_mesher.show(_refine.parents.single(), true);
 	}
 
-	void unapplyRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine, bool _detach)
+	void unhideRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine)
 	{
 		for (Dag::Element& child : _refine.children)
 		{
@@ -90,28 +80,28 @@ namespace HMP::Refinement::Utils
 			{
 				if (operation.primitive == Dag::Operation::EPrimitive::Refine)
 				{
-					unapplyRecursive(_mesher, static_cast<Dag::Refine&>(operation), false);
+					unhideRecursive(_mesher, static_cast<Dag::Refine&>(operation));
 				}
 			}
 		}
-		unapply(_mesher, _refine, _detach);
+		unhide(_mesher, _refine);
 	}
 
 	void Sub3x3AdapterCandidate::setup3x3Subdivide(const Meshing::Mesher& _mesher)
 	{
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
-		const Id pid{ _mesher.elementToPid(*m_element) };
+		const Id pid{ m_element->pid };
 		m_scheme = Refinement::EScheme::Subdivide3x3;
 		m_forwardFaceOffset = 0;
 		const Id forwardFid{ mesh.poly_face_id(pid, m_forwardFaceOffset) };
-		const Id upFid{ Meshing::Utils::adjFidInPidByEidAndFid(mesh, pid, forwardFid, mesh.face_edge_id(forwardFid, 0)) };
+		const Id upFid{ Meshing::Utils::adjFidInPidByFidAndEid(mesh, pid, forwardFid, mesh.face_edge_id(forwardFid, 0)) };
 		m_upFaceOffset = mesh.poly_face_offset(pid, upFid);
 	}
 
 	void Sub3x3AdapterCandidate::findRightAdapter(const Meshing::Mesher& _mesher)
 	{
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
-		const Id pid{ _mesher.elementToPid(*m_element) };
+		const Id pid{ m_element->pid };
 		// process adjacent faces ignoring adjacent edges first
 		switch (m_adjacentFaceOffsets.size())
 		{
@@ -127,7 +117,7 @@ namespace HMP::Refinement::Utils
 				m_scheme = Refinement::EScheme::AdapterFaceSubdivide3x3;
 				m_forwardFaceOffset = m_adjacentFaceOffsets[0];
 				const Id forwardFid{ mesh.poly_face_id(pid, m_forwardFaceOffset) };
-				const Id upFid{ Meshing::Utils::adjFidInPidByEidAndFid(mesh, pid, forwardFid, mesh.face_edge_id(forwardFid, 0)) };
+				const Id upFid{ Meshing::Utils::adjFidInPidByFidAndEid(mesh, pid, forwardFid, mesh.face_edge_id(forwardFid, 0)) };
 				m_upFaceOffset = mesh.poly_face_offset(pid, upFid);
 			}
 			break;
@@ -195,7 +185,7 @@ namespace HMP::Refinement::Utils
 					m_scheme = Refinement::EScheme::AdapterEdgeSubdivide3x3;
 					const Id targetForwardFid{ Meshing::Utils::anyAdjFidInPidByEid(mesh, pid, unprocessedEids[0]) };
 					m_forwardFaceOffset = mesh.poly_face_offset(pid, targetForwardFid);
-					const Id targetUpFid{ Meshing::Utils::adjFidInPidByEidAndFid(mesh, pid, targetForwardFid, unprocessedEids[0]) };
+					const Id targetUpFid{ Meshing::Utils::adjFidInPidByFidAndEid(mesh, pid, targetForwardFid, unprocessedEids[0]) };
 					m_upFaceOffset = mesh.poly_face_offset(pid, targetUpFid);
 				}
 				else
@@ -222,8 +212,8 @@ namespace HMP::Refinement::Utils
 	void Sub3x3AdapterCandidate::addAdjacency(const Meshing::Mesher& _mesher, const Dag::Element& _refined, bool _edge)
 	{
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
-		const Id pid{ _mesher.elementToPid(*m_element) };
-		const Id refPid{ _mesher.elementToPid(_refined) };
+		const Id pid{ m_element->pid };
+		const Id refPid{ _refined.pid };
 		const Id sharedFid{ static_cast<Id>(mesh.poly_shared_face(pid, refPid)) };
 		if (_edge)
 		{
@@ -274,9 +264,7 @@ namespace HMP::Refinement::Utils
 	{
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
 		Dag::Element& refEl = _refine.parents.single();
-		// temporarily add the element just to examine the adjacencies
-		_mesher.add(refEl);
-		const Id refPid{ _mesher.elementToPid(refEl) };
+		const Id refPid{ refEl.pid };
 		// add face to face adjacent elements
 		for (const Id candPid : mesh.adj_p2p(refPid))
 		{
@@ -294,8 +282,6 @@ namespace HMP::Refinement::Utils
 				}
 			}
 		}
-		// remove the temporarily added element
-		_mesher.remove(refEl, false);
 	}
 
 	Sub3x3AdapterCandidate Sub3x3AdapterCandidateSet::pop()

@@ -13,8 +13,6 @@ namespace HMP::Actions::ExtrudeUtils
 
 	HexVertIds apply(const Meshing::Mesher& _mesher, const Dag::Extrude& _extrude, std::vector<Vec>& _newVerts);
 
-	HexVertIds apply(Meshing::Mesher& _mesher, const Dag::Extrude& _extrude);
-
 	Dag::Extrude& prepare(const cpputils::collections::FixedVector<I, 3>& _fis, I _firstVi, bool _clockwise);
 
 }

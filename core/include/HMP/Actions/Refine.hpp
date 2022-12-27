@@ -3,12 +3,13 @@
 #include <HMP/Commander.hpp>
 #include <HMP/Dag/NodeHandle.hpp>
 #include <HMP/Meshing/types.hpp>
+#include <HMP/Meshing/Mesher.hpp>
 #include <HMP/Dag/Refine.hpp>
 
 namespace HMP::Actions
 {
 
-	class Refine final : public Commander::Action
+	class Refine final: public Commander::Action
 	{
 
 	private:
@@ -16,6 +17,7 @@ namespace HMP::Actions
 		Dag::Element& m_element;
 		Dag::NodeHandle<Dag::Refine> m_operation;
 		I m_depth;
+		Meshing::Mesher::State m_oldState;
 
 		void apply() override;
 		void unapply() override;

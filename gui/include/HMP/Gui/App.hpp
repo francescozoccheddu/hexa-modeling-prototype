@@ -127,6 +127,7 @@ namespace HMP::Gui
 			cinolib::vec2d position{};
 			HMP::Dag::Element* element{};
 			I fi, vi, ei;
+			Id pid, fid, vid, eid;
 		} m_mouse;
 
 		struct
@@ -168,9 +169,8 @@ namespace HMP::Gui
 		void requestDagViewerUpdate();
 
 		// mesher events
-		void onElementRemove(const HMP::Dag::Element& _element, const std::vector<Id>& _removedVids);
-		void onElementRemoved(const HMP::Dag::Element& _element, const std::vector<Id>& _removedVids, bool _actuallyRemovedVids);
-		void onClearElements();
+		void onMesherRestored(const Meshing::Mesher::State& _state);
+		void onMesherElementVisibilityChanged(const Dag::Element& _element, bool _visible);
 
 		// vert edit events
 		void onApplyVertEdit(const std::vector<Id>& _vids, const Mat4& _transform);

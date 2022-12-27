@@ -13,7 +13,7 @@ namespace HMP::Projection::Utils
 
     SurfaceExporter::SurfaceExporter(const Meshing::Mesher::Mesh& _mesh): vol{ _mesh }
     {
-        cinolib::export_surface(_mesh, surf, m_v2s, m_s2v);
+        cinolib::export_surface(_mesh, surf, m_v2s, m_s2v, false);
     }
 
     void SurfaceExporter::applySurfToVol()

@@ -57,9 +57,7 @@ namespace HMP::Actions
 		{
 			Dag::Refine& ref = *refine;
 			Dag::Element& refEl = ref.parents.single();
-			// temporarily add the element just to examine the adjacencies
-			mesher.add(refEl);
-			const Id refPid{ mesher.elementToPid(refEl) };
+			const Id refPid{ refEl.pid };
 			// for each adjacent poly candPid
 			for (const Id candPid : mesh.adj_p2p(refPid))
 			{
@@ -83,7 +81,7 @@ namespace HMP::Actions
 				Dag::Element& candEl = mesher.pidToElement(candPid);
 				const Id candForwardFid{ sharedFid };
 				const Id candForwardFaceOffset{ mesh.poly_face_offset(candPid, candForwardFid) };
-				const Id candUpFid{ Meshing::Utils::adjFidInPidByEidAndFid(mesh, candPid, candForwardFid, mesh.face_edge_id(candForwardFid, 0)) };
+				const Id candUpFid{ Meshing::Utils::adjFidInPidByFidAndEid(mesh, candPid, candForwardFid, mesh.face_edge_id(candForwardFid, 0)) };
 				const Id candUpFaceOffset{ mesh.poly_face_offset(candPid, candUpFid) };
 				// apply the refinement
 				Dag::Refine& adapterRef{ Refinement::Utils::prepare(candForwardFaceOffset, candUpFaceOffset, EScheme::Inset) };
@@ -92,8 +90,6 @@ namespace HMP::Actions
 				m_operations.push_back({ &adapterRef, &candEl });
 				_insets.push_back(&adapterRef);
 			}
-			// remove the temporarily added element
-			mesher.remove(refEl, false);
 		}
 	}
 
@@ -157,7 +153,7 @@ namespace HMP::Actions
 		for (auto it{ m_operations.rbegin() }; it != m_operations.rend(); ++it)
 		{
 			auto& [operation, element] {*it};
-			Refinement::Utils::unapply(mesher(), *operation);
+			//Refinement::Utils::unapply(mesher(), *operation);
 		}
 		mesher().updateMesh();
 	}

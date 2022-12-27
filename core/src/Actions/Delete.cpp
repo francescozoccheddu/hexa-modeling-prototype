@@ -6,14 +6,14 @@ namespace HMP::Actions
 	void Delete::apply()
 	{
 		m_operation->parents.attach(m_element);
-		mesher().remove(m_element, false);
+		mesher().show(m_element, false);
 		mesher().updateMesh();
 	}
 
 	void Delete::unapply()
 	{
 		m_operation->parents.detachAll(false);
-		mesher().add(m_element);
+		mesher().show(m_element, true);
 		mesher().updateMesh();
 	}
 

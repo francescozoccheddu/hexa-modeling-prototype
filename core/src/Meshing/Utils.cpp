@@ -10,7 +10,7 @@ namespace HMP::Meshing::Utils
 
 	Id anyAdjFidInPidByFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid)
 	{
-		return adjFidInPidByEidAndFid(_mesh, _pid, _fid, _mesh.adj_f2e(_fid)[0]);
+		return adjFidInPidByFidAndEid(_mesh, _pid, _fid, _mesh.adj_f2e(_fid)[0]);
 	}
 
 	Id adjFidInPidByVidAndFids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _vid, Id _fid1, Id _fid2)
@@ -41,7 +41,7 @@ namespace HMP::Meshing::Utils
 		assert(false);
 	}
 
-	Id adjFidInPidByEidAndFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _eid)
+	Id adjFidInPidByFidAndEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _eid)
 	{
 		assert(_mesh.poly_contains_face(_pid, _fid));
 		assert(_mesh.face_contains_edge(_fid, _eid));
@@ -284,36 +284,6 @@ namespace HMP::Meshing::Utils
 		return closestEid;
 	}
 
-	void addVerts(Mesher& _mesher, const std::vector<Vec>& _verts)
-	{
-		for (const Vec& vert : _verts)
-		{
-			_mesher.addVert(vert);
-		}
-	}
-
-	void addLeafs(Mesher& _mesher, Dag::Node& _root)
-	{
-		for (Dag::Node* node : Dag::Utils::descendants(_root))
-		{
-			if (isMeshed(*node))
-			{
-				_mesher.add(node->element());
-			}
-		}
-	}
-
-	void removeLeafs(Mesher& _mesher, Dag::Node& _root, bool _removeVerts)
-	{
-		for (Dag::Node* node : Dag::Utils::descendants(_root))
-		{
-			if (isMeshed(*node))
-			{
-				_mesher.remove(node->element(), _removeVerts);
-			}
-		}
-	}
-
 	QuadVertIds faceVids(const Dag::Element& _element, I _fi)
 	{
 		const HexVertIds vids{ _element.vids };
@@ -496,7 +466,7 @@ namespace HMP::Meshing::Utils
 		return sum / 4.0;
 	}
 
-	bool isMeshed(const Dag::Node& _node)
+	bool isShown(const Dag::Node& _node)
 	{
 		return _node.isElement() && _node.element().children.filter([&](const Dag::Operation& _child) {
 			return _child.primitive != Dag::Operation::EPrimitive::Extrude;
@@ -516,6 +486,24 @@ namespace HMP::Meshing::Utils
 	HexVertIds pidVids(const Mesher::Mesh& _mesh, Id _pid)
 	{
 		return cpputils::range::of(_mesh.adj_p2v(_pid)).toArray<8>();
+	}
+
+	void addTree(Mesher& _mesher, Dag::Node& _root, const std::vector<Vec>& _newVerts)
+	{
+		const std::vector<Dag::Element*> elements{
+			cpputils::range::of(Dag::Utils::descendants(_root))
+			.filter([&](const Dag::Node* _node) { return _node->isElement(); })
+			.cast<Dag::Element*>()
+			.toVector()
+		};
+		_mesher.add(elements, _newVerts);
+		for (Dag::Element* element : elements)
+		{
+			if (!isShown(*element))
+			{
+				_mesher.show(*element, false);
+			}
+		}
 	}
 
 }

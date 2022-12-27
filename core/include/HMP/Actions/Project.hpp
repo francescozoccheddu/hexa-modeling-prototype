@@ -19,16 +19,8 @@ namespace HMP::Actions
 
 	private:
 
-		struct VertMove final
-		{
-			Vec position;
-			Id vertOffset;
-			Dag::Element* element;
-		};
-
 		const TargetMesh m_target;
 		bool m_prepared;
-		std::vector<VertMove> m_vertMoves;
 		const std::vector<Projection::Utils::Point> m_pointFeats;
 		const std::vector<Projection::Utils::EidsPath> m_pathFeats;
 		const Projection::Options m_options;

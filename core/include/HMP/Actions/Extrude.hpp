@@ -18,6 +18,7 @@ namespace HMP::Actions
 
 		cpputils::collections::FixedVector<Dag::Element*, 3> m_elements;
 		Dag::NodeHandle<Dag::Extrude> m_operation;
+		Meshing::Mesher::State m_oldState;
 
 		void apply() override;
 		void unapply() override;
