@@ -9,14 +9,14 @@
 namespace HMP
 {
 
-	class Project : public cpputils::mixins::ReferenceClass
+	class Project: public cpputils::mixins::ReferenceClass
 	{
 
 	private:
 
-		Dag::NodeHandle<Dag::Element> m_root;
 		Meshing::Mesher m_mesher;
 		Commander m_commander;
+		Dag::NodeHandle<Dag::Element> m_root;
 
 	public:
 

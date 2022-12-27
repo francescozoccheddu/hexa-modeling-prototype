@@ -26,10 +26,10 @@ namespace HMP::Gui::Widgets
 		}
 
 		Meshing::Mesher& m_mesher;
-		Utils::Transform m_appliedTransform, m_unappliedTransform;
 		std::unordered_map<Id, Vec> m_verts;
-		Vec m_centroid;
 		bool m_pendingAction;
+		Utils::Transform m_unappliedTransform, m_appliedTransform;
+		Vec m_centroid;
 
 		bool addOrRemove(const Id* _vids, I _count, bool _add, bool _update);
 

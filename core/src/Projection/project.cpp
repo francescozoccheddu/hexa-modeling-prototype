@@ -237,7 +237,6 @@ namespace HMP::Projection
     {
         const Vec& sourceVert{ _source.vert(_vid) };
         const std::vector<Real>& baseWeights{ pathVertBaseWeights(_source, _vid, _adjEids, _matches, _options.baseWeightMode) };
-        const Vec sourceNorm{ _source.vert_data(_vid).normal };
         Vec targetVertSum{};
         Vec dirSum{};
         Vec normDirSum{};
@@ -297,7 +296,7 @@ namespace HMP::Projection
             std::vector<Id> adjEids(adjVids.size());
             for (const auto& [adjVid, adjEid] : cpputils::range::zip(adjVids, adjEids))
             {
-                adjEid = _source.edge_id(vid, adjVid);
+                adjEid = static_cast<Id>(_source.edge_id(vid, adjVid));
             }
             projected[i] = projectPathVert(_source, _target, vid, adjEids, matches, _options);
         } };

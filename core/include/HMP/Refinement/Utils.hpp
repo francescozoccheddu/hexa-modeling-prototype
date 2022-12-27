@@ -47,7 +47,7 @@ namespace HMP::Refinement::Utils
 
         void addAdjacency(const Meshing::Mesher& _mesher, const Dag::Element& _refined, bool _edge);
 
-        Dag::Refine& prepareAdapter(const Meshing::Mesher& _mesher) const;
+        Dag::Refine& prepareAdapter() const;
 
     };
 

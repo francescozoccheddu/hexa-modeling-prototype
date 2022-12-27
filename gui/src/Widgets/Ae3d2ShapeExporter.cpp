@@ -40,8 +40,7 @@ namespace HMP::Gui::Widgets
 	}
 
 	Ae3d2ShapeExporter::Ae3d2ShapeExporter(const Meshing::Mesher::Mesh& _mesh, const cinolib::FreeCamera<Real>& _camera):
-		cinolib::SideBarItem{ "ae-3d2shape exporter" }, m_camera{ _camera }, m_mesh{ _mesh }, m_sampleError{},
-		m_keyframes{}
+		cinolib::SideBarItem{ "ae-3d2shape exporter" }, m_mesh{ _mesh }, m_camera{ _camera }, m_keyframes{}, m_sampleError{}
 	{}
 
 	bool Ae3d2ShapeExporter::requestExport() const
@@ -69,7 +68,7 @@ namespace HMP::Gui::Widgets
 					}
 					file
 						<< '{'
-						<< JProp{ "time" } << k * c_keyframeDuration << ','
+						<< JProp{ "time" } << static_cast<double>(k) * c_keyframeDuration << ','
 						<< JProp{ "scene" } << '{'; // project.keyframes[k]
 					{
 						const cinolib::FreeCamera<Real>& camera{ m_keyframes[k].camera };
@@ -83,7 +82,6 @@ namespace HMP::Gui::Widgets
 						}
 						file << ','; // project.keyframes[k].scene.camera
 						{
-
 							file << JProp{ "projection" } << '{';  // project.keyframes[k].scene.camera.projection
 							if (camera.projection.perspective)
 							{

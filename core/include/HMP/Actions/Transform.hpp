@@ -16,8 +16,8 @@ namespace HMP::Actions
 	private:
 
 		const Mat4 m_transform;
-		std::vector<Vec> m_otherVerts;
 		const std::optional<std::vector<Id>> m_vids;
+		std::vector<Vec> m_otherVerts;
 		bool m_prepared;
 
 		void apply() override;

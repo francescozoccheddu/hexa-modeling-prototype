@@ -148,12 +148,6 @@ namespace HMP::Dag
 	}
 
 	template <cpputils::concepts::DerivedSimpleClass<Node> TNode, bool TDescending>
-	NodeHandle<TNode, TDescending>::operator bool() const
-	{
-		return m_node;
-	}
-
-	template <cpputils::concepts::DerivedSimpleClass<Node> TNode, bool TDescending>
 	void NodeHandle<TNode, TDescending>::free()
 	{
 		if (m_node)

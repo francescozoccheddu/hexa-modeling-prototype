@@ -34,7 +34,7 @@ namespace HMP::Actions
 		: m_elements{ _elements }, m_operation{ ExtrudeUtils::prepare(_fis, _firstVi, _clockwise) }
 	{
 		assert(_elements.size() == _fis.size());
-		assert(_firstVi >= 0 && _firstVi < 8);
+		assert(_firstVi < 8);
 	}
 
 	Extrude::Elements Extrude::elements() const

@@ -13,10 +13,11 @@ namespace HMP::Gui::Widgets
 	Target::Target(const Meshing::Mesher::Mesh& _sourceMesh):
 		cinolib::SideBarItem{ "Target mesh" },
 		m_mesh{}, m_sourceMesh{ _sourceMesh },
-		onApplyTransformToSource{},
-		visible{ true },
+		m_missingMeshFile{ false },
+		faceColor{ cinolib::Color::WHITE() }, edgeColor{ cinolib::Color::BLACK() },
 		transform{},
-		m_missingMeshFile{ false }
+		visible{ true },
+		onMeshChanged{}, onApplyTransformToSource{}
 	{}
 
 	const Meshing::Mesher::Mesh& Target::sourceMesh() const

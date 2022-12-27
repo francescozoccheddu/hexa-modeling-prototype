@@ -66,15 +66,15 @@ namespace HMP::Meshing
 		static constexpr Real c_maxVertDistance{ 1e-3 };
 
 		Mesh m_mesh;
-		bool m_dirty;
-		std::vector<Id> m_visibleFaceIndices, m_visibleEdgeIndices;
 		cinolib::Octree m_octree;
+		std::vector<Id> m_visibleFaceIndices, m_visibleEdgeIndices;
+		bool m_dirty;
 
 		void updateOctree();
 
 	public:
 
-		cinolib::Color edgeColor, faceColor;
+		cinolib::Color faceColor, edgeColor;
 
 		Mesher();
 

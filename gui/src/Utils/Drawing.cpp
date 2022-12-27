@@ -56,7 +56,7 @@ namespace HMP::Gui::Utils::Drawing
 
     void circleFilled(ImDrawList& _drawList, const ImVec2& _center, float _radius, ImU32 _color)
     {
-        _drawList.AddCircleFilled(_center, segCount(_radius), _color, 6);
+        _drawList.AddCircleFilled(_center, _radius, _color, segCount(_radius));
     }
 
     void cross(ImDrawList& _drawList, const ImVec2& _center, float _radius, ImU32 _color, float _thickness)

@@ -62,7 +62,7 @@ namespace HMP::Actions
 	}
 
 	Transform::Transform(const Mat4& _transform, const std::optional<std::vector<Id>>& _vids)
-		: m_transform{ _transform }, m_vids{ _vids }, m_prepared{ false }, m_otherVerts{}
+		: m_transform{ _transform }, m_vids{ _vids }, m_otherVerts{}, m_prepared{ false }
 	{}
 
 	const Mat4& Transform::transform() const

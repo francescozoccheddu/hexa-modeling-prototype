@@ -27,8 +27,8 @@ namespace HMP::Actions
 		: m_element{ _element }, m_operation{ Refinement::Utils::prepare(_forwardFi, _firstVi, _scheme, _depth) }, m_depth{ _depth }
 	{
 		assert(_depth >= 1 && _depth <= 3);
-		assert(_forwardFi >= 0 && _forwardFi < 6);
-		assert(_firstVi >= 0 && _firstVi < 8);
+		assert(_forwardFi < 6);
+		assert(_firstVi < 8);
 		assert(Refinement::schemes.contains(_scheme));
 	}
 
