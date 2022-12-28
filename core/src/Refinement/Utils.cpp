@@ -43,12 +43,12 @@ namespace HMP::Refinement::Utils
 		const HexVertIds sourceVids{ Meshing::Utils::pidVidsByForwardFidAndFirstVid(mesh, element.pid, forwardFid, firstVid) };
 		const HexVerts sourceVerts{ Meshing::Utils::verts(mesh, sourceVids) };
 		std::vector<Vec> newVerts;
-		const std::vector<HexVertIds> polys{ refinement.apply(_mesher, sourceVerts, newVerts) };
+		/*const std::vector<HexVertIds> polys{ refinement.apply(_mesher, sourceVerts, newVerts) };
 		for (const auto& [child, vids] : cpputils::range::zip(_refine.children, polys))
 		{
 			child.vids = vids;
 		}
-		_mesher.add(_refine.children.address().toVector(), newVerts);
+		_mesher.add(_refine.children.address().toVector(), newVerts);*/
 		_mesher.show(_refine.parents.single(), false);
 	}
 

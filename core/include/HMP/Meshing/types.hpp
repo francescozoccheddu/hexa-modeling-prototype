@@ -9,10 +9,12 @@ namespace HMP
 
 	using Id = unsigned int;
 	using I = std::size_t;
-
 	using Real = double;
-	using Vec = cinolib::vec<3, Real>;
+
 	using IVec = cinolib::vec<3, I>;
+	using IVec2 = cinolib::vec<2, I>;
+
+	using Vec = cinolib::vec<3, Real>;
 	using Vec2 = cinolib::vec<2, Real>;
 	using Vec4 = cinolib::vec<4, Real>;
 	using Mat4 = cinolib::mat4d;

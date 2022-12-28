@@ -3,17 +3,114 @@
 #include <cinolib/geometry/lerp.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <limits>
+#include <cpputils/range/of.hpp>
+#include <utility>
+#include <cassert>
 
 namespace HMP::Refinement
 {
 
+	bool Scheme::compareIVec2(const IVec2& _a, const IVec2& _b)
+	{
+		return (_a.x() == _b.x())
+			? (_a.y() < _b.y())
+			: (_a.x() < _b.x());
+	}
+
+	std::vector<I> Scheme::findSurfVis() const
+	{
+		return cpputils::range::of(m_verts)
+			.enumerate()
+			.filter([&](const auto& _vertAndVi) { return isOnSurf(std::get<0>(_vertAndVi)); })
+			.map([](const auto& _vertAndVi) { return std::get<1>(_vertAndVi); })
+			.toVector();
+	}
+
+	std::vector<I> Scheme::findCornerVis() const
+	{
+		return cpputils::range::of(m_surfVis)
+			.filter([&](const I _vi) { return isCorner(m_verts[_vi]); })
+			.toVector();
+	}
+
+	IVec2 removeDim(const IVec& _vert, Id _dim)
+	{
+		switch (_dim)
+		{
+			case 0:
+				return { _vert.y(), _vert.z() };
+			case 1:
+				return { _vert.x(), _vert.z() };
+			case 2:
+				return { _vert.x(), _vert.y() };
+			default:
+				assert(false);
+		}
+	}
+
+	Scheme::FaceSurfVisMap Scheme::findFacesSurfVisIs(Id _dim, bool _polarity) const
+	{
+		FaceSurfVisMap map{ &compareIVec2 };
+		for (I surfViI{}; surfViI < m_surfVis.size(); surfViI++)
+		{
+			const I vi{ m_surfVis[surfViI] };
+			const IVec& vert{ m_verts[vi] };
+			const I comp{ vert[_dim] };
+			if (_polarity ? isMax(comp) : isMin(comp))
+			{
+				map.insert({ removeDim(vert, _dim), surfViI });
+			}
+		}
+		return map;
+	}
+
+	HexFaceData<Scheme::FaceSurfVisMap> Scheme::findFacesSurfVisIs() const
+	{
+		static constexpr HexFaceData<std::pair<Id, bool>> surfaceDimAndPolarity{ {
+			{2, false},
+			{2, true},
+			{0, true},
+			{0, false},
+			{1, false},
+			{1, true}
+		} };
+		return cpputils::range::of(surfaceDimAndPolarity)
+			.map([&](const auto& _dimAndPolarity) { return findFacesSurfVisIs(std::get<0>(_dimAndPolarity), std::get<1>(_dimAndPolarity)); })
+			.toArray();
+	}
+
 	Scheme::Scheme(I _gridSize, const std::vector<IVec>& _verts, const std::vector<HexVertData<I>>& _polys)
-		: m_gridSize{ _gridSize }, m_verts{ _verts }, m_polys{ _polys }
+		: m_gridSize{ _gridSize }, m_verts{ _verts }, m_polys{ _polys }, m_surfVis{ findSurfVis() }, m_cornerVis{ findCornerVis() }, m_facesSurfVisIs{ findFacesSurfVisIs() }
 	{}
 
 	I Scheme::gridSize() const
 	{
 		return m_gridSize;
+	}
+
+	bool Scheme::isMin(I _comp) const
+	{
+		return _comp == 0;
+	}
+
+	bool Scheme::isMax(I _comp) const
+	{
+		return _comp + 1 == m_gridSize;
+	}
+
+	bool Scheme::isExtreme(I _comp) const
+	{
+		return isMin(_comp) || isMax(_comp);
+	}
+
+	bool Scheme::isOnSurf(const IVec& _vert) const
+	{
+		return isExtreme(_vert.x()) || isExtreme(_vert.y()) || isExtreme(_vert.z());
+	}
+
+	bool Scheme::isCorner(const IVec& _vert) const
+	{
+		return isExtreme(_vert.x()) && isExtreme(_vert.y()) && isExtreme(_vert.z());
 	}
 
 	const std::vector<IVec>& Scheme::verts() const
@@ -26,65 +123,19 @@ namespace HMP::Refinement
 		return m_polys;
 	}
 
-	Id getOrAddVert(const Meshing::Mesher::Mesh& _mesh, const Vec& _vert, std::vector<Vec>& _newVerts)
+	const std::vector<I>& Scheme::surfVis() const
 	{
-		Real minDist{ std::numeric_limits<Real>::infinity() };
-		Id minVid{ noId };
-		for (Id vid{}; vid < _mesh.num_verts(); vid++)
-		{
-			const Real dist{ _mesh.vert(vid).dist(_vert) };
-			if (dist < minDist)
-			{
-				minDist = dist;
-				minVid = vid;
-			}
-		}
-		static constexpr Real eps{ 1e-9 };
-		if (minDist < eps)
-		{
-			return minVid;
-		}
-		else
-		{
-			const Id vid{ _mesh.num_verts() + toId(_newVerts.size()) };
-			_newVerts.push_back(_vert);
-			return vid;
-		}
+		return m_surfVis;
 	}
 
-	std::vector<HexVertIds> Scheme::apply(const Meshing::Mesher& _mesher, const HexVerts& _sourceVerts, std::vector<Vec>& _newVerts) const
+	const std::vector<I>& Scheme::cornerVis() const
 	{
-		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
-		std::vector<Id> vidsPool;
-		vidsPool.reserve(m_verts.size());
-		const HexVerts sourceVerts{
-			_sourceVerts[0],
-			_sourceVerts[1],
-			_sourceVerts[3],
-			_sourceVerts[2],
-			_sourceVerts[4],
-			_sourceVerts[5],
-			_sourceVerts[7],
-			_sourceVerts[6]
-		};
-		for (const IVec& ivert : m_verts)
-		{
-			const Vec progress{ ivert.cast<Real>() / static_cast<Real>(m_gridSize) };
-			const Vec vert{ cinolib::lerp3(sourceVerts, progress) };
-			vidsPool.push_back(getOrAddVert(mesh, vert, _newVerts));
-		}
-		std::vector<HexVertIds> polys;
-		polys.reserve(m_polys.size());
-		for (const HexVertData<I>& polyVis : m_polys)
-		{
-			HexVertIds polyVids;
-			for (I i{}; i < 8; i++)
-			{
-				polyVids[i] = vidsPool[polyVis[i]];
-			}
-			polys.push_back(polyVids);
-		}
-		return polys;
+		return m_cornerVis;
+	}
+
+	const HexFaceData<Scheme::FaceSurfVisMap>& Scheme::facesSurfVisIs() const
+	{
+		return m_facesSurfVisIs;
 	}
 
 }
