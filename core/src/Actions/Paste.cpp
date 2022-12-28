@@ -3,6 +3,7 @@
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Actions/ExtrudeUtils.hpp>
 #include <HMP/Dag/Utils.hpp>
+#include <HMP/Dag/Refine.hpp>
 #include <array>
 #include <algorithm>
 #include <utility>
@@ -114,6 +115,21 @@ namespace HMP::Actions
 							vid = numVerts + toId(m_newVerts.size());
 							vidMap.emplace_hint(it, oldVid, vid);
 							m_newVerts.push_back(transform * mesh.vert(oldVid));
+						}
+					}
+				}
+			}
+			for (Dag::Node* node : Dag::Utils::descendants(*m_operation))
+			{
+				if (node->isOperation())
+				{
+					Dag::Operation& operation{ node->operation() };
+					if (operation.primitive == Dag::Operation::EPrimitive::Refine)
+					{
+						Dag::Refine& refine{ static_cast<Dag::Refine&>(operation) };
+						for (Id& vid : refine.surfVids)
+						{
+							vid = vidMap.at(vid);
 						}
 					}
 				}
