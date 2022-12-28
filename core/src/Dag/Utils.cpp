@@ -72,10 +72,11 @@ namespace HMP::Dag::Utils
 						case Operation::EPrimitive::Extrude:
 						{
 							const Extrude& extrudeOperation{ static_cast<const Extrude&>(operation) };
-							_serializer << extrudeOperation.source;
-							_serializer << extrudeOperation.firstVi;
-							_serializer << extrudeOperation.clockwise;
-							_serializer << extrudeOperation.fis.size();
+							_serializer
+								<< extrudeOperation.source
+								<< extrudeOperation.firstVi
+								<< extrudeOperation.clockwise
+								<< extrudeOperation.fis.size();
 							for (const I fi : extrudeOperation.fis)
 							{
 								_serializer << fi;
@@ -88,7 +89,12 @@ namespace HMP::Dag::Utils
 							_serializer
 								<< refineOperation.forwardFi
 								<< refineOperation.firstVi
-								<< refineOperation.scheme;
+								<< refineOperation.scheme
+								<< refineOperation.surfVids.size();
+							for (const Id vid : refineOperation.surfVids)
+							{
+								_serializer << vid;
+							}
 						}
 						break;
 						default:
@@ -157,9 +163,10 @@ namespace HMP::Dag::Utils
 						case Operation::EPrimitive::Extrude:
 						{
 							Extrude& extrudeOperation{ *new Extrude{} };
-							_deserializer >> extrudeOperation.source;
-							_deserializer >> extrudeOperation.firstVi;
-							_deserializer >> extrudeOperation.clockwise;
+							_deserializer
+								>> extrudeOperation.source
+								>> extrudeOperation.firstVi
+								>> extrudeOperation.clockwise;
 							extrudeOperation.fis.resize(_deserializer.get<I>());
 							for (I& fi : extrudeOperation.fis)
 							{
@@ -175,6 +182,11 @@ namespace HMP::Dag::Utils
 								>> refineOperation.forwardFi
 								>> refineOperation.firstVi
 								>> refineOperation.scheme;
+							refineOperation.surfVids.resize(_deserializer.get<I>());
+							for (Id& vid : refineOperation.surfVids)
+							{
+								_deserializer >> vid;
+							}
 							operation = &refineOperation;
 						}
 						break;
@@ -237,6 +249,7 @@ namespace HMP::Dag::Utils
 						clone.scheme = source.scheme;
 						clone.forwardFi = source.forwardFi;
 						clone.firstVi = source.firstVi;
+						clone.surfVids = source.surfVids;
 						return clone;
 					}
 					default:
