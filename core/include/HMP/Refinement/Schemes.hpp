@@ -9,7 +9,7 @@ namespace HMP::Refinement
 
 	enum class EScheme
 	{
-		Subdivide3x3, AdapterFaceSubdivide3x3, Adapter2FacesSubdivide3x3, AdapterEdgeSubdivide3x3, Inset
+		Subdivide3x3, AdapterFaceSubdivide3x3, Adapter2FacesSubdivide3x3, AdapterEdgeSubdivide3x3, Inset, Test
 	};
 
 	extern const std::unordered_map<EScheme, const Scheme&> schemes;
@@ -22,6 +22,7 @@ namespace HMP::Refinement
 		extern const Scheme adapter2FacesSubdivide3x3;
 		extern const Scheme adapterEdgeSubdivide3x3;
 		extern const Scheme inset;
+		extern const Scheme test;
 
 	}
 

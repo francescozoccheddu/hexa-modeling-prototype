@@ -436,6 +436,10 @@ namespace HMP::Gui
 		{
 			onSetPathEdge(false);
 		}
+		else if (key == c_kbRefineTest)
+		{
+			onRefineTest();
+		}
 		else
 		{
 			return false;
@@ -545,7 +549,7 @@ namespace HMP::Gui
 			const QuadVertIds firstParentVids{ Meshing::Utils::align(Meshing::Utils::fiVids(firstParent.vids, extrude.fis[0]), firstVid, extrude.clockwise) };
 			const EdgeVertData<ImVec2> eid2d{ project(m_canvas, Meshing::Utils::verts(m_mesh, EdgeVertIds{ firstParentVids[0], firstParentVids[1] })) };
 			dashedLine(drawList, eid2d, mutedColorU32, 4.0f);
-			circleFilled(drawList, eid2d[0], 4.0f, mutedColorU32);
+			circleFilled(drawList, eid2d[0], 6.0f, mutedColorU32);
 		}
 		if (m_mouse.element)
 		{
@@ -565,7 +569,7 @@ namespace HMP::Gui
 				const ImU32 adjColorU32{ m_mesher.shown(adjPid) ? colorU32 : mutedColorU32 };
 				if (m_options.showNames)
 				{
-					const Dag::Element& element{ m_mesher.pidToElement(adjPid) };
+					const Dag::Element& element{ m_mesher.element(adjPid) };
 					text(drawList, m_dagNamer(&element).c_str(), adjPidCenter2d, 20.0f, adjColorU32);
 				}
 				else
@@ -588,7 +592,7 @@ namespace HMP::Gui
 				dashedLine(drawList, adjEid2d, adjEid == m_mouse.eid ? colorU32 : mutedColorU32, 4.0f);
 			}
 			const ImVec2 hVert2d{ project(m_canvas, m_mesh.vert(m_mouse.vid)) };
-			circleFilled(drawList, hVert2d, 4.0f, colorU32);
+			circleFilled(drawList, hVert2d, 6.0f, colorU32);
 		}
 		if (m_mouse.element)
 		{
@@ -666,7 +670,7 @@ namespace HMP::Gui
 			const cinolib::Ray ray{ m_canvas.eye_to_mouse_ray() };
 			if (m_mesher.pick(ray.begin(), ray.dir(), m_mouse.pid, m_mouse.fid, m_mouse.eid, m_mouse.vid, !m_canvas.camera.projection.perspective))
 			{
-				m_mouse.element = &m_mesher.pidToElement(m_mouse.pid);
+				m_mouse.element = &m_mesher.element(m_mouse.pid);
 				m_mouse.fi = Meshing::Utils::fi(m_mouse.element->vids, Meshing::Utils::fidVids(m_mesh, m_mouse.fid));
 				m_mouse.ei = Meshing::Utils::ei(m_mouse.element->vids, Meshing::Utils::eidVids(m_mesh, m_mouse.eid));
 				m_mouse.vi = Meshing::Utils::vi(m_mouse.element->vids, m_mouse.vid);
@@ -757,7 +761,7 @@ namespace HMP::Gui
 			}
 			_clockwise = Meshing::Utils::isEdgeCW(m_mesh, pids[0], fids[0], commVid, firstEid);
 			_elements = cpputils::range::of(pids).map([&](Id _pid) {
-				return &m_mesher.pidToElement(_pid);
+				return &m_mesher.element(_pid);
 			}).toFixedVector<3>();
 			_fis = cpputils::range::zip(fids, _elements).map([&](const auto& _fidAndElement) {
 				const auto& [fid, element] {_fidAndElement};
@@ -799,7 +803,7 @@ namespace HMP::Gui
 		{
 			return;
 		}
-		Dag::Element& element{ m_mesher.pidToElement(pid) };
+		Dag::Element& element{ m_mesher.element(pid) };
 		const I fi{ Meshing::Utils::fi(element.vids, Meshing::Utils::fidVids(m_mesh, fid)) };
 		const I vi{ Meshing::Utils::vi(element.vids, vids[0]) };
 		Actions::Extrude& action{ *new Actions::Extrude{ {&element}, {fi}, vi, false } };
@@ -845,6 +849,14 @@ namespace HMP::Gui
 		if (m_mouse.element)
 		{
 			applyAction(*new Actions::Refine{ *m_mouse.element, m_mouse.fi, m_mouse.vi, Refinement::EScheme::Subdivide3x3, _twice ? 2u : 1u });
+		}
+	}
+
+	void App::onRefineTest()
+	{
+		if (m_mouse.element)
+		{
+			applyAction(*new Actions::Refine{ *m_mouse.element, m_mouse.fi, m_mouse.vi, Refinement::EScheme::Test });
 		}
 	}
 

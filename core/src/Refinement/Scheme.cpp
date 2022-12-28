@@ -55,10 +55,15 @@ namespace HMP::Refinement
 		{
 			const I vi{ surfVis[surfViI] };
 			const IVec& vert{ verts[vi] };
-			const I comp{ vert[_dim] };
-			if (_polarity ? isMax(comp) : isMin(comp))
 			{
-				map.insert({ removeDim(vert, _dim), surfViI });
+				const I comp{ vert[_dim] };
+				if (_polarity ? isMax(comp) : isMin(comp))
+				{
+					if (!isCorner(vert))
+					{
+						map.insert({ removeDim(vert, _dim), surfViI });
+					}
+				}
 			}
 		}
 		return map;

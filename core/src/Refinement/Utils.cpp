@@ -10,6 +10,8 @@
 #include <vector>
 #include <cstddef>
 #include <algorithm>
+#include <unordered_set>
+#include <limits>
 
 namespace HMP::Refinement::Utils
 {
@@ -34,6 +36,134 @@ namespace HMP::Refinement::Utils
 		return refine;
 	}
 
+	IVec schemeOrigin(I _vi, I _gridSize)
+	{
+		const I s{ _gridSize };
+		switch (_vi)
+		{
+			case 0:
+				return { 0,0,0 };
+			case 1:
+				return { s,0,0 };
+			case 2:
+				return { s,s,0 };
+			case 3:
+				return { 0,s,0 };
+			case 4:
+				return { 0,0,s };
+			case 5:
+				return { s,0,s };
+			case 6:
+				return { s,s,s };
+			case 7:
+				return { 0,s,s };
+			default:
+				assert(false);
+		}
+	}
+
+	struct BasisVec final
+	{
+		bool dim;
+		bool positive;
+
+		constexpr BasisVec operator-() const
+		{
+			return { dim, !positive };
+		}
+
+	};
+
+	I index(const QuadVertData<I>& _elements, I _element)
+	{
+		return static_cast<I>(std::distance(_elements.begin(), std::find(_elements.begin(), _elements.end(), _element)));
+	}
+
+	std::array<BasisVec, 2> rotateBasisCCW(I _count, const BasisVec& _right, const BasisVec& _up)
+	{
+		switch (_count % 4)
+		{
+			case 0:
+				return { _right, _up };
+			case 1:
+				return { _up, -_right };
+			case 2:
+				return { -_right, -_up };
+			case 3:
+				return { -_up, _right };
+			default:
+				assert(false);
+		}
+	}
+
+	static constexpr HexFaceData<QuadVertData<I>> faceVis{ {
+		{ 0,1,2,3 },
+		{ 4,7,6,5 },
+		{ 1,5,6,2 },
+		{ 0,3,7,4 },
+		{ 0,4,5,1 },
+		{ 3,2,6,7 }
+	} };
+
+	std::array<BasisVec, 2> schemeBasis(I _fi, I _vi)
+	{
+		static constexpr Id x{ 0 }, y{ 1 }, z{ 2 };
+		static constexpr HexFaceData<std::pair<I, I>> dims{ {
+			{x,y},
+			{y,x},
+			{z,y},
+			{y,z},
+			{z,x},
+			{x,z}
+		} };
+		const auto& [rightDim, upDim] { dims[_fi] };
+		return rotateBasisCCW(index(faceVis[_fi], _vi), { rightDim > upDim, true }, { upDim > rightDim, true });
+	}
+
+	I rotateFiCW(I _fi, I _forwardFi)
+	{
+		static constexpr HexFaceData<HexFaceData<I>> rotFis{ {
+			{0,1,4,5,3,2},
+			{0,1,5,4,2,3},
+			{5,4,2,3,0,1},
+			{4,5,2,3,1,0},
+			{2,3,1,0,4,5},
+			{3,2,0,1,4,5}
+		} };
+		return rotFis[_forwardFi][_fi];
+	}
+
+	I rotateFiCCW(I _fi, I _forwardFi)
+	{
+		static constexpr HexFaceData<HexFaceData<I>> rotFis{ {
+			{0,1,5,4,2,3},
+			{0,1,4,5,3,2},
+			{4,5,2,3,1,0},
+			{5,4,2,3,0,1},
+			{3,2,0,1,4,5},
+			{2,3,1,0,4,5}
+		} };
+		return rotFis[_forwardFi][_fi];
+	}
+
+	I relativeFi(I _fi, I _forwardFi, I _vi)
+	{
+		static constexpr HexFaceData<HexFaceData<I>> invFis{ {
+			{0,1,2,3,4,5},
+			{1,0,5,4,3,2},
+			{3,2,0,1,4,5},
+			{4,5,1,0,3,2},
+			{3,2,5,4,0,1},
+			{4,5,2,3,1,0}
+		} };
+		I count{ index(faceVis[_forwardFi], _vi) };
+		while (count-- > 0)
+		{
+			_fi = rotateFiCW(_fi, _forwardFi);
+		}
+		return invFis[_forwardFi][_fi];
+	}
+
 	void apply(Meshing::Mesher& _mesher, Dag::Refine& _refine)
 	{
 		const Scheme& scheme{ schemes.at(_refine.scheme) };
@@ -41,18 +171,98 @@ namespace HMP::Refinement::Utils
 		Dag::Element& parent{ _refine.parents.single() };
 		const HexVertIds parentVids{ Meshing::Utils::align(Meshing::Utils::rotate(parent.vids, _refine.forwardFi), parent.vids[_refine.firstVi]) };
 		// weld adjacencies
-		// weld corners
 		{
-			for (const I cornerVi : scheme.cornerVis)
+			const IVec origin{ schemeOrigin(_refine.firstVi, scheme.gridSize) };
+			const std::array<BasisVec, 2> basis{ schemeBasis(_refine.forwardFi, _refine.firstVi) };
+			// ################# TEMP IMPL ##################
+			std::unordered_set<Id> vidsSearchPool{}; // TEMP IMPL
+			// ##############################################
+			for (const Id adjPid : _mesher.mesh().adj_p2p(parent.pid))
 			{
-				const IVec& corner{ scheme.verts[cornerVi] };
-				schemeVids[cornerVi] = parentVids[scheme.cornerVi(corner)];
+				const Dag::Refine* adjRefine{
+					_mesher
+					.element(adjPid)
+					.children
+					.filter([&](const Dag::Operation& _op) { return _op.primitive == Dag::Operation::EPrimitive::Refine; })
+					.address()
+					.cast<const Dag::Refine*>()
+					.single(nullptr)
+				};
+				if (!adjRefine)
+				{
+					continue;
+				}
+				const Scheme& adjScheme{ schemes.at(adjRefine->scheme) };
+				if (adjScheme.gridSize == scheme.gridSize)
+				{
+					const Id fid{ static_cast<Id>(_mesher.mesh().poly_shared_face(parent.pid, adjPid)) };
+					const QuadVertIds fidVids{ Meshing::Utils::fidVids(_mesher.mesh(), fid) };
+					const I fi{ Meshing::Utils::fi(parent.vids, fidVids) };
+					const I adjFi{ Meshing::Utils::fi(adjRefine->parents.single().vids, fidVids) };
+					const I schemeFi{ relativeFi(fi, _refine.forwardFi, _refine.firstVi) };
+					const I adjSchemeFi{ relativeFi(adjFi, adjRefine->forwardFi, adjRefine->firstVi) };
+					const I count{ scheme.facesSurfVisIs[schemeFi].size() / 4 };
+					const I adjCount{ adjScheme.facesSurfVisIs[adjSchemeFi].size() / 4 };
+					std::cout
+						<< "fi=" << fi
+						<< ", adjFi=" << adjFi
+						<< ", forwardFi=" << _refine.forwardFi
+						<< ", firstVi=" << _refine.firstVi
+						<< ", adjForwardFi=" << adjRefine->forwardFi
+						<< ", adjFirstVi=" << adjRefine->firstVi
+						<< ", schemeFi=" << schemeFi
+						<< ", adjSchemeFi=" << adjSchemeFi
+						<< ", schemeFiSize=" << count
+						<< ", adjSchemeFiSize=" << adjCount
+						<< std::endl;
+					// ################# TEMP IMPL ##################
+					vidsSearchPool.insert(adjRefine->surfVids.begin(), adjRefine->surfVids.end()); // TEMP IMPL
+					// ##############################################
+				}
 			}
+			// ################# TEMP IMPL ##################
+			{  // TEMP IMPL
+				const Id numVerts{ _mesher.mesh().num_verts() }; // TEMP IMPL
+				const HexVerts parentVerts{ Meshing::Utils::verts(_mesher.mesh(), parentVids) }; // TEMP IMPL
+				const HexVerts lerpVerts{ // TEMP IMPL
+					parentVerts[0], // TEMP IMPL
+					parentVerts[1], // TEMP IMPL
+					parentVerts[3], // TEMP IMPL
+					parentVerts[2], // TEMP IMPL
+					parentVerts[4], // TEMP IMPL
+					parentVerts[5], // TEMP IMPL
+					parentVerts[7], // TEMP IMPL
+					parentVerts[6] // TEMP IMPL
+				}; // TEMP IMPL
+				const Real eps{ 1e-9 }; // TEMP IMPL
+				for (const auto& [vid, ivert] : cpputils::range::zip(schemeVids, scheme.verts)) // TEMP IMPL
+				{ // TEMP IMPL
+					const Vec progress{ ivert.cast<Real>() / static_cast<Real>(scheme.gridSize) }; // TEMP IMPL
+					const Vec vert{ cinolib::lerp3(lerpVerts, progress) }; // TEMP IMPL
+					Real minDist{ std::numeric_limits<Real>::infinity() }; // TEMP IMPL
+					for (const Id candVid : vidsSearchPool) // TEMP IMPL
+					{ // TEMP IMPL
+						const Real dist{ _mesher.mesh().vert(candVid).dist(vert) }; // TEMP IMPL
+						if (dist < minDist && dist < eps) // TEMP IMPL
+						{ // TEMP IMPL
+							minDist = dist; // TEMP IMPL
+							vid = candVid; // TEMP IMPL
+						} // TEMP IMPL
+					} // TEMP IMPL
+				} // TEMP IMPL
+			} // TEMP IMPL
+			// ##############################################
+		}
+		// weld corners
+		for (const I cornerVi : scheme.cornerVis)
+		{
+			const IVec& corner{ scheme.verts[cornerVi] };
+			schemeVids[cornerVi] = parentVids[scheme.cornerVi(corner)];
 		}
 		// create missing verts
-		const Id numVerts{ _mesher.mesh().num_verts() };
 		std::vector<Vec> newVerts;
 		{
+			const Id numVerts{ _mesher.mesh().num_verts() };
 			const HexVerts parentVerts{ Meshing::Utils::verts(_mesher.mesh(), parentVids) };
 			const HexVerts lerpVerts{
 				parentVerts[0],
@@ -287,7 +497,7 @@ namespace HMP::Refinement::Utils
 		// add face to face adjacent elements
 		for (const Id candPid : mesh.adj_p2p(refPid))
 		{
-			addAdjacency(_mesher, _mesher.pidToElement(candPid), refEl, false);
+			addAdjacency(_mesher, _mesher.element(candPid), refEl, false);
 		}
 		// add face to edge adjacent elements
 		for (const Id sharedEid : mesh.adj_p2e(refPid)) // for each adjacent edge sharedEid
@@ -297,7 +507,7 @@ namespace HMP::Refinement::Utils
 				// if candPid is not the refined element, nor is adjacent face to face to it
 				if (candPid != refPid && static_cast<Id>(mesh.poly_shared_face(candPid, refPid)) == noId)
 				{
-					addAdjacency(_mesher, _mesher.pidToElement(candPid), refEl, true);
+					addAdjacency(_mesher, _mesher.element(candPid), refEl, true);
 				}
 			}
 		}

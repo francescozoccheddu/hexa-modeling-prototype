@@ -32,14 +32,14 @@ namespace HMP::Meshing
 		return m_mesh;
 	}
 
-	Dag::Element& Mesher::pidToElement(Id _pid)
+	Dag::Element& Mesher::element(Id _pid)
 	{
 		return *m_mesh.poly_data(_pid).m_element;
 	}
 
-	const Dag::Element& Mesher::pidToElement(Id _pid) const
+	const Dag::Element& Mesher::element(Id _pid) const
 	{
-		return const_cast<Mesher*>(this)->pidToElement(_pid);
+		return const_cast<Mesher*>(this)->element(_pid);
 	}
 
 	void Mesher::moveVert(Id _vid, const Vec& _position)
@@ -224,7 +224,7 @@ namespace HMP::Meshing
 			{
 				for (Id pid{}; pid < m_mesh.num_polys(); pid++)
 				{
-					pidToElement(pid).pid = noId;
+					element(pid).pid = noId;
 				}
 				m_mesh.clear();
 			}
@@ -232,7 +232,7 @@ namespace HMP::Meshing
 			{
 				for (Id pidsCount{ m_mesh.num_polys() }; pidsCount > _state.pidsCount(); --pidsCount)
 				{
-					pidToElement(pidsCount - 1).pid = noId;
+					element(pidsCount - 1).pid = noId;
 					m_mesh.poly_remove(pidsCount - 1, false);
 				}
 				for (Id fidsCount{ m_mesh.num_faces() }; fidsCount > _state.fidsCount(); --fidsCount)
@@ -266,7 +266,7 @@ namespace HMP::Meshing
 		{
 			data = !_visible;
 			m_dirty = true;
-			onElementVisibilityChanged(pidToElement(_pid), _visible);
+			onElementVisibilityChanged(element(_pid), _visible);
 		}
 	}
 
