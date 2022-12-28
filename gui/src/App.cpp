@@ -87,7 +87,6 @@ namespace HMP::Gui
 		cinolib::print_binding(c_kbAddPathEdge.name(), "add path edge");
 		cinolib::print_binding(c_kbRemovePathEdge.name(), "remove path edge");
 		cinolib::print_binding(c_kbRedo.name(), "redo");
-		cinolib::print_binding(c_kbPrintDebugInfo.name(), "print debug info");
 		std::cout << "-------------------------------\n";
 	}
 
@@ -331,11 +330,6 @@ namespace HMP::Gui
 		{
 			onClear();
 		}
-		// print elements
-		else if (key == c_kbPrintDebugInfo)
-		{
-			onPrintDebugInfo();
-		}
 		// direct manipulation
 		else if (key == c_kbDirectTranslation)
 		{
@@ -536,7 +530,7 @@ namespace HMP::Gui
 			const ImVec2 cPidCenter2d{ project(m_canvas, m_mesh.poly_centroid(cPid)) };
 			for (const auto& [parent, fi] : extrude.parents.zip(extrude.fis))
 			{
-				const QuadVertIds parentFidVids{ Meshing::Utils::faceVids(parent, fi) };
+				const QuadVertIds parentFidVids{ Meshing::Utils::fiVids(parent.vids, fi) };
 				const QuadVerts parentFidVerts{ Meshing::Utils::verts(m_mesh, parentFidVids) };
 				const Vec parentFidCenter{ cpputils::range::of(parentFidVerts).sum() / 4.0 };
 				const ImVec2 parentFidCenter2d{ project(m_canvas, parentFidCenter) };
@@ -548,7 +542,7 @@ namespace HMP::Gui
 			}
 			const Dag::Element& firstParent{ extrude.parents.first() };
 			const Id firstVid{ firstParent.vids[extrude.firstVi] };
-			const QuadVertIds firstParentVids{ Meshing::Utils::align(Meshing::Utils::faceVids(firstParent, extrude.fis[0]), firstVid, extrude.clockwise) };
+			const QuadVertIds firstParentVids{ Meshing::Utils::align(Meshing::Utils::fiVids(firstParent.vids, extrude.fis[0]), firstVid, extrude.clockwise) };
 			const EdgeVertData<ImVec2> eid2d{ project(m_canvas, Meshing::Utils::verts(m_mesh, EdgeVertIds{ firstParentVids[0], firstParentVids[1] })) };
 			dashedLine(drawList, eid2d, mutedColorU32, 4.0f);
 			circleFilled(drawList, eid2d[0], 4.0f, mutedColorU32);
@@ -558,7 +552,7 @@ namespace HMP::Gui
 			for (I i{}; i < 6; i++)
 			{
 				const I fi{ (i + 1 + m_mouse.fi) % 6 };
-				const QuadVerts fiVerts{ Meshing::Utils::verts(m_mesh, Meshing::Utils::faceVids(*m_mouse.element, fi)) };
+				const QuadVerts fiVerts{ Meshing::Utils::verts(m_mesh, Meshing::Utils::fiVids(m_mouse.element->vids, fi)) };
 				const QuadVertData<ImVec2> fiVerts2d{ project(m_canvas, fiVerts) };
 				quadFilled(drawList, fiVerts2d, fi == m_mouse.fi ? hFaceColorU32 : hPolyColorU32);
 			}
@@ -688,73 +682,6 @@ namespace HMP::Gui
 	}
 
 	// Commands
-
-	std::string App::getDebugInfo() const
-	{
-		std::ostringstream ss{};
-		ss << "---- Elements\n";
-		for (Id pid{}; pid < m_mesh.num_polys(); pid++)
-		{
-			const Dag::Element& element{ m_mesher.pidToElement(pid) };
-			ss
-				<< "name: " << m_dagNamer.nameOrUnknown(&element)
-				<< " pid: " << pid
-				<< " centroid: " << Utils::HrDescriptions::describe(m_mesh.poly_centroid(pid))
-				<< " vids: " << Utils::HrDescriptions::describe(m_mesh.adj_p2v(pid))
-				<< " eids: " << Utils::HrDescriptions::describe(m_mesh.adj_p2e(pid))
-				<< " fids: " << Utils::HrDescriptions::describe(m_mesh.adj_p2f(pid))
-				<< " pids: " << Utils::HrDescriptions::describe(m_mesh.adj_p2p(pid))
-				<< " winding: " << Utils::HrDescriptions::describe(m_mesh.poly_faces_winding(pid))
-				<< "\n";
-		}
-		ss << "---- Faces\n";
-		for (Id fid{}; fid < m_mesh.num_faces(); fid++)
-		{
-			ss
-				<< "fid: " << fid
-				<< " centroid: " << Utils::HrDescriptions::describe(m_mesh.face_centroid(fid))
-				<< " vids: " << Utils::HrDescriptions::describe(m_mesh.adj_f2v(fid))
-				<< " eids: " << Utils::HrDescriptions::describe(m_mesh.adj_f2e(fid))
-				<< " fids: " << Utils::HrDescriptions::describe(m_mesh.adj_f2f(fid))
-				<< " pids: " << Utils::HrDescriptions::describe(m_mesh.adj_f2p(fid))
-				<< " normal: " << Utils::HrDescriptions::describe(m_mesh.face_data(fid).normal)
-				<< "\n";
-		}
-		ss << "---- Edges\n";
-		for (Id eid{}; eid < m_mesh.num_edges(); eid++)
-		{
-			ss
-				<< "eid: " << eid
-				<< " midpoint: " << Utils::HrDescriptions::describe(Meshing::Utils::midpoint(m_mesh, eid))
-				<< " vids: " << Utils::HrDescriptions::describe(m_mesh.adj_e2v(eid))
-				<< " eids: " << Utils::HrDescriptions::describe(m_mesh.adj_e2e(eid))
-				<< " fids: " << Utils::HrDescriptions::describe(m_mesh.adj_e2f(eid))
-				<< " pids: " << Utils::HrDescriptions::describe(m_mesh.adj_e2p(eid))
-				<< "\n";
-		}
-		ss << "---- Vertices\n";
-		for (Id vid{}; vid < m_mesh.num_verts(); vid++)
-		{
-			ss
-				<< "vid: " << vid
-				<< " position: " << Utils::HrDescriptions::describe(m_mesh.vert(vid))
-				<< " vids: " << Utils::HrDescriptions::describe(m_mesh.adj_v2v(vid))
-				<< " eids: " << Utils::HrDescriptions::describe(m_mesh.adj_v2e(vid))
-				<< " fids: " << Utils::HrDescriptions::describe(m_mesh.adj_v2f(vid))
-				<< " pids: " << Utils::HrDescriptions::describe(m_mesh.adj_v2p(vid))
-				<< "\n";
-		}
-		return ss.str();
-	}
-
-	void App::onPrintDebugInfo() const
-	{
-		std::cout
-			<< "-------- PRINT DEBUG INFO --------\n"
-			<< getDebugInfo()
-			<< "----------------------------------"
-			<< std::endl;
-	}
 
 	bool App::hoveredExtrudeElements(Dag::Extrude::ESource _source, cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, cpputils::collections::FixedVector<I, 3>& _fis, I& _firstVi, bool& _clockwise)
 	{
@@ -1225,20 +1152,14 @@ namespace HMP::Gui
 		{
 			const std::time_t time{ std::time(nullptr) };
 			const std::tm* now{ std::localtime(&time) };
-			std::ostringstream basename{};
-			basename << "crash_" << std::put_time(now, "%H-%M-%S_%d-%m-%y");
+			std::ostringstream filenameSs{};
+			filenameSs << "crash_"
+				<< std::put_time(now, "%H-%M-%S_%d-%m-%y")
+				<< ".hmp";
 			{
-				const std::string filename{ basename.str() + "_dag.hmp" };
+				const std::string filename{ filenameSs.str() };
 				onSaveState(filename);
 				std::cout << "Wrote state to " << std::filesystem::absolute(filename) << std::endl;
-			}
-			{
-				const std::string filename{ basename.str() + "_mesh_debug.txt" };
-				std::ofstream file;
-				file.open(filename);
-				file << getDebugInfo();
-				file.close();
-				std::cout << "Wrote mesh debug info to " << std::filesystem::absolute(filename) << std::endl;
 			}
 			throw;
 		}

@@ -53,7 +53,7 @@ namespace HMP::Actions::ExtrudeUtils
 
 	HexVertIds applyFaceExtrude(const Meshing::Mesher::Mesh& _mesh, const Dag::Element& _element, I _fi, Id _firstVid, std::vector<Vec>& _newVerts)
 	{
-		const QuadVertIds faceVids{ Meshing::Utils::align(Meshing::Utils::faceVids(_element, _fi), _firstVid) };
+		const QuadVertIds faceVids{ Meshing::Utils::align(Meshing::Utils::fiVids(_element.vids, _fi), _firstVid) };
 		const QuadVerts newVerts{ extrudeFace(_mesh, faceVids) };
 		HexVertIds vids;
 		std::copy(faceVids.begin(), faceVids.end(), vids.begin());
@@ -71,7 +71,7 @@ namespace HMP::Actions::ExtrudeUtils
 		const std::array<QuadVertIds, 2> faceVids{
 			cpputils::range::zip(_elements, _fis).map([&](const auto& _elAndFi) {
 				const auto& [element, fi] {_elAndFi};
-				return Meshing::Utils::align(Meshing::Utils::faceVids(*element, fi), _firstVid);
+				return Meshing::Utils::align(Meshing::Utils::fiVids(element->vids, fi), _firstVid);
 			}).toArray()
 		};
 		const std::array<QuadVerts, 2> newQuadVerts{
@@ -105,7 +105,7 @@ namespace HMP::Actions::ExtrudeUtils
 		const std::array<QuadVertIds, 3> faceVids{
 			cpputils::range::zip(_elements, _fis).map([&](const auto& _elAndFi) {
 				const auto& [element, fi] {_elAndFi};
-				return Meshing::Utils::align(Meshing::Utils::faceVids(*element, fi), _firstVid);
+				return Meshing::Utils::align(Meshing::Utils::fiVids(element->vids, fi), _firstVid);
 			}).toArray()
 		};
 		const std::array<QuadVerts, 3> newQuadVerts{

@@ -49,7 +49,7 @@ namespace HMP::Actions
 		const Dag::Element& firstParent{ _extrude.parents.first() };
 		const Id firstVid{ firstParent.vids[_extrude.firstVi] };
 		const Dag::Element& parent{ _extrude.parents[_parentIndex] };
-		const QuadVertIds parentVids{ Meshing::Utils::align(Meshing::Utils::faceVids(parent, _extrude.fis[_parentIndex]), firstVid) };
+		const QuadVertIds parentVids{ Meshing::Utils::align(Meshing::Utils::fiVids(parent.vids, _extrude.fis[_parentIndex]), firstVid) };
 		std::unordered_map<Id, Id> vidsMap{};
 		vidsMap.reserve(4);
 		for (const auto& [newVid, targetI] : cpputils::range::zip(parentVids, _is))
