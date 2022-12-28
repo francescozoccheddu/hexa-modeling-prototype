@@ -85,8 +85,8 @@ namespace HMP::Meshing
 		const Mesh& mesh() const;
 
 		bool has(const Dag::Element& _element) const;
-		Dag::Element& pidToElement(Id _pid);
-		const Dag::Element& pidToElement(Id _pid) const;
+		Dag::Element& element(Id _pid);
+		const Dag::Element& element(Id _pid) const;
 		void moveVert(Id _vid, const Vec& _position);
 		void add(const std::vector<Dag::Element*> _elements, const std::vector<Vec>& _verts = {});
 		void restore(const State& _state);

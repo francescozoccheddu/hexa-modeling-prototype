@@ -71,7 +71,7 @@ namespace HMP::Actions
 					continue;
 				}
 				// get the orientation right
-				Dag::Element& candEl = mesher.pidToElement(candPid);
+				Dag::Element& candEl = mesher.element(candPid);
 				const Id candForwardFid{ sharedFid };
 				const Id candForwardFaceOffset{ mesh.poly_face_offset(candPid, candForwardFid) };
 				const Id candUpFid{ Meshing::Utils::adjFidInPidByFidAndEid(mesh, candPid, candForwardFid, mesh.face_edge_id(candForwardFid, 0)) };

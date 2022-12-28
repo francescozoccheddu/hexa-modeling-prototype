@@ -71,6 +71,7 @@ namespace HMP::Gui
 		static constexpr cinolib::KeyBinding c_kbSelectAll{ GLFW_KEY_A, GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbAddPathEdge{ GLFW_KEY_I, GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbRemovePathEdge{ GLFW_KEY_I, GLFW_MOD_CONTROL };
+		static constexpr cinolib::KeyBinding c_kbRefineTest{ GLFW_KEY_COMMA };
 		static constexpr int c_kmodSelectAdd{ GLFW_MOD_SHIFT };
 		static constexpr int c_kmodSelectRemove{ GLFW_MOD_CONTROL };
 		static constexpr int c_kbDirectEditX{ GLFW_KEY_LEFT_CONTROL };
@@ -176,6 +177,7 @@ namespace HMP::Gui
 		void onRefineElement(bool _twice);
 		void onDelete();
 		void onRefineFace();
+		void onRefineTest();
 		void onMakeConformant();
 		void onExportMesh();
 		void onSaveState();
