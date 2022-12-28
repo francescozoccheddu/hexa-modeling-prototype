@@ -2,7 +2,6 @@
 
 #include <HMP/Meshing/types.hpp>
 #include <HMP/Meshing/Mesher.hpp>
-#include <HMP/Dag/Element.hpp>
 #include <cpputils/range/of.hpp>
 #include <utility>
 
@@ -33,33 +32,26 @@ namespace HMP::Meshing::Utils
 	HexVertIds pidVidsByForwardFidAndFirstVid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _firstVid);
 
 	template<I TSize>
-	std::array<Vec, TSize> verts(const Meshing::Mesher::Mesh& _mesh, const std::array<Id, TSize>& _vids, const std::vector<Vec>& _newVerts = {})
-	{
-		return cpputils::range::of(_vids).map([&](const Id _vid) {
-			return _vid >= _mesh.num_verts() ? _newVerts[toI(_vid - _mesh.num_verts())] : _mesh.vert(_vid);
-		}).toArray();
-	}
-
-	Vec midpoint(const Meshing::Mesher::Mesh& _mesh, Id _eid);
-	Vec centroid(const HexVerts& _verts);
-
-	Id closestPolyFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, const Vec& _centroid);
-	Id closestFaceEid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _midpoint);
-	Id closestFaceVid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _position);
-
-	QuadVertIds fiVids(const HexVertIds& _vids, I _fi);
-	EdgeVertIds eiVids(const HexVertIds& _vids, I _ei);
-	I vi(const Dag::Element& _element, Id _vid);
-	I fi(const Dag::Element& _element, const QuadVertIds& _vids);
-	I ei(const Dag::Element& _element, const EdgeVertIds& _vids);
+	std::array<Vec, TSize> verts(const Meshing::Mesher::Mesh& _mesh, const std::array<Id, TSize>& _vids, const std::vector<Vec>& _newVerts = {});
+	template<I TSize>
+	Vec centroid(const std::array<Vec, TSize>& _verts);
+	Id closestFidEid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _midpoint);
+	Id closestFidVid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _position);
+	QuadVertIds fiVids(const HexVertIds& _hexVids, I _fi);
+	EdgeVertIds eiVids(const HexVertIds& _hexVids, I _ei);
+	I vi(const HexVertIds& _hexVids, Id _vid);
+	I fi(const HexVertIds& _hexVids, const QuadVertIds& _vids);
+	I ei(const HexVertIds& _hexVids, const EdgeVertIds& _vids);
 	QuadVertIds align(const QuadVertIds& _vids, Id _firstVid, bool _reverse = false);
 	HexVertIds align(const HexVertIds& _vids, Id _firstVid, bool _reverse = false);
+	EdgeVertIds align(const EdgeVertIds& _vids, Id _firstVid, bool _reverse = false);
 	HexVertIds rotate(const HexVertIds& _vids, Id _forwardFid);
 	I oppositeFi(I _fi);
 	QuadVertIds reverse(const QuadVertIds& _vids);
 	HexVertIds reverse(const HexVertIds& _vids);
-	Id eid(const Mesher::Mesh& _mesh, const Dag::Element& _element, I _ei);
-	Id fid(const Mesher::Mesh& _mesh, const Dag::Element& _element, I _fi);
+	EdgeVertIds reverse(const EdgeVertIds& _vids);
+	Id eid(const Mesher::Mesh& _mesh, const HexVertIds& _hexVids, I _ei);
+	Id fid(const Mesher::Mesh& _mesh, const HexVertIds& _hexVids, I _fi);
 	Vec normal(const QuadVerts& _verts);
 	Real avgEdgeLength(const QuadVerts& _verts);
 	bool isShown(const Dag::Node& _node);
@@ -69,3 +61,7 @@ namespace HMP::Meshing::Utils
 	void addTree(Mesher& _mesher, Dag::Node& _root, const std::vector<Vec>& _newVerts = {});
 
 }
+
+#define HMP_MESHING_UTILS_IMPL
+#include <HMP/Meshing/Utils.tpp>
+#undef HMP_MESHING_UTILS_IMPL

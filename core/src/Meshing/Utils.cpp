@@ -183,40 +183,7 @@ namespace HMP::Meshing::Utils
 		return vids;
 	}
 
-	Vec midpoint(const Meshing::Mesher::Mesh& _mesh, Id _eid)
-	{
-		const std::vector<Vec> verts{ _mesh.edge_verts(_eid) };
-		return (verts[0] + verts[1]) / 2;
-	}
-
-	Vec centroid(const HexVerts& _verts)
-	{
-		Vec centroid{ 0,0,0 };
-		for (const Vec& vert : _verts)
-		{
-			centroid += vert;
-		}
-		centroid /= 8;
-		return centroid;
-	}
-
-	Id closestPolyFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, const Vec& _centroid)
-	{
-		Real closestDist{ cinolib::inf_double };
-		Id closestFid{};
-		for (const Id fid : _mesh.poly_faces_id(_pid))
-		{
-			const Real dist{ _centroid.dist(_mesh.face_centroid(fid)) };
-			if (dist < closestDist)
-			{
-				closestDist = dist;
-				closestFid = fid;
-			}
-		}
-		return closestFid;
-	}
-
-	Id closestFaceVid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _position)
+	Id closestFidVid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _position)
 	{
 		Real closestDist{ cinolib::inf_double };
 		Id closestVid{};
@@ -232,14 +199,14 @@ namespace HMP::Meshing::Utils
 		return closestVid;
 	}
 
-	Id closestFaceEid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _midpoint)
+	Id closestFidEid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _midpoint)
 	{
 		Real closestDist{ cinolib::inf_double };
 		Id closestEid{};
 		for (Id edgeOffset{ 0 }; edgeOffset < 4; edgeOffset++)
 		{
 			const Id eid{ _mesh.face_edge_id(_fid, edgeOffset) };
-			const Vec midpoint{ Utils::midpoint(_mesh, eid) };
+			const Vec midpoint{ centroid(verts(_mesh, eidVids(_mesh, eid))) };
 			const Real dist{ _midpoint.dist(midpoint) };
 			if (dist < closestDist)
 			{
@@ -250,22 +217,22 @@ namespace HMP::Meshing::Utils
 		return closestEid;
 	}
 
-	QuadVertIds fiVids(const HexVertIds& _vids, I _fi)
+	QuadVertIds fiVids(const HexVertIds& _hexVids, I _fi)
 	{
 		switch (_fi)
 		{
 			case 0:
-				return { _vids[0], _vids[3], _vids[2], _vids[1] };
+				return { _hexVids[0], _hexVids[3], _hexVids[2], _hexVids[1] };
 			case 1:
-				return { _vids[4], _vids[5], _vids[6], _vids[7] };
+				return { _hexVids[4], _hexVids[5], _hexVids[6], _hexVids[7] };
 			case 2:
-				return { _vids[1], _vids[2], _vids[6], _vids[5] };
+				return { _hexVids[1], _hexVids[2], _hexVids[6], _hexVids[5] };
 			case 3:
-				return { _vids[0], _vids[4], _vids[7], _vids[3] };
+				return { _hexVids[0], _hexVids[4], _hexVids[7], _hexVids[3] };
 			case 4:
-				return { _vids[0], _vids[1], _vids[5], _vids[4] };
+				return { _hexVids[0], _hexVids[1], _hexVids[5], _hexVids[4] };
 			case 5:
-				return { _vids[3], _vids[7], _vids[6], _vids[2] };
+				return { _hexVids[3], _hexVids[7], _hexVids[6], _hexVids[2] };
 			default:
 				assert(false);
 		}
@@ -321,6 +288,16 @@ namespace HMP::Meshing::Utils
 		return vids;
 	}
 
+	EdgeVertIds align(const EdgeVertIds& _vids, Id _firstVid, bool _reverse)
+	{
+		return (_reverse != (_vids[0] != _firstVid)) ? reverse(_vids) : _vids;
+	}
+
+	EdgeVertIds reverse(const EdgeVertIds& _vids)
+	{
+		return { _vids[1], _vids[0] };
+	}
+
 	HexVertIds rotate(const HexVertIds& _vids, Id _forwardFid)
 	{
 		return cpputils::range::join(
@@ -353,11 +330,11 @@ namespace HMP::Meshing::Utils
 		};
 	}
 
-	I vi(const Dag::Element& _element, Id _vid)
+	I vi(const HexVertIds& _hexVids, Id _vid)
 	{
 		for (I vi{}; vi < 8; vi++)
 		{
-			if (_element.vids[vi] == _vid)
+			if (_hexVids[vi] == _vid)
 			{
 				return vi;
 			}
@@ -365,13 +342,13 @@ namespace HMP::Meshing::Utils
 		assert(false);
 	}
 
-	I fi(const Dag::Element& _element, const QuadVertIds& _vids)
+	I fi(const HexVertIds& _hexVids, const QuadVertIds& _vids)
 	{
 		QuadVertIds qVids{ _vids };
 		std::sort(qVids.begin(), qVids.end());
 		for (I fi{}; fi < 6; fi++)
 		{
-			QuadVertIds vids{ fiVids(_element.vids, fi) };
+			QuadVertIds vids{ fiVids(_hexVids, fi) };
 			std::sort(vids.begin(), vids.end());
 			if (vids == qVids)
 			{
@@ -381,46 +358,46 @@ namespace HMP::Meshing::Utils
 		assert(false);
 	}
 
-	EdgeVertIds eiVids(const HexVertIds& _vids, I _ei)
+	EdgeVertIds eiVids(const HexVertIds& _hexVids, I _ei)
 	{
 		switch (_ei)
 		{
 			case 0:
-				return { _vids[0], _vids[1] };
+				return { _hexVids[0], _hexVids[1] };
 			case 1:
-				return { _vids[1], _vids[2] };
+				return { _hexVids[1], _hexVids[2] };
 			case 2:
-				return { _vids[2], _vids[3] };
+				return { _hexVids[2], _hexVids[3] };
 			case 3:
-				return { _vids[3], _vids[0] };
+				return { _hexVids[3], _hexVids[0] };
 			case 4:
-				return { _vids[4], _vids[5] };
+				return { _hexVids[4], _hexVids[5] };
 			case 5:
-				return { _vids[5], _vids[6] };
+				return { _hexVids[5], _hexVids[6] };
 			case 6:
-				return { _vids[6], _vids[7] };
+				return { _hexVids[6], _hexVids[7] };
 			case 7:
-				return { _vids[7], _vids[4] };
+				return { _hexVids[7], _hexVids[4] };
 			case 8:
-				return { _vids[0], _vids[4] };
+				return { _hexVids[0], _hexVids[4] };
 			case 9:
-				return { _vids[1], _vids[5] };
+				return { _hexVids[1], _hexVids[5] };
 			case 10:
-				return { _vids[2], _vids[6] };
+				return { _hexVids[2], _hexVids[6] };
 			case 11:
-				return { _vids[3], _vids[7] };
+				return { _hexVids[3], _hexVids[7] };
 			default:
 				assert(false);
 		}
 	}
 
-	I ei(const Dag::Element& _element, const EdgeVertIds& _vids)
+	I ei(const HexVertIds& _hexVids, const EdgeVertIds& _vids)
 	{
 		EdgeVertIds qVids{ _vids };
 		std::sort(qVids.begin(), qVids.end());
 		for (I ei{}; ei < 12; ei++)
 		{
-			EdgeVertIds vids{ eiVids(_element.vids, ei) };
+			EdgeVertIds vids{ eiVids(_hexVids, ei) };
 			std::sort(vids.begin(), vids.end());
 			if (vids == qVids)
 			{
@@ -430,16 +407,16 @@ namespace HMP::Meshing::Utils
 		assert(false);
 	}
 
-	Id eid(const Mesher::Mesh& _mesh, const Dag::Element& _element, I _ei)
+	Id eid(const Mesher::Mesh& _mesh, const HexVertIds& _hexVids, I _ei)
 	{
-		const int eid{ _mesh.edge_id(cpputils::range::of(eiVids(_element.vids, _ei)).toVector()) };
+		const int eid{ _mesh.edge_id(cpputils::range::of(eiVids(_hexVids, _ei)).toVector()) };
 		assert(eid != -1);
 		return static_cast<Id>(eid);
 	}
 
-	Id fid(const Mesher::Mesh& _mesh, const Dag::Element& _element, I _fi)
+	Id fid(const Mesher::Mesh& _mesh, const HexVertIds& _hexVids, I _fi)
 	{
-		const int fid{ _mesh.face_id(cpputils::range::of(fiVids(_element.vids, _fi)).toVector()) };
+		const int fid{ _mesh.face_id(cpputils::range::of(fiVids(_hexVids, _fi)).toVector()) };
 		assert(fid != -1);
 		return static_cast<Id>(fid);
 	}
