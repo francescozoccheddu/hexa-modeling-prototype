@@ -667,9 +667,9 @@ namespace HMP::Gui
 			if (m_mesher.pick(ray.begin(), ray.dir(), m_mouse.pid, m_mouse.fid, m_mouse.eid, m_mouse.vid, !m_canvas.camera.projection.perspective))
 			{
 				m_mouse.element = &m_mesher.pidToElement(m_mouse.pid);
-				m_mouse.fi = Meshing::Utils::fi(*m_mouse.element, Meshing::Utils::fidVids(m_mesh, m_mouse.fid));
-				m_mouse.ei = Meshing::Utils::ei(*m_mouse.element, Meshing::Utils::eidVids(m_mesh, m_mouse.eid));
-				m_mouse.vi = Meshing::Utils::vi(*m_mouse.element, m_mouse.vid);
+				m_mouse.fi = Meshing::Utils::fi(m_mouse.element->vids, Meshing::Utils::fidVids(m_mesh, m_mouse.fid));
+				m_mouse.ei = Meshing::Utils::ei(m_mouse.element->vids, Meshing::Utils::eidVids(m_mesh, m_mouse.eid));
+				m_mouse.vi = Meshing::Utils::vi(m_mouse.element->vids, m_mouse.vid);
 			}
 		}
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
@@ -762,7 +762,7 @@ namespace HMP::Gui
 			_fis = cpputils::range::zip(fids, _elements).map([&](const auto& _fidAndElement) {
 				const auto& [fid, element] {_fidAndElement};
 			const QuadVertIds vids{ Meshing::Utils::fidVids(m_mesh, fid) };
-			return Meshing::Utils::fi(*element, vids);
+			return Meshing::Utils::fi(element->vids, vids);
 			}).toFixedVector<3>();
 			_firstVi = m_mouse.vi;
 			return true;
@@ -800,8 +800,8 @@ namespace HMP::Gui
 			return;
 		}
 		Dag::Element& element{ m_mesher.pidToElement(pid) };
-		const I fi{ Meshing::Utils::fi(element, Meshing::Utils::fidVids(m_mesh, fid)) };
-		const I vi{ Meshing::Utils::vi(element, vids[0]) };
+		const I fi{ Meshing::Utils::fi(element.vids, Meshing::Utils::fidVids(m_mesh, fid)) };
+		const I vi{ Meshing::Utils::vi(element.vids, vids[0]) };
 		Actions::Extrude& action{ *new Actions::Extrude{ {&element}, {fi}, vi, false } };
 		applyAction(action);
 		const Id newPid{ action.operation().children.single().pid };

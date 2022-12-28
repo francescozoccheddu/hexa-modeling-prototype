@@ -293,8 +293,8 @@ namespace HMP::Meshing
 		{
 			const Vec point{ _from + _normDir * minT };
 			assert(m_mesh.face_is_visible(_fid, _pid));
-			_eid = Meshing::Utils::closestFaceEid(m_mesh, _fid, point);
-			_vid = Meshing::Utils::closestFaceVid(m_mesh, _fid, point);
+			_eid = Meshing::Utils::closestFidEid(m_mesh, _fid, point);
+			_vid = Meshing::Utils::closestFidVid(m_mesh, _fid, point);
 			return true;
 		}
 		else
