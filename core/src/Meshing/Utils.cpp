@@ -2,6 +2,7 @@
 
 #include <HMP/Dag/Utils.hpp>
 #include <cpputils/range/of.hpp>
+#include <cpputils/range/join.hpp>
 #include <cinolib/geometry/polygon_utils.h>
 #include <cassert>
 
@@ -127,11 +128,6 @@ namespace HMP::Meshing::Utils
 		return vids;
 	}
 
-	Real avgFidEdgeLength(const Meshing::Mesher::Mesh& _mesh, Id _fid)
-	{
-		return cpputils::range::of(_mesh.adj_f2e(_fid)).map([&](Id _eid) { return _mesh.edge_length(_eid);}).avg();
-	}
-
 	QuadVertIds pidFidVidsByFirstVid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _firstVid, bool _cw)
 	{
 		assert(_mesh.face_contains_vert(_fid, _firstVid));
@@ -254,23 +250,43 @@ namespace HMP::Meshing::Utils
 		return closestEid;
 	}
 
-	QuadVertIds faceVids(const Dag::Element& _element, I _fi)
+	QuadVertIds fiVids(const HexVertIds& _vids, I _fi)
 	{
-		const HexVertIds vids{ _element.vids };
 		switch (_fi)
 		{
 			case 0:
-				return { vids[0], vids[3], vids[2], vids[1] };
+				return { _vids[0], _vids[3], _vids[2], _vids[1] };
 			case 1:
-				return { vids[4], vids[5], vids[6], vids[7] };
+				return { _vids[4], _vids[5], _vids[6], _vids[7] };
 			case 2:
-				return { vids[1], vids[2], vids[6], vids[5] };
+				return { _vids[1], _vids[2], _vids[6], _vids[5] };
 			case 3:
-				return { vids[0], vids[4], vids[7], vids[3] };
+				return { _vids[0], _vids[4], _vids[7], _vids[3] };
 			case 4:
-				return { vids[0], vids[1], vids[5], vids[4] };
+				return { _vids[0], _vids[1], _vids[5], _vids[4] };
 			case 5:
-				return { vids[3], vids[7], vids[6], vids[2] };
+				return { _vids[3], _vids[7], _vids[6], _vids[2] };
+			default:
+				assert(false);
+		}
+	}
+
+	I oppositeFi(I _fi)
+	{
+		switch (_fi)
+		{
+			case 0:
+				return 1;
+			case 1:
+				return 0;
+			case 2:
+				return 3;
+			case 3:
+				return 2;
+			case 4:
+				return 5;
+			case 5:
+				return 4;
 			default:
 				assert(false);
 		}
@@ -303,6 +319,14 @@ namespace HMP::Meshing::Utils
 			vids = reverse(vids);
 		}
 		return vids;
+	}
+
+	HexVertIds rotate(const HexVertIds& _vids, Id _forwardFid)
+	{
+		return cpputils::range::join(
+			fiVids(_vids, _forwardFid),
+			reverse(fiVids(_vids, oppositeFi(_forwardFid)))
+		).toArray();
 	}
 
 	QuadVertIds reverse(const QuadVertIds& _vids)
@@ -347,7 +371,7 @@ namespace HMP::Meshing::Utils
 		std::sort(qVids.begin(), qVids.end());
 		for (I fi{}; fi < 6; fi++)
 		{
-			QuadVertIds vids{ faceVids(_element, fi) };
+			QuadVertIds vids{ fiVids(_element.vids, fi) };
 			std::sort(vids.begin(), vids.end());
 			if (vids == qVids)
 			{
@@ -357,35 +381,34 @@ namespace HMP::Meshing::Utils
 		assert(false);
 	}
 
-	EdgeVertIds edgeVids(const Dag::Element& _element, I _ei)
+	EdgeVertIds eiVids(const HexVertIds& _vids, I _ei)
 	{
-		const HexVertIds vids{ _element.vids };
 		switch (_ei)
 		{
 			case 0:
-				return { vids[0], vids[1] };
+				return { _vids[0], _vids[1] };
 			case 1:
-				return { vids[1], vids[2] };
+				return { _vids[1], _vids[2] };
 			case 2:
-				return { vids[2], vids[3] };
+				return { _vids[2], _vids[3] };
 			case 3:
-				return { vids[3], vids[0] };
+				return { _vids[3], _vids[0] };
 			case 4:
-				return { vids[4], vids[5] };
+				return { _vids[4], _vids[5] };
 			case 5:
-				return { vids[5], vids[6] };
+				return { _vids[5], _vids[6] };
 			case 6:
-				return { vids[6], vids[7] };
+				return { _vids[6], _vids[7] };
 			case 7:
-				return { vids[7], vids[4] };
+				return { _vids[7], _vids[4] };
 			case 8:
-				return { vids[0], vids[4] };
+				return { _vids[0], _vids[4] };
 			case 9:
-				return { vids[1], vids[5] };
+				return { _vids[1], _vids[5] };
 			case 10:
-				return { vids[2], vids[6] };
+				return { _vids[2], _vids[6] };
 			case 11:
-				return { vids[3], vids[7] };
+				return { _vids[3], _vids[7] };
 			default:
 				assert(false);
 		}
@@ -397,7 +420,7 @@ namespace HMP::Meshing::Utils
 		std::sort(qVids.begin(), qVids.end());
 		for (I ei{}; ei < 12; ei++)
 		{
-			EdgeVertIds vids{ edgeVids(_element, ei) };
+			EdgeVertIds vids{ eiVids(_element.vids, ei) };
 			std::sort(vids.begin(), vids.end());
 			if (vids == qVids)
 			{
@@ -409,14 +432,14 @@ namespace HMP::Meshing::Utils
 
 	Id eid(const Mesher::Mesh& _mesh, const Dag::Element& _element, I _ei)
 	{
-		const int eid{ _mesh.edge_id(cpputils::range::of(edgeVids(_element, _ei)).toVector()) };
+		const int eid{ _mesh.edge_id(cpputils::range::of(eiVids(_element.vids, _ei)).toVector()) };
 		assert(eid != -1);
 		return static_cast<Id>(eid);
 	}
 
 	Id fid(const Mesher::Mesh& _mesh, const Dag::Element& _element, I _fi)
 	{
-		const int fid{ _mesh.face_id(cpputils::range::of(faceVids(_element, _fi)).toVector()) };
+		const int fid{ _mesh.face_id(cpputils::range::of(fiVids(_element.vids, _fi)).toVector()) };
 		assert(fid != -1);
 		return static_cast<Id>(fid);
 	}

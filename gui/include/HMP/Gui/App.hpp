@@ -61,7 +61,6 @@ namespace HMP::Gui
 		static constexpr cinolib::KeyBinding c_kbUndo{ GLFW_KEY_Z, GLFW_MOD_CONTROL };
 		static constexpr cinolib::KeyBinding c_kbRedo{ GLFW_KEY_Z, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbClear{ GLFW_KEY_N, GLFW_MOD_CONTROL };
-		static constexpr cinolib::KeyBinding c_kbPrintDebugInfo{ GLFW_KEY_COMMA };
 		static constexpr cinolib::KeyBinding c_kbSelectVertex{ GLFW_KEY_1 };
 		static constexpr cinolib::KeyBinding c_kbSelectEdge{ GLFW_KEY_2 };
 		static constexpr cinolib::KeyBinding c_kbSelectUpEdge{ GLFW_KEY_2, GLFW_MOD_ALT };
@@ -169,9 +168,7 @@ namespace HMP::Gui
 		void onExportMesh(const std::string& _filename);
 
 		// user operation
-		std::string getDebugInfo() const;
 		void onSetPathEdge(bool _add);
-		void onPrintDebugInfo() const;
 		void onExtrude(Dag::Extrude::ESource _source);
 		void onExtrudeSelected();
 		void onCopy();

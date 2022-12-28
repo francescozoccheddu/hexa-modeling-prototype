@@ -22,23 +22,23 @@ namespace HMP::Refinement
 
 	private:
 
-		const I m_gridSize;
-		const std::vector<IVec> m_verts;
-		const std::vector<HexVertData<I>> m_polys;
-		const std::vector<I> m_surfVis;
-		const std::vector<I> m_cornerVis;
-		const HexFaceData<FaceSurfVisMap> m_facesSurfVisIs;
-
 		std::vector<I> findSurfVis() const;
 		std::vector<I> findCornerVis() const;
 		FaceSurfVisMap findFacesSurfVisIs(Id _dim, bool _polarity) const;
 		HexFaceData<FaceSurfVisMap> findFacesSurfVisIs() const;
 
+		const HexVertData<IVec> m_vidCorners;
+
 	public:
 
-		explicit Scheme(I _gridSize, const std::vector<IVec>& _verts, const std::vector<HexVertData<I>>& _polys);
+		const I gridSize;
+		const std::vector<IVec> verts;
+		const std::vector<HexVertData<I>> polys;
+		const std::vector<I> surfVis;
+		const std::vector<I> cornerVis;
+		const HexFaceData<FaceSurfVisMap> facesSurfVisIs;
 
-		I gridSize() const;
+		explicit Scheme(I _gridSize, const std::vector<IVec>& _verts, const std::vector<HexVertData<I>>& _polys);
 
 		bool isMin(I _comp) const;
 
@@ -50,15 +50,7 @@ namespace HMP::Refinement
 
 		bool isCorner(const IVec& _vert) const;
 
-		const std::vector<IVec>& verts() const;
-
-		const std::vector<HexVertData<I>>& polys() const;
-
-		const std::vector<I>& surfVis() const;
-
-		const std::vector<I>& cornerVis() const;
-
-		const HexFaceData<FaceSurfVisMap>& facesSurfVisIs() const;
+		I cornerVi(const IVec& _corner) const;
 
 	};
 

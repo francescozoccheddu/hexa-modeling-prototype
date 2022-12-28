@@ -19,9 +19,6 @@ namespace HMP::Refinement::Utils
     void apply(Meshing::Mesher& _mesher, Dag::Refine& _refine);
     void applyRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine);
 
-    void unhide(Meshing::Mesher& _mesher, Dag::Refine& _refine);
-    void unhideRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine);
-
     class Sub3x3AdapterCandidate final
     {
 

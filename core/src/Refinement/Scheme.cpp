@@ -19,7 +19,7 @@ namespace HMP::Refinement
 
 	std::vector<I> Scheme::findSurfVis() const
 	{
-		return cpputils::range::of(m_verts)
+		return cpputils::range::of(verts)
 			.enumerate()
 			.filter([&](const auto& _vertAndVi) { return isOnSurf(std::get<0>(_vertAndVi)); })
 			.map([](const auto& _vertAndVi) { return std::get<1>(_vertAndVi); })
@@ -28,8 +28,8 @@ namespace HMP::Refinement
 
 	std::vector<I> Scheme::findCornerVis() const
 	{
-		return cpputils::range::of(m_surfVis)
-			.filter([&](const I _vi) { return isCorner(m_verts[_vi]); })
+		return cpputils::range::of(surfVis)
+			.filter([&](const I _vi) { return isCorner(verts[_vi]); })
 			.toVector();
 	}
 
@@ -51,10 +51,10 @@ namespace HMP::Refinement
 	Scheme::FaceSurfVisMap Scheme::findFacesSurfVisIs(Id _dim, bool _polarity) const
 	{
 		FaceSurfVisMap map{ &compareIVec2 };
-		for (I surfViI{}; surfViI < m_surfVis.size(); surfViI++)
+		for (I surfViI{}; surfViI < surfVis.size(); surfViI++)
 		{
-			const I vi{ m_surfVis[surfViI] };
-			const IVec& vert{ m_verts[vi] };
+			const I vi{ surfVis[surfViI] };
+			const IVec& vert{ verts[vi] };
 			const I comp{ vert[_dim] };
 			if (_polarity ? isMax(comp) : isMin(comp))
 			{
@@ -80,13 +80,18 @@ namespace HMP::Refinement
 	}
 
 	Scheme::Scheme(I _gridSize, const std::vector<IVec>& _verts, const std::vector<HexVertData<I>>& _polys)
-		: m_gridSize{ _gridSize }, m_verts{ _verts }, m_polys{ _polys }, m_surfVis{ findSurfVis() }, m_cornerVis{ findCornerVis() }, m_facesSurfVisIs{ findFacesSurfVisIs() }
+		: m_vidCorners{
+			IVec{0, 0, 0},
+			IVec{_gridSize, 0, 0},
+			IVec{_gridSize, _gridSize, 0},
+			IVec{0, _gridSize, 0},
+			IVec{0, 0, _gridSize},
+			IVec{_gridSize, 0, _gridSize},
+			IVec{_gridSize, _gridSize, _gridSize},
+			IVec{0, _gridSize, _gridSize}
+		},
+		gridSize{ _gridSize }, verts{ _verts }, polys{ _polys }, surfVis{ findSurfVis() }, cornerVis{ findCornerVis() }, facesSurfVisIs{ findFacesSurfVisIs() }
 	{}
-
-	I Scheme::gridSize() const
-	{
-		return m_gridSize;
-	}
 
 	bool Scheme::isMin(I _comp) const
 	{
@@ -95,7 +100,7 @@ namespace HMP::Refinement
 
 	bool Scheme::isMax(I _comp) const
 	{
-		return _comp + 1 == m_gridSize;
+		return _comp == gridSize;
 	}
 
 	bool Scheme::isExtreme(I _comp) const
@@ -113,29 +118,16 @@ namespace HMP::Refinement
 		return isExtreme(_vert.x()) && isExtreme(_vert.y()) && isExtreme(_vert.z());
 	}
 
-	const std::vector<IVec>& Scheme::verts() const
+	I Scheme::cornerVi(const IVec& _corner) const
 	{
-		return m_verts;
-	}
-
-	const std::vector<HexVertData<I>>& Scheme::polys() const
-	{
-		return m_polys;
-	}
-
-	const std::vector<I>& Scheme::surfVis() const
-	{
-		return m_surfVis;
-	}
-
-	const std::vector<I>& Scheme::cornerVis() const
-	{
-		return m_cornerVis;
-	}
-
-	const HexFaceData<Scheme::FaceSurfVisMap>& Scheme::facesSurfVisIs() const
-	{
-		return m_facesSurfVisIs;
+		for (I vi{}; vi < 8; vi++)
+		{
+			if (_corner == m_vidCorners[vi])
+			{
+				return vi;
+			}
+		}
+		assert(false);
 	}
 
 }

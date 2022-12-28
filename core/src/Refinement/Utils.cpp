@@ -5,6 +5,7 @@
 #include <cpputils/range/zip.hpp>
 #include <cpputils/range/enumerate.hpp>
 #include <cpputils/collections/FixedVector.hpp>
+#include <cinolib/geometry/lerp.hpp>
 #include <cassert>
 #include <vector>
 #include <cstddef>
@@ -20,8 +21,8 @@ namespace HMP::Refinement::Utils
 		refine.scheme = _scheme;
 		refine.forwardFi = _forwardFi;
 		refine.firstVi = _firstVi;
-		const Refinement::Scheme& refinement{ Refinement::schemes.at(_scheme) };
-		for (I i{ 0 }; i < refinement.polys().size(); i++)
+		const Refinement::Scheme& scheme{ Refinement::schemes.at(_scheme) };
+		for (I i{ 0 }; i < scheme.polys.size(); i++)
 		{
 			Dag::Element& child{ *new Dag::Element{} };
 			if (_depth > 1)
@@ -35,21 +36,59 @@ namespace HMP::Refinement::Utils
 
 	void apply(Meshing::Mesher& _mesher, Dag::Refine& _refine)
 	{
-		const Dag::Element& element{ _refine.parents.single() };
-		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
-		const Refinement::Scheme& refinement{ Refinement::schemes.at(_refine.scheme) };
-		const Id forwardFid{ Meshing::Utils::fid(mesh, element, _refine.forwardFi) };
-		const Id firstVid{ element.vids[_refine.firstVi] };
-		const HexVertIds sourceVids{ Meshing::Utils::pidVidsByForwardFidAndFirstVid(mesh, element.pid, forwardFid, firstVid) };
-		const HexVerts sourceVerts{ Meshing::Utils::verts(mesh, sourceVids) };
-		std::vector<Vec> newVerts;
-		/*const std::vector<HexVertIds> polys{ refinement.apply(_mesher, sourceVerts, newVerts) };
-		for (const auto& [child, vids] : cpputils::range::zip(_refine.children, polys))
+		const Scheme& scheme{ schemes.at(_refine.scheme) };
+		std::vector<Id> schemeVids(scheme.verts.size(), noId);
+		Dag::Element& parent{ _refine.parents.single() };
+		const HexVertIds parentVids{ Meshing::Utils::align(Meshing::Utils::rotate(parent.vids, _refine.forwardFi), parent.vids[_refine.firstVi]) };
+		// weld adjacencies
+		// weld corners
 		{
-			child.vids = vids;
+			for (const I cornerVi : scheme.cornerVis)
+			{
+				const IVec& corner{ scheme.verts[cornerVi] };
+				schemeVids[cornerVi] = parentVids[scheme.cornerVi(corner)];
+			}
 		}
-		_mesher.add(_refine.children.address().toVector(), newVerts);*/
-		_mesher.show(_refine.parents.single(), false);
+		// create missing verts
+		const Id numVerts{ _mesher.mesh().num_verts() };
+		std::vector<Vec> newVerts;
+		{
+			const HexVerts parentVerts{ Meshing::Utils::verts(_mesher.mesh(), parentVids) };
+			const HexVerts lerpVerts{
+				parentVerts[0],
+				parentVerts[1],
+				parentVerts[3],
+				parentVerts[2],
+				parentVerts[4],
+				parentVerts[5],
+				parentVerts[7],
+				parentVerts[6]
+			};
+			for (const auto& [vid, ivert] : cpputils::range::zip(schemeVids, scheme.verts))
+			{
+				if (vid == noId)
+				{
+					vid = numVerts + toId(newVerts.size());
+					const Vec progress{ ivert.cast<Real>() / static_cast<Real>(scheme.gridSize) };
+					newVerts.push_back(cinolib::lerp3(lerpVerts, progress));
+				}
+			}
+		}
+		// create elements
+		{
+			const std::vector<Dag::Element*> elements{
+				_refine.children.zip(scheme.polys).map([&](const auto& _elAndVis) {
+					const auto& [el, vis] { _elAndVis };
+					for (const auto& [vid, vi] : cpputils::range::zip(el.vids, vis))
+					{
+						vid = schemeVids[vi];
+					}
+					return &el;
+			}).toVector() };
+			_refine.surfVids = cpputils::range::of(scheme.surfVis).map([&](const I _vi) { return schemeVids[_vi]; }).toVector();
+			_mesher.show(parent, false);
+			_mesher.add(elements, newVerts);
+		}
 	}
 
 	void applyRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine)
