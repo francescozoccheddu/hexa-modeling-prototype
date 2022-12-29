@@ -23,6 +23,8 @@ add_library (core STATIC
     "src/Refinement/Scheme.cpp"
     "src/Refinement/Schemes.cpp"
     "src/Refinement/Utils.cpp"
+    "src/Refinement/Sub3x3AdapterCandidate.cpp"
+    "src/Refinement/Sub3x3AdapterCandidateSet.cpp"
     "src/Projection/project.cpp"
     "src/Projection/Utils.cpp"
     "src/Projection/fill.cpp"

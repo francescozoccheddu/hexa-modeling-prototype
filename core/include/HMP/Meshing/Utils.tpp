@@ -7,6 +7,17 @@
 namespace HMP::Meshing::Utils
 {
 
+	template<I TOutSize, I TInSize, typename TValue>
+	std::array<TValue, TOutSize> index(const std::array<TValue, TInSize>& _source, const std::array<I, TOutSize>& _is)
+	{
+		std::array<TValue, TOutSize> out;
+		for (I i{}; i < _is.size(); i++)
+		{
+			out[i] = _source[_is[i]];
+		}
+		return out;
+	}
+
 	template<I TSize>
 	std::array<Vec, TSize> verts(const Meshing::Mesher::Mesh& _mesh, const std::array<Id, TSize>& _vids, const std::vector<Vec>& _newVerts)
 	{

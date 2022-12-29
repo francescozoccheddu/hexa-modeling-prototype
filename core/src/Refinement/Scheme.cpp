@@ -84,7 +84,7 @@ namespace HMP::Refinement
 			.toArray();
 	}
 
-	Scheme::Scheme(I _gridSize, const std::vector<IVec>& _verts, const std::vector<HexVertData<I>>& _polys)
+	Scheme::Scheme(I _gridSize, const std::vector<IVec>& _verts, const std::vector<HexVertIs>& _polys)
 		: m_vidCorners{
 			IVec{0, 0, 0},
 			IVec{_gridSize, 0, 0},

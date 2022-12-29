@@ -31,10 +31,46 @@ namespace HMP::Meshing::Utils
 	HexVertIds pidVidsByForwardFidAndFirstEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _forwardUpEid);
 	HexVertIds pidVidsByForwardFidAndFirstVid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _forwardFid, Id _firstVid);
 
+	inline constexpr HexFaceData<QuadVertIs> hexFiVis{ {
+		{ 0, 3, 2, 1 },
+		{ 4, 5, 6, 7 },
+		{ 1, 2, 6, 5 },
+		{ 0, 4, 7, 3 },
+		{ 0, 1, 5, 4 },
+		{ 3, 7, 6, 2 }
+	} };
+
+	inline constexpr HexEdgeData<EdgeVertIs> hexEiVis{ {
+		{ 0, 1 },
+		{ 1, 2 },
+		{ 2, 3 },
+		{ 3, 0 },
+		{ 4, 5 },
+		{ 5, 6 },
+		{ 6, 7 },
+		{ 7, 4 },
+		{ 0, 4 },
+		{ 1, 5 },
+		{ 2, 6 },
+		{ 3, 7 }
+	} };
+
+	inline constexpr HexFaceIs hexFiOppFis{ 1,0,3,2,5,4 };
+
+	template<I TOutSize, I TInSize, typename TValue>
+	std::array<TValue, TOutSize> index(const std::array<TValue, TInSize>& _source, const std::array<I, TOutSize>& _is);
+
+	template<I TSize>
+	I indexOf(const std::array<I, TSize>& _source, I _i);
+
 	template<I TSize>
 	std::array<Vec, TSize> verts(const Meshing::Mesher::Mesh& _mesh, const std::array<Id, TSize>& _vids, const std::vector<Vec>& _newVerts = {});
+
 	template<I TSize>
 	Vec centroid(const std::array<Vec, TSize>& _verts);
+
+	I firstFiVi(I _fi, I _ei);
+	bool isIForward(const QuadVertIs& _fiVis, I _vi0, I _vi1);
 	Id closestFidEid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _midpoint);
 	Id closestFidVid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _position);
 	QuadVertIds fiVids(const HexVertIds& _hexVids, I _fi);
@@ -45,8 +81,7 @@ namespace HMP::Meshing::Utils
 	QuadVertIds align(const QuadVertIds& _vids, Id _firstVid, bool _reverse = false);
 	HexVertIds align(const HexVertIds& _vids, Id _firstVid, bool _reverse = false);
 	EdgeVertIds align(const EdgeVertIds& _vids, Id _firstVid, bool _reverse = false);
-	HexVertIds rotate(const HexVertIds& _vids, Id _forwardFid);
-	I oppositeFi(I _fi);
+	HexVertIds rotate(const HexVertIds& _vids, I _forwardFi);
 	QuadVertIds reverse(const QuadVertIds& _vids);
 	HexVertIds reverse(const HexVertIds& _vids);
 	EdgeVertIds reverse(const EdgeVertIds& _vids);

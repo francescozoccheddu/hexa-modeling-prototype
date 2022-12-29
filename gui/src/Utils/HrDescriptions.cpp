@@ -229,7 +229,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 		std::ostringstream stream{};
 		stream << "Make conforming";
 		stream << " (";
-		std::vector<std::pair<const HMP::Dag::Refine*, const HMP::Dag::Element*>> operations{ _action.operations() };
+		const Actions::MakeConforming::Operations& operations{ _action.operations() };
 		if (operations.empty())
 		{
 			stream << "no operations";
@@ -248,7 +248,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 					stream << ", ";
 				}
 				first = false;
-				stream << name(*operation, _dagNamer) << " of " << name(*element, _dagNamer);
+				stream << name(operation, _dagNamer) << " of " << name(element, _dagNamer);
 			}
 		}
 		stream << ")";

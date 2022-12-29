@@ -219,44 +219,7 @@ namespace HMP::Meshing::Utils
 
 	QuadVertIds fiVids(const HexVertIds& _hexVids, I _fi)
 	{
-		switch (_fi)
-		{
-			case 0:
-				return { _hexVids[0], _hexVids[3], _hexVids[2], _hexVids[1] };
-			case 1:
-				return { _hexVids[4], _hexVids[5], _hexVids[6], _hexVids[7] };
-			case 2:
-				return { _hexVids[1], _hexVids[2], _hexVids[6], _hexVids[5] };
-			case 3:
-				return { _hexVids[0], _hexVids[4], _hexVids[7], _hexVids[3] };
-			case 4:
-				return { _hexVids[0], _hexVids[1], _hexVids[5], _hexVids[4] };
-			case 5:
-				return { _hexVids[3], _hexVids[7], _hexVids[6], _hexVids[2] };
-			default:
-				assert(false);
-		}
-	}
-
-	I oppositeFi(I _fi)
-	{
-		switch (_fi)
-		{
-			case 0:
-				return 1;
-			case 1:
-				return 0;
-			case 2:
-				return 3;
-			case 3:
-				return 2;
-			case 4:
-				return 5;
-			case 5:
-				return 4;
-			default:
-				assert(false);
-		}
+		return index(_hexVids, hexFiVis[_fi]);
 	}
 
 	QuadVertIds align(const QuadVertIds& _vids, Id _firstVid, bool _reverse)
@@ -298,11 +261,11 @@ namespace HMP::Meshing::Utils
 		return { _vids[1], _vids[0] };
 	}
 
-	HexVertIds rotate(const HexVertIds& _vids, Id _forwardFid)
+	HexVertIds rotate(const HexVertIds& _vids, I _forwardFi)
 	{
 		return cpputils::range::join(
-			fiVids(_vids, _forwardFid),
-			reverse(fiVids(_vids, oppositeFi(_forwardFid)))
+			fiVids(_vids, _forwardFi),
+			reverse(fiVids(_vids, hexFiOppFis[_forwardFi]))
 		).toArray();
 	}
 
@@ -358,37 +321,34 @@ namespace HMP::Meshing::Utils
 		assert(false);
 	}
 
+	template<I TSize>
+	I indexOf(const std::array<I, TSize>& _source, I _i)
+	{
+		for (I i{}; i < TSize; ++i)
+		{
+			if (_source[i] == _i)
+			{
+				return i;
+			}
+		}
+		assert(false);
+	}
+
+	I firstFiVi(I _fi, I _ei)
+	{
+		const EdgeVertIs& eiVis{ hexEiVis[_ei] };
+		return isIForward(hexFiVis[_fi], eiVis[0], eiVis[1]) ? eiVis[0] : eiVis[1];
+	}
+
+	bool isIForward(const QuadVertIs& _fiVis, I _vi0, I _vi1)
+	{
+		const I fiVi0{ indexOf(_fiVis, _vi0) };
+		return _fiVis[(fiVi0 + 1) % 4] == _vi1;
+	}
+
 	EdgeVertIds eiVids(const HexVertIds& _hexVids, I _ei)
 	{
-		switch (_ei)
-		{
-			case 0:
-				return { _hexVids[0], _hexVids[1] };
-			case 1:
-				return { _hexVids[1], _hexVids[2] };
-			case 2:
-				return { _hexVids[2], _hexVids[3] };
-			case 3:
-				return { _hexVids[3], _hexVids[0] };
-			case 4:
-				return { _hexVids[4], _hexVids[5] };
-			case 5:
-				return { _hexVids[5], _hexVids[6] };
-			case 6:
-				return { _hexVids[6], _hexVids[7] };
-			case 7:
-				return { _hexVids[7], _hexVids[4] };
-			case 8:
-				return { _hexVids[0], _hexVids[4] };
-			case 9:
-				return { _hexVids[1], _hexVids[5] };
-			case 10:
-				return { _hexVids[2], _hexVids[6] };
-			case 11:
-				return { _hexVids[3], _hexVids[7] };
-			default:
-				assert(false);
-		}
+		return index(_hexVids, hexEiVis[_ei]);
 	}
 
 	I ei(const HexVertIds& _hexVids, const EdgeVertIds& _vids)
