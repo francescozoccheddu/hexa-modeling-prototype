@@ -27,14 +27,18 @@ cmake --build .
 
 5. Enjoy! 😉
 
-### Compatibility
+## Compatibility
 
-Requires [CMake](https://cmake.org/) 3.14+, a modern C++20 compiler and OpenGL 1.1 support.
+Requires [CMake](https://cmake.org/) 3.14+, a modern C++20 compiler, OpenGL 2.0 support and an Internet connection.
 
-Tested on MSVC v143 on Windows 11 and g++ 10 and Clang 14 on Ubuntu 22.10. 
+Tested on MSVC v143 on Windows 11 and GCC 10 and Clang 14 on Ubuntu 22.10. 
 
 > **NOTE:**  
-> With this configuration Cinolib generates hundreds of warnings (OGDF might also generate some warnings on g++). Compilation should succeed anyway; just ignore them.
+> With this configuration Cinolib generates hundreds of warnings (OGDF might also generate some warnings on GCC). Compilation should succeed anyway; just ignore them.
 
 > **NOTE:**  
 > On Ubuntu, make sure to have `libgl1-mesa-dev`, `libglu1-mesa-dev` and `xorg-dev` installed.
+
+## Future work
+
+See [TODO.md](TODO.md).
