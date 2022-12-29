@@ -16,8 +16,8 @@ namespace HMP::Actions
 
 	private:
 
-		cpputils::collections::FixedVector<Dag::Element*, 3> m_elements;
-		Dag::NodeHandle<Dag::Extrude> m_operation;
+		const cpputils::collections::FixedVector<Dag::Element*, 3> m_elements;
+		const Dag::NodeHandle<Dag::Extrude> m_operation;
 		Meshing::Mesher::State m_oldState;
 
 		void apply() override;

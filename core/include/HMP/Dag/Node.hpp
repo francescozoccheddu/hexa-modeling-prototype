@@ -19,6 +19,19 @@ namespace HMP::Dag
 	class Node: public cpputils::mixins::ReferenceClass
 	{
 
+
+#ifndef NDEBUG
+
+	private:
+
+		static I s_allocatedNodeCount;
+
+	public:
+
+		static I allocatedNodeCount();
+
+#endif
+
 	public:
 
 		using Set = NodeSet<Node>;

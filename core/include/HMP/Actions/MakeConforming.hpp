@@ -21,7 +21,7 @@ namespace HMP::Actions
 
 		static std::pair<const Dag::Refine&, const Dag::Element&> dereferenceOperation(const std::pair<Dag::NodeHandle<Dag::Refine>, Dag::Element*>& _pair);
 
-		std::vector<std::pair<Dag::NodeHandle<Dag::Refine>, Dag::Element*>> m_operations;
+		std::vector<std::pair<const Dag::NodeHandle<Dag::Refine>, Dag::Element* const>> m_operations;
 		Meshing::Mesher::State m_oldState;
 		bool m_prepared;
 

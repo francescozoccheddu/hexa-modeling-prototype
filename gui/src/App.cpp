@@ -509,9 +509,12 @@ namespace HMP::Gui
 			ImGui::TextDisabled("Compiler ID: " HMP_GUI_COMPILER_ID);
 			ImGui::TextDisabled("Memory usage: %dMB", static_cast<int>(cinolib::memory_usage_in_mega_bytes() + 0.5f));
 			ImGui::TextDisabled("Poly count: %u", static_cast<unsigned int>(m_mesh.num_polys()));
-			ImGui::TextDisabled("Faces count: %u", static_cast<unsigned int>(m_mesh.num_faces()));
-			ImGui::TextDisabled("Edges count: %u", static_cast<unsigned int>(m_mesh.num_edges()));
+			ImGui::TextDisabled("Face count: %u", static_cast<unsigned int>(m_mesh.num_faces()));
+			ImGui::TextDisabled("Edge count: %u", static_cast<unsigned int>(m_mesh.num_edges()));
 			ImGui::TextDisabled("Vert count: %u", static_cast<unsigned int>(m_mesh.num_verts()));
+#ifndef NDEBUG
+			ImGui::TextDisabled("Allocated node count: %u", static_cast<unsigned int>(Dag::Node::allocatedNodeCount()));
+#endif
 			ImGui::Spacing();
 			if (ImGui::Button("Crash me!"))
 			{

@@ -8,19 +8,19 @@
 namespace HMP::Actions
 {
 
-	class Delete final : public Commander::Action
+	class Delete final: public Commander::Action
 	{
 
 	private:
 
 		Dag::Element& m_element;
-		Dag::NodeHandle<Dag::Delete> m_operation;
+		const Dag::NodeHandle<Dag::Delete> m_operation;
 
 		void apply() override;
 		void unapply() override;
 
 	public:
-		
+
 		Delete(Dag::Element& _element);
 
 		const Dag::Element& element() const;

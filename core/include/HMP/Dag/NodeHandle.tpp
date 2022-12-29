@@ -105,44 +105,19 @@ namespace HMP::Dag
 	}
 
 	template <cpputils::concepts::DerivedSimpleClass<Node> TNode, bool TDescending>
-	template <cpputils::concepts::DerivedSimpleClass<Node> TOtherNode, bool TOtherDescending>
-	bool NodeHandle<TNode, TDescending>::operator!=(const NodeHandle<TOtherNode, TOtherDescending>& _other) const
-	{
-		return _other.m_node != m_node;
-	}
-
-	template <cpputils::concepts::DerivedSimpleClass<Node> TNode, bool TDescending>
-	TNode& NodeHandle<TNode, TDescending>::operator*()
+	TNode& NodeHandle<TNode, TDescending>::operator*() const
 	{
 		return *m_node;
 	}
 
 	template <cpputils::concepts::DerivedSimpleClass<Node> TNode, bool TDescending>
-	TNode* NodeHandle<TNode, TDescending>::operator->()
+	TNode* NodeHandle<TNode, TDescending>::operator->() const
 	{
 		return m_node;
 	}
 
 	template <cpputils::concepts::DerivedSimpleClass<Node> TNode, bool TDescending>
-	NodeHandle<TNode, TDescending>::operator TNode* ()
-	{
-		return m_node;
-	}
-
-	template <cpputils::concepts::DerivedSimpleClass<Node> TNode, bool TDescending>
-	const TNode& NodeHandle<TNode, TDescending>::operator*() const
-	{
-		return *m_node;
-	}
-
-	template <cpputils::concepts::DerivedSimpleClass<Node> TNode, bool TDescending>
-	const TNode* NodeHandle<TNode, TDescending>::operator->() const
-	{
-		return m_node;
-	}
-
-	template <cpputils::concepts::DerivedSimpleClass<Node> TNode, bool TDescending>
-	NodeHandle<TNode, TDescending>::operator const TNode* () const
+	NodeHandle<TNode, TDescending>::operator TNode* () const
 	{
 		return m_node;
 	}
