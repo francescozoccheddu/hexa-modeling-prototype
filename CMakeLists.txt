@@ -3,18 +3,15 @@
 include (FetchContent)
 set (FETCHCONTENT_QUIET FALSE)
 
-project ("hexa-modeling-prototype")
+project ("hexa-modeling-prototype" VERSION 0.1)
+
+add_compile_definitions(HMP_NAME=\"${CMAKE_PROJECT_NAME}\")
+add_compile_definitions(HMP_VERSION=\"${CMAKE_PROJECT_VERSION}\")
 
 option (HMP_GUI_ENABLE_DAG_VIEWER "Enable dag viewer widget" OFF)
 option (HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER "Enable ae-3d2shape exporter" OFF)
 option (HMP_AGGRESSIVE_DEBUG "Enable ASAN and debug libc" OFF)
 option (HMP_AGGRESSIVE_WARNINGS "Enable a lot of warnings" OFF)
-
-if (HMP_AGGRESSIVE_DEBUG)
-    add_compile_definitions(_GLIBCXX_DEBUG HMP_AGGRESSIVE_DEBUG)
-    add_compile_options(-fsanitize=address)
-    add_link_options(-fsanitize=address)
-endif()
 
 # cinolib
 set (CINOLIB_HEADER_ONLY OFF)
@@ -53,7 +50,7 @@ FetchContent_MakeAvailable (updatable_priority_queue)
 FetchContent_Declare (
     cpputils
     GIT_REPOSITORY "https://github.com/francescozoccheddu/cpputils.git"
-    GIT_TAG "036dba793d42ba29085946d080ddb6313d30b565"
+    GIT_TAG "24d2947832313ba2a71e8c05e1ec2d38ff6e6cc3"
     GIT_SHALLOW TRUE
     GIT_PROGRESS TRUE
 )
@@ -62,6 +59,14 @@ FetchContent_MakeAvailable (cpputils)
 # hexa-modeling-prototype
 add_subdirectory ("core")
 add_subdirectory ("gui")
+
+# compile options
+
+if (HMP_AGGRESSIVE_DEBUG)
+    add_compile_definitions(_GLIBCXX_DEBUG HMP_AGGRESSIVE_DEBUG)
+    add_compile_options(-fsanitize=address)
+    add_link_options(-fsanitize=address)
+endif()
 
 if (HMP_AGGRESSIVE_WARNINGS)
     if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")

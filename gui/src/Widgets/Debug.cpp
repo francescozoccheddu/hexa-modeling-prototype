@@ -148,6 +148,7 @@ namespace HMP::Gui::Widgets
 #else
             ImGui::TextDisabled("Debug build");
 #endif
+            ImGui::TextDisabled("Version: " HMP_VERSION);
             ImGui::TextDisabled("Date: " __DATE__);
             ImGui::TextDisabled("Time: " __TIME__);
             ImGui::TextDisabled("Compiler ID: " HMP_GUI_COMPILER_ID);

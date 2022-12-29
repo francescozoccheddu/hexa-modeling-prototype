@@ -1,5 +1,6 @@
 #include <HMP/Refinement/Scheme.hpp>
 
+#include <cpputils/unreachable.hpp>
 #include <cinolib/geometry/lerp.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <limits>
@@ -44,7 +45,7 @@ namespace HMP::Refinement
 			case 2:
 				return { _vert.x(), _vert.y() };
 			default:
-				assert(false);
+				cpputils::unreachable();
 		}
 	}
 
@@ -132,7 +133,7 @@ namespace HMP::Refinement
 				return vi;
 			}
 		}
-		assert(false);
+		cpputils::unreachable();
 	}
 
 }

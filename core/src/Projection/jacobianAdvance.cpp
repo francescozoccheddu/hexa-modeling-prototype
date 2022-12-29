@@ -1,5 +1,6 @@
 #include <HMP/Projection/jacobianAdvance.hpp>
 
+#include <cpputils/unreachable.hpp>
 #include <algorithm>
 #include <limits>
 #include <cinolib/parallel_for.h>
@@ -56,7 +57,7 @@ namespace HMP::Projection
                 return _from + _progress * _off / _len;
             }
             default:
-                assert(false);
+                cpputils::unreachable();
         }
     }
 

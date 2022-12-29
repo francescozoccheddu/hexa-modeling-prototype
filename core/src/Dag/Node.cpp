@@ -1,6 +1,7 @@
 #include <HMP/Dag/Node.hpp>
 
 #include <cassert>
+#include <cpputils/ensure.hpp>
 
 namespace HMP::Dag
 {
@@ -47,7 +48,7 @@ namespace HMP::Dag
 			assert(node.back(_descending).empty());
 			for (Node& next : node.forward(_descending))
 			{
-				assert(next.back(_descending).data().remove(node));
+				ensure(next.back(_descending).data().remove(node));
 				if (next.back(_descending).empty() && !next.m_handles)
 				{
 					_dangling.push(&next);
@@ -62,7 +63,7 @@ namespace HMP::Dag
 	{
 		if (forward(_descending).data().add(_node))
 		{
-			assert(_node.back(_descending).data().add(*this));
+			ensure(_node.back(_descending).data().add(*this));
 			return true;
 		}
 		return false;
@@ -72,7 +73,7 @@ namespace HMP::Dag
 	{
 		if (forward(_descending).data().remove(_node))
 		{
-			assert(_node.back(_descending).data().remove(*this));
+			ensure(_node.back(_descending).data().remove(*this));
 			if (_deleteDangling && _node.back(_descending).empty())
 			{
 				std::queue<Node*> dangling{};
@@ -90,7 +91,7 @@ namespace HMP::Dag
 		const bool wasEmpty{ forward(_descending).empty() };
 		for (Node& next : forward(_descending))
 		{
-			assert(next.back(_descending).data().remove(*this));
+			ensure(next.back(_descending).data().remove(*this));
 			if (_deleteDangling && next.back(_descending).empty())
 			{
 				dangling.push(&next);

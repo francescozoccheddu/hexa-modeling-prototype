@@ -1,5 +1,6 @@
 #include <HMP/Actions/ExtrudeUtils.hpp>
 
+#include <cpputils/unreachable.hpp>
 #include <HMP/Dag/Utils.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <cpputils/range/zip.hpp>
@@ -32,7 +33,7 @@ namespace HMP::Actions::ExtrudeUtils
 				extrude.source = Dag::Extrude::ESource::Vertex;
 				break;
 			default:
-				assert(false);
+				cpputils::unreachable();
 		}
 		extrude.children.attach(*new Dag::Element{});
 		return extrude;
@@ -144,7 +145,7 @@ namespace HMP::Actions::ExtrudeUtils
 			case Dag::Extrude::ESource::Vertex:
 				return applyVertexExtrude(mesh, _extrude.parents.address().toArray<3>(), cpputils::range::of(_extrude.fis).toArray<3>(), firstVid, _extrude.clockwise, _newVerts);
 			default:
-				assert(false);
+				cpputils::unreachable();
 		}
 	}
 

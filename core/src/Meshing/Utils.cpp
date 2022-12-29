@@ -1,5 +1,6 @@
 #include <HMP/Meshing/Utils.hpp>
 
+#include <cpputils/unreachable.hpp>
 #include <HMP/Dag/Utils.hpp>
 #include <cpputils/range/of.hpp>
 #include <cpputils/range/join.hpp>
@@ -67,7 +68,7 @@ namespace HMP::Meshing::Utils
 				return fid;
 			}
 		}
-		assert(false);
+		cpputils::unreachable();
 	}
 
 	Id adjFidInPidByFidAndEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _eid)
@@ -81,7 +82,7 @@ namespace HMP::Meshing::Utils
 				return fid;
 			}
 		}
-		assert(false);
+		cpputils::unreachable();
 	}
 
 	Id sharedEid(const Meshing::Mesher::Mesh& _mesh, Id _pid1, Id _pid2)
@@ -96,7 +97,7 @@ namespace HMP::Meshing::Utils
 				}
 			}
 		}
-		assert(false);
+		cpputils::unreachable();
 	}
 
 	EdgeVertIds edgeVids(const Meshing::Mesher::Mesh& _mesh, const EdgeVertIds& _edgeVertOffsets, Id _pid)
@@ -330,7 +331,7 @@ namespace HMP::Meshing::Utils
 				return vi;
 			}
 		}
-		assert(false);
+		cpputils::unreachable();
 	}
 
 	I fi(const HexVertIds& _hexVids, const QuadVertIds& _vids)
@@ -346,7 +347,7 @@ namespace HMP::Meshing::Utils
 				return fi;
 			}
 		}
-		assert(false);
+		cpputils::unreachable();
 	}
 
 	template<I TSize>
@@ -359,7 +360,7 @@ namespace HMP::Meshing::Utils
 				return i;
 			}
 		}
-		assert(false);
+		cpputils::unreachable();
 	}
 
 	I firstFiVi(I _fi, I _ei)
@@ -392,7 +393,7 @@ namespace HMP::Meshing::Utils
 				return ei;
 			}
 		}
-		assert(false);
+		cpputils::unreachable();
 	}
 
 	Id eid(const Mesher::Mesh& _mesh, const HexVertIds& _hexVids, I _ei)

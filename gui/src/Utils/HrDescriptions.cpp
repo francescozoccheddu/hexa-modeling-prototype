@@ -1,5 +1,6 @@
 #include <HMP/Gui/Utils/HrDescriptions.hpp>
 
+#include <cpputils/unreachable.hpp>
 #include <sstream>
 #include <iomanip>
 #include <cpputils/range/of.hpp>
@@ -25,7 +26,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 					case HMP::Dag::Operation::EPrimitive::Refine:
 						return "R-" + _dagNamer(&_node);
 					default:
-						assert(false);
+						cpputils::unreachable();
 				}
 			default:
 				return "?-" + _dagNamer(&_node);

@@ -1,5 +1,6 @@
 #include <HMP/Meshing/Mesher.hpp>
 
+#include <cpputils/ensure.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <cinolib/Moller_Trumbore_intersection.h>
 #include <limits>
@@ -288,7 +289,7 @@ namespace HMP::Meshing
 		if (_allowBehind ? m_octree.intersects_line(_from, _normDir, minT, _fid) : m_octree.intersects_ray(_from, _normDir, minT, _fid))
 		{
 			const Vec point{ _from + _normDir * minT };
-			assert(m_mesh.face_is_visible(_fid, _pid));
+			ensure(m_mesh.face_is_visible(_fid, _pid));
 			_eid = Meshing::Utils::closestFidEid(m_mesh, _fid, point);
 			_vid = Meshing::Utils::closestFidVid(m_mesh, _fid, point);
 			return true;
