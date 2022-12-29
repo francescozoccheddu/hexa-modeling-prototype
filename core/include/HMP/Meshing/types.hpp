@@ -45,12 +45,18 @@ namespace HMP
 
 	using HexVerts = HexVertData<Vec>;
 	using HexVertIds = HexVertData<Id>;
+	using HexVertIs = HexVertData<I>;
 	using HexFaceIds = HexFaceData<Id>;
+	using HexFaceIs = HexFaceData<I>;
 	using HexEdgeIds = HexEdgeData<Id>;
+	using HexEdgeIs = HexEdgeData<I>;
 	using QuadVerts = QuadVertData<Vec>;
 	using QuadVertIds = QuadVertData<Id>;
+	using QuadVertIs = QuadVertData<I>;
 	using QuadEdgeIds = QuadEdgeData<Id>;
+	using QuadEdgeIs = QuadEdgeData<I>;
 	using EdgeVerts = EdgeVertData<Vec>;
 	using EdgeVertIds = EdgeVertData<Id>;
+	using EdgeVertIs = EdgeVertData<I>;
 
 }

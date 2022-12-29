@@ -33,12 +33,12 @@ namespace HMP::Refinement
 
 		const I gridSize;
 		const std::vector<IVec> verts;
-		const std::vector<HexVertData<I>> polys;
+		const std::vector<HexVertIs> polys;
 		const std::vector<I> surfVis;
 		const std::vector<I> cornerVis;
 		const HexFaceData<FaceSurfVisMap> facesSurfVisIs;
 
-		explicit Scheme(I _gridSize, const std::vector<IVec>& _verts, const std::vector<HexVertData<I>>& _polys);
+		explicit Scheme(I _gridSize, const std::vector<IVec>& _verts, const std::vector<HexVertIs>& _polys);
 
 		bool isMin(I _comp) const;
 
