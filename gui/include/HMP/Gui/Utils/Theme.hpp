@@ -6,6 +6,7 @@
 #include <HMP/Gui/Widgets/DirectVertEdit.hpp>
 #include <HMP/Gui/Widgets/Target.hpp>
 #include <HMP/Gui/Widgets/VertEdit.hpp>
+#include <HMP/Gui/Widgets/Debug.hpp>
 #include <HMP/Gui/App.hpp>
 #include <cinolib/gl/glcanvas.h>
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
@@ -94,6 +95,7 @@ namespace HMP::Gui::Utils
         void apply(Widgets::VertEdit& _widget) const;
         void apply(App& _app) const;
         void apply(cinolib::GLcanvas& _canvas) const;
+        void apply(Widgets::Debug& _widget) const;
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
         void apply(DagViewer::Widget& _widget) const;

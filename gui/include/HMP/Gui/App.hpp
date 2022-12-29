@@ -18,6 +18,7 @@
 #include <HMP/Gui/Widgets/DirectVertEdit.hpp>
 #include <HMP/Gui/Widgets/Projection.hpp>
 #include <HMP/Gui/Widgets/Save.hpp>
+#include <HMP/Gui/Widgets/Debug.hpp>
 #include <vector>
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
@@ -103,11 +104,6 @@ namespace HMP::Gui
 			HMP::Dag::Element* element{};
 		} m_copy;
 
-		struct
-		{
-			bool showNames{ false };
-		} m_options;
-
 		HMP::Project m_project;
 		cinolib::GLcanvas m_canvas;
 		Meshing::Mesher& m_mesher;
@@ -121,6 +117,7 @@ namespace HMP::Gui
 		Widgets::DirectVertEdit m_directVertEditWidget;
 		Widgets::Save m_saveWidget;
 		Widgets::Projection m_projectionWidget;
+		Widgets::Debug m_debugWidget;
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		DagViewer::Widget m_dagViewerWidget;
@@ -131,11 +128,8 @@ namespace HMP::Gui
 		Widgets::Ae3d2ShapeExporter m_ae3d2ShapeExporter;
 #endif
 
-		bool m_darkTheme;
-		float m_themeHueDeg;
-
 		// other
-		void updateTheme();
+		void setTheme(bool _dark, float _hue);
 
 		// actions
 		void onActionApplied();
@@ -156,7 +150,6 @@ namespace HMP::Gui
 		bool onMouseRightClicked(int _modifiers);
 		bool onKeyPressed(int _key, int _modifiers);
 		bool onMouseMoved(double _x, double _y);
-		void onDrawControls();
 		void onDrawCustomGui();
 		void onDagViewerDraw();
 		void updateMouse();

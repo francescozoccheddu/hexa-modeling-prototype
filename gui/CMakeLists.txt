@@ -9,6 +9,7 @@ add_executable (gui
     "src/Utils/Drawing.cpp"
     "src/Utils/Theme.cpp"
     "src/Widgets/Axes.cpp"
+    "src/Widgets/Debug.cpp"
     "src/Widgets/Commander.cpp"
     "src/Widgets/Target.cpp"
     "src/Widgets/VertEdit.cpp"
