@@ -15,8 +15,7 @@
 namespace HMP::Refinement::Utils
 {
 
-    Dag::Refine& prepare(I _forwardFi, I _firstVi, Refinement::EScheme _scheme, I _depth = 1);
+    Dag::Refine& prepare(I _forwardFi, I _firstVi, Refinement::EScheme _scheme);
     void apply(Meshing::Mesher& _mesher, Dag::Refine& _refine);
-    void applyRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine);
 
 }

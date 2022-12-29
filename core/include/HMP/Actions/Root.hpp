@@ -14,7 +14,7 @@ namespace HMP::Actions
 	private:
 
 		Dag::Element& m_newRoot;
-		std::vector<Vec> m_newVerts;
+		const std::vector<Vec> m_newVerts;
 		Dag::NodeHandle<Dag::Element> m_otherRoot;
 		std::vector<Vec> m_otherVerts;
 

@@ -16,9 +16,8 @@
 namespace HMP::Refinement::Utils
 {
 
-	Dag::Refine& prepare(I _forwardFi, I _firstVi, Refinement::EScheme _scheme, I _depth)
+	Dag::Refine& prepare(I _forwardFi, I _firstVi, Refinement::EScheme _scheme)
 	{
-		assert(_depth >= 1 && _depth <= 3);
 		Dag::Refine& refine{ *new Dag::Refine{} };
 		refine.scheme = _scheme;
 		refine.forwardFi = _forwardFi;
@@ -27,10 +26,6 @@ namespace HMP::Refinement::Utils
 		for (I i{ 0 }; i < scheme.polys.size(); i++)
 		{
 			Dag::Element& child{ *new Dag::Element{} };
-			if (_depth > 1)
-			{
-				child.children.attach(prepare(_forwardFi, _firstVi, _scheme, _depth - 1));
-			}
 			refine.children.attach(child);
 		}
 		return refine;
@@ -286,21 +281,6 @@ namespace HMP::Refinement::Utils
 			_refine.surfVids = cpputils::range::of(scheme.surfVis).map([&](const I _vi) { return schemeVids[_vi]; }).toVector();
 			_mesher.show(parent, false);
 			_mesher.add(elements, newVerts);
-		}
-	}
-
-	void applyRecursive(Meshing::Mesher& _mesher, Dag::Refine& _refine)
-	{
-		apply(_mesher, _refine);
-		for (Dag::Element& child : _refine.children)
-		{
-			for (Dag::Operation& operation : child.children)
-			{
-				if (operation.primitive == Dag::Operation::EPrimitive::Refine)
-				{
-					applyRecursive(_mesher, static_cast<Dag::Refine&>(operation));
-				}
-			}
 		}
 	}
 

@@ -5,6 +5,8 @@
 #include <HMP/Meshing/types.hpp>
 #include <HMP/Meshing/Mesher.hpp>
 #include <HMP/Dag/Refine.hpp>
+#include <vector>
+#include <utility>
 
 namespace HMP::Actions
 {
@@ -15,8 +17,9 @@ namespace HMP::Actions
 	private:
 
 		Dag::Element& m_element;
-		Dag::NodeHandle<Dag::Refine> m_operation;
-		I m_depth;
+		const Dag::NodeHandle<Dag::Refine> m_operation;
+		const I m_depth;
+		const std::vector<std::pair<Dag::Element*, Dag::Refine*>> m_operations;
 		Meshing::Mesher::State m_oldState;
 
 		void apply() override;

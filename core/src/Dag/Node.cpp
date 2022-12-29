@@ -5,6 +5,17 @@
 namespace HMP::Dag
 {
 
+#ifndef NDEBUG
+
+	I Node::s_allocatedNodeCount{};
+
+	I Node::allocatedNodeCount()
+	{
+		return s_allocatedNodeCount;
+	}
+
+#endif
+
 	Node::Node(EType _type):
 		m_parentsImpl{}, m_childrenImpl{},
 		m_handles{ 0 },
@@ -21,7 +32,11 @@ namespace HMP::Dag
 			[this](auto && ..._args) { return onChildDetach(_args...); },
 			[this](auto && ..._args) { return onChildrenDetachAll(_args...); }
 		}
-	{}
+	{
+#ifndef NDEBUG
+		s_allocatedNodeCount++;
+#endif
+	}
 
 	void Node::deleteDangling(std::queue<Node*>& _dangling, bool _descending)
 	{
@@ -136,6 +151,9 @@ namespace HMP::Dag
 	{
 		parents.detachAll(false);
 		children.detachAll(false);
+#ifndef NDEBUG
+		s_allocatedNodeCount--;
+#endif
 	}
 
 	bool Node::isElement() const
