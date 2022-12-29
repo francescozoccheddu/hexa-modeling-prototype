@@ -200,6 +200,7 @@ namespace HMP::Meshing
 			}
 			for (Dag::Element* element : _elements)
 			{
+				assert(element->pid == noId || element->pid == m_mesh.num_polys());
 				element->pid = m_mesh.num_polys();
 				const Id pid{ m_mesh.poly_add(cpputils::range::of(element->vids).toVector()) };
 				m_mesh.poly_data(pid).m_element = element;
@@ -222,17 +223,12 @@ namespace HMP::Meshing
 		{
 			if (_state == State{})
 			{
-				for (Id pid{}; pid < m_mesh.num_polys(); pid++)
-				{
-					element(pid).pid = noId;
-				}
 				m_mesh.clear();
 			}
 			else
 			{
 				for (Id pidsCount{ m_mesh.num_polys() }; pidsCount > _state.pidsCount(); --pidsCount)
 				{
-					element(pidsCount - 1).pid = noId;
 					m_mesh.poly_remove(pidsCount - 1, false);
 				}
 				for (Id fidsCount{ m_mesh.num_faces() }; fidsCount > _state.fidsCount(); --fidsCount)
