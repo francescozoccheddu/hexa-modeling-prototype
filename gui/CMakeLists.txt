@@ -7,7 +7,9 @@ add_executable (gui
     "src/Utils/Transform.cpp"
     "src/Utils/Controls.cpp"
     "src/Utils/Drawing.cpp"
+    "src/Utils/Theme.cpp"
     "src/Widgets/Axes.cpp"
+    "src/Widgets/Debug.cpp"
     "src/Widgets/Commander.cpp"
     "src/Widgets/Target.cpp"
     "src/Widgets/VertEdit.cpp"
@@ -28,6 +30,10 @@ target_include_directories (gui
 
 target_link_libraries (gui 
     PRIVATE core
+)
+
+target_compile_definitions(gui 
+    PUBLIC HMP_GUI_COMPILER_ID=\"${CMAKE_CXX_COMPILER_ID}\"
 )
 
 if (HMP_GUI_ENABLE_DAG_VIEWER)
@@ -56,14 +62,6 @@ if (HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER)
 
     target_compile_definitions(gui 
         PUBLIC HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER
-    )
-
-endif()
-
-if (HMP_GUI_LIGHT_THEME)
-
-    target_compile_definitions(gui 
-        PUBLIC HMP_GUI_LIGHT_THEME
     )
 
 endif()

@@ -7,15 +7,18 @@
 namespace HMP
 {
 
+	using Id = unsigned int;
+	using I = std::size_t;
 	using Real = double;
+
+	using IVec = cinolib::vec<3, I>;
+	using IVec2 = cinolib::vec<2, I>;
+
 	using Vec = cinolib::vec<3, Real>;
 	using Vec2 = cinolib::vec<2, Real>;
 	using Vec4 = cinolib::vec<4, Real>;
 	using Mat4 = cinolib::mat4d;
 	using Mat3 = cinolib::mat3d;
-
-	using Id = unsigned int;
-	using I = std::size_t;
 
 	constexpr Id noId{ static_cast<Id>(-1) };
 
@@ -23,31 +26,37 @@ namespace HMP
 	inline constexpr I toI(Id _id) { return static_cast<I>(_id); }
 
 	template<typename TData>
-	using PolyFaceData = std::array<TData, 6>;
+	using HexFaceData = std::array<TData, 6>;
 
 	template<typename TData>
-	using PolyEdgeData = std::array<TData, 12>;
+	using HexEdgeData = std::array<TData, 12>;
 
 	template<typename TData>
-	using PolyVertData = std::array<TData, 8>;
+	using HexVertData = std::array<TData, 8>;
 
 	template<typename TData>
-	using FaceVertData = std::array<TData, 4>;
+	using QuadVertData = std::array<TData, 4>;
 
 	template<typename TData>
-	using FaceEdgeData = std::array<TData, 4>;
+	using QuadEdgeData = std::array<TData, 4>;
 
 	template<typename TData>
 	using EdgeVertData = std::array<TData, 2>;
 
-	using PolyVerts = PolyVertData<Vec>;
-	using PolyVertIds = PolyVertData<Id>;
-	using PolyFaceIds = PolyFaceData<Id>;
-	using PolyEdgeIds = PolyEdgeData<Id>;
-	using FaceVerts = FaceVertData<Vec>;
-	using FaceVertIds = FaceVertData<Id>;
-	using FaceEdgeIds = FaceEdgeData<Id>;
+	using HexVerts = HexVertData<Vec>;
+	using HexVertIds = HexVertData<Id>;
+	using HexVertIs = HexVertData<I>;
+	using HexFaceIds = HexFaceData<Id>;
+	using HexFaceIs = HexFaceData<I>;
+	using HexEdgeIds = HexEdgeData<Id>;
+	using HexEdgeIs = HexEdgeData<I>;
+	using QuadVerts = QuadVertData<Vec>;
+	using QuadVertIds = QuadVertData<Id>;
+	using QuadVertIs = QuadVertData<I>;
+	using QuadEdgeIds = QuadEdgeData<Id>;
+	using QuadEdgeIs = QuadEdgeData<I>;
 	using EdgeVerts = EdgeVertData<Vec>;
 	using EdgeVertIds = EdgeVertData<Id>;
+	using EdgeVertIs = EdgeVertData<I>;
 
 }

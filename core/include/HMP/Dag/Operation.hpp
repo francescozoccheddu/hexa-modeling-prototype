@@ -7,7 +7,7 @@
 namespace HMP::Dag
 {
 
-	class Operation : public Node
+	class Operation: public Node
 	{
 
 	public:
@@ -21,10 +21,6 @@ namespace HMP::Dag
 
 	private:
 
-		const EPrimitive m_primitive;
-
-		Set m_parents, m_children;
-
 		using Node::isElement;
 		using Node::isOperation;
 		using Node::element;
@@ -36,17 +32,13 @@ namespace HMP::Dag
 
 	public:
 
-		EPrimitive primitive() const;
+		const EPrimitive primitive;
+		Set parents, children;
 
 		Set& forward(bool _descending);
 		const Set& forward(bool _descending) const;
 		Set& back(bool _descending);
 		const Set& back(bool _descending) const;
-
-		Set& parents();
-		const Set& parents() const;
-		Set& children();
-		const Set& children() const;
 
 	};
 

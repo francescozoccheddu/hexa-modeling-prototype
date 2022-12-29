@@ -4,237 +4,27 @@
 #include <cinolib/Moller_Trumbore_intersection.h>
 #include <limits>
 #include <cinolib/octree.h>
+#include <queue>
+#include <cassert>
 
 namespace HMP::Meshing
 {
 
-	// Mesher::PolyAttributes
-
-	Dag::Element& Mesher::PolyAttributes::element()
-	{
-		return *m_element;
-	}
-
-	const Dag::Element& Mesher::PolyAttributes::element() const
-	{
-		return *m_element;
-	}
-
-	// Mesher::MarkerSetBase
-
-	Mesher::MarkerSetBase::MarkerSetBase(Mesher& _mesher)
-		: m_mesher{ _mesher }, m_dirty{ false }, m_color{ cinolib::Color::WHITE() }
-	{}
-
-	cinolib::Color& Mesher::MarkerSetBase::color()
-	{
-		return m_color;
-	}
-
-	const cinolib::Color& Mesher::MarkerSetBase::color() const
-	{
-		return m_color;
-	}
-
-	void Mesher::MarkerSetBase::requestUpdate()
-	{
-		m_dirty = true;
-	}
-
-	// Mesher::PolyMarkerSet
-
-	Mesher::PolyMarkerSet::PolyMarkerSet(Mesher& _mesher)
-		: MarkerSetBase{ _mesher }, m_data{}, HMP::Utils::ConstDerefRanged<std::unordered_set<const Dag::Element*>>{m_data}
-	{}
-
-	void Mesher::PolyMarkerSet::mark(const Dag::Element& _element, bool _marked)
-	{
-		const Id pid{ m_mesher.elementToPid(_element) };
-		std::bitset<8>& flags{ m_mesher.m_mesh.poly_data(pid).flags };
-		if (flags[cinolib::MARKED] != _marked)
-		{
-			flags[cinolib::MARKED] = _marked;
-			m_dirty = true;
-		}
-	}
-
-	bool Mesher::PolyMarkerSet::has(const Dag::Element& _element) const
-	{
-		return m_data.contains(&_element);
-	}
-
-	bool Mesher::PolyMarkerSet::add(const Dag::Element& _element)
-	{
-		if (m_data.insert(&_element).second)
-		{
-			mark(_element, true);
-			return true;
-		}
-		return false;
-	}
-
-	bool Mesher::PolyMarkerSet::remove(const Dag::Element& _element)
-	{
-		if (m_data.erase(&_element))
-		{
-			mark(_element, false);
-			return true;
-		}
-		return false;
-	}
-
-	bool Mesher::PolyMarkerSet::clear()
-	{
-		const bool wasEmpty{ empty() };
-		for (const Dag::Element& element : *this)
-		{
-			mark(element, false);
-		}
-		m_data.clear();
-		return !wasEmpty;
-	}
-
-	Mesher::FaceMarkerSet::FaceMarkerSet(Mesher& _mesher)
-		: MarkerSetBase{ _mesher }, m_data{}, HMP::Utils::ConstMapRanged<
-		std::unordered_set < std::pair<const Dag::Element*, Id>, Internal::FaceMarkerHasher>,
-		std::pair<const Dag::Element&, Id>,
-		Internal::faceMarkerConvert
-		>{ m_data }
-	{}
-
-	void Mesher::FaceMarkerSet::mark(const Dag::Element& _element, Id _faceOffset, bool _marked)
-	{
-		const Id pid{ m_mesher.elementToPid(_element) };
-		const Id fid{ m_mesher.m_mesh.poly_face_id(pid, _faceOffset) };
-		std::bitset<8>& flags{ m_mesher.m_mesh.face_data(fid).flags };
-		if (flags[cinolib::MARKED] != _marked)
-		{
-			flags[cinolib::MARKED] = _marked;
-			m_dirty = true;
-		}
-	}
-
-	bool Mesher::FaceMarkerSet::has(const Dag::Element& _element, Id _faceOffset) const
-	{
-		return m_data.contains({ &_element, _faceOffset });
-	}
-
-	bool Mesher::FaceMarkerSet::addAll(const Dag::Element& _element)
-	{
-		bool added{ false };
-		for (Id o{ 0 }; o < 6; o++)
-		{
-			added |= add(_element, o);
-		}
-		return added;
-	}
-
-	bool Mesher::FaceMarkerSet::add(const Dag::Element& _element, Id _faceOffset)
-	{
-		if (m_data.insert({ &_element, _faceOffset }).second)
-		{
-			mark(_element, _faceOffset, true);
-			return true;
-		}
-		return false;
-	}
-
-	bool Mesher::FaceMarkerSet::removeAll(const Dag::Element& _element)
-	{
-		bool removed{ false };
-		for (Id o{ 0 }; o < 6; o++)
-		{
-			removed |= remove(_element, o);
-		}
-		return removed;
-	}
-
-	bool Mesher::FaceMarkerSet::remove(const Dag::Element& _element, Id _faceOffset)
-	{
-		if (m_data.erase({ &_element, _faceOffset }))
-		{
-			mark(_element, _faceOffset, false);
-			return true;
-		}
-		return false;
-	}
-
-	bool Mesher::FaceMarkerSet::clear()
-	{
-		const bool wasEmpty{ empty() };
-		for (const auto& [element, faceOffset] : *this)
-		{
-			mark(element, faceOffset, false);
-		}
-		m_data.clear();
-		return !wasEmpty;
-	}
-
 	// Mesher
 
-	Id Mesher::getOrAddVert(const Vec& _vert)
-	{
-		const Id vid{ getVert(_vert) };
-		if (vid == noId)
-		{
-			m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
-			return m_mesh.vert_add(_vert);
-		}
-		return vid;
-	}
-
 	Mesher::Mesher()
-		: m_mesh(), m_elementToPid{},
-		m_polyMarkerSet{ *this }, m_faceMarkerSet{ *this },
-		m_polyColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.35f) }, m_edgeColor{ cinolib::Color::BLACK() },
-		m_dirty{ false }, m_visibleFaceIndices{}, m_visibleEdgeIndices{}, m_removedIds{},
-		HMP::Utils::ConstAndNonConstMapRanged<
-		std::unordered_map<Dag::Element*, Id>,
-		std::pair<const Dag::Element&, Id>,
-		Internal::mesherEntryConstConvert,
-		std::pair<Dag::Element&, Id>,
-		Internal::mesherEntryConvert
-		>{m_elementToPid}
+		: m_mesh(), m_octree{},
+		m_visibleFaceIndices{}, m_visibleEdgeIndices{},
+		m_dirty{ false },
+		faceColor{ cinolib::Color::WHITE() }, edgeColor{ cinolib::Color::BLACK() }
 	{
-		m_polyMarkerSet.color() = cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.5f);
-		m_faceMarkerSet.color() = cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.7f);
-		m_removedIds.vids.reserve(8);
-		m_removedIds.eids.reserve(12);
-		m_removedIds.fids.reserve(6);
 		m_mesh.draw_back_faces = false;
 		m_mesh.show_mesh(true);
 		m_mesh.show_mesh_flat();
 		m_mesh.show_marked_face(true);
 		m_mesh.show_out_wireframe_width(2.0f);
+		m_mesh.show_in_wireframe_width(2.0f);
 		updateColors();
-	}
-
-	void Mesher::paintEdge(Id _eid, const cinolib::Color& _color)
-	{
-		m_edgesPainted[toI(_eid)] = true;
-		updateEdgeColor(_eid, _color);
-	}
-
-	void Mesher::unpaintEdge(Id _eid)
-	{
-		if (m_edgesPainted[toI(_eid)])
-		{
-			m_edgesPainted[toI(_eid)] = false;
-			updateEdgeColor(_eid, m_edgeColor);
-		}
-	}
-
-	void Mesher::updateEdgeColor(Id _eid, const cinolib::Color& _color)
-	{
-		if (m_mesh.edge_data(_eid).color != _color)
-		{
-			m_mesh.edge_data(_eid).color = _color;
-			const Id visibleIndex{ m_visibleEdgeIndices[toI(_eid)] };
-			if (visibleIndex != noId)
-			{
-				m_mesh.updateGL_out_e(_eid, visibleIndex);
-			}
-		}
 	}
 
 	const Mesher::Mesh& Mesher::mesh() const
@@ -242,99 +32,14 @@ namespace HMP::Meshing
 		return m_mesh;
 	}
 
-	Id Mesher::getVert(const Vec& _vert) const
+	Dag::Element& Mesher::element(Id _pid)
 	{
-		if (!m_mesh.num_verts())
-		{
-			return noId;
-		}
-		const Id vid{ m_mesh.pick_vert(_vert) };
-		return m_mesh.vert(vid).dist(_vert) <= c_maxVertDistance ? vid : noId;
+		return *m_mesh.poly_data(_pid).m_element;
 	}
 
-	bool Mesher::has(const Dag::Element& _element) const
+	const Dag::Element& Mesher::element(Id _pid) const
 	{
-		return m_elementToPid.contains(const_cast<Dag::Element*>(&_element));
-	}
-
-	Id Mesher::elementToPid(const Dag::Element& _element) const
-	{
-		auto it{ m_elementToPid.find(const_cast<Dag::Element*>(&_element)) };
-		return (it != m_elementToPid.end()) ? it->second : noId;
-	}
-
-	Dag::Element& Mesher::pidToElement(Id _pid)
-	{
-		return m_mesh.poly_data(_pid).element();
-	}
-
-	const Dag::Element& Mesher::pidToElement(Id _pid) const
-	{
-		return const_cast<Mesher*>(this)->pidToElement(_pid);
-	}
-
-	void Mesher::add(Dag::Element& _element)
-	{
-		PolyVertIds vids;
-		for (I i{ 0 }; i < 8; i++)
-		{
-			vids[i] = getOrAddVert(_element.vertices()[i]);
-		}
-		//vids = Utils::sortVids(m_mesh, vids);
-		onElementAdd(_element);
-		const Id pid{ m_mesh.poly_add(cpputils::range::of(vids).toVector()) };
-		m_mesh.poly_data(pid).m_element = &_element;
-		m_mesh.poly_data(pid).color = m_polyColor;
-		m_edgesPainted.resize(toI(m_mesh.num_edges()), false);
-		for (const Id eid : m_mesh.adj_p2e(pid))
-		{
-			if (!m_edgesPainted[toI(eid)])
-			{
-				m_mesh.edge_data(eid).color = m_edgeColor;
-			}
-		}
-		for (I vo{}; vo < 8; vo++)
-		{
-			_element.vertices()[vo] = m_mesh.vert(m_mesh.poly_vert_id(pid, toId(vo)));
-		}
-		m_elementToPid[&_element] = pid;
-		m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
-		onElementAdded(_element);
-	}
-
-	void Mesher::remove(Dag::Element& _element)
-	{
-		const Id pid{ elementToPid(_element) };
-		if (pid == noId)
-		{
-			throw std::logic_error{ "not an element" };
-		}
-		m_mesh.poly_dangling_ids(pid, m_removedIds.vids, m_removedIds.eids, m_removedIds.fids);
-		m_removedIds.pid = pid;
-		onElementRemove(_element, m_removedIds);
-		m_elementToPid.erase(&_element);
-		for (const Id eid : m_removedIds.eids)
-		{
-			m_edgesPainted[toI(eid)] = m_edgesPainted.back();
-			m_edgesPainted.pop_back();
-		}
-		const Id lastPid{ m_mesh.num_polys() - 1 };
-		if (pid != lastPid)
-		{
-			m_elementToPid[&m_mesh.poly_data(lastPid).element()] = pid;
-		}
-		m_mesh.poly_disconnect(pid, m_removedIds.vids, m_removedIds.eids, m_removedIds.fids);
-		for (const Id fid : m_removedIds.fids) m_mesh.face_remove_unreferenced(fid);
-		for (const Id eid : m_removedIds.eids) m_mesh.edge_remove_unreferenced(eid);
-		for (const Id vid : m_removedIds.vids) m_mesh.vert_remove_unreferenced(vid);
-		m_mesh.poly_remove_unreferenced(pid);
-		m_polyMarkerSet.m_data.erase(&_element);
-		for (Id o{ 0 }; o < 6; o++)
-		{
-			m_faceMarkerSet.m_data.erase({ &_element, o });
-		}
-		m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
-		onElementRemoved(_element, m_removedIds);
+		return const_cast<Mesher*>(this)->element(_pid);
 	}
 
 	void Mesher::moveVert(Id _vid, const Vec& _position)
@@ -342,74 +47,19 @@ namespace HMP::Meshing
 		if (m_mesh.vert(_vid) != _position)
 		{
 			m_mesh.vert(_vid) = _position;
-			for (const Id pid : m_mesh.adj_v2p(_vid))
-			{
-				pidToElement(pid).vertices()[m_mesh.poly_vert_offset(pid, _vid)] = _position;
-			}
-			m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = true;
+			m_dirty = true;
 		}
-	}
-
-	void Mesher::clear()
-	{
-		onClear();
-		m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = m_dirty = m_mesh.num_polys();
-		m_mesh.clear();
-		m_elementToPid.clear();
-		m_polyMarkerSet.m_data.clear();
-		m_faceMarkerSet.m_data.clear();
-		onCleared();
-	}
-
-	Mesher::PolyMarkerSet& Mesher::polyMarkerSet()
-	{
-		return m_polyMarkerSet;
-	}
-
-	const Mesher::PolyMarkerSet& Mesher::polyMarkerSet() const
-	{
-		return m_polyMarkerSet;
-	}
-
-	Mesher::FaceMarkerSet& Mesher::faceMarkerSet()
-	{
-		return m_faceMarkerSet;
-	}
-
-	const Mesher::FaceMarkerSet& Mesher::faceMarkerSet() const
-	{
-		return m_faceMarkerSet;
-	}
-
-	cinolib::Color& Mesher::polyColor()
-	{
-		return m_polyColor;
-	}
-
-	const cinolib::Color& Mesher::polyColor() const
-	{
-		return m_polyColor;
-	}
-
-	cinolib::Color& Mesher::edgeColor()
-	{
-		return m_edgeColor;
-	}
-
-	const cinolib::Color& Mesher::edgeColor() const
-	{
-		return m_edgeColor;
 	}
 
 	void Mesher::updateColors(bool _poly, bool _edge)
 	{
 		if (_poly)
 		{
-			m_mesh.poly_set_color(m_polyColor);
+			m_mesh.poly_set_color(faceColor);
 		}
 		if (_edge)
 		{
-			m_mesh.edge_set_color(m_edgeColor);
+			m_mesh.edge_set_color(edgeColor);
 		}
 	}
 
@@ -424,8 +74,7 @@ namespace HMP::Meshing
 				for (I fi{}; fi < m_visibleFaceIndices.size(); fi++)
 				{
 					const Id fid{ toId(fi) };
-					Id pid;
-					m_visibleFaceIndices[fi] = (m_mesh.face_is_on_srf(fid) && m_mesh.face_is_visible(fid, pid)) ? lastI++ : noId;
+					m_visibleFaceIndices[fi] = (m_mesh.face_is_on_srf(fid) && m_mesh.face_is_visible(fid)) ? lastI++ : noId;
 				}
 			}
 			{
@@ -434,25 +83,13 @@ namespace HMP::Meshing
 				for (I ei{}; ei < m_visibleEdgeIndices.size(); ei++)
 				{
 					const Id eid{ toId(ei) };
-					bool visible{ false };
-					if (m_mesh.edge_is_on_srf(eid))
-					{
-						for (const Id pid : m_mesh.adj_e2p(eid))
-						{
-							if (!m_mesh.poly_data(pid).flags[cinolib::HIDDEN])
-							{
-								visible = true;
-								break;
-							}
-						}
-					}
-					m_visibleEdgeIndices[ei] = visible ? lastI++ : noId;
+					m_visibleEdgeIndices[ei] = (m_mesh.edge_is_on_srf(eid) && m_mesh.edge_is_visible(eid)) ? lastI++ : noId;
 				}
 			}
 			m_mesh.update_normals();
 			m_mesh.update_bbox();
 			m_mesh.updateGL_out();
-			updateMeshMarkers();
+			m_mesh.updateGL_in();
 			m_dirty = false;
 		}
 	}
@@ -462,10 +99,11 @@ namespace HMP::Meshing
 		if (m_dirty)
 		{
 			static constexpr double c_threshold{ 0.5 };
-			if (_changedVids.size() >= static_cast<I>(toI(m_mesh.num_polys()) * c_threshold))
+			if (_changedVids.size() >= static_cast<I>(static_cast<double>(m_mesh.num_polys()) * c_threshold))
 			{
 				m_mesh.update_normals();
 				m_mesh.updateGL_out();
+				m_mesh.updateGL_in();
 			}
 			else
 			{
@@ -505,27 +143,154 @@ namespace HMP::Meshing
 		}
 	}
 
-	void Mesher::updateMeshMarkers()
+	Mesher::State::State(Id _pids, Id _fids, Id _eids, Id _vids)
+		: m_pids{ _pids }, m_fids{ _fids }, m_eids{ _eids }, m_vids{ _vids }
+	{}
+
+	Mesher::State::State(): State{ 0,0,0,0 } {}
+
+	Id Mesher::State::pidsCount() const
 	{
-		if (m_polyMarkerSet.m_dirty || m_faceMarkerSet.m_dirty)
+		return m_pids;
+	}
+
+	Id Mesher::State::fidsCount() const
+	{
+		return m_fids;
+	}
+
+	Id Mesher::State::eidsCount() const
+	{
+		return m_eids;
+	}
+
+	Id Mesher::State::vidsCount() const
+	{
+		return m_vids;
+	}
+
+	Id Mesher::State::lastPid() const
+	{
+		return m_pids - 1;
+	}
+
+	Id Mesher::State::lastFid() const
+	{
+		return m_fids - 1;
+	}
+
+	Id Mesher::State::lastEid() const
+	{
+		return m_eids - 1;
+	}
+
+	Id Mesher::State::lastVid() const
+	{
+		return m_vids - 1;
+	}
+
+	void Mesher::add(const std::vector<Dag::Element*> _elements, const std::vector<Vec>& _verts)
+	{
+		if (!_elements.empty() || !_verts.empty())
 		{
-			m_mesh.marked_face_color = m_faceMarkerSet.color();
-			m_mesh.marked_poly_color = m_polyMarkerSet.color();
-			m_mesh.updateGL_marked();
-			m_polyMarkerSet.m_dirty = m_faceMarkerSet.m_dirty = false;
+			const State oldState{ state() };
+			for (const Vec& vert : _verts)
+			{
+				m_mesh.vert_add(vert);
+			}
+			for (Dag::Element* element : _elements)
+			{
+				assert(element->pid == noId || element->pid == m_mesh.num_polys());
+				element->pid = m_mesh.num_polys();
+				const Id pid{ m_mesh.poly_add(cpputils::range::of(element->vids).toVector()) };
+				m_mesh.poly_data(pid).m_element = element;
+				m_mesh.poly_data(pid).color = faceColor;
+				for (const Id eid : m_mesh.adj_p2e(pid))
+				{
+					m_mesh.edge_data(eid).color = edgeColor;
+				}
+				m_dirty = true;
+			}
+			m_dirty = true;
+			onAdded(oldState);
 		}
+	}
+
+	void Mesher::restore(const State& _state)
+	{
+		const State oldState{ state() };
+		if (_state != oldState)
+		{
+			if (_state == State{})
+			{
+				m_mesh.clear();
+			}
+			else
+			{
+				for (Id pidsCount{ m_mesh.num_polys() }; pidsCount > _state.pidsCount(); --pidsCount)
+				{
+					m_mesh.poly_remove(pidsCount - 1, false);
+				}
+				for (Id fidsCount{ m_mesh.num_faces() }; fidsCount > _state.fidsCount(); --fidsCount)
+				{
+					m_mesh.face_remove_unreferenced(fidsCount - 1);
+				}
+				for (Id eidsCount{ m_mesh.num_edges() }; eidsCount > _state.eidsCount(); --eidsCount)
+				{
+					m_mesh.edge_remove_unreferenced(eidsCount - 1);
+				}
+				for (Id vidsCount{ m_mesh.num_verts() }; vidsCount > _state.vidsCount(); --vidsCount)
+				{
+					m_mesh.vert_remove_unreferenced(vidsCount - 1);
+				}
+			}
+			assert(state() == _state);
+			m_dirty = true;
+			onRestored(oldState);
+		}
+	}
+
+	Mesher::State Mesher::state() const
+	{
+		return State{ m_mesh.num_polys(), m_mesh.num_faces(), m_mesh.num_edges(), m_mesh.num_verts() };
+	}
+
+	void Mesher::show(Id _pid, bool _visible)
+	{
+		auto data{ m_mesh.poly_data(_pid).flags[cinolib::HIDDEN] };
+		if (data != !_visible)
+		{
+			data = !_visible;
+			m_dirty = true;
+			onElementVisibilityChanged(element(_pid), _visible);
+		}
+	}
+
+	void Mesher::show(Dag::Element& _element, bool _visible)
+	{
+		show(_element.pid, _visible);
+	}
+
+	bool Mesher::shown(Id _pid) const
+	{
+		return !m_mesh.poly_data(_pid).flags[cinolib::HIDDEN];
+	}
+
+	bool Mesher::shown(const Dag::Element& _element) const
+	{
+		return shown(_element.pid);
 	}
 
 	bool Mesher::pick(const Vec& _from, const Vec& _normDir, Id& _pid, Id& _fid, Id& _eid, Id& _vid, bool _allowBehind) const
 	{
 		double minT{ std::numeric_limits<double>::infinity() };
 		_pid = _fid = _eid = _vid = noId;
-		if (_allowBehind ? m_octree->intersects_line(_from, _normDir, minT, _fid) : m_octree->intersects_ray(_from, _normDir, minT, _fid))
+		if (_allowBehind ? m_octree.intersects_line(_from, _normDir, minT, _fid) : m_octree.intersects_ray(_from, _normDir, minT, _fid))
 		{
 			const Vec point{ _from + _normDir * minT };
-			_pid = m_mesh.adj_f2p(_fid)[0];
-			_eid = Meshing::Utils::closestFaceEid(m_mesh, _fid, point);
-			_vid = Meshing::Utils::closestFaceVid(m_mesh, _fid, point);
+			assert(m_mesh.face_is_visible(_fid, _pid));
+			_eid = Meshing::Utils::closestFidEid(m_mesh, _fid, point);
+			_vid = Meshing::Utils::closestFidVid(m_mesh, _fid, point);
 			return true;
 		}
 		else
@@ -536,7 +301,8 @@ namespace HMP::Meshing
 
 	void Mesher::updateOctree()
 	{
-		m_octree = std::make_unique<cinolib::Octree>();
+		m_octree.clear();
+		m_octree.items.reserve(m_mesh.num_faces());
 		for (Id fid{}; fid < m_mesh.num_faces(); fid++)
 		{
 			Id facePid;
@@ -545,7 +311,7 @@ namespace HMP::Meshing
 				const bool cw{ m_mesh.poly_face_is_CW(facePid, fid) };
 				for (I ti{}; ti < 2; ti++)
 				{
-					m_octree->push_triangle(fid, {
+					m_octree.push_triangle(fid, {
 							m_mesh.vert(m_mesh.face_tessellation(fid)[ti * 3 + (cw ? 2 : 0)]),
 							m_mesh.vert(m_mesh.face_tessellation(fid)[ti * 3 + 1]),
 							m_mesh.vert(m_mesh.face_tessellation(fid)[ti * 3 + (cw ? 0 : 2)]),
@@ -554,7 +320,7 @@ namespace HMP::Meshing
 				}
 			}
 		}
-		m_octree->build();
+		m_octree.build();
 	}
 
 }

@@ -26,13 +26,11 @@ namespace HMP::Gui::Widgets
         VertEdit& m_vertEdit;
         const cinolib::GLcanvas& m_canvas;
         bool m_pending;
-        bool m_onX, m_onY, m_onZ;
-        EKind m_kind;
-        Vec2 m_start;
         Vec2 m_centroid;
+        EKind m_kind;
+        bool m_onX, m_onY, m_onZ;
+        Vec2 m_start;
         Vec2 m_mouse;
-
-        void ensurePending() const;
 
     public:
 

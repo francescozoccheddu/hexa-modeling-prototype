@@ -12,6 +12,7 @@
 #include <HMP/Projection/smooth.hpp>
 #include <array>
 #include <cinolib/parallel_for.h>
+#include <cassert>
 
 #define HMP_PROJECTION_PROJECT_DEBUG_LOG
 
@@ -54,15 +55,15 @@ namespace HMP::Projection
                 for (const Id adjFid : adjFids)
                 {
                     const Id adjFO{ _source.poly_vert_offset(adjFid, _vid) };
-                    const std::vector<Vec>& sourceFaceVerts{ _source.poly_verts(adjFid) };
+                    const std::vector<Vec>& sourceQuadVerts{ _source.poly_verts(adjFid) };
                     for (const Match::SourceToTargetVid& match : _matches[toI(adjFid)])
                     {
                         cinolib::vec4<Real> sourceFaceWeights;
                         cinolib::quad_barycentric_coords(
-                            sourceFaceVerts[0],
-                            sourceFaceVerts[1],
-                            sourceFaceVerts[2],
-                            sourceFaceVerts[3],
+                            sourceQuadVerts[0],
+                            sourceQuadVerts[1],
+                            sourceQuadVerts[2],
+                            sourceQuadVerts[3],
                             match.pos,
                             sourceFaceWeights
                         );
@@ -105,7 +106,7 @@ namespace HMP::Projection
         return weights;
     }
 
-    std::optional<Vec> projectSurfaceVert(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const Id _vid, const std::vector<std::vector<Match::SourceToTargetVid>>& _matches, const Options& _options)
+    std::optional<Vec> projectsurfaceVert(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const Id _vid, const std::vector<std::vector<Match::SourceToTargetVid>>& _matches, const Options& _options)
     {
         const std::vector<Id>& adjFids{ _source.adj_v2p(_vid) };
         const Vec& sourceVert{ _source.vert(_vid) };
@@ -168,7 +169,7 @@ namespace HMP::Projection
                 case EDisplaceMode::NormDirAvgAndDirNormAvg:
                     return sourceVert + normDirSum * dirLengthSum / weightSum / weightSum;
                 default:
-                    throw std::domain_error{ "unknown displace mode" };
+                    assert(false);
             }
         }
     }
@@ -178,7 +179,7 @@ namespace HMP::Projection
         const std::vector<std::vector<Match::SourceToTargetVid>>& matches{ Match::matchSurfaceFid(_source, _target) };
         std::vector<std::optional<Vec>> projected(toI(_source.num_verts()));
         const auto func{ [&](const Id _vid) {
-            projected[toI(_vid)] = projectSurfaceVert(_source, _target, _vid, matches, _options);
+            projected[toI(_vid)] = projectsurfaceVert(_source, _target, _vid, matches, _options);
         } };
         cinolib::PARALLEL_FOR(0, _source.num_verts(), c_minVertsForParallelFor, func);
         return fill(_source, projected, _options.unsetVertsDistWeightTweak);
@@ -236,7 +237,6 @@ namespace HMP::Projection
     {
         const Vec& sourceVert{ _source.vert(_vid) };
         const std::vector<Real>& baseWeights{ pathVertBaseWeights(_source, _vid, _adjEids, _matches, _options.baseWeightMode) };
-        const Vec sourceNorm{ _source.vert_data(_vid).normal };
         Vec targetVertSum{};
         Vec dirSum{};
         Vec normDirSum{};
@@ -280,7 +280,7 @@ namespace HMP::Projection
                 case EDisplaceMode::NormDirAvgAndDirNormAvg:
                     return sourceVert + normDirSum * dirLengthSum / weightSum / weightSum;
                 default:
-                    throw std::domain_error{ "unknown displace mode" };
+                    assert(false);
             }
         }
     }
@@ -296,7 +296,7 @@ namespace HMP::Projection
             std::vector<Id> adjEids(adjVids.size());
             for (const auto& [adjVid, adjEid] : cpputils::range::zip(adjVids, adjEids))
             {
-                adjEid = _source.edge_id(vid, adjVid);
+                adjEid = static_cast<Id>(_source.edge_id(vid, adjVid));
             }
             projected[i] = projectPathVert(_source, _target, vid, adjEids, matches, _options);
         } };

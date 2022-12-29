@@ -34,18 +34,9 @@ namespace HMP::Dag
 		template <cpputils::concepts::DerivedSimpleClass<Node> TOtherNode, bool TOtherDescending>
 		bool operator==(const NodeHandle<TOtherNode, TOtherDescending>& _other) const;
 
-		template <cpputils::concepts::DerivedSimpleClass<Node> TOtherNode, bool TOtherDescending>
-		bool operator!=(const NodeHandle<TOtherNode, TOtherDescending>& _other) const;
-
-		TNode& operator*();
-		TNode* operator->();
-		operator TNode* ();
-
-		const TNode& operator*() const;
-		const TNode* operator->() const;
-		operator const TNode* () const;
-
-		operator bool() const;
+		TNode& operator*() const;
+		TNode* operator->() const;
+		operator TNode* () const;
 
 		void free();
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cinolib/gl/side_bar_item.h>
+#include <cinolib/gl/canvas_gui_item.h>
 #include <cpputils/collections/Event.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <HMP/Projection/project.hpp>
@@ -9,24 +10,24 @@
 #include <HMP/Commander.hpp>
 #include <cinolib/feature_network.h>
 #include <array>
+#include <imgui.h>
 
 namespace HMP::Gui::Widgets
 {
 
-	class Projection final: public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
+	class Projection final: public cinolib::SideBarItem, public cinolib::CanvasGuiItem, public cpputils::mixins::ReferenceClass
 	{
 
 	private:
 
-		HMP::Projection::Options m_options;
-		Widgets::Target& m_targetWidget;
+		const Widgets::Target& m_targetWidget;
 		HMP::Commander& m_commander;
-		HMP::Meshing::Mesher& m_mesher;
+		const HMP::Meshing::Mesher& m_mesher;
+		HMP::Projection::Options m_options;
 		std::vector<HMP::Projection::Utils::EidsPath> m_paths;
-		VertEdit& m_vertEditWidget;
 		cinolib::FeatureNetworkOptions m_featureFinderOptions;
-		bool m_showPaths{ true }, m_showAllPaths{ false };
-		I m_currentPath{};
+		bool m_showPaths, m_showAllPaths;
+		I m_currentPath;
 
 		void matchPaths(I _first, I _lastEx, bool _fromSource);
 
@@ -34,34 +35,14 @@ namespace HMP::Gui::Widgets
 
 		void setSourcePathFromSelection(I _path);
 
-		void updateMeshEdges(I _first, I _lastEx, bool _show, bool _source);
-
-		void updateBothMeshEdges(I _first, I _lastEx, bool _show);
-
-		void updateSourceMeshEdges(I _first, I _lastEx, bool _show);
-
-		void updateTargetMeshEdges(I _first, I _lastEx, bool _show);
-
-		void clearBothPaths();
-
-		void addPath();
-
-		void removePath(I _index);
-
-		void clearPaths(I _first, I _lastEx, bool _source);
-
-		void clearBothPaths(I _first, I _lastEx);
-
-		void clearSourcePaths(I _first, I _lastEx);
-
-		void clearTargetPaths(I _first, I _lastEx);
-
 		template<class M, class V, class E, class P>
 		void setPathEdgeAtPoint(const Vec& _point, bool _add, const cinolib::AbstractMesh<M, V, E, P>& _mesh, bool _source);
 
+		ImVec4 pathColor(I _path) const;
+
 	public:
 
-		Projection(Widgets::Target& _targetWidget, HMP::Commander& _commander, HMP::Meshing::Mesher& _mesher, VertEdit& _vertEditWidget);
+		Projection(const Widgets::Target& _targetWidget, HMP::Commander& _commander, const HMP::Meshing::Mesher& _mesher);
 
 		cpputils::collections::Event<Projection, const cinolib::Polygonmesh<>&, const std::vector<HMP::Projection::Utils::Point>&, const std::vector<HMP::Projection::Utils::EidsPath>&, const HMP::Projection::Options&> onProjectRequest;
 
@@ -78,6 +59,8 @@ namespace HMP::Gui::Widgets
 		void setSourcePathEdgeAtPoint(const Vec& _point, bool _add);
 
 		void draw() override;
+
+		void draw(const cinolib::GLcanvas& _canvas) override;
 
 	};
 

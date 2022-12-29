@@ -1,7 +1,7 @@
 #include <HMP/Gui/Widgets/VertEdit.hpp>
 
 #include <imgui.h>
-#include <stdexcept>
+#include <cassert>
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <HMP/Gui/Utils/Drawing.hpp>
 
@@ -75,18 +75,6 @@ namespace HMP::Gui::Widgets
 		return false;
 	}
 
-	bool VertEdit::replace(Id _oldVid, Id _newVid)
-	{
-		auto node = m_verts.extract(_oldVid);
-		if (!node.empty())
-		{
-			node.key() = _newVid;
-			m_verts.insert(std::move(node));
-			return true;
-		}
-		return false;
-	}
-
 	bool VertEdit::has(Id _vid) const
 	{
 		return m_verts.contains(_vid);
@@ -111,10 +99,7 @@ namespace HMP::Gui::Widgets
 
 	const Vec& VertEdit::centroid() const
 	{
-		if (empty())
-		{
-			throw std::logic_error{ "empty" };
-		}
+		assert(!empty());
 		return m_centroid;
 	}
 

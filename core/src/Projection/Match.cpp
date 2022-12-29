@@ -87,7 +87,7 @@ namespace HMP::Projection::Match
         return invMatches;
     }
 
-    std::unordered_map<Id, std::vector<SourceToTargetVid>> invertPathMatches(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::vector<Id>& _sourceEidsPath, const std::vector<Id>& _targetVidsPath, const std::vector<TargetVidToSource>& _matches)
+    std::unordered_map<Id, std::vector<SourceToTargetVid>> invertPathMatches(const std::vector<Id>& _sourceEidsPath, const std::vector<Id>& _targetVidsPath, const std::vector<TargetVidToSource>& _matches)
     {
         std::unordered_map<Id, std::vector<SourceToTargetVid>> invMatches;
         invMatches.reserve(_sourceEidsPath.size());
@@ -112,7 +112,7 @@ namespace HMP::Projection::Match
 
     std::unordered_map<Id, std::vector<SourceToTargetVid>> matchPathEid(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::vector<Id>& _sourceEidsPath, const std::vector<Id>& _targetVidsPath)
     {
-        return invertPathMatches(_source, _target, _sourceEidsPath, _targetVidsPath, matchPath(_source, _target, _sourceEidsPath, _targetVidsPath));
+        return invertPathMatches(_sourceEidsPath, _targetVidsPath, matchPath(_source, _target, _sourceEidsPath, _targetVidsPath));
     }
 
 }

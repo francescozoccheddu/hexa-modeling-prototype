@@ -30,7 +30,6 @@ namespace HMP
 
 			ActionBase();
 
-			void ensureAttached() const;
 			void attach(Commander& _commander);
 
 			void prepareAndApply();
@@ -90,7 +89,6 @@ namespace HMP
 
 			friend class Commander;
 
-			using ActionBase::ensureAttached;
 			using ActionBase::attach;
 			using ActionBase::prepareAndApply;
 			using ActionBase::prepareAndUnapply;
@@ -117,7 +115,7 @@ namespace HMP
 	private:
 
 		Project& m_project;
-		Stack m_unapplied{}, m_applied{};
+		Stack m_applied, m_unapplied;
 
 	public:
 
@@ -137,6 +135,7 @@ namespace HMP
 
 		Stack& applied();
 		const Stack& applied() const;
+
 
 	};
 

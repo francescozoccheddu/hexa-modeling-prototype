@@ -3,23 +3,15 @@
 #include <HMP/Gui/Utils/Transform.hpp>
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <HMP/Gui/Utils/Drawing.hpp>
-#include <stdexcept>
+#include <cassert>
 #include <imgui.h>
 
 namespace HMP::Gui::Widgets
 {
 
-    void DirectVertEdit::ensurePending() const
-    {
-        if (!m_pending)
-        {
-            throw std::logic_error{ "not pending" };
-        }
-    }
-
     DirectVertEdit::DirectVertEdit(VertEdit& _vertEdit, const cinolib::GLcanvas& _canvas):
         m_vertEdit{ _vertEdit }, m_canvas{ _canvas }, m_pending{ false },
-        m_centroid{}, m_kind{}, m_onX{}, m_onY{}, m_onZ{}, m_start{}, onPendingChanged{}, m_mouse{}
+        m_centroid{}, m_kind{}, m_onX{}, m_onY{}, m_onZ{}, m_start{}, m_mouse{}, onPendingChanged{}
     {
         _vertEdit.onVidsChanged += [&]() {
             if (m_vertEdit.empty())
@@ -104,7 +96,6 @@ namespace HMP::Gui::Widgets
             {
                 const Vec2 diff{ m_mouse - m_centroid };
                 const Vec2 startDiff{ m_start - m_centroid };
-                Vec scale{ 1.0 };
                 if (!m_onX && !m_onY && !m_onZ)
                 {
                     const auto scaleDim{ [&diff, &startDiff](unsigned int _dim) {
@@ -202,7 +193,7 @@ namespace HMP::Gui::Widgets
 
     DirectVertEdit::EKind DirectVertEdit::kind() const
     {
-        ensurePending();
+        assert(m_pending);
         return m_kind;
     }
 
@@ -226,7 +217,7 @@ namespace HMP::Gui::Widgets
         return m_onZ;
     }
 
-    void DirectVertEdit::draw(const cinolib::GLcanvas& _canvas)
+    void DirectVertEdit::draw(const cinolib::GLcanvas&)
     {
         if (!m_pending)
         {
@@ -238,7 +229,6 @@ namespace HMP::Gui::Widgets
         const ImU32 startCol{ ImGui::ColorConvertFloat4ToU32(toImGui(mutedColor)) };
         const ImU32 col{ ImGui::ColorConvertFloat4ToU32(toImGui(color)) };
         const Real maxLen{ Vec2{static_cast<Real>(m_canvas.canvas_width()), static_cast<Real>(m_canvas.height())}.norm() };
-        const ImFont* const font{ ImGui::GetFont() };
         switch (m_kind)
         {
             case EKind::Rotation:
@@ -268,8 +258,8 @@ namespace HMP::Gui::Widgets
                 text(drawList, axisStr, toImGui(m_centroid + textMargin), textSize, startCol, EAlign::LeftTop, EAlign::LeftTop);
                 const Vec2 startDir{ Utils::Transform::dir(m_centroid, m_start) };
                 const Vec2 dir{ Utils::Transform::dir(m_centroid, m_mouse) };
-                line(drawList, toImGui(m_centroid), toImGui(m_centroid + startDir * maxLen), startCol, lineThickness);
-                line(drawList, toImGui(m_centroid), toImGui(m_centroid + dir * maxLen), col, lineThickness);
+                line(drawList, { toImGui(m_centroid), toImGui(m_centroid + startDir * maxLen) }, startCol, lineThickness);
+                line(drawList, { toImGui(m_centroid), toImGui(m_centroid + dir * maxLen) }, col, lineThickness);
             }
             break;
             case EKind::Scale:
@@ -293,27 +283,27 @@ namespace HMP::Gui::Widgets
                 static constexpr Real crossRadius{ 10.0f };
                 if (m_onX && !m_onY && !m_onZ)
                 {
-                    line(drawList, toImGui(m_start - Vec2{ maxLen, 0 }), toImGui(m_start + Vec2{ maxLen, 0 }), startCol, lineThickness);
-                    line(drawList, toImGui(m_start - Vec2{ 0, crossRadius }), toImGui(m_start + Vec2{ 0, crossRadius }), startCol, lineThickness);
-                    line(drawList, toImGui(Vec2{ m_mouse.x(), m_start.y() } - Vec2{ 0, crossRadius }), toImGui(Vec2{ m_mouse.x(), m_start.y() } + Vec2{ 0, crossRadius }), col, lineThickness);
+                    line(drawList, { toImGui(m_start - Vec2{ maxLen, 0 }), toImGui(m_start + Vec2{ maxLen, 0 }) }, startCol, lineThickness);
+                    line(drawList, { toImGui(m_start - Vec2{ 0, crossRadius }), toImGui(m_start + Vec2{ 0, crossRadius }) }, startCol, lineThickness);
+                    line(drawList, { toImGui(Vec2{ m_mouse.x(), m_start.y() } - Vec2{ 0, crossRadius }), toImGui(Vec2{ m_mouse.x(), m_start.y() } + Vec2{ 0, crossRadius }) }, col, lineThickness);
                     text(drawList, "X", toImGui(m_start + textMargin), textSize, startCol, EAlign::LeftTop, EAlign::LeftTop);
                 }
                 else if (!m_onX && m_onY && !m_onZ)
                 {
-                    line(drawList, toImGui(m_start - Vec2{ 0, maxLen }), toImGui(m_start + Vec2{ 0, maxLen }), startCol, lineThickness);
-                    line(drawList, toImGui(m_start - Vec2{ crossRadius, 0 }), toImGui(m_start + Vec2{ crossRadius, 0 }), startCol, lineThickness);
-                    line(drawList, toImGui(Vec2{ m_start.x(), m_mouse.y() } - Vec2{ crossRadius, 0 }), toImGui(Vec2{ m_start.x(), m_mouse.y() } + Vec2{ crossRadius, 0 }), col, lineThickness);
+                    line(drawList, { toImGui(m_start - Vec2{ 0, maxLen }), toImGui(m_start + Vec2{ 0, maxLen }) }, startCol, lineThickness);
+                    line(drawList, { toImGui(m_start - Vec2{ crossRadius, 0 }), toImGui(m_start + Vec2{ crossRadius, 0 }) }, startCol, lineThickness);
+                    line(drawList, { toImGui(Vec2{ m_start.x(), m_mouse.y() } - Vec2{ crossRadius, 0 }), toImGui(Vec2{ m_start.x(), m_mouse.y() } + Vec2{ crossRadius, 0 }) }, col, lineThickness);
                     text(drawList, "Y", toImGui(m_start + textMargin), textSize, startCol, EAlign::LeftTop, EAlign::LeftTop);
                 }
                 else if (!m_onX && !m_onY && !m_onZ)
                 {
                     cross(drawList, toImGui(m_start), crossRadius, startCol, lineThickness);
-                    line(drawList, toImGui(m_start), toImGui(m_mouse), col, lineThickness);
+                    line(drawList, { toImGui(m_start), toImGui(m_mouse) }, col, lineThickness);
                 }
                 else
                 {
-                    line(drawList, toImGui(m_start - Vec2{ crossRadius, 0 }), toImGui(m_start + Vec2{ crossRadius, 0 }), startCol, lineThickness);
-                    line(drawList, toImGui(m_start - Vec2{ 0, crossRadius }), toImGui(m_start + Vec2{ 0, crossRadius }), startCol, lineThickness);
+                    line(drawList, { toImGui(m_start - Vec2{ crossRadius, 0 }), toImGui(m_start + Vec2{ crossRadius, 0 }) }, startCol, lineThickness);
+                    line(drawList, { toImGui(m_start - Vec2{ 0, crossRadius }), toImGui(m_start + Vec2{ 0, crossRadius }) }, startCol, lineThickness);
                     text(drawList, "???", toImGui(m_start + textMargin), textSize, col, EAlign::LeftTop, EAlign::LeftTop);
                 }
             }

@@ -18,6 +18,7 @@
 #include <HMP/Gui/Widgets/DirectVertEdit.hpp>
 #include <HMP/Gui/Widgets/Projection.hpp>
 #include <HMP/Gui/Widgets/Save.hpp>
+#include <HMP/Gui/Widgets/Debug.hpp>
 #include <vector>
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
@@ -35,28 +36,6 @@ namespace HMP::Gui
 	{
 
 	private:
-
-		static constexpr float c_hue{ 0.1f };
-
-#ifdef HMP_GUI_LIGHT_THEME
-		static constexpr cinolib::Color c_warningTextColor{ cinolib::Color::hsv2rgb(0.1f, 1.0f, 0.75f) };
-		static constexpr cinolib::Color c_backgroundColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.95f) };
-		static constexpr cinolib::Color c_overlayColor{ cinolib::Color::hsv2rgb(c_hue, 0.8f, 1.0f) };
-		static constexpr cinolib::Color c_mutedOverlayColor{ cinolib::Color::hsv2rgb(c_hue, 0.0f, 0.0f, 0.25f) };
-		static constexpr cinolib::Color c_polyColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.75f) };
-		static constexpr cinolib::Color c_edgeColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.1f) };
-		static constexpr cinolib::Color c_selectedPolyColor{ cinolib::Color::hsv2rgb(c_hue, 0.3f, 0.85f) };
-		static constexpr cinolib::Color c_selectedFaceColor{ cinolib::Color::hsv2rgb(c_hue, 0.75f, 1.0f) };
-#else
-		static constexpr cinolib::Color c_warningTextColor{ cinolib::Color::hsv2rgb(0.2f, 0.6f, 0.6f) };
-		static constexpr cinolib::Color c_backgroundColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.1f) };
-		static constexpr cinolib::Color c_overlayColor{ cinolib::Color::hsv2rgb(c_hue, 0.5f, 1.0f) };
-		static constexpr cinolib::Color c_mutedOverlayColor{ cinolib::Color::hsv2rgb(c_hue, 0.0f, 1.0f, 0.25f) };
-		static constexpr cinolib::Color c_polyColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.35f) };
-		static constexpr cinolib::Color c_edgeColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 0.0f) };
-		static constexpr cinolib::Color c_selectedPolyColor{ cinolib::Color::hsv2rgb(c_hue, 0.75f, 0.5f) };
-		static constexpr cinolib::Color c_selectedFaceColor{ cinolib::Color::hsv2rgb(c_hue, 0.75f, 1.0f) };
-#endif
 
 		static constexpr cinolib::KeyBinding c_kbCancelDirectEdit{ GLFW_KEY_ESCAPE };
 		static constexpr cinolib::KeyBinding c_kbDirectTranslation{ GLFW_KEY_T };
@@ -83,7 +62,6 @@ namespace HMP::Gui
 		static constexpr cinolib::KeyBinding c_kbUndo{ GLFW_KEY_Z, GLFW_MOD_CONTROL };
 		static constexpr cinolib::KeyBinding c_kbRedo{ GLFW_KEY_Z, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbClear{ GLFW_KEY_N, GLFW_MOD_CONTROL };
-		static constexpr cinolib::KeyBinding c_kbPrintDebugInfo{ GLFW_KEY_COMMA };
 		static constexpr cinolib::KeyBinding c_kbSelectVertex{ GLFW_KEY_1 };
 		static constexpr cinolib::KeyBinding c_kbSelectEdge{ GLFW_KEY_2 };
 		static constexpr cinolib::KeyBinding c_kbSelectUpEdge{ GLFW_KEY_2, GLFW_MOD_ALT };
@@ -94,6 +72,7 @@ namespace HMP::Gui
 		static constexpr cinolib::KeyBinding c_kbSelectAll{ GLFW_KEY_A, GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbAddPathEdge{ GLFW_KEY_I, GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbRemovePathEdge{ GLFW_KEY_I, GLFW_MOD_CONTROL };
+		static constexpr cinolib::KeyBinding c_kbRefineTest{ GLFW_KEY_COMMA };
 		static constexpr int c_kmodSelectAdd{ GLFW_MOD_SHIFT };
 		static constexpr int c_kmodSelectRemove{ GLFW_MOD_CONTROL };
 		static constexpr int c_kbDirectEditX{ GLFW_KEY_LEFT_CONTROL };
@@ -116,18 +95,14 @@ namespace HMP::Gui
 		{
 			cinolib::vec2d position{};
 			HMP::Dag::Element* element{};
-			Id faceOffset{}, upFaceOffset{}, vertOffset{};
+			I fi, vi, ei;
+			Id pid, fid, vid, eid;
 		} m_mouse;
 
 		struct
 		{
-			HMP::Dag::NodeHandle<HMP::Dag::Element> element{};
+			HMP::Dag::Element* element{};
 		} m_copy;
-
-		struct
-		{
-			bool showNames{ false };
-		} m_options;
 
 		HMP::Project m_project;
 		cinolib::GLcanvas m_canvas;
@@ -135,22 +110,26 @@ namespace HMP::Gui
 		const Meshing::Mesher::Mesh& m_mesh;
 		Commander& m_commander;
 		cpputils::collections::SetNamer<const HMP::Dag::Node*> m_dagNamer;
+		Widgets::Commander m_commanderWidget;
 		Widgets::Axes m_axesWidget;
 		Widgets::Target m_targetWidget;
 		Widgets::VertEdit m_vertEditWidget;
-		Widgets::Commander m_commanderWidget;
 		Widgets::DirectVertEdit m_directVertEditWidget;
 		Widgets::Save m_saveWidget;
 		Widgets::Projection m_projectionWidget;
+		Widgets::Debug m_debugWidget;
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
-		bool m_dagViewerNeedsUpdate;
 		DagViewer::Widget m_dagViewerWidget;
+		bool m_dagViewerNeedsUpdate;
 #endif
 
 #ifdef HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER
 		Widgets::Ae3d2ShapeExporter m_ae3d2ShapeExporter;
 #endif
+
+		// other
+		void setTheme(bool _dark, float _hue);
 
 		// actions
 		void onActionApplied();
@@ -158,9 +137,8 @@ namespace HMP::Gui
 		void requestDagViewerUpdate();
 
 		// mesher events
-		void onElementRemove(const HMP::Dag::Element& _element, const std::vector<Id>& _removedVids);
-		void onElementRemoved(const HMP::Dag::Element& _element, const std::vector<Id>& _removedVids);
-		void onClearElements();
+		void onMesherRestored(const Meshing::Mesher::State& _state);
+		void onMesherElementVisibilityChanged(const Dag::Element& _element, bool _visible);
 
 		// vert edit events
 		void onApplyVertEdit(const std::vector<Id>& _vids, const Mat4& _transform);
@@ -172,12 +150,11 @@ namespace HMP::Gui
 		bool onMouseRightClicked(int _modifiers);
 		bool onKeyPressed(int _key, int _modifiers);
 		bool onMouseMoved(double _x, double _y);
-		void onDrawControls();
 		void onDrawCustomGui();
 		void onDagViewerDraw();
 		void updateMouse();
 		void onFilesDropped(const std::vector<std::string>& _files);
-		bool hoveredExtrudeElements(Dag::Extrude::ESource _source, cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id& _vertOffset, bool& _clockwise);
+		bool hoveredExtrudeElements(Dag::Extrude::ESource _source, cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, cpputils::collections::FixedVector<I, 3>& _fis, I& _firstVi, bool& _clockwise);
 
 		// save events
 		void onSaveState(const std::string& _filename);
@@ -185,9 +162,7 @@ namespace HMP::Gui
 		void onExportMesh(const std::string& _filename);
 
 		// user operation
-		std::string getDebugInfo() const;
 		void onSetPathEdge(bool _add);
-		void onPrintDebugInfo() const;
 		void onExtrude(Dag::Extrude::ESource _source);
 		void onExtrudeSelected();
 		void onCopy();
@@ -195,6 +170,7 @@ namespace HMP::Gui
 		void onRefineElement(bool _twice);
 		void onDelete();
 		void onRefineFace();
+		void onRefineTest();
 		void onMakeConformant();
 		void onExportMesh();
 		void onSaveState();
@@ -211,6 +187,12 @@ namespace HMP::Gui
 		void onSelectAll(bool _selected);
 
 	public:
+
+		cinolib::Color warningTextColor;
+		cinolib::Color overlayColor;
+		cinolib::Color mutedOverlayColor;
+		cinolib::Color highlightedPolyColor;
+		cinolib::Color highlightedFaceColor;
 
 		App();
 

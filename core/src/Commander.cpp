@@ -2,7 +2,7 @@
 
 #include <HMP/Project.hpp>
 #include <HMP/Meshing/Mesher.hpp>
-#include <stdexcept>
+#include <cassert>
 
 namespace HMP
 {
@@ -13,66 +13,49 @@ namespace HMP
 		: m_commander{}, m_applied{ false }
 	{}
 
-	void Commander::ActionBase::ensureAttached() const
-	{
-		if (!attached())
-		{
-			throw std::logic_error{ "not attached" };
-		}
-	}
-
 	void Commander::ActionBase::attach(Commander& _commander)
 	{
-		if (attached())
-		{
-			throw std::logic_error{ "already attached" };
-		}
+		assert(!attached());
 		m_commander = &_commander;
 	}
 
 	void Commander::ActionBase::prepareAndApply()
 	{
-		ensureAttached();
-		if (m_applied)
-		{
-			throw std::logic_error{ "already applied" };
-		}
+		assert(attached());
+		assert(!m_applied);
 		m_applied = true;
 		apply();
 	}
 
 	void Commander::ActionBase::prepareAndUnapply()
 	{
-		ensureAttached();
-		if (!m_applied)
-		{
-			throw std::logic_error{ "not applied" };
-		}
+		assert(attached());
+		assert(m_applied);
 		m_applied = false;
 		unapply();
 	}
 
 	Meshing::Mesher& Commander::ActionBase::mesher()
 	{
-		ensureAttached();
+		assert(attached());
 		return m_commander->m_project.mesher();
 	}
 
 	const Meshing::Mesher& Commander::ActionBase::mesher() const
 	{
-		ensureAttached();
+		assert(attached());
 		return m_commander->m_project.mesher();
 	}
 
 	Dag::NodeHandle<Dag::Element>& Commander::ActionBase::root()
 	{
-		ensureAttached();
+		assert(attached());
 		return m_commander->m_project.root();
 	}
 
 	const Dag::Element* Commander::ActionBase::root() const
 	{
-		ensureAttached();
+		assert(attached());
 		return m_commander->m_project.root();
 	}
 
@@ -89,15 +72,12 @@ namespace HMP
 	// Commander::StackBase
 
 	Commander::StackBase::StackBase()
-		: m_data{}, m_limit{ 1000 }, HMP::Utils::ConstDerefRanged<std::deque<Action*>>{ m_data }
+		: HMP::Utils::ConstDerefRanged<std::deque<Action*>>{ m_data }, m_data{}, m_limit{ 1000 }
 	{}
 
 	Commander::Action& Commander::StackBase::pop()
 	{
-		if (empty())
-		{
-			throw std::logic_error{ "empty" };
-		}
+		assert(!empty());
 		Action& action{ *m_data.front() };
 		m_data.pop_front();
 		return action;
@@ -172,10 +152,7 @@ namespace HMP
 
 	void Commander::undo()
 	{
-		if (!canUndo())
-		{
-			throw std::logic_error{ "cannot undo" };
-		}
+		assert(canUndo());
 		Action& action{ m_applied.pop() };
 		action.unapply();
 		m_unapplied.push(action);
@@ -183,10 +160,7 @@ namespace HMP
 
 	void Commander::redo()
 	{
-		if (!canRedo())
-		{
-			throw std::logic_error{ "cannot redo" };
-		}
+		assert(canRedo());
 		Action& action{ m_unapplied.pop() };
 		action.apply();
 		m_applied.push(action);

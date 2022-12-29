@@ -27,7 +27,7 @@ namespace HMP::Dag::Utils
 		{
 			Node& node{ *toVisit.front() };
 			toVisit.pop_front();
-			for (Node& child : node.children())
+			for (Node& child : node.children)
 			{
 				if (_branchSelector(child) && visited.emplace(&child).second)
 				{
@@ -51,39 +51,35 @@ namespace HMP::Dag::Utils
 		_serializer << nodes.size();
 		for (const Node* node : nodes)
 		{
-			_serializer << node->type();
-			switch (node->type())
+			_serializer << node->type;
+			switch (node->type)
 			{
 				case Node::EType::Element:
 				{
 					const Element& element{ node->element() };
-					for (const Vec& vertex : element.vertices())
+					for (const Id vid : element.vids)
 					{
-						_serializer << vertex;
+						_serializer << vid;
 					}
 				}
 				break;
 				case Node::EType::Operation:
 				{
 					const Operation& operation{ node->operation() };
-					_serializer << operation.primitive();
-					switch (operation.primitive())
+					_serializer << operation.primitive;
+					switch (operation.primitive)
 					{
-						case Operation::EPrimitive::Delete:
-						{
-							const Delete& deleteOperation{ static_cast<const Delete&>(operation) };
-						}
-						break;
 						case Operation::EPrimitive::Extrude:
 						{
 							const Extrude& extrudeOperation{ static_cast<const Extrude&>(operation) };
-							_serializer << extrudeOperation.source();
-							_serializer << extrudeOperation.vertOffset();
-							_serializer << extrudeOperation.clockwise();
-							_serializer << extrudeOperation.faceOffsets().size();
-							for (const Id fo : extrudeOperation.faceOffsets())
+							_serializer
+								<< extrudeOperation.source
+								<< extrudeOperation.firstVi
+								<< extrudeOperation.clockwise
+								<< extrudeOperation.fis.size();
+							for (const I fi : extrudeOperation.fis)
 							{
-								_serializer << fo;
+								_serializer << fi;
 							}
 						}
 						break;
@@ -91,11 +87,18 @@ namespace HMP::Dag::Utils
 						{
 							const Refine& refineOperation{ static_cast<const Refine&>(operation) };
 							_serializer
-								<< refineOperation.forwardFaceOffset()
-								<< refineOperation.upFaceOffset()
-								<< refineOperation.scheme();
+								<< refineOperation.forwardFi
+								<< refineOperation.firstVi
+								<< refineOperation.scheme
+								<< refineOperation.surfVids.size();
+							for (const Id vid : refineOperation.surfVids)
+							{
+								_serializer << vid;
+							}
 						}
 						break;
+						default:
+							break;
 					}
 				}
 				break;
@@ -113,8 +116,8 @@ namespace HMP::Dag::Utils
 			}
 			for (const Node* node : nodes)
 			{
-				_serializer << node->parents().size();
-				for (const Node& parent : node->parents())
+				_serializer << node->parents.size();
+				for (const Node& parent : node->parents)
 				{
 					_serializer << nodeMap.at(&parent);
 				}
@@ -137,9 +140,9 @@ namespace HMP::Dag::Utils
 				case Node::EType::Element:
 				{
 					Element& element{ *new Element{} };
-					for (Vec& vertex : element.vertices())
+					for (Id& vid : element.vids)
 					{
-						_deserializer >> vertex;
+						_deserializer >> vid;
 					}
 					nodes.push_back(&element);
 				}
@@ -160,13 +163,14 @@ namespace HMP::Dag::Utils
 						case Operation::EPrimitive::Extrude:
 						{
 							Extrude& extrudeOperation{ *new Extrude{} };
-							_deserializer >> extrudeOperation.source();
-							_deserializer >> extrudeOperation.vertOffset();
-							_deserializer >> extrudeOperation.clockwise();
-							extrudeOperation.faceOffsets().resize(_deserializer.get<I>());
-							for (Id& fo : extrudeOperation.faceOffsets())
+							_deserializer
+								>> extrudeOperation.source
+								>> extrudeOperation.firstVi
+								>> extrudeOperation.clockwise;
+							extrudeOperation.fis.resize(_deserializer.get<I>());
+							for (I& fi : extrudeOperation.fis)
 							{
-								_deserializer >> fo;
+								_deserializer >> fi;
 							}
 							operation = &extrudeOperation;
 						}
@@ -175,9 +179,14 @@ namespace HMP::Dag::Utils
 						{
 							Refine& refineOperation{ *new Refine{} };
 							_deserializer
-								>> refineOperation.forwardFaceOffset()
-								>> refineOperation.upFaceOffset()
-								>> refineOperation.scheme();
+								>> refineOperation.forwardFi
+								>> refineOperation.firstVi
+								>> refineOperation.scheme;
+							refineOperation.surfVids.resize(_deserializer.get<I>());
+							for (Id& vid : refineOperation.surfVids)
+							{
+								_deserializer >> vid;
+							}
 							operation = &refineOperation;
 						}
 						break;
@@ -195,57 +204,28 @@ namespace HMP::Dag::Utils
 			{
 				I parentIndex;
 				_deserializer >> parentIndex;
-				node->parents().attach(*nodes[parentIndex]);
+				node->parents.attach(*nodes[parentIndex]);
 			}
 		}
-		if (nodes.empty())
-		{
-			throw std::logic_error{ "empty" };
-		}
+		assert(!nodes.empty());
 		return *nodes[0];
-	}
-
-	void transform(Node& _root, const Mat4& _transform)
-	{
-		for (Node* node : descendants(_root))
-		{
-			if (node->isElement())
-			{
-				for (Vec& vert : node->element().vertices())
-				{
-					vert = _transform * vert;
-				}
-			}
-		}
-	}
-
-	void transform(Node& _root, const Mat3& _transform)
-	{
-		for (Node* node : descendants(_root))
-		{
-			if (node->isElement())
-			{
-				for (Vec& vert : node->element().vertices())
-				{
-					vert = _transform * vert;
-				}
-			}
-		}
 	}
 
 	Node& cloneNode(const Node& _node)
 	{
-		switch (_node.type())
+		switch (_node.type)
 		{
 			case Node::EType::Element:
 			{
+				const Element& source{ _node.element() };
 				Element& clone{ *new Element{} };
-				clone.vertices() = _node.element().vertices();
+				clone.vids = source.vids;
+				clone.pid = source.pid;
 				return clone;
 			}
 			case Node::EType::Operation:
 			{
-				switch (_node.operation().primitive())
+				switch (_node.operation().primitive)
 				{
 					case Operation::EPrimitive::Delete:
 					{
@@ -256,25 +236,29 @@ namespace HMP::Dag::Utils
 					{
 						const Extrude& source{ static_cast<const Extrude&>(_node) };
 						Extrude& clone{ *new Extrude{} };
-						clone.vertOffset() = source.vertOffset();
-						clone.faceOffsets() = source.faceOffsets();
-						clone.source() = source.source();
-						clone.clockwise() = source.clockwise();
+						clone.firstVi = source.firstVi;
+						clone.fis = source.fis;
+						clone.source = source.source;
+						clone.clockwise = source.clockwise;
 						return clone;
 					}
 					case Operation::EPrimitive::Refine:
 					{
 						const Refine& source{ static_cast<const Refine&>(_node) };
 						Refine& clone{ *new Refine{} };
-						clone.scheme() = source.scheme();
-						clone.forwardFaceOffset() = source.forwardFaceOffset();
-						clone.upFaceOffset() = source.upFaceOffset();
+						clone.scheme = source.scheme;
+						clone.forwardFi = source.forwardFi;
+						clone.firstVi = source.firstVi;
+						clone.surfVids = source.surfVids;
 						return clone;
 					}
+					default:
+						assert(false);
 				}
 			}
+			default:
+				assert(false);
 		}
-		throw std::domain_error{ "unknown node" };
 	}
 
 	Node& clone(const Node& _root)
@@ -289,9 +273,9 @@ namespace HMP::Dag::Utils
 		for (const Node* source : sources)
 		{
 			Node& clone{ *cloneMap.at(source) };
-			for (const Node& sourceChild : source->children())
+			for (const Node& sourceChild : source->children)
 			{
-				clone.children().attach(*cloneMap.at(&sourceChild));
+				clone.children.attach(*cloneMap.at(&sourceChild));
 			}
 		}
 		return *cloneMap.at(&_root);

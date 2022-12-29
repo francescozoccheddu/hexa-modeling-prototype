@@ -6,7 +6,7 @@
 namespace HMP::Dag
 {
 
-	class Element final : public Node
+	class Element final: public Node
 	{
 
 	public:
@@ -14,10 +14,6 @@ namespace HMP::Dag
 		using Set = NodeSet<Operation>;
 
 	private:
-
-		PolyVerts m_vertices;
-
-		Set m_parents, m_children;
 
 		using Node::isElement;
 		using Node::isOperation;
@@ -28,18 +24,14 @@ namespace HMP::Dag
 
 		Element();
 
-		PolyVerts& vertices();
-		const PolyVerts& vertices() const;
+		Set parents, children;
+		HexVertIds vids;
+		Id pid;
 
 		Set& forward(bool _descending);
 		const Set& forward(bool _descending) const;
 		Set& back(bool _descending);
 		const Set& back(bool _descending) const;
-
-		Set& parents();
-		const Set& parents() const;
-		Set& children();
-		const Set& children() const;
 
 	};
 

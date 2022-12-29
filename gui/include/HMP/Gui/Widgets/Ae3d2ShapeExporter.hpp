@@ -19,7 +19,7 @@ namespace HMP::Gui::Widgets
 
         struct Keyframe final
         {
-            std::vector<FaceVerts> polygons{};
+            std::vector<QuadVerts> polygons{};
             cinolib::FreeCamera<Real> camera{};
         };
 

@@ -7,7 +7,7 @@
 namespace HMP::Gui::Widgets
 {
 
-    Save::Save(): cinolib::SideBarItem{ "Save" }, m_filename{}, onSave{}, onLoad{}, onExportMesh{}, m_loaded{ false }
+    Save::Save(): cinolib::SideBarItem{ "Save" }, m_filename{}, m_loaded{ false }, onSave{}, onLoad{}, onExportMesh{}
     {}
 
     void Save::apply(bool _load, const std::string& _filename)

@@ -26,16 +26,16 @@ namespace HMP::Gui::Widgets
 		}
 
 		Meshing::Mesher& m_mesher;
-		Utils::Transform m_appliedTransform, m_unappliedTransform;
 		std::unordered_map<Id, Vec> m_verts;
-		Vec m_centroid;
 		bool m_pendingAction;
+		Utils::Transform m_unappliedTransform, m_appliedTransform;
+		Vec m_centroid;
 
 		bool addOrRemove(const Id* _vids, I _count, bool _add, bool _update);
 
 	public:
 
-		cinolib::Color color{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 1.0f, 0.7f) };
+		cinolib::Color color{ cinolib::Color::YELLOW() };
 
 		using Vids = decltype(cpputils::range::ofc(m_verts).map(&vertsToVidsConvert));
 
@@ -54,8 +54,6 @@ namespace HMP::Gui::Widgets
 		bool add(const std::vector<Id>& _vids, bool _update = true);
 
 		bool remove(const std::vector<Id>& _vids, bool _update = true);
-
-		bool replace(Id _oldVid, Id _newVid);
 
 		bool has(Id _vid) const;
 
