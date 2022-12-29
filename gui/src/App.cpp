@@ -470,60 +470,6 @@ namespace HMP::Gui
 		return m_directVertEditWidget.pending();
 	}
 
-	void App::onDrawControls()
-	{
-		// names
-		{
-			ImGui::TextDisabled("Element names");
-			ImGui::Checkbox("Show", &m_options.showNames);
-			ImGui::SameLine();
-			if (ImGui::Button("Reset"))
-			{
-				m_dagNamer.reset();
-			}
-		}
-		// theme
-		ImGui::Spacing();
-		{
-			ImGui::TextDisabled("Theme");
-			if (ImGui::Checkbox("Dark", &m_darkTheme))
-			{
-				updateTheme();
-			}
-			if (ImGui::SliderFloat("Hue", &m_themeHueDeg, 0.0f, 360.0f, "%.0f deg", ImGuiSliderFlags_AlwaysClamp))
-			{
-				updateTheme();
-			}
-		}
-		// debug
-		ImGui::Spacing();
-		if (ImGui::TreeNode("Stats"))
-		{
-#ifdef NDEBUG
-			ImGui::TextDisabled("Release build");
-#else
-			ImGui::TextDisabled("Debug build");
-#endif
-			ImGui::TextDisabled("Date: " __DATE__);
-			ImGui::TextDisabled("Time: " __TIME__);
-			ImGui::TextDisabled("Compiler ID: " HMP_GUI_COMPILER_ID);
-			ImGui::TextDisabled("Memory usage: %dMB", static_cast<int>(cinolib::memory_usage_in_mega_bytes() + 0.5f));
-			ImGui::TextDisabled("Poly count: %u", static_cast<unsigned int>(m_mesh.num_polys()));
-			ImGui::TextDisabled("Face count: %u", static_cast<unsigned int>(m_mesh.num_faces()));
-			ImGui::TextDisabled("Edge count: %u", static_cast<unsigned int>(m_mesh.num_edges()));
-			ImGui::TextDisabled("Vert count: %u", static_cast<unsigned int>(m_mesh.num_verts()));
-#ifndef NDEBUG
-			ImGui::TextDisabled("Allocated node count: %u", static_cast<unsigned int>(Dag::Node::allocatedNodeCount()));
-#endif
-			ImGui::Spacing();
-			if (ImGui::Button("Crash me!"))
-			{
-				throw std::runtime_error{ "user requested crash" };
-			}
-			ImGui::TreePop();
-		}
-	}
-
 	void App::onDrawCustomGui()
 	{
 		const ImVec4 warningColor{ Utils::Controls::toImGui(warningTextColor) };
@@ -543,7 +489,7 @@ namespace HMP::Gui
 				const ImVec2 parentFidCenter2d{ project(m_canvas, parentFidCenter) };
 				dashedLine(drawList, { parentFidCenter2d, cPidCenter2d }, mutedColorU32, 1.5f);
 			}
-			if (!m_options.showNames || !m_mesh.poly_is_on_surf(cPid))
+			if (!m_mesh.poly_is_on_surf(cPid))
 			{
 				circle(drawList, cPidCenter2d, 4.0f, m_mouse.element == m_copy.element ? colorU32 : mutedColorU32, 1.5f);
 			}
@@ -570,25 +516,10 @@ namespace HMP::Gui
 				const ImVec2 adjFidCenter2d{ project(m_canvas, m_mesh.face_centroid(adjFid)) };
 				const ImVec2 adjPidCenter2d{ project(m_canvas, m_mesh.poly_centroid(adjPid)) };
 				const ImU32 adjColorU32{ m_mesher.shown(adjPid) ? colorU32 : mutedColorU32 };
-				if (m_options.showNames)
-				{
-					const Dag::Element& element{ m_mesher.element(adjPid) };
-					text(drawList, m_dagNamer(&element).c_str(), adjPidCenter2d, 20.0f, adjColorU32);
-				}
-				else
-				{
-					circle(drawList, adjPidCenter2d, 4.0f, adjColorU32, 1.5f);
-				}
+				circle(drawList, adjPidCenter2d, 4.0f, adjColorU32, 1.5f);
 				dashedLine(drawList, { adjFidCenter2d, hPidCenter2d }, adjColorU32, 1.5f);
 			}
-			if (m_options.showNames)
-			{
-				text(drawList, m_dagNamer(m_mouse.element).c_str(), hPidCenter2d, 20.0f, colorU32);
-			}
-			else
-			{
-				circle(drawList, hPidCenter2d, 4.0f, colorU32, 1.5f);
-			}
+			circle(drawList, hPidCenter2d, 4.0f, colorU32, 1.5f);
 			for (const Id adjEid : m_mesh.adj_f2e(m_mouse.fid))
 			{
 				const EdgeVertData<ImVec2> adjEid2d{ project(m_canvas, Meshing::Utils::verts(m_mesh, Meshing::Utils::eidVids(m_mesh, adjEid))) };
@@ -1053,9 +984,9 @@ namespace HMP::Gui
 		}
 	}
 
-	void App::updateTheme()
+	void App::setTheme(bool _dark, float _hue)
 	{
-		const Utils::Theme theme{ Utils::Theme::make(m_darkTheme, m_themeHueDeg) };
+		const Utils::Theme theme{ Utils::Theme::make(_dark, _hue) };
 		theme.applyImGui();
 		theme.apply(m_mesher);
 		theme.apply(m_axesWidget);
@@ -1064,6 +995,7 @@ namespace HMP::Gui
 		theme.apply(m_vertEditWidget);
 		theme.apply(*this);
 		theme.apply(m_canvas);
+		theme.apply(m_debugWidget);
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		theme.apply(m_dagViewerWidget);
 #endif
@@ -1075,13 +1007,13 @@ namespace HMP::Gui
 		m_project{}, m_canvas{ 700, 600, 13, 1.0f }, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() },
 		m_dagNamer{}, m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{}, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher },
 		m_directVertEditWidget{ m_vertEditWidget, m_canvas }, m_saveWidget{}, m_projectionWidget{ m_targetWidget, m_commander, m_mesher },
+		m_debugWidget{ m_mesher, m_dagNamer, m_vertEditWidget },
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		m_dagViewerWidget{ m_dagNamer }, m_dagViewerNeedsUpdate{ true },
 #endif
 #ifdef HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER
 		m_ae3d2ShapeExporter{ m_mesh, m_canvas.camera },
 #endif
-		m_darkTheme{ true }, m_themeHueDeg{ 36.0f },
 		warningTextColor{ cinolib::Color::YELLOW() }, overlayColor{ cinolib::Color::YELLOW() }, mutedOverlayColor{ cinolib::Color::GRAY() },
 		highlightedPolyColor{ cinolib::Color::PASTEL_YELLOW() }, highlightedFaceColor{ cinolib::Color::YELLOW() }
 	{
@@ -1105,6 +1037,8 @@ namespace HMP::Gui
 		m_canvas.push(&m_targetWidget.meshForDisplay());
 		m_canvas.push(&m_directVertEditWidget);
 		m_canvas.push(&m_axesWidget);
+		m_canvas.push(static_cast<cinolib::CanvasGuiItem*>(&m_debugWidget));
+		m_canvas.push(static_cast<cinolib::SideBarItem*>(&m_debugWidget));
 
 		m_canvas.push(&m_saveWidget);
 		m_canvas.push(&m_commanderWidget);
@@ -1121,6 +1055,8 @@ namespace HMP::Gui
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		m_canvas.push(&m_dagViewerWidget);
 #endif
+
+		m_debugWidget.onThemeChangeRequested += [this](bool _dark, float _hue) { setTheme(_dark, _hue); };
 
 		m_saveWidget.onExportMesh += [this](const std::string& _filename) { onExportMesh(_filename); };
 		m_saveWidget.onSave += [this](const std::string& _filename) { onSaveState(_filename); };
@@ -1142,7 +1078,6 @@ namespace HMP::Gui
 		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMoved(_args...); };
 		m_canvas.callback_key_pressed = [this](auto && ..._args) { return onKeyPressed(_args...); };
 		m_canvas.callback_key_event = [this](auto && ...) { updateMouse(); };
-		m_canvas.callback_app_controls = [this](auto && ..._args) { return onDrawControls(_args ...); };
 		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChanged(_args...); };
 		m_canvas.callback_custom_gui = [this](auto && ..._args) { return onDrawCustomGui(_args...); };
 		m_canvas.callback_drop_files = [this](std::vector<std::string> _files) { onFilesDropped(_files); };
@@ -1152,7 +1087,8 @@ namespace HMP::Gui
 #endif
 		requestDagViewerUpdate();
 
-		updateTheme();
+		m_debugWidget.requestThemeUpdate();
+
 	}
 
 	int App::launch()
@@ -1179,6 +1115,5 @@ namespace HMP::Gui
 			throw;
 		}
 	}
-
 
 }

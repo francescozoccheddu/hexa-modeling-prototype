@@ -75,6 +75,11 @@ namespace HMP::Gui::Utils
         _canvas.background = backgroundColor;
     }
 
+    void Theme::apply(Widgets::Debug& _widget) const
+    {
+        _widget.nameColor = overlayColor;
+    }
+
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 
     void Theme::apply(DagViewer::Widget& _widget) const
