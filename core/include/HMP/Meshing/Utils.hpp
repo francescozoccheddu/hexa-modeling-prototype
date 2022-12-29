@@ -55,6 +55,13 @@ namespace HMP::Meshing::Utils
 		{ 3, 7 }
 	} };
 
+	inline constexpr QuadEdgeData<EdgeVertIs> quadEiVis{ {
+		{ 0, 1 },
+		{ 1, 2 },
+		{ 2, 3 },
+		{ 3, 0 }
+	} };
+
 	inline constexpr HexFaceIs hexFiOppFis{ 1,0,3,2,5,4 };
 
 	template<I TOutSize, I TInSize, typename TValue>
@@ -89,6 +96,7 @@ namespace HMP::Meshing::Utils
 	Id fid(const Mesher::Mesh& _mesh, const HexVertIds& _hexVids, I _fi);
 	Vec normal(const QuadVerts& _verts);
 	Real avgEdgeLength(const QuadVerts& _verts);
+	Real avgEdgeLength(const HexVerts& _verts);
 	bool isShown(const Dag::Node& _node);
 	EdgeVertIds eidVids(const Mesher::Mesh& _mesh, Id _eid);
 	QuadVertIds fidVids(const Mesher::Mesh& _mesh, Id _fid);
