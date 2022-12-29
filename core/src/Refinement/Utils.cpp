@@ -49,32 +49,7 @@ namespace HMP::Refinement::Utils
 		};
 		static constexpr Real epsFactor{ 1e-3 };
 		const Real eps{ Meshing::Utils::avgEdgeLength(parentVerts) / static_cast<Real>(scheme.gridSize) * epsFactor };
-		const auto comparer{ [eps](const Vec& _a, const Vec& _b) {
-			const Real xDiff{_a.x() - _b.x() };
-			if (xDiff < 0.0 && abs(xDiff) > eps)
-			{
-				return true;
-			}
-			else if (abs(xDiff) < eps)
-			{
-				const Real yDiff{_a.y() - _b.y() };
-				if (yDiff < 0.0 && abs(yDiff) > eps)
-				{
-					return true;
-				}
-				else if (abs(yDiff) < eps)
-				{
-					const Real zDiff{_a.z() - _b.z() };
-					if (zDiff < 0.0 && abs(zDiff) > eps)
-					{
-						return true;
-					}
-				}
-			}
-
-			return false;
-		} };
-		std::map<Vec, Id, decltype(comparer)> vertMap{ comparer };
+		std::map<Vec, Id, Meshing::Utils::VertComparer> vertMap{ {.eps = eps} };
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
 		const auto processAdjPid{ [&](const Id _pid) {
 			const Dag::Refine* adjRefine{

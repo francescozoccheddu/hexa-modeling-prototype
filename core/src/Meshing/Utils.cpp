@@ -5,9 +5,37 @@
 #include <cpputils/range/join.hpp>
 #include <cinolib/geometry/polygon_utils.h>
 #include <cassert>
+#include <algorithm>
 
 namespace HMP::Meshing::Utils
 {
+
+	bool VertComparer::operator()(const Vec& _a, const Vec& _b) const
+	{
+		const Real xDiff{ _a.x() - _b.x() };
+		const Real absXDiff{ std::abs(xDiff) };
+		if (xDiff < 0.0 && absXDiff > eps)
+		{
+			return true;
+		}
+		else if (absXDiff < eps)
+		{
+			const Real yDiff{ _a.y() - _b.y() };
+			if (yDiff < 0.0 && std::abs(yDiff) > eps)
+			{
+				return true;
+			}
+			else if (std::abs(yDiff) < eps)
+			{
+				const Real zDiff{ _a.z() - _b.z() };
+				if (zDiff < 0.0 && std::abs(zDiff) > eps)
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
 	Id anyAdjFidInPidByFid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid)
 	{
