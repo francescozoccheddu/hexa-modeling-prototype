@@ -104,15 +104,6 @@ namespace HMP::Gui::Widgets
             {
                 path.insert(path.begin(), closestEid);
             }
-            const cinolib::Color color{ cinolib::Color::hsv2rgb(static_cast<float>(m_currentPath) / static_cast<float>(m_paths.size()), 1.0f, 1.0f) };
-            if (_source)
-            {
-                m_mesher.paintEdge(closestEid, color);
-            }
-            else
-            {
-                m_targetWidget.paintEdge(closestEid, color);
-            }
         }
         else
         {
@@ -136,14 +127,6 @@ namespace HMP::Gui::Widgets
             const I nextI{ (i + 1) % path.size() };
             std::rotate(path.begin(), path.begin() + nextI, path.end());
             path.pop_back();
-            if (_source)
-            {
-                m_mesher.unpaintEdge(closestEid);
-            }
-            else
-            {
-                m_targetWidget.unpaintEdge(closestEid);
-            }
         }
     }
 

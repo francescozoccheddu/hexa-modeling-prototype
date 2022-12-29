@@ -4,18 +4,19 @@
 #include <iomanip>
 #include <cpputils/range/of.hpp>
 #include <cpputils/range/enumerate.hpp>
+#include <cassert>
 
 namespace HMP::Gui::Utils::HrDescriptions
 {
 
 	std::string name(const HMP::Dag::Node& _node, DagNamer& _dagNamer)
 	{
-		switch (_node.type())
+		switch (_node.type)
 		{
 			case HMP::Dag::Node::EType::Element:
 				return _dagNamer(&_node);
 			case HMP::Dag::Node::EType::Operation:
-				switch (_node.operation().primitive())
+				switch (_node.operation().primitive)
 				{
 					case HMP::Dag::Operation::EPrimitive::Delete:
 						return "D-" + _dagNamer(&_node);
@@ -23,23 +24,25 @@ namespace HMP::Gui::Utils::HrDescriptions
 						return "E-" + _dagNamer(&_node);
 					case HMP::Dag::Operation::EPrimitive::Refine:
 						return "R-" + _dagNamer(&_node);
+					default:
+						assert(false);
 				}
 			default:
 				return "?-" + _dagNamer(&_node);
 		}
 	}
 
-	std::string describe(Meshing::ERefinementScheme _scheme)
+	std::string describe(Refinement::EScheme _scheme)
 	{
 		switch (_scheme)
 		{
-			case Meshing::ERefinementScheme::Inset:
+			case Refinement::EScheme::Inset:
 				return "Inset";
-			case Meshing::ERefinementScheme::Subdivide3x3:
+			case Refinement::EScheme::Subdivide3x3:
 				return "Subdivide3x3";
-			case Meshing::ERefinementScheme::AdapterEdgeSubdivide3x3:
+			case Refinement::EScheme::AdapterEdgeSubdivide3x3:
 				return "AdapterEdgeSubdivide3x3";
-			case Meshing::ERefinementScheme::AdapterFaceSubdivide3x3:
+			case Refinement::EScheme::AdapterFaceSubdivide3x3:
 				return "AdapterFaceSubdivide3x3";
 			default:
 				return "Unknown";
@@ -86,6 +89,22 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return stream.str();
 	}
 
+	std::string describe(const std::vector<I>& _is)
+	{
+		std::ostringstream stream{};
+		stream << "[";
+		if (!_is.empty())
+		{
+			stream << _is[0];
+			for (I i{ 1 }; i < _is.size(); i++)
+			{
+				stream << "," << _is[i];
+			}
+		}
+		stream << "]";
+		return stream.str();
+	}
+
 	std::string describe(const std::vector<Id>& _ids)
 	{
 		std::ostringstream stream{};
@@ -118,31 +137,6 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return stream.str();
 	}
 
-	std::string describe(const std::vector<HMP::Meshing::Utils::PolyVertLoc>& _locs)
-	{
-		std::ostringstream stream{};
-		stream << "[";
-		if (!_locs.empty())
-		{
-			stream << describe(_locs[0]);
-			for (I i{ 1 }; i < _locs.size(); i++)
-			{
-				stream << "," << describe(_locs[i]);
-			}
-		}
-		stream << "]";
-		return stream.str();
-	}
-
-	std::string describe(const HMP::Meshing::Utils::PolyVertLoc _loc)
-	{
-		std::ostringstream stream{};
-		stream << (_loc.x() ? 'x' : '-');
-		stream << (_loc.y() ? 'y' : '-');
-		stream << (_loc.z() ? 'z' : '-');
-		return stream.str();
-	}
-
 	std::string describe(const HMP::Dag::Delete& _operation, const HMP::Dag::Element& _element, DagNamer& _dagNamer)
 	{
 		std::ostringstream stream{};
@@ -165,7 +159,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 			}
 			stream << name(*element, _dagNamer);
 		}
-		switch (_operation.source())
+		switch (_operation.source)
 		{
 			case HMP::Dag::Extrude::ESource::Face:
 				stream << " (face)";
@@ -177,9 +171,9 @@ namespace HMP::Gui::Utils::HrDescriptions
 				stream << " (vertex)";
 				break;
 		}
-		stream << " towards " << describe(cpputils::range::of(_operation.faceOffsets()).toVector())
-			<< " (" << _operation.vertOffset() << " " << (_operation.clockwise() ? "CW" : " CCW") << ")"
-			<< " into " << name(_operation.children().single(), _dagNamer)
+		stream << " towards " << describe(cpputils::range::of(_operation.fis).toVector())
+			<< " (" << _operation.firstVi << " " << (_operation.clockwise ? "CW" : " CCW") << ")"
+			<< " into " << name(_operation.children.single(), _dagNamer)
 			<< " (" << name(_operation, _dagNamer) << ")";
 		return stream.str();
 	}
@@ -190,30 +184,25 @@ namespace HMP::Gui::Utils::HrDescriptions
 		stream
 			<< "Refine"
 			<< " " << name(_element, _dagNamer)
-			<< " with scheme " << describe(_operation.scheme())
-			<< " towards " << describe(std::vector<Id>{ _operation.forwardFaceOffset(), _operation.upFaceOffset() })
+			<< " with scheme " << describe(_operation.scheme)
+			<< " towards " << describe(std::vector<I>{ _operation.forwardFi, _operation.firstVi })
 			<< " (" << name(_operation, _dagNamer) << ")";
 		return stream.str();
 	}
 
 	std::string describe(const HMP::Dag::Delete& _operation, DagNamer& _dagNamer)
 	{
-		return describe(_operation, _operation.parents().single(), _dagNamer);
+		return describe(_operation, _operation.parents.single(), _dagNamer);
 	}
 
 	std::string describe(const HMP::Dag::Extrude& _operation, DagNamer& _dagNamer)
 	{
-		return describe(_operation, _operation.parents().address().toFixedVector<3>(), _dagNamer);
+		return describe(_operation, _operation.parents.address().toFixedVector<3>(), _dagNamer);
 	}
 
 	std::string describe(const HMP::Dag::Refine& _operation, DagNamer& _dagNamer)
 	{
-		return describe(_operation, _operation.parents().single(), _dagNamer);
-	}
-
-	std::string describe(const Actions::Clear& _action, DagNamer& _dagNamer)
-	{
-		return "Clear";
+		return describe(_operation, _operation.parents.single(), _dagNamer);
 	}
 
 	std::string describe(const Actions::Delete& _action, DagNamer& _dagNamer)
@@ -226,11 +215,11 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return describe(_action.operation(), _action.elements().address().toFixedVector<3>(), _dagNamer);
 	}
 
-	std::string describe(const Actions::Load& _action, DagNamer& _dagNamer)
+	std::string describe(const Actions::Root& _action, DagNamer& _dagNamer)
 	{
 		std::ostringstream stream{};
 		stream
-			<< "Load"
+			<< "Root"
 			<< " " << name(_action.newRoot(), _dagNamer);
 		return stream.str();
 	}
@@ -240,7 +229,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 		std::ostringstream stream{};
 		stream << "Make conforming";
 		stream << " (";
-		std::vector<std::pair<const HMP::Dag::Refine*, const HMP::Dag::Element*>> operations{ _action.operations() };
+		const Actions::MakeConforming::Operations& operations{ _action.operations() };
 		if (operations.empty())
 		{
 			stream << "no operations";
@@ -259,19 +248,10 @@ namespace HMP::Gui::Utils::HrDescriptions
 					stream << ", ";
 				}
 				first = false;
-				stream << name(*operation, _dagNamer) << " of " << name(*element, _dagNamer);
+				stream << name(operation, _dagNamer) << " of " << name(element, _dagNamer);
 			}
 		}
 		stream << ")";
-		return stream.str();
-	}
-
-	std::string describe(const Actions::TransformVerts& _action, DagNamer& _dagNamer)
-	{
-		std::ostringstream stream{};
-		stream
-			<< "Transform " << _action.verts().size() << " verts "
-			<< " " << describe(_action.transform());
 		return stream.str();
 	}
 
@@ -288,7 +268,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 			}
 			stream << name(element, _dagNamer);
 		}
-		switch (_action.operation().source())
+		switch (_action.operation().source)
 		{
 			case HMP::Dag::Extrude::ESource::Face:
 				stream << " (face)";
@@ -300,14 +280,14 @@ namespace HMP::Gui::Utils::HrDescriptions
 				stream << " (vertex)";
 				break;
 		}
-		stream << " towards " << describe(cpputils::range::of(_action.operation().faceOffsets()).toVector())
-			<< " (" << _action.operation().vertOffset() << " " << (_action.operation().clockwise() ? "CW" : "CCW") << ")"
-			<< " into " << name(_action.operation().children().single(), _dagNamer)
+		stream << " towards " << describe(cpputils::range::of(_action.operation().fis).toVector())
+			<< " (" << _action.operation().firstVi << " " << (_action.operation().clockwise ? "CW" : "CCW") << ")"
+			<< " into " << name(_action.operation().children.single(), _dagNamer)
 			<< " (" << name(_action.operation(), _dagNamer) << ")";
 		return stream.str();
 	}
 
-	std::string describe(const Actions::Project& _action, DagNamer& _dagNamer)
+	std::string describe(const Actions::Project& _action)
 	{
 		std::ostringstream stream{};
 		stream
@@ -327,21 +307,24 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return stream.str();
 	}
 
-	std::string describe(const Actions::TransformAll& _action, DagNamer& _dagNamer)
+	std::string describe(const Actions::Transform& _action)
 	{
 		std::ostringstream stream{};
-		stream
-			<< "Transform all "
-			<< " " << describe(_action.transform());
+		stream << "Transform ";
+		if (_action.vids())
+		{
+			stream << _action.vids()->size();
+		}
+		else
+		{
+			stream << "all";
+		}
+		stream << " verts " << describe(_action.transform());
 		return stream.str();
 	}
 
 	std::string describe(const Commander::Action& _action, DagNamer& _dagNamer)
 	{
-		if (const Actions::Clear* action{ dynamic_cast<const Actions::Clear*>(&_action) }; action)
-		{
-			return describe(*action, _dagNamer);
-		}
 		if (const Actions::Delete* action{ dynamic_cast<const Actions::Delete*>(&_action) }; action)
 		{
 			return describe(*action, _dagNamer);
@@ -350,7 +333,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 		{
 			return describe(*action, _dagNamer);
 		}
-		if (const Actions::Load* action{ dynamic_cast<const Actions::Load*>(&_action) }; action)
+		if (const Actions::Root* action{ dynamic_cast<const Actions::Root*>(&_action) }; action)
 		{
 			return describe(*action, _dagNamer);
 		}
@@ -370,11 +353,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 		{
 			return describe(*action, _dagNamer);
 		}
-		if (const Actions::TransformVerts* action{ dynamic_cast<const Actions::TransformVerts*>(&_action) }; action)
-		{
-			return describe(*action, _dagNamer);
-		}
-		if (const Actions::TransformAll* action{ dynamic_cast<const Actions::TransformAll*>(&_action) }; action)
+		if (const Actions::Transform* action{ dynamic_cast<const Actions::Transform*>(&_action) }; action)
 		{
 			return describe(*action, _dagNamer);
 		}

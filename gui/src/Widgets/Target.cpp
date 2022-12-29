@@ -4,7 +4,7 @@
 #include <imgui.h>
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <vector>
-#include <stdexcept>
+#include <cassert>
 #include <filesystem>
 
 namespace HMP::Gui::Widgets
@@ -13,24 +13,12 @@ namespace HMP::Gui::Widgets
 	Target::Target(const Meshing::Mesher::Mesh& _sourceMesh):
 		cinolib::SideBarItem{ "Target mesh" },
 		m_mesh{}, m_sourceMesh{ _sourceMesh },
-		onApplyTransformToSource{},
-		m_visible{ true },
-#ifdef HMP_GUI_LIGHT_THEME
-		m_faceColor{ cinolib::Color{0.0f,0.0f,0.0f, 0.1f} }, m_edgeColor{ cinolib::Color{0.0f,0.0f,0.0f, 0.3f} },
-#else
-		m_faceColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.1f} }, m_edgeColor{ cinolib::Color{1.0f,1.0f,1.0f, 0.3f} },
-#endif
-		m_transform{},
-		m_missingMeshFile{ false }
+		m_missingMeshFile{ false },
+		faceColor{ cinolib::Color::WHITE() }, edgeColor{ cinolib::Color::BLACK() },
+		transform{},
+		visible{ true },
+		onMeshChanged{}, onApplyTransformToSource{}
 	{}
-
-	void Target::ensureHasMesh() const
-	{
-		if (!hasMesh())
-		{
-			throw std::logic_error{ "no mesh" };
-		}
-	}
 
 	const Meshing::Mesher::Mesh& Target::sourceMesh() const
 	{
@@ -49,7 +37,7 @@ namespace HMP::Gui::Widgets
 
 	cinolib::Polygonmesh<> Target::meshForProjection() const
 	{
-		ensureHasMesh();
+		assert(hasMesh());
 		cinolib::Polygonmesh<> mesh{ m_mesh };
 		for (Id vid{}; vid < mesh.num_verts(); vid++)
 		{
@@ -59,72 +47,23 @@ namespace HMP::Gui::Widgets
 		return mesh;
 	}
 
-	void Target::show(bool _visible)
-	{
-		m_visible = _visible;
-		if (hasMesh())
-		{
-			updateVisibility();
-		}
-	}
-
-	bool Target::visible() const
-	{
-		return m_visible;
-	}
-
-	bool& Target::visible()
-	{
-		return m_visible;
-	}
-
-	cinolib::Color& Target::faceColor()
-	{
-		return m_faceColor;
-	}
-
-	const cinolib::Color& Target::faceColor() const
-	{
-		return m_faceColor;
-	}
-
-	cinolib::Color& Target::edgeColor()
-	{
-		return m_edgeColor;
-	}
-
-	const cinolib::Color& Target::edgeColor() const
-	{
-		return m_edgeColor;
-	}
-
-	const Utils::Transform& Target::transform() const
-	{
-		return m_transform;
-	}
-
-	Utils::Transform& Target::transform()
-	{
-		return m_transform;
-	}
-
 	void Target::identity(bool _origin, bool _translation, bool _rotation, bool _scale)
 	{
 		if (_origin)
 		{
-			m_transform.origin = Vec{};
+			transform.origin = Vec{};
 		}
 		if (_translation)
 		{
-			m_transform.translation = Vec{};
+			transform.translation = Vec{};
 		}
 		if (_rotation)
 		{
-			m_transform.rotation = Vec{};
+			transform.rotation = Vec{};
 		}
 		if (_scale)
 		{
-			m_transform.scale = { 1.0 };
+			transform.scale = { 1.0 };
 		}
 		if (hasMesh())
 		{
@@ -134,45 +73,45 @@ namespace HMP::Gui::Widgets
 
 	void Target::fit(bool _origin, bool _translation, bool _scale)
 	{
-		ensureHasMesh();
+		assert(hasMesh());
 		if (_origin)
 		{
-			m_transform.origin = m_mesh.bbox().center();
+			transform.origin = m_mesh.bbox().center();
 		}
 		if (_translation)
 		{
-			m_transform.translation = -m_transform.origin + m_sourceMesh.bbox().center();
+			transform.translation = -transform.origin + m_sourceMesh.bbox().center();
 		}
 		if (_scale)
 		{
-			m_transform.scale = { m_sourceMesh.bbox().diag() / m_mesh.bbox().diag() };
+			transform.scale = { m_sourceMesh.bbox().diag() / m_mesh.bbox().diag() };
 		}
 		updateTransform();
 	}
 
 	void Target::updateTransform()
 	{
-		ensureHasMesh();
-		m_mesh.transform = m_transform.matrix();
+		assert(hasMesh());
+		m_mesh.transform = transform.matrix();
 		onMeshChanged();
 	}
 
 	void Target::updateVisibility()
 	{
-		ensureHasMesh();
-		m_mesh.show_mesh(m_visible);
+		assert(hasMesh());
+		m_mesh.show_mesh(visible);
 	}
 
 	void Target::updateColor(bool _face, bool _edge)
 	{
-		ensureHasMesh();
+		assert(hasMesh());
 		if (_face)
 		{
-			m_mesh.poly_set_color(m_faceColor);
+			m_mesh.poly_set_color(faceColor);
 		}
 		if (_edge)
 		{
-			m_mesh.edge_set_color(m_edgeColor);
+			m_mesh.edge_set_color(edgeColor);
 		}
 	}
 
@@ -181,7 +120,7 @@ namespace HMP::Gui::Widgets
 		const std::string filename{ cinolib::file_dialog_open() };
 		if (!filename.empty())
 		{
-			m_visible = true;
+			visible = true;
 			load(filename, _keepTransform);
 			return true;
 		}
@@ -194,15 +133,13 @@ namespace HMP::Gui::Widgets
 		m_filename = _filename;
 		if (std::filesystem::exists(_filename))
 		{
-			m_visible = true;
+			visible = true;
 			m_mesh = cinolib::DrawablePolygonmesh<>{ m_filename.c_str() };
-			m_edgesPainted.clear();
-			m_edgesPainted.resize(toI(m_mesh.num_edges()), false);
 			m_mesh.show_marked_edge(false);
 			m_mesh.draw_back_faces = false;
 			if (!_keepTransform)
 			{
-				m_transform = {};
+				transform = {};
 				fit();
 			}
 			updateVisibility();
@@ -226,7 +163,7 @@ namespace HMP::Gui::Widgets
 
 	void Target::requestApplyTransformToSource()
 	{
-		ensureHasMesh();
+		assert(hasMesh());
 		updateTransform();
 		onApplyTransformToSource(m_mesh.transform.inverse());
 		identity();
@@ -252,7 +189,7 @@ namespace HMP::Gui::Widgets
 					}
 				}
 				ImGui::SameLine();
-				if (ImGui::Checkbox("Visible", &m_visible))
+				if (ImGui::Checkbox("Visible", &visible))
 				{
 					updateVisibility();
 				}
@@ -276,7 +213,7 @@ namespace HMP::Gui::Widgets
 			{
 				ImGui::PushID(1);
 				const float targetMeshSize{ static_cast<float>(m_mesh.bbox().diag()) * 2 };
-				if (Utils::Controls::dragTranslationVec("Origin", m_transform.origin, targetMeshSize))
+				if (Utils::Controls::dragTranslationVec("Origin", transform.origin, targetMeshSize))
 				{
 					updateTransform();
 				}
@@ -295,7 +232,7 @@ namespace HMP::Gui::Widgets
 			{
 				ImGui::PushID(2);
 				const float sourceMeshSize{ static_cast<float>(m_sourceMesh.bbox().diag()) * 2 };
-				if (Utils::Controls::dragTranslationVec("Translation", m_transform.translation, sourceMeshSize))
+				if (Utils::Controls::dragTranslationVec("Translation", transform.translation, sourceMeshSize))
 				{
 					updateTransform();
 				}
@@ -313,7 +250,7 @@ namespace HMP::Gui::Widgets
 			}
 			{
 				ImGui::PushID(3);
-				if (Utils::Controls::dragRotation("Rotation", m_transform.rotation))
+				if (Utils::Controls::dragRotation("Rotation", transform.rotation))
 				{
 					updateTransform();
 				}
@@ -327,10 +264,10 @@ namespace HMP::Gui::Widgets
 			{
 				ImGui::PushID(4);
 				const Real sourceAndTargetMeshScaleRatio{ m_sourceMesh.bbox().diag() / m_mesh.bbox().diag() * 3 };
-				Real scale{ m_transform.avgScale() };
+				Real scale{ transform.avgScale() };
 				if (Utils::Controls::dragScale("Scale", scale, sourceAndTargetMeshScaleRatio))
 				{
-					m_transform.scale = { scale };
+					transform.scale = { scale };
 					updateTransform();
 				}
 				ImGui::SameLine();
@@ -347,13 +284,13 @@ namespace HMP::Gui::Widgets
 			}
 			ImGui::Spacing();
 			{
-				Utils::Controls::colorButton("Face color", m_faceColor);
+				Utils::Controls::colorButton("Face color", faceColor);
 				ImGui::SameLine();
 				if (ImGui::SmallButton("Apply##face_color"))
 				{
 					updateColor(true, false);
 				}
-				Utils::Controls::colorButton("Edge color", m_edgeColor);
+				Utils::Controls::colorButton("Edge color", edgeColor);
 				ImGui::SameLine();
 				if (ImGui::SmallButton("Apply##edge_color"))
 				{
@@ -389,40 +326,16 @@ namespace HMP::Gui::Widgets
 		}
 	}
 
-	void Target::updateEdgeColor(Id _eid, const cinolib::Color& _color)
-	{
-		if (m_mesh.edge_data(_eid).color != _color)
-		{
-			m_mesh.edge_data(_eid).color = _color;
-			m_mesh.updateGL_mesh_e(_eid, _eid);
-		}
-	}
-
-	void Target::paintEdge(Id _eid, const cinolib::Color& _color)
-	{
-		m_edgesPainted[toI(_eid)] = true;
-		updateEdgeColor(_eid, _color);
-	}
-
-	void Target::unpaintEdge(Id _eid)
-	{
-		if (m_edgesPainted[_eid])
-		{
-			m_edgesPainted[toI(_eid)] = false;
-			updateEdgeColor(_eid, m_edgeColor);
-		}
-	}
-
 	void Target::serialize(HMP::Utils::Serialization::Serializer& _serializer) const
 	{
 		_serializer << hasMesh();
 		if (hasMesh())
 		{
 			_serializer << m_filename;
-			_serializer << m_transform.origin;
-			_serializer << m_transform.translation;
-			_serializer << m_transform.scale;
-			_serializer << m_transform.rotation;
+			_serializer << transform.origin;
+			_serializer << transform.translation;
+			_serializer << transform.scale;
+			_serializer << transform.rotation;
 		}
 	}
 
@@ -432,10 +345,10 @@ namespace HMP::Gui::Widgets
 		if (_deserializer.get<bool>())
 		{
 			const std::string filename{ _deserializer.get<std::string>() };
-			_deserializer >> m_transform.origin;
-			_deserializer >> m_transform.translation;
-			_deserializer >> m_transform.scale;
-			_deserializer >> m_transform.rotation;
+			_deserializer >> transform.origin;
+			_deserializer >> transform.translation;
+			_deserializer >> transform.scale;
+			_deserializer >> transform.rotation;
 			load(filename, true);
 		}
 	}

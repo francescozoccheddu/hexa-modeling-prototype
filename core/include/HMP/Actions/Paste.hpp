@@ -5,6 +5,7 @@
 #include <HMP/Dag/Element.hpp>
 #include <HMP/Dag/Extrude.hpp>
 #include <cpputils/collections/FixedVector.hpp>
+#include <HMP/Meshing/Mesher.hpp>
 
 namespace HMP::Actions
 {
@@ -14,10 +15,12 @@ namespace HMP::Actions
 
 	private:
 
-		cpputils::collections::FixedVector<Dag::Element*, 3> m_elements;
-		Dag::NodeHandle<Dag::Extrude> m_operation;
+		const cpputils::collections::FixedVector<Dag::Element*, 3> m_elements;
+		const Dag::NodeHandle<Dag::Extrude> m_operation;
 		const Dag::Extrude& m_sourceOperation;
-		bool m_prepared;
+		Meshing::Mesher::State m_oldState;
+		bool m_prepared{ false };
+		std::vector<Vec> m_newVerts;
 
 		void apply() override;
 
@@ -27,7 +30,7 @@ namespace HMP::Actions
 
 		using Elements = decltype(cpputils::range::ofc(m_elements).dereference().immutable());
 
-		Paste(const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id _vertOffset, bool _clockwise, const Dag::Extrude& _source);
+		Paste(const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<I, 3>& _fis, I _firstVi, bool _clockwise, const Dag::Extrude& _source);
 
 		Elements elements() const;
 

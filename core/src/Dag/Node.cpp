@@ -1,34 +1,41 @@
 #include <HMP/Dag/Node.hpp>
 
-#include <stdexcept>
+#include <cassert>
 
 namespace HMP::Dag
 {
 
-	Node::Node(EType _type) :
-		m_type{ _type },
+#ifndef NDEBUG
+
+	I Node::s_allocatedNodeCount{};
+
+	I Node::allocatedNodeCount()
+	{
+		return s_allocatedNodeCount;
+	}
+
+#endif
+
+	Node::Node(EType _type):
 		m_parentsImpl{}, m_childrenImpl{},
-		m_parents{
+		m_handles{ 0 },
+		type{ _type },
+		parents{
 			m_parentsImpl,
 			[this](auto && ..._args) { return onParentAttach(_args...); },
 			[this](auto && ..._args) { return onParentDetach(_args...); },
 			[this](auto && ..._args) { return onParentsDetachAll(_args...); }
-	},
-		m_children{
+		},
+		children{
 			m_childrenImpl,
 			[this](auto && ..._args) { return onChildAttach(_args...); },
 			[this](auto && ..._args) { return onChildDetach(_args...); },
 			[this](auto && ..._args) { return onChildrenDetachAll(_args...); }
-	},
-		m_handles{ 0 }
-	{}
-
-	void assertSync(bool _condition)
-	{
-		if (!_condition)
-		{
-			throw std::logic_error{ "desync" };
 		}
+	{
+#ifndef NDEBUG
+		s_allocatedNodeCount++;
+#endif
 	}
 
 	void Node::deleteDangling(std::queue<Node*>& _dangling, bool _descending)
@@ -37,10 +44,10 @@ namespace HMP::Dag
 		{
 			Node& node{ *_dangling.front() };
 			_dangling.pop();
-			assertSync(node.back(_descending).empty());
+			assert(node.back(_descending).empty());
 			for (Node& next : node.forward(_descending))
 			{
-				assertSync(next.back(_descending).data().remove(node));
+				assert(next.back(_descending).data().remove(node));
 				if (next.back(_descending).empty() && !next.m_handles)
 				{
 					_dangling.push(&next);
@@ -55,7 +62,7 @@ namespace HMP::Dag
 	{
 		if (forward(_descending).data().add(_node))
 		{
-			assertSync(_node.back(_descending).data().add(*this));
+			assert(_node.back(_descending).data().add(*this));
 			return true;
 		}
 		return false;
@@ -65,7 +72,7 @@ namespace HMP::Dag
 	{
 		if (forward(_descending).data().remove(_node))
 		{
-			assertSync(_node.back(_descending).data().remove(*this));
+			assert(_node.back(_descending).data().remove(*this));
 			if (_deleteDangling && _node.back(_descending).empty())
 			{
 				std::queue<Node*> dangling{};
@@ -83,7 +90,7 @@ namespace HMP::Dag
 		const bool wasEmpty{ forward(_descending).empty() };
 		for (Node& next : forward(_descending))
 		{
-			assertSync(next.back(_descending).data().remove(*this));
+			assert(next.back(_descending).data().remove(*this));
 			if (_deleteDangling && next.back(_descending).empty())
 			{
 				dangling.push(&next);
@@ -126,49 +133,47 @@ namespace HMP::Dag
 		return onDetachAll(_deleteDangling, true);
 	}
 
-	void Node::onParentAttaching(Node& _child) const {}
+	void Node::onParentAttaching(Node&) const {}
 
-	void Node::onChildAttaching(Node& _child) const {}
+	void Node::onChildAttaching(Node&) const {}
 
 	Internal::NodeSetHandle& Node::parentsHandle()
 	{
-		return m_parents.handle();
+		return parents.handle();
 	}
 
 	Internal::NodeSetHandle& Node::childrenHandle()
 	{
-		return m_children.handle();
+		return children.handle();
 	}
 
 	Node::~Node()
 	{
-		m_parents.detachAll(false);
-		m_children.detachAll(false);
-	}
-
-	Node::EType Node::type() const
-	{
-		return m_type;
+		parents.detachAll(false);
+		children.detachAll(false);
+#ifndef NDEBUG
+		s_allocatedNodeCount--;
+#endif
 	}
 
 	bool Node::isElement() const
 	{
-		return m_type == EType::Element;
+		return type == EType::Element;
 	}
 
 	bool Node::isOperation() const
 	{
-		return m_type == EType::Operation;
+		return type == EType::Operation;
 	}
 
 	bool Node::isRoot() const
 	{
-		return m_parents.empty();
+		return parents.empty();
 	}
 
 	bool Node::isLeaf() const
 	{
-		return m_children.empty();
+		return children.empty();
 	}
 
 	Element& Node::element()
@@ -193,7 +198,7 @@ namespace HMP::Dag
 
 	Node::Set& Node::forward(bool _descending)
 	{
-		return _descending ? m_children : m_parents;
+		return _descending ? children : parents;
 	}
 
 	const Node::Set& Node::forward(bool _descending) const
@@ -209,26 +214,6 @@ namespace HMP::Dag
 	const Node::Set& Node::back(bool _descending) const
 	{
 		return const_cast<Node*>(this)->back(_descending);
-	}
-
-	Node::Set& Node::parents()
-	{
-		return m_parents;
-	}
-
-	const Node::Set& Node::parents() const
-	{
-		return m_parents;
-	}
-
-	Node::Set& Node::children()
-	{
-		return m_children;
-	}
-
-	const Node::Set& Node::children() const
-	{
-		return m_children;
 	}
 
 }

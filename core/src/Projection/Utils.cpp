@@ -13,7 +13,7 @@ namespace HMP::Projection::Utils
 
     SurfaceExporter::SurfaceExporter(const Meshing::Mesher::Mesh& _mesh): vol{ _mesh }
     {
-        cinolib::export_surface(_mesh, surf, m_v2s, m_s2v);
+        cinolib::export_surface(_mesh, surf, m_v2s, m_s2v, false);
     }
 
     void SurfaceExporter::applySurfToVol()
@@ -45,13 +45,13 @@ namespace HMP::Projection::Utils
     Id SurfaceExporter::toSurfEid(Id _volEid) const
     {
         const Id volVid0{ vol.edge_vert_id(_volEid, 0) }, volVid1{ vol.edge_vert_id(_volEid, 1) };
-        return surf.edge_id(toSurfVid(volVid0), toSurfVid(volVid1));
+        return static_cast<Id>(surf.edge_id(toSurfVid(volVid0), toSurfVid(volVid1)));
     }
 
     Id SurfaceExporter::toVolEid(Id _surfEid) const
     {
         const Id surfVid0{ surf.edge_vert_id(_surfEid, 0) }, surfVid1{ surf.edge_vert_id(_surfEid, 1) };
-        return vol.edge_id(toVolVid(surfVid0), toVolVid(surfVid1));
+        return static_cast<Id>(vol.edge_id(toVolVid(surfVid0), toVolVid(surfVid1)));
     }
 
     std::vector<Id> SurfaceExporter::onSurfVolVids() const
@@ -80,10 +80,7 @@ namespace HMP::Projection::Utils
 
     Tweak::Tweak(Real _min, Real _power): m_min{ _min }, m_power{ _power }
     {
-        if (_power < 0.0 || _power > 10.0)
-        {
-            throw std::logic_error{ "power out of range" };
-        }
+        assert(_power >= 0.0 && _power <= 10.0);
     }
 
     Real Tweak::min() const

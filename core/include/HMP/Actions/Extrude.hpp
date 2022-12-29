@@ -16,8 +16,9 @@ namespace HMP::Actions
 
 	private:
 
-		cpputils::collections::FixedVector<Dag::Element*, 3> m_elements;
-		Dag::NodeHandle<Dag::Extrude> m_operation;
+		const cpputils::collections::FixedVector<Dag::Element*, 3> m_elements;
+		const Dag::NodeHandle<Dag::Extrude> m_operation;
+		Meshing::Mesher::State m_oldState;
 
 		void apply() override;
 		void unapply() override;
@@ -27,7 +28,7 @@ namespace HMP::Actions
 
 		using Elements = decltype(cpputils::range::ofc(m_elements).dereference().immutable());
 
-		Extrude(const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<Id, 3>& _faceOffsets, Id _vertOffset, bool _clockwise);
+		Extrude(const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<I, 3>& _fis, I _firstVi, bool _clockwise);
 
 		Elements elements() const;
 

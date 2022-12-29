@@ -11,7 +11,7 @@ namespace HMP::Gui::Utils::Controls
 	bool combo(const char* _label, TEnum& _value, const std::initializer_list<const char*>& _values)
 	{
 		int value{ static_cast<int>(_value) };
-		if (ImGui::Combo(_label, &value, _values.begin(), _values.size()))
+		if (ImGui::Combo(_label, &value, _values.begin(), static_cast<int>(_values.size())))
 		{
 			_value = static_cast<TEnum>(value);
 			return true;

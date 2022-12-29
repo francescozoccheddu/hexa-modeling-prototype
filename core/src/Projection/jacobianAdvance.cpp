@@ -56,7 +56,7 @@ namespace HMP::Projection
                 return _from + _progress * _off / _len;
             }
             default:
-                throw std::domain_error{ "unknown mode" };
+                assert(false);
         }
     }
 

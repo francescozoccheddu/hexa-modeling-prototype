@@ -6,9 +6,9 @@
 #include <imgui.h>
 #include <string>
 #include <fstream>
-#include <stdexcept>
 #include <sstream>
 #include <ctime>
+#include <cassert>
 #include <iomanip>
 
 namespace HMP::Gui::Widgets
@@ -40,17 +40,13 @@ namespace HMP::Gui::Widgets
 	}
 
 	Ae3d2ShapeExporter::Ae3d2ShapeExporter(const Meshing::Mesher::Mesh& _mesh, const cinolib::FreeCamera<Real>& _camera):
-		cinolib::SideBarItem{ "ae-3d2shape exporter" }, m_camera{ _camera }, m_mesh{ _mesh }, m_sampleError{},
-		m_keyframes{}
+		cinolib::SideBarItem{ "ae-3d2shape exporter" }, m_mesh{ _mesh }, m_camera{ _camera }, m_keyframes{}, m_sampleError{}
 	{}
 
 	bool Ae3d2ShapeExporter::requestExport() const
 	{
 		static constexpr double c_keyframeDuration{ 1.0 };
-		if (empty())
-		{
-			throw std::logic_error{ "empty" };
-		}
+		assert(!empty());
 		const std::string filename{ cinolib::file_dialog_save() };
 		if (!filename.empty())
 		{
@@ -72,7 +68,7 @@ namespace HMP::Gui::Widgets
 					}
 					file
 						<< '{'
-						<< JProp{ "time" } << k * c_keyframeDuration << ','
+						<< JProp{ "time" } << static_cast<double>(k) * c_keyframeDuration << ','
 						<< JProp{ "scene" } << '{'; // project.keyframes[k]
 					{
 						const cinolib::FreeCamera<Real>& camera{ m_keyframes[k].camera };
@@ -86,7 +82,6 @@ namespace HMP::Gui::Widgets
 						}
 						file << ','; // project.keyframes[k].scene.camera
 						{
-
 							file << JProp{ "projection" } << '{';  // project.keyframes[k].scene.camera.projection
 							if (camera.projection.perspective)
 							{
@@ -117,7 +112,7 @@ namespace HMP::Gui::Widgets
 					{
 						file << JProp{ "polygons" } << '['; // project.keyframes[k].polygons
 						bool firstPolygon{ true };
-						for (const FaceVerts& face : m_keyframes[k].polygons)
+						for (const QuadVerts& face : m_keyframes[k].polygons)
 						{
 							if (!firstPolygon)
 							{

@@ -4,24 +4,14 @@ namespace HMP::Dag
 {
 
 	Element::Element()
-		: Node{ EType::Element }, m_parents{ parentsHandle() }, m_children{ childrenHandle() }
+		: Node{ EType::Element }, parents{ parentsHandle() }, children{ childrenHandle() }, vids{}, pid{ noId }
 	{
-		m_vertices.fill(Vec{ 0,0,0 });
-	}
-
-	PolyVerts& Element::vertices()
-	{
-		return m_vertices;
-	}
-
-	const PolyVerts& Element::vertices() const
-	{
-		return m_vertices;
+		vids.fill(noId);
 	}
 
 	Element::Set& Element::forward(bool _descending)
 	{
-		return _descending ? m_children : m_parents;
+		return _descending ? children : parents;
 	}
 
 	const Element::Set& Element::forward(bool _descending) const
@@ -37,26 +27,6 @@ namespace HMP::Dag
 	const Element::Set& Element::back(bool _descending) const
 	{
 		return const_cast<Element*>(this)->back(_descending);
-	}
-
-	Element::Set& Element::parents()
-	{
-		return m_parents;
-	}
-
-	const Element::Set& Element::parents() const
-	{
-		return m_parents;
-	}
-
-	Element::Set& Element::children()
-	{
-		return m_children;
-	}
-
-	const Element::Set& Element::children() const
-	{
-		return m_children;
 	}
 
 }

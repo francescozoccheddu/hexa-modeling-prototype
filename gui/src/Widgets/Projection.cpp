@@ -1,8 +1,7 @@
 #include <HMP/Gui/Widgets/Projection.hpp>
 
-#include <imgui.h>
 #include <utility>
-#include <stdexcept>
+#include <cassert>
 #include <HMP/Actions/Project.hpp>
 #include <cinolib/export_surface.h>
 #include <limits>
@@ -11,54 +10,65 @@
 #include <cinolib/feature_mapping.h>
 #include <HMP/Projection/Utils.hpp>
 #include <HMP/Gui/Utils/Controls.hpp>
+#include <HMP/Gui/Utils/Drawing.hpp>
+#include <HMP/Meshing/Utils.hpp>
+#include <unordered_set>
+#include <cpputils/range/of.hpp>
 
 namespace HMP::Gui::Widgets
 {
 
-	Projection::Projection(Widgets::Target& _targetWidget, HMP::Commander& _commander, Meshing::Mesher& _mesher, VertEdit& _vertEditWidget):
-		cinolib::SideBarItem{ "Projection" }, m_targetWidget{ _targetWidget }, m_commander{ _commander }, m_mesher{ _mesher }, m_vertEditWidget{ _vertEditWidget },
-		onProjectRequest{}, m_options{}, m_paths(1)
+	Projection::Projection(const Widgets::Target& _targetWidget, HMP::Commander& _commander, const Meshing::Mesher& _mesher):
+		cinolib::SideBarItem{ "Projection" }, m_targetWidget{ _targetWidget }, m_commander{ _commander }, m_mesher{ _mesher },
+		m_options{}, m_paths(1), m_featureFinderOptions{}, m_showPaths{ true }, m_showAllPaths{ false }, m_currentPath{}, onProjectRequest{}
 	{
 		m_targetWidget.onMeshChanged += [this]() {
-			clearTargetPaths(0, m_paths.size());
+			for (auto& path : m_paths)
+			{
+				path.targetEids.clear();
+			}
 		};
-		m_mesher.onElementAdd += [this](const Dag::Element& _element) {
+		m_mesher.onAdded += [this](const Meshing::Mesher::State&) {
 			for (I i{}; i < m_paths.size(); i++)
 			{
 				for (const Id eid : m_paths[i].sourceEids)
 				{
-					if (!m_mesher.mesh().edge_is_on_srf(eid))
+					if (!m_mesher.mesh().edge_is_on_srf(eid) || !m_mesher.mesh().edge_is_visible(eid))
 					{
-						clearSourcePaths(i, i + 1);
+						m_paths[i].sourceEids.clear();
 						break;
 					}
 				}
 			}
 		};
-		m_mesher.onElementRemove += [this](const Dag::Element& _element, const Meshing::Mesher::RemovedIds& _removedIds) {
-			Id lastEid{ m_mesher.mesh().num_edges() };
-			for (const Id removedEid : _removedIds.eids)
+		m_mesher.onElementVisibilityChanged += [this](const Dag::Element& _element, bool) {
+			const std::vector<Id> removedEids{ m_mesher.mesh().poly_dangling_eids(_element.pid) };
+			const std::unordered_set<Id> removedEidsSet{ removedEids.begin(), removedEids.end() };
+			for (I i{}; i < m_paths.size(); i++)
 			{
-				lastEid--;
-				for (I i{}; i < m_paths.size(); i++)
+				for (Id& eid : m_paths[i].sourceEids)
 				{
-					for (Id& eid : m_paths[i].sourceEids)
+					if (removedEidsSet.contains(eid))
 					{
-						if (eid == lastEid)
-						{
-							eid = removedEid;
-						}
-						else if (eid == removedEid)
-						{
-							clearSourcePaths(i, i + 1);
-							break;
-						}
+						m_paths[i].sourceEids.clear();
+						break;
 					}
 				}
 			}
 		};
-		m_mesher.onClear += [this]() {
-			clearSourcePaths(0, m_paths.size());
+		m_mesher.onRestored += [this](const Meshing::Mesher::State&) {
+			const Id eidCount{ m_mesher.mesh().num_edges() };
+			for (I i{}; i < m_paths.size(); i++)
+			{
+				for (const Id eid : m_paths[i].sourceEids)
+				{
+					if (eid >= eidCount)
+					{
+						m_paths[i].sourceEids.clear();
+						break;
+					}
+				}
+			}
 		};
 	}
 
@@ -69,10 +79,7 @@ namespace HMP::Gui::Widgets
 
 	void Projection::requestProjection()
 	{
-		if (!m_targetWidget.hasMesh())
-		{
-			throw std::logic_error{ "no target mesh" };
-		}
+		assert(m_targetWidget.hasMesh());
 		std::vector<HMP::Projection::Utils::Point> points;
 		points.reserve(m_paths.size() * 2);
 		std::vector<HMP::Projection::Utils::EidsPath> paths;
@@ -104,10 +111,7 @@ namespace HMP::Gui::Widgets
 
 	void Projection::requestReprojection()
 	{
-		if (!canReproject())
-		{
-			throw std::logic_error{ "no projection to undo" };
-		}
+		assert(canReproject());
 		m_commander.undo();
 		requestProjection();
 	}
@@ -116,7 +120,11 @@ namespace HMP::Gui::Widgets
 	{
 		cinolib::Polygonmesh<> target{ m_targetWidget.meshForProjection() };
 		const Meshing::Mesher::Mesh& source{ m_mesher.mesh() };
-		clearPaths(_first, _lastEx, !_fromSource);
+		for (auto& path : m_paths)
+		{
+			std::vector<Id>& eids{ _fromSource ? path.targetEids : path.sourceEids };
+			eids.clear();
+		}
 		std::vector<std::vector<Id>> from(_lastEx - _first), to;
 		for (I i{ _first }; i < _lastEx; i++)
 		{
@@ -126,7 +134,7 @@ namespace HMP::Gui::Widgets
 		}
 		std::unordered_map<Id, Id> surf2vol, vol2surf;
 		cinolib::Polygonmesh<> sourceSurf{};
-		cinolib::export_surface(source, sourceSurf, vol2surf, surf2vol);
+		cinolib::export_surface(source, sourceSurf, vol2surf, surf2vol, false);
 		if (_fromSource)
 		{
 			for (auto& vids : from)
@@ -159,29 +167,7 @@ namespace HMP::Gui::Widgets
 			{
 				m_paths[i].sourceEids = HMP::Projection::Utils::vidsToEidsPath(source, to[i - _first]);
 			}
-			if (m_showPaths && (m_showAllPaths || m_currentPath == i))
-			{
-				updateMeshEdges(i, i + 1, true, !_fromSource);
-			}
 		}
-	}
-
-	void Projection::clearPaths(I _first, I _lastEx, bool _source)
-	{
-		if (_source)
-		{
-			clearSourcePaths(_first, _lastEx);
-		}
-		else
-		{
-			clearTargetPaths(_first, _lastEx);
-		}
-	}
-
-	void Projection::clearBothPaths(I _first, I _lastEx)
-	{
-		clearSourcePaths(_first, _lastEx);
-		clearTargetPaths(_first, _lastEx);
 	}
 
 	void Projection::findPaths(bool _inSource)
@@ -189,85 +175,25 @@ namespace HMP::Gui::Widgets
 		std::vector<std::vector<Id>> network{};
 		if (_inSource)
 		{
-			clearSourcePaths(0, m_paths.size());
+			for (auto& path : m_paths)
+			{
+				path.sourceEids.clear();
+			}
 			cinolib::Polygonmesh<> surface{};
-			cinolib::export_surface(m_mesher.mesh(), surface);
+			cinolib::export_surface(m_mesher.mesh(), surface, false);
 			cinolib::feature_network(surface, network, m_featureFinderOptions);
 		}
 		else
 		{
-			clearTargetPaths(0, m_paths.size());
+			for (auto& path : m_paths)
+			{
+				path.targetEids.clear();
+			}
 			cinolib::feature_network(m_targetWidget.meshForDisplay(), network, m_featureFinderOptions);
 		}
 		std::cout << network.size() << std::endl;
 		// FIXME Why network is empty?
 		// TODO Clear
-	}
-
-	void Projection::updateMeshEdges(I _first, I _lastEx, bool _show, bool _source)
-	{
-		if (_source)
-		{
-			updateSourceMeshEdges(_first, _lastEx, _show);
-		}
-		else
-		{
-			updateTargetMeshEdges(_first, _lastEx, _show);
-		}
-	}
-
-	void Projection::updateBothMeshEdges(I _first, I _lastEx, bool _show)
-	{
-		updateSourceMeshEdges(_first, _lastEx, _show);
-		updateTargetMeshEdges(_first, _lastEx, _show);
-	}
-
-	void Projection::updateSourceMeshEdges(I _first, I _lastEx, bool _show)
-	{
-		for (I i{ _first }; i < _lastEx; i++)
-		{
-			const cinolib::Color& color{ _show
-				? cinolib::Color::hsv2rgb(static_cast<float>(i) / static_cast<float>(m_paths.size()), 1.0f, 1.0f)
-				: m_mesher.edgeColor()
-			};
-			for (const Id eid : m_paths[i].sourceEids)
-			{
-				m_mesher.paintEdge(eid, color);
-			}
-		}
-	}
-
-	void Projection::updateTargetMeshEdges(I _first, I _lastEx, bool _show)
-	{
-		for (I i{ _first }; i < _lastEx; i++)
-		{
-			const cinolib::Color& color{ _show
-				? cinolib::Color::hsv2rgb(static_cast<float>(i) / static_cast<float>(m_paths.size()), 1.0f, 1.0f)
-				: m_targetWidget.edgeColor()
-			};
-			for (const Id eid : m_paths[i].targetEids)
-			{
-				m_targetWidget.paintEdge(eid, color);
-			}
-		}
-	}
-
-	void Projection::clearSourcePaths(I _first, I _lastEx)
-	{
-		updateSourceMeshEdges(_first, _lastEx, false);
-		for (I i{ _first }; i < _lastEx; i++)
-		{
-			m_paths[i].sourceEids.clear();
-		}
-	}
-
-	void Projection::clearTargetPaths(I _first, I _lastEx)
-	{
-		updateTargetMeshEdges(_first, _lastEx, false);
-		for (I i{ _first }; i < _lastEx; i++)
-		{
-			m_paths[i].targetEids.clear();
-		}
 	}
 
 	void Projection::setSourcePathEdgeAtPoint(const Vec& _point, bool _add)
@@ -280,42 +206,12 @@ namespace HMP::Gui::Widgets
 		setPathEdgeAtPoint(m_targetWidget.meshForDisplay().transform.inverse() * _point, _add, m_targetWidget.meshForDisplay(), false);
 	}
 
-	void Projection::clearBothPaths()
+	ImVec4 Projection::pathColor(I _path) const
 	{
-		m_currentPath = 0;
-		updateBothMeshEdges(0, m_paths.size(), false);
-		m_paths.clear();
-	}
-
-	void Projection::addPath()
-	{
-		m_paths.push_back({});
-		if (m_showPaths)
-		{
-			if (m_showAllPaths)
-			{
-				updateBothMeshEdges(0, m_paths.size(), m_showPaths);
-			}
-			else if (!m_paths.empty())
-			{
-				updateBothMeshEdges(m_currentPath, m_currentPath + 1, m_showPaths);
-			}
-		}
-	}
-
-	void Projection::removePath(I _index)
-	{
-		updateBothMeshEdges(_index, _index + 1, false);
-		if (_index + 1 != m_paths.size())
-		{
-			std::swap(m_paths[_index], m_paths.back());
-		}
-		m_paths.pop_back();
-		if (_index == m_currentPath)
-		{
-			m_currentPath = 0;
-		}
-		updateBothMeshEdges(0, m_paths.size(), false);
+		ImVec4 color;
+		ImGui::ColorConvertHSVtoRGB(static_cast<float>(_path) / static_cast<float>(m_paths.size()), 1.0f, 1.0f, color.x, color.y, color.z);
+		color.w = 1.0f;
+		return color;
 	}
 
 	void Projection::draw()
@@ -374,19 +270,7 @@ namespace HMP::Gui::Widgets
 			ImGui::TreePop();
 		}
 		ImGui::SetNextItemOpen(m_showPaths, ImGuiCond_Always);
-		bool wasShowingPaths{ m_showPaths };
 		m_showPaths = ImGui::TreeNode("Paths");
-		if (wasShowingPaths != m_showPaths)
-		{
-			if (m_showAllPaths)
-			{
-				updateBothMeshEdges(0, m_paths.size(), m_showPaths);
-			}
-			else if (!m_paths.empty())
-			{
-				updateBothMeshEdges(m_currentPath, m_currentPath + 1, m_showPaths);
-			}
-		}
 		if (m_showPaths)
 		{
 			ImGui::Spacing();
@@ -415,21 +299,7 @@ namespace HMP::Gui::Widgets
 			}
 			else
 			{
-				if (ImGui::Checkbox("Show all", &m_showAllPaths))
-				{
-					if (m_showPaths)
-					{
-						if (m_showAllPaths)
-						{
-							updateBothMeshEdges(0, m_paths.size(), true);
-						}
-						else if (!m_paths.empty())
-						{
-							updateBothMeshEdges(0, m_paths.size(), false);
-							updateBothMeshEdges(m_currentPath, m_currentPath + 1, true);
-						}
-					}
-				}
+				ImGui::Checkbox("Show all", &m_showAllPaths);
 				ImGui::Spacing();
 				ImGui::Separator();
 				ImGui::Spacing();
@@ -441,32 +311,35 @@ namespace HMP::Gui::Widgets
 						int currentPath = static_cast<int>(m_currentPath);
 						if (ImGui::RadioButton("", &currentPath, static_cast<int>(i)))
 						{
-							updateBothMeshEdges(m_currentPath, m_currentPath + 1, false);
 							m_currentPath = static_cast<I>(currentPath);
-							updateBothMeshEdges(m_currentPath, m_currentPath + 1, true);
 						}
 						ImGui::SameLine();
 					}
-					ImVec4 color;
-					ImGui::ColorConvertHSVtoRGB(static_cast<float>(i) / static_cast<float>(m_paths.size()), 1.0f, 1.0f, color.x, color.y, color.z);
-					color.w = 1.0f;
-					ImGui::ColorButton("##color", color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoTooltip);
+					ImGui::ColorButton("##color", pathColor(i), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoTooltip);
 					ImGui::SameLine();
 					if (ImGui::Button("Remove"))
 					{
-						removePath(i);
+						if (i + 1 != m_paths.size())
+						{
+							std::swap(m_paths[i], m_paths.back());
+						}
+						m_paths.pop_back();
+						if (i == m_currentPath)
+						{
+							m_currentPath = 0;
+						}
 					}
 					ImGui::SameLine();
 					if (Utils::Controls::disabledSmallButton("Clear source", !m_paths[i].sourceEids.empty()))
 					{
-						clearSourcePaths(i, i + 1);
+						m_paths[i].sourceEids.clear();
 					}
 					if (m_targetWidget.hasMesh())
 					{
 						ImGui::SameLine();
 						if (Utils::Controls::disabledSmallButton("Clear target", !m_paths[i].targetEids.empty()))
 						{
-							clearTargetPaths(i, i + 1);
+							m_paths[i].targetEids.clear();
 						}
 						ImGui::SameLine();
 						if (Utils::Controls::disabledSmallButton("Match source", !m_paths[i].targetEids.empty()))
@@ -488,14 +361,15 @@ namespace HMP::Gui::Widgets
 			ImGui::Spacing();
 			if (ImGui::Button("Add"))
 			{
-				addPath();
+				m_paths.push_back({});
 			}
 			if (!m_paths.empty())
 			{
 				ImGui::SameLine();
 				if (ImGui::Button("Clear"))
 				{
-					clearBothPaths();
+					m_currentPath = 0;
+					m_paths.clear();
 				}
 				if (m_targetWidget.hasMesh())
 				{
@@ -529,6 +403,45 @@ namespace HMP::Gui::Widgets
 				{
 					requestReprojection();
 				}
+			}
+		}
+	}
+
+	void Projection::draw(const cinolib::GLcanvas& _canvas)
+	{
+		const Meshing::Mesher::Mesh& mesh{ m_mesher.mesh() };
+		const cinolib::DrawablePolygonmesh<>& targetMesh{ m_targetWidget.meshForDisplay() };
+		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
+		const auto drawPath{ [&](const I _pathI) {
+			const HMP::Projection::Utils::EidsPath& path { m_paths[_pathI] };
+			const ImU32 color{ ImGui::ColorConvertFloat4ToU32(pathColor(_pathI)) };
+			for (const Id eid : path.sourceEids)
+			{
+				const EdgeVertData<ImVec2> eid2d{ Utils::Drawing::project(_canvas, Meshing::Utils::verts(mesh, Meshing::Utils::eidVids(mesh, eid))) };
+				Utils::Drawing::line(drawList, eid2d, color, 2.0f);
+			}
+			for (const Id eid : path.targetEids)
+			{
+				const std::vector<Id>& vids{ targetMesh.adj_e2v(eid) };
+				const EdgeVerts verts{ cpputils::range::of(vids).map([&](const Id _vid) {
+					return targetMesh.transform * targetMesh.vert(_vid);
+				}).toArray<2>() };
+				const EdgeVertData<ImVec2> eid2d{ Utils::Drawing::project(_canvas, verts) };
+				Utils::Drawing::line(drawList, eid2d, color, 2.0f);
+			}
+		} };
+		if (m_showPaths)
+		{
+			if (m_showAllPaths)
+			{
+				for (I i{}; i < m_paths.size(); i++)
+				{
+					drawPath(i);
+				}
+			}
+			else if (!m_paths.empty())
+			{
+				drawPath(m_currentPath);
 			}
 		}
 	}
