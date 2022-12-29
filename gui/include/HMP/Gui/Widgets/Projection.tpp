@@ -40,7 +40,7 @@ namespace HMP::Gui::Widgets
                     {
                         continue;
                     }
-                    if (_source && !m_mesher.mesh().edge_is_on_srf(eid))
+                    if (_source && !(m_mesher.mesh().edge_is_on_srf(eid) && m_mesher.mesh().edge_is_visible(eid)))
                     {
                         continue;
                     }
@@ -58,6 +58,10 @@ namespace HMP::Gui::Widgets
                 {
                     for (const Id eid : _mesh.adj_e2e(endEid))
                     {
+                        if (_source && !(m_mesher.mesh().edge_is_on_srf(eid) && m_mesher.mesh().edge_is_visible(eid)))
+                        {
+                            continue;
+                        }
                         if (has2 && (eid == path[1] || eid == path[lastI - 1]))
                         {
                             continue;
@@ -112,6 +116,10 @@ namespace HMP::Gui::Widgets
             Id closestEid{ noId };
             for (const Id eid : candidates)
             {
+                if (_source && !(m_mesher.mesh().edge_is_on_srf(eid) && m_mesher.mesh().edge_is_visible(eid)))
+                {
+                    continue;
+                }
                 const Real dist{ _point.dist_sqrd(_mesh.edge_sample_at(eid, 0.5)) };
                 if (dist < closestDist)
                 {
