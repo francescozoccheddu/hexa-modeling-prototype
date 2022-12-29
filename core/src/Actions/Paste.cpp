@@ -102,6 +102,7 @@ namespace HMP::Actions
 			{
 				if (node->isElement())
 				{
+					node->element().pid = noId;
 					for (Id& vid : node->element().vids)
 					{
 						const auto it{ vidMap.find(vid) };

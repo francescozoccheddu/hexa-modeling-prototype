@@ -389,11 +389,21 @@ namespace HMP::Meshing::Utils
 	Real avgEdgeLength(const QuadVerts& _verts)
 	{
 		Real sum{};
-		for (I i{}; i < 4; i++)
+		for (const EdgeVertIs is : quadEiVis)
 		{
-			sum += _verts[i].dist(_verts[(i + 1) % 4]);
+			sum += _verts[is[0]].dist(_verts[is[1]]);
 		}
 		return sum / 4.0;
+	}
+
+	Real avgEdgeLength(const HexVerts& _verts)
+	{
+		Real sum{};
+		for (const EdgeVertIs is : hexEiVis)
+		{
+			sum += _verts[is[0]].dist(_verts[is[1]]);
+		}
+		return sum / 12.0;
 	}
 
 	bool isShown(const Dag::Node& _node)
