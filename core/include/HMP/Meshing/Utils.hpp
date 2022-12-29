@@ -8,6 +8,15 @@
 namespace HMP::Meshing::Utils
 {
 
+	struct VertComparer final
+	{
+
+		Real eps{ 1e-9 };
+
+		bool operator()(const Vec& _a, const Vec& _b) const;
+
+	};
+
 	Id anyAdjFidInPidByEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _eid);
 	Id adjFidInPidByFidAndEid(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _fid, Id _eid);
 	Id adjFidInPidByVidAndFids(const Meshing::Mesher::Mesh& _mesh, Id _pid, Id _vid, Id _fid1, Id _fid2);
