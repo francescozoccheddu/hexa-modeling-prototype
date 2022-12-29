@@ -8,17 +8,22 @@
 namespace HMP::Actions
 {
 
-	std::vector<std::pair<Dag::Element*, Dag::Refine*>> prepareRecursive(Dag::Element& _element, Dag::Refine& _refine, I _depth)
+	std::vector<std::pair<Dag::Element* const, const Dag::NodeHandle<Dag::Refine>>> prepareRecursive(Dag::Element& _element, I _forwardFi, I _firstVi, Refinement::EScheme _scheme, I _depth)
 	{
-		std::vector<std::pair<Dag::Element*, Dag::Refine*>> refines{ {&_element, &_refine} };
-		if (_depth > 0)
+		assert(_depth >= 1 && _depth <= 3);
+		Dag::Refine& refine{ Refinement::Utils::prepare(_forwardFi, _firstVi, _scheme) };
+		std::vector<std::pair<Dag::Element* const, const Dag::NodeHandle<Dag::Refine>>> refines{ {&_element, refine} };
+		if (_depth > 1)
 		{
 			const I childDepth{ _depth - 1 };
-			for (Dag::Element& child : _refine.children)
+			for (Dag::Element& child : refine.children)
 			{
-				Dag::Refine& childRefine{ Refinement::Utils::prepare(_refine.forwardFi, _refine.firstVi, _refine.scheme) };
-				std::vector<std::pair<Dag::Element*, Dag::Refine*>> childRefines{ prepareRecursive(child, childRefine, childDepth) };
-				refines.insert(refines.end(), childRefines.begin(), childRefines.end());
+				std::vector<std::pair<Dag::Element* const, const Dag::NodeHandle<Dag::Refine>>> childRefines{ prepareRecursive(child, _forwardFi, _firstVi, _scheme, childDepth) };
+				refines.reserve(refines.size() + childRefines.size());
+				for (const auto& [el, op] : childRefines)
+				{
+					refines.emplace_back(el, op);
+				}
 			}
 		}
 		return refines;
@@ -26,9 +31,8 @@ namespace HMP::Actions
 
 	void Refine::apply()
 	{
-		assert(mesher().shown(m_element));
+		assert(mesher().shown(element()));
 		m_oldState = mesher().state();
-		m_operation->parents.attach(m_element);
 		for (const auto& [element, operation] : m_operations)
 		{
 			operation->parents.attach(*element);
@@ -42,15 +46,14 @@ namespace HMP::Actions
 		for (const auto& [element, operation] : cpputils::range::of(m_operations).reverse())
 		{
 			operation->parents.detachAll(false);
+			mesher().show(*element, true);
 		}
-		mesher().show(m_element, true);
 		mesher().restore(m_oldState);
 		mesher().updateMesh();
 	}
 
 	Refine::Refine(Dag::Element& _element, I _forwardFi, I _firstVi, Refinement::EScheme _scheme, I _depth)
-		: m_element{ _element }, m_operation{ Refinement::Utils::prepare(_forwardFi, _firstVi, _scheme) }, m_depth{ _depth },
-		m_operations{ prepareRecursive(_element, *m_operation, _depth - 1) }
+		: m_operations{ prepareRecursive(_element, _forwardFi, _firstVi, _scheme, _depth) }, m_depth{ _depth }
 	{
 		assert(_depth >= 1 && _depth <= 3);
 		assert(_forwardFi < 6);
@@ -60,12 +63,12 @@ namespace HMP::Actions
 
 	const Dag::Element& Refine::element() const
 	{
-		return m_element;
+		return *m_operations.front().first;
 	}
 
 	const Dag::Refine& Refine::operation() const
 	{
-		return *m_operation;
+		return *m_operations.front().second;
 	}
 
 	I Refine::depth() const

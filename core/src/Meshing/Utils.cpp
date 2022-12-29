@@ -420,12 +420,13 @@ namespace HMP::Meshing::Utils
 
 	void addTree(Mesher& _mesher, Dag::Node& _root, const std::vector<Vec>& _newVerts)
 	{
-		const std::vector<Dag::Element*> elements{
+		std::vector<Dag::Element*> elements{
 			cpputils::range::of(Dag::Utils::descendants(_root))
 			.filter([&](const Dag::Node* _node) { return _node->isElement(); })
 			.cast<Dag::Element*>()
 			.toVector()
 		};
+		std::sort(elements.begin(), elements.end(), [](const Dag::Element* _a, const Dag::Element* _b) { return _a->pid < _b->pid; });
 		_mesher.add(elements, _newVerts);
 		for (Dag::Element* element : elements)
 		{

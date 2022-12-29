@@ -16,10 +16,8 @@ namespace HMP::Actions
 
 	private:
 
-		Dag::Element& m_element;
-		const Dag::NodeHandle<Dag::Refine> m_operation;
+		const std::vector<std::pair<Dag::Element* const, const Dag::NodeHandle<Dag::Refine>>> m_operations;
 		const I m_depth;
-		const std::vector<std::pair<Dag::Element*, Dag::Refine*>> m_operations;
 		Meshing::Mesher::State m_oldState;
 
 		void apply() override;
