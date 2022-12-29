@@ -1,5 +1,6 @@
 #include <HMP/Actions/Paste.hpp>
 
+#include <cpputils/unreachable.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Actions/ExtrudeUtils.hpp>
 #include <HMP/Dag/Utils.hpp>
@@ -165,7 +166,7 @@ namespace HMP::Actions
 				m_operation->source = Dag::Extrude::ESource::Vertex;
 				break;
 			default:
-				assert(false);
+				cpputils::unreachable();
 		}
 	}
 

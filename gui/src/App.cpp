@@ -1018,7 +1018,13 @@ namespace HMP::Gui
 		highlightedPolyColor{ cinolib::Color::PASTEL_YELLOW() }, highlightedFaceColor{ cinolib::Color::YELLOW() }
 	{
 
-		glfwSetWindowTitle(m_canvas.window, "hexa-modeling-prototype");
+#ifdef NDEBUG
+#define HMP_GUI_APP_TITLE HMP_NAME " v" HMP_VERSION
+#else
+#define HMP_GUI_APP_TITLE HMP_NAME " v" HMP_VERSION " (DEV)"
+#endif
+		glfwSetWindowTitle(m_canvas.window, HMP_GUI_APP_TITLE);
+#undef HMP_GUI_APP_TITLE
 
 		m_canvas.key_bindings.reset_camera = GLFW_KEY_P;
 		m_canvas.key_bindings.store_camera = cinolib::KeyBindings::no_key_binding();

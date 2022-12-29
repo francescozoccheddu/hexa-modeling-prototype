@@ -1,5 +1,6 @@
 #include <HMP/Projection/project.hpp>
 
+#include <cpputils/unreachable.hpp>
 #include <cinolib/geometry/quad_utils.h>
 #include <cinolib/meshes/polygonmesh.h>
 #include <optional>
@@ -169,7 +170,7 @@ namespace HMP::Projection
                 case EDisplaceMode::NormDirAvgAndDirNormAvg:
                     return sourceVert + normDirSum * dirLengthSum / weightSum / weightSum;
                 default:
-                    assert(false);
+                    cpputils::unreachable();
             }
         }
     }
@@ -280,7 +281,7 @@ namespace HMP::Projection
                 case EDisplaceMode::NormDirAvgAndDirNormAvg:
                     return sourceVert + normDirSum * dirLengthSum / weightSum / weightSum;
                 default:
-                    assert(false);
+                    cpputils::unreachable();
             }
         }
     }

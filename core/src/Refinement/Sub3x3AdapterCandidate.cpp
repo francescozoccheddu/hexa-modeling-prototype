@@ -1,5 +1,6 @@
 #include <HMP/Refinement/Sub3x3AdapterCandidate.hpp>
 
+#include <cpputils/unreachable.hpp>
 #include <HMP/Dag/Utils.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Refinement/Utils.hpp>
@@ -69,7 +70,7 @@ namespace HMP::Refinement
 				break;
 			}
 			default:
-				assert(false);
+				cpputils::unreachable();
 		}
 		// now consider adjacent edges too
 		// if the scheme is Subdivide3x3, leave it as it is (no edge adjacency can change this)

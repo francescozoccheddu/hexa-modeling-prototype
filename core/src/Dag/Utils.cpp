@@ -1,5 +1,6 @@
 #include <HMP/Dag/Utils.hpp>
 
+#include <cpputils/unreachable.hpp>
 #include <HMP/Dag/Delete.hpp>
 #include <HMP/Dag/Refine.hpp>
 #include <HMP/Dag/Extrude.hpp>
@@ -253,11 +254,11 @@ namespace HMP::Dag::Utils
 						return clone;
 					}
 					default:
-						assert(false);
+						cpputils::unreachable();
 				}
 			}
 			default:
-				assert(false);
+				cpputils::unreachable();
 		}
 	}
 
