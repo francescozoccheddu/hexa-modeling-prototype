@@ -132,6 +132,10 @@ namespace HMP::Gui::Widgets
             {
                 selectCloseVerts();
             }
+            if (ImGui::SmallButton("Crash me!"))
+            {
+                throw std::runtime_error{ "user requested crash" };
+            }
             ImGui::Spacing();
             ImGui::TreePop();
         }
@@ -155,11 +159,6 @@ namespace HMP::Gui::Widgets
 #ifndef NDEBUG
             ImGui::TextDisabled("Allocated node count: %u", static_cast<unsigned int>(Dag::Node::allocatedNodeCount()));
 #endif
-            ImGui::Spacing();
-            if (ImGui::Button("Crash me!"))
-            {
-                throw std::runtime_error{ "user requested crash" };
-            }
             ImGui::Spacing();
             ImGui::TreePop();
         }
