@@ -3,7 +3,7 @@ Sorted by priority:
 - **\[BUG\]** `HMP::Actions::Root::~Root()` leads to `HMP::Dag::Node` double free on app exit (I think the `HMP::Dag::Node` detachment system is broken).
 - **\[IMPROVEMENT\]** `HMP::Refinement::Utils::apply` should use `HMP::Refinement::Scheme::facesSurfVisIs` in place of `HMP::Refinement::Utils::weldAdjacencies_TEMP_NAIVE` (how do I rotate the scheme vertices and match the adjacent faces?).
 - **\[IMPROVEMENT\]** Improve `HMP::Actions::MakeConforming` either by implementing a balancing preprocessing phase, or by defining more adapter schemes.
-- **\[BUG\]** `cinolib::feature_mapping` and `HMP::Gui::Widgets::Projection::matchPaths` crash most of the times.
+- **\[BUG\]** `cinolib::feature_mapping` and `HMP::Gui::Widgets::Projection::matchPaths` crash with relatively short paths.
 - **\[BUG\]** `cinolib::feature_mapping` chooses the shortest path without following the edge chain.
 - **\[IMPROVEMENT\]** `HMP::Actions::MakeConforming` performance can be improved a lot by keeping a queue of non-conforming refinements.
 - **\[FEATURE\]** Perhaps pasting a subtree should not preserve the source size (or maybe the choice could be left to the user).
