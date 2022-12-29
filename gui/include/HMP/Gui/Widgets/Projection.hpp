@@ -26,6 +26,8 @@ namespace HMP::Gui::Widgets
 		HMP::Projection::Options m_options;
 		std::vector<HMP::Projection::Utils::EidsPath> m_paths;
 		cinolib::FeatureNetworkOptions m_featureFinderOptions;
+		bool m_usePathAsCrease;
+		float m_featureFinderCreaseAngle;
 		bool m_showPaths, m_showAllPaths;
 		I m_currentPath;
 
@@ -39,6 +41,8 @@ namespace HMP::Gui::Widgets
 		void setPathEdgeAtPoint(const Vec& _point, bool _add, const cinolib::AbstractMesh<M, V, E, P>& _mesh, bool _source);
 
 		ImVec4 pathColor(I _path) const;
+
+		void removePath(I _path);
 
 	public:
 
