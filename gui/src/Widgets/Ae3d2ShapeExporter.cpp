@@ -215,10 +215,10 @@ namespace HMP::Gui::Widgets
 			clear();
 		}
 		ImGui::SameLine();
-		ImGui::TextColored(Utils::Controls::toImVec4(empty() ? themer->sbWarn : themer->sbOk), "%d keyframes", static_cast<int>(keyframeCount()));
+		ImGui::TextColored(empty() ? themer->sbWarn : themer->sbOk, "%d keyframes", static_cast<int>(keyframeCount()));
 		if (m_sampleError)
 		{
-			ImGui::TextColored(Utils::Controls::toImVec4(themer->sbErr), "%s", m_sampleError->c_str());
+			ImGui::TextColored(themer->sbErr, "%s", m_sampleError->c_str());
 		}
 		ImGui::Spacing();
 		if (Utils::Controls::disabledButton("Export", !empty()))

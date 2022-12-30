@@ -22,14 +22,13 @@ namespace HMP::Gui::Widgets
         using namespace Utils::Drawing;
         const Meshing::Mesher::Mesh& mesh{ m_mesher.mesh() };
         ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
-        const ImU32 ovHi{ toU32(themer->ovHi) };
         if (showVids)
         {
             const Id count{ std::min<Id>(mesh.num_verts(), 100) };
             for (Id vid{}; vid < count; vid++)
             {
                 const Vec vert{ mesh.vert(vid) };
-                text(drawList, std::to_string(vid).c_str(), project(_canvas, vert), fontSize, ovHi);
+                text(drawList, std::to_string(vid).c_str(), project(_canvas, vert), fontSize, themer->ovHi);
             }
         }
         if (showEids)
@@ -38,7 +37,7 @@ namespace HMP::Gui::Widgets
             for (Id eid{}; eid < count; eid++)
             {
                 const Vec vert{ Meshing::Utils::centroid(Meshing::Utils::verts(mesh, Meshing::Utils::eidVids(mesh, eid))) };
-                text(drawList, std::to_string(eid).c_str(), project(_canvas, vert), fontSize, ovHi);
+                text(drawList, std::to_string(eid).c_str(), project(_canvas, vert), fontSize, themer->ovHi);
             }
         }
         if (showFids)
@@ -47,7 +46,7 @@ namespace HMP::Gui::Widgets
             for (Id fid{}; fid < count; fid++)
             {
                 const Vec vert{ mesh.face_centroid(fid) };
-                text(drawList, std::to_string(fid).c_str(), project(_canvas, vert), fontSize, ovHi);
+                text(drawList, std::to_string(fid).c_str(), project(_canvas, vert), fontSize, themer->ovHi);
             }
         }
         if (showPids)
@@ -56,7 +55,7 @@ namespace HMP::Gui::Widgets
             for (Id pid{}; pid < count; pid++)
             {
                 const Vec vert{ mesh.poly_centroid(pid) };
-                text(drawList, std::to_string(pid).c_str(), project(_canvas, vert), fontSize, ovHi);
+                text(drawList, std::to_string(pid).c_str(), project(_canvas, vert), fontSize, themer->ovHi);
             }
         }
         if (showElements)
@@ -65,7 +64,7 @@ namespace HMP::Gui::Widgets
             for (Id pid{}; pid < count; pid++)
             {
                 const Vec vert{ mesh.poly_centroid(pid) };
-                text(drawList, m_dagNamer.nameOrUnknown(&m_mesher.element(pid)).c_str(), project(_canvas, vert), fontSize, ovHi);
+                text(drawList, m_dagNamer.nameOrUnknown(&m_mesher.element(pid)).c_str(), project(_canvas, vert), fontSize, themer->ovHi);
             }
         }
     }
@@ -158,7 +157,7 @@ namespace HMP::Gui::Widgets
                 throw std::runtime_error{ "user requested test crash" };
             }
             ImGui::TableNextColumn();
-            ImGui::TextColored(Utils::Controls::toImVec4(themer->sbWarn), "Throw an exception");
+            ImGui::TextColored(themer->sbWarn, "Throw an exception");
             ImGui::EndTable();
             ImGui::Spacing();
             ImGui::TreePop();

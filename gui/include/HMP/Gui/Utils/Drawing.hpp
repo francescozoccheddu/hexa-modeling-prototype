@@ -35,14 +35,24 @@ namespace HMP::Gui::Utils::Drawing
         return static_cast<float>(_colorComponent) / 255.0f;
     }
 
-    constexpr ImU32 toU32(const cinolib::Color& _color)
+    constexpr ImU32 toImU32(const cinolib::Color& _color)
     {
         return IM_COL32(toByte(_color.r()), toByte(_color.g()), toByte(_color.b()), toByte(_color.a()));
     }
 
-    constexpr cinolib::Color toVec(const ImU32 _color)
+    constexpr cinolib::Color toColor(const ImU32 _color)
     {
         return cinolib::Color{
+            fromByte((_color >> IM_COL32_R_SHIFT) & 0xFF),
+            fromByte((_color >> IM_COL32_G_SHIFT) & 0xFF),
+            fromByte((_color >> IM_COL32_B_SHIFT) & 0xFF),
+            fromByte((_color >> IM_COL32_A_SHIFT) & 0xFF)
+        };
+    }
+
+    constexpr ImVec4 toImVec4(const ImU32 _color)
+    {
+        return ImVec4{
             fromByte((_color >> IM_COL32_R_SHIFT) & 0xFF),
             fromByte((_color >> IM_COL32_G_SHIFT) & 0xFF),
             fromByte((_color >> IM_COL32_B_SHIFT) & 0xFF),
