@@ -3,21 +3,21 @@ Sorted by priority:
 - **\[BUG\]** `HMP::Actions::Root::~Root()` leads to `HMP::Dag::Node` double free on app exit (I think the `HMP::Dag::Node` detachment system is broken).
 - **\[BUG\]** On paste `HMP::Dag::Extrude` nodes must be unlinked from parents outside the subtree.
 - **\[IMPROVEMENT\]** `HMP::Refinement::Utils::apply` should use `HMP::Refinement::Scheme::facesSurfVisIs` in place of `HMP::Refinement::Utils::weldAdjacencies_TEMP_NAIVE` (how do I rotate the scheme vertices and match the adjacent faces?).
+- **\[IMPROVEMENT\]** `HMP::Gui::Widgets::Projection` feature paths are awkward to work with and the find/map automatisms hardly ever work.
 - **\[IMPROVEMENT\]** Improve `HMP::Actions::MakeConforming` either by implementing a balancing preprocessing phase, or by defining more adapter schemes.
 - **\[FEATURE\]** The extrude operation could automatically determine the number of parents, or at least give the user a warning in case of unintentionally duplicate vertices.
 - **\[IMPROVEMENT\]** `HMP::Actions::MakeConforming` performance can be improved a lot by keeping a queue of non-conforming refinements.
 - **\[FEATURE\]** Projection feature paths, widget options and camera could be serialized too.
-- **\[BUG\]** `cinolib::feature_mapping` chooses the shortest path without following the edge chain.
 - **\[FEATURE\]** Perhaps pasting a subtree should not preserve the source size (or maybe the choice could be left to the user).
 - **\[REFACTOR\]** `HMP::Meshing::Utils` is a dumpsite full of duplicated code. Keep the few essential primitives and throw everything else away.
-- **\[REFACTOR\]** The `HMP::Gui::App` class is too big. Keep splitting it into child components.
-- **\[IMPROVEMENT\]** The `HMP::Gui::Widgets::DirectVertEdit` scale and rotation implementation is a bit janky.
-- **\[REFACTOR\]** All the `HMP::Meshing::Actions` could be replaced with a set of more primitive actions (`MoveVert`, `ShowElement`, `AddElements`, `WeldElements` and `ActionSequence` maybe?).
 - **\[IMPROVEMENT\]** `OGDF` is overkill for what I need. Consider replacing it with a lighter implementation of the Sugiyama layout algorithm.
-- **\[REFACTOR\]** Does the `core`/`gui` CMake project separation still make sense? 
+- **\[IMPROVEMENT\]** The `HMP::Gui::Widgets::DirectVertEdit` scale and rotation implementation is a bit janky.
 - **\[FEATURE\]** Add a command to select all the vertices in a subtree.
 - **\[FEATURE\]** Add a command to refine all the elements (maybe with a density threshold?).
 - **\[FEATURE\]** Allow the user to change the transform origin when editing vertices (or add a command to lock the origin in the current location).
 - **\[FEATURE\]** Add As-Rigid-As-Possible vertex editing support.
+- **\[REFACTOR\]** All the `HMP::Meshing::Actions` could be replaced with a set of more primitive actions (`MoveVert`, `ShowElement`, `AddElements`, `WeldElements` and `ActionSequence` maybe?).
 - **\[IMPROVEMENT\]** `HMP::Gui::DagViewer::Widget` view should try to remain stable on layout change.
+- **\[REFACTOR\]** The `HMP::Gui::App` class is too big. Keep splitting it into child components.
+- **\[REFACTOR\]** Does the `core`/`gui` CMake project separation still make sense? 
 - **\[FEATURE\]** Enable undo/redo support for every user action, not just meshing operations.
