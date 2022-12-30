@@ -1,7 +1,7 @@
 # Issues and possible improvements
 Sorted by priority:
+- **\[BUG\]** `HMP::Dag::Extrude` and `HMP::Dag::Refine` fis and vis become incorrect after a paste operation (this means that copying from a pasted subtree is a Russian roulette at the moment).
 - **\[BUG\]** `HMP::Actions::Root::~Root()` leads to `HMP::Dag::Node` double free on app exit (I think the `HMP::Dag::Node` detachment system is broken).
-- **\[BUG\]** On paste `HMP::Dag::Extrude` nodes must be unlinked from parents outside the subtree.
 - **\[IMPROVEMENT\]** `HMP::Refinement::Utils::apply` should use `HMP::Refinement::Scheme::facesSurfVisIs` in place of `HMP::Refinement::Utils::weldAdjacencies_TEMP_NAIVE` (how do I rotate the scheme vertices and match the adjacent faces?).
 - **\[IMPROVEMENT\]** `HMP::Gui::Widgets::Projection` feature paths are awkward to work with and the find/map automatisms hardly ever work.
 - **\[IMPROVEMENT\]** Improve `HMP::Actions::MakeConforming` either by implementing a balancing preprocessing phase, or by defining more adapter schemes.

@@ -16,8 +16,11 @@ namespace HMP::Actions
 	private:
 
 		const cpputils::collections::FixedVector<Dag::Element*, 3> m_elements;
-		const Dag::NodeHandle<Dag::Extrude> m_operation;
 		const Dag::Extrude& m_sourceOperation;
+		const cpputils::collections::FixedVector<I, 3>& m_fis;
+		const I m_firstVi;
+		const bool m_clockwise;
+		Dag::NodeHandle<Dag::Extrude> m_operation;
 		Meshing::Mesher::State m_oldState;
 		bool m_prepared{ false };
 		std::vector<Vec> m_newVerts;
