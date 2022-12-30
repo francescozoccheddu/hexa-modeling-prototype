@@ -87,6 +87,8 @@ namespace HMP::Meshing::Utils
 
 	I firstFiVi(I _fi, I _ei);
 	bool isIForward(const QuadVertIs& _fiVis, I _vi0, I _vi1);
+	Id closestEidVid(const Meshing::Mesher::Mesh& _mesh, Id _eid, const Vec& _position);
+	Id closestFidEidByVid(const Meshing::Mesher::Mesh& _mesh, Id _fid, Id _vid, const Vec& _midpoint);
 	Id closestFidEid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _midpoint);
 	Id closestFidVid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _position);
 	QuadVertIds fiVids(const HexVertIds& _hexVids, I _fi);

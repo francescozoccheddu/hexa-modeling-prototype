@@ -212,10 +212,47 @@ namespace HMP::Meshing::Utils
 		return vids;
 	}
 
+	Id closestEidVid(const Meshing::Mesher::Mesh& _mesh, Id _eid, const Vec& _position)
+	{
+		Real closestDist{ cinolib::inf_double };
+		Id closestVid{ noId };
+		for (const Id vid : eidVids(_mesh, _eid))
+		{
+			const Real dist{ _position.dist(_mesh.vert(vid)) };
+			if (dist < closestDist)
+			{
+				closestDist = dist;
+				closestVid = vid;
+			}
+		}
+		return closestVid;
+	}
+
+	Id closestFidEidByVid(const Meshing::Mesher::Mesh& _mesh, Id _fid, Id _vid, const Vec& _midpoint)
+	{
+		Real closestDist{ cinolib::inf_double };
+		Id closestEid{ noId };
+		for (Id edgeOffset{ 0 }; edgeOffset < 4; edgeOffset++)
+		{
+			const Id eid{ _mesh.face_edge_id(_fid, edgeOffset) };
+			if (_mesh.edge_contains_vert(eid, _vid))
+			{
+				const Vec midpoint{ centroid(verts(_mesh, eidVids(_mesh, eid))) };
+				const Real dist{ _midpoint.dist(midpoint) };
+				if (dist < closestDist)
+				{
+					closestDist = dist;
+					closestEid = eid;
+				}
+			}
+		}
+		return closestEid;
+	}
+
 	Id closestFidVid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _position)
 	{
 		Real closestDist{ cinolib::inf_double };
-		Id closestVid{};
+		Id closestVid{ noId };
 		for (const Id vid : fidVids(_mesh, _fid))
 		{
 			const Real dist{ _position.dist(_mesh.vert(vid)) };
@@ -231,7 +268,7 @@ namespace HMP::Meshing::Utils
 	Id closestFidEid(const Meshing::Mesher::Mesh& _mesh, Id _fid, const Vec& _midpoint)
 	{
 		Real closestDist{ cinolib::inf_double };
-		Id closestEid{};
+		Id closestEid{ noId };
 		for (Id edgeOffset{ 0 }; edgeOffset < 4; edgeOffset++)
 		{
 			const Id eid{ _mesh.face_edge_id(_fid, edgeOffset) };
