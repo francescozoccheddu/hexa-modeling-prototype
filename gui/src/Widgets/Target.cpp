@@ -15,14 +15,14 @@ namespace HMP::Gui::Widgets
 		cinolib::SideBarItem{ "Target mesh" },
 		m_mesh{}, m_sourceMesh{ _sourceMesh },
 		m_missingMeshFile{ false },
-		faceColor{ themer->targetFaceColor }, edgeColor{ themer->targetEdgeColor },
+		faceColor{ themer->tgtFace }, edgeColor{ themer->tgtEdge },
 		transform{},
 		visible{ true },
 		onMeshChanged{}, onApplyTransformToSource{}
 	{
 		themer.onThemeChange += [this]() {
-			faceColor = themer->targetFaceColor;
-			edgeColor = themer->targetEdgeColor;
+			faceColor = themer->tgtFace;
+			edgeColor = themer->tgtEdge;
 			if (hasMesh())
 			{
 				updateColor();
@@ -184,7 +184,8 @@ namespace HMP::Gui::Widgets
 		if (hasMesh())
 		{
 			{
-				ImGui::TextDisabled("%s", m_filename.c_str());
+				ImGui::TextColored(Utils::Controls::toImVec4(themer->sbOk), "%s", m_filename.c_str());
+				ImGui::Spacing();
 				if (ImGui::Button("Clear"))
 				{
 					clearMesh();
@@ -206,106 +207,105 @@ namespace HMP::Gui::Widgets
 			}
 			ImGui::Spacing();
 			{
-				ImGui::PushID(0);
+				ImGui::BeginTable("Transform", 3, ImGuiTableFlags_RowBg);
+				ImGui::TableSetupColumn("drag", ImGuiTableColumnFlags_WidthStretch);
+				ImGui::TableSetupColumn("identity", ImGuiTableColumnFlags_WidthFixed);
+				ImGui::TableSetupColumn("fit", ImGuiTableColumnFlags_WidthFixed);
+				ImGui::TableNextColumn();
 				ImGui::Text("Transform");
-				ImGui::SameLine();
-				if (ImGui::SmallButton("Identity"))
+				ImGui::TableNextColumn();
+				if (ImGui::Button("Identity##global"))
 				{
 					identity();
 				}
-				ImGui::SameLine();
-				if (ImGui::SmallButton("Fit"))
+				ImGui::TableNextColumn();
+				if (ImGui::Button("Fit##global"))
 				{
 					fit();
 				}
-				ImGui::PopID();
-			}
-			{
-				ImGui::PushID(1);
+				ImGui::TableNextColumn();
 				const float targetMeshSize{ static_cast<float>(m_mesh.bbox().diag()) * 2 };
 				if (Utils::Controls::dragTranslationVec("Origin", transform.origin, targetMeshSize))
 				{
 					updateTransform();
 				}
-				ImGui::SameLine();
-				if (ImGui::SmallButton("Identity"))
+				ImGui::TableNextColumn();
+				if (ImGui::Button("Identity##origin"))
 				{
 					identity(true, false, false, false);
 				}
-				ImGui::SameLine();
-				if (ImGui::SmallButton("Center"))
+				ImGui::TableNextColumn();
+				if (ImGui::Button("Fit##origin"))
 				{
 					fit(true, false, false);
 				}
-				ImGui::PopID();
-			}
-			{
-				ImGui::PushID(2);
+				ImGui::TableNextColumn();
 				const float sourceMeshSize{ static_cast<float>(m_sourceMesh.bbox().diag()) * 2 };
 				if (Utils::Controls::dragTranslationVec("Translation", transform.translation, sourceMeshSize))
 				{
 					updateTransform();
 				}
-				ImGui::SameLine();
-				if (ImGui::SmallButton("Identity"))
+				ImGui::TableNextColumn();
+				if (ImGui::Button("Identity##translation"))
 				{
 					identity(false, true, false, false);
 				}
-				ImGui::SameLine();
-				if (ImGui::SmallButton("Fit"))
+				ImGui::TableNextColumn();
+				if (ImGui::Button("Fit##translation"))
 				{
 					fit(false, true, false);
 				}
-				ImGui::PopID();
-			}
-			{
-				ImGui::PushID(3);
+				ImGui::TableNextColumn();
 				if (Utils::Controls::dragRotation("Rotation", transform.rotation))
 				{
 					updateTransform();
 				}
-				ImGui::SameLine();
-				if (ImGui::SmallButton("Identity"))
+				ImGui::TableNextColumn();
+				if (ImGui::Button("Identity##rotation"))
 				{
 					identity(false, false, true, false);
 				}
-				ImGui::PopID();
-			}
-			{
-				ImGui::PushID(4);
+				ImGui::TableNextColumn();
+				ImGui::TableNextColumn();
 				const Real sourceAndTargetMeshScaleRatio{ m_sourceMesh.bbox().diag() / m_mesh.bbox().diag() * 3 };
 				Real scale{ transform.avgScale() };
-				if (Utils::Controls::dragScale("Scale", scale, sourceAndTargetMeshScaleRatio))
+				if (Utils::Controls::dragScale("Scale##scale", scale, sourceAndTargetMeshScaleRatio))
 				{
 					transform.scale = { scale };
 					updateTransform();
 				}
-				ImGui::SameLine();
-				if (ImGui::SmallButton("Identity"))
+				ImGui::TableNextColumn();
+				if (ImGui::Button("Identity##scale"))
 				{
 					identity(false, false, false, true);
 				}
-				ImGui::SameLine();
-				if (ImGui::SmallButton("Fit"))
+				ImGui::TableNextColumn();
+				if (ImGui::Button("Fit##scale"))
 				{
 					fit(false, false, true);
 				}
-				ImGui::PopID();
+				ImGui::EndTable();
 			}
 			ImGui::Spacing();
 			{
+				ImGui::BeginTable("Color", 2, ImGuiTableFlags_RowBg);
+				ImGui::TableSetupColumn("pick", ImGuiTableColumnFlags_WidthStretch);
+				ImGui::TableSetupColumn("apply", ImGuiTableColumnFlags_WidthFixed);
+				ImGui::TableNextColumn();
 				Utils::Controls::colorButton("Face color", faceColor);
-				ImGui::SameLine();
-				if (ImGui::SmallButton("Apply##face_color"))
+				ImGui::TableNextColumn();
+				if (ImGui::Button("Apply##face"))
 				{
 					updateColor(true, false);
 				}
+				ImGui::TableNextColumn();
 				Utils::Controls::colorButton("Edge color", edgeColor);
-				ImGui::SameLine();
-				if (ImGui::SmallButton("Apply##edge_color"))
+				ImGui::TableNextColumn();
+				if (ImGui::Button("Apply##edge"))
 				{
 					updateColor(false, true);
 				}
+				ImGui::EndTable();
 			}
 			ImGui::Spacing();
 			if (ImGui::Button("Apply transform to source"))
@@ -317,8 +317,9 @@ namespace HMP::Gui::Widgets
 		{
 			if (m_missingMeshFile)
 			{
-				ImGui::Text("Missing mesh file");
-				ImGui::TextDisabled("%s", m_filename.c_str());
+				ImGui::TextColored(Utils::Controls::toImVec4(themer->sbErr), "Missing mesh file");
+				ImGui::TextColored(Utils::Controls::toImVec4(themer->sbWarn), "%s", m_filename.c_str());
+				ImGui::Spacing();
 				if (ImGui::Button("Clear"))
 				{
 					clearMesh();

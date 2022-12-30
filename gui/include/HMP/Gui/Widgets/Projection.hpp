@@ -20,11 +20,14 @@ namespace HMP::Gui::Widgets
 
 	private:
 
+		using EidsPath = HMP::Projection::Utils::EidsPath;
+		using Point = HMP::Projection::Utils::Point;
+
 		const Widgets::Target& m_targetWidget;
 		HMP::Commander& m_commander;
 		const HMP::Meshing::Mesher& m_mesher;
 		HMP::Projection::Options m_options;
-		std::vector<HMP::Projection::Utils::EidsPath> m_paths;
+		std::vector<EidsPath> m_paths;
 		cinolib::FeatureNetworkOptions m_featureFinderOptions;
 		bool m_usePathAsCrease;
 		float m_featureFinderCreaseAngle;
@@ -48,7 +51,7 @@ namespace HMP::Gui::Widgets
 
 		Projection(const Widgets::Target& _targetWidget, HMP::Commander& _commander, const HMP::Meshing::Mesher& _mesher);
 
-		cpputils::collections::Event<Projection, const cinolib::Polygonmesh<>&, const std::vector<HMP::Projection::Utils::Point>&, const std::vector<HMP::Projection::Utils::EidsPath>&, const HMP::Projection::Options&> onProjectRequest;
+		cpputils::collections::Event<Projection, const cinolib::Polygonmesh<>&, const std::vector<Point>&, const std::vector<EidsPath>&, const HMP::Projection::Options&> onProjectRequest;
 
 		const HMP::Projection::Options& options() const;
 

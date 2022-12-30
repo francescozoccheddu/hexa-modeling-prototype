@@ -85,7 +85,7 @@ namespace HMP::Gui::DagViewer
 
 		if (showLayoutPerformanceWarning)
 		{
-			ImGui::TextColored(Utils::Controls::toImVec4(themer->warningTextColor), "Leaving this widget open will affect meshing performance!");
+			ImGui::TextColored(Utils::Controls::toImVec4(themer->sbWarn), "Leaving this widget open will affect meshing performance!");
 		}
 
 		// types
@@ -250,12 +250,12 @@ namespace HMP::Gui::DagViewer
 				const Vec2 nodeHalfDiag_s{ nodeRadius_s, nodeRadius_s };
 				const Vec2 copiedNodeHalfDiag_s{ copiedNodeRadius_s, copiedNodeRadius_s };
 
-				const ImU32 elementColor{ Utils::Drawing::toU32(themer->dagElementColor) };
-				const ImU32 inactiveElementColor{ Utils::Drawing::toU32(cinolib::Color::lerp(themer->dagElementColor, Utils::Drawing::toVec(backgroundColor), 0.5f)) };
-				const ImU32 highlightedElementColor{ Utils::Drawing::toU32(themer->dagHighlightedElementColor) };
-				const ImU32 refineNodeColor{ Utils::Drawing::toU32(themer->dagRefineNodeColor) };
-				const ImU32 extrudeNodeColor{ Utils::Drawing::toU32(themer->dagExtrudeNodeColor) };
-				const ImU32 deleteNodeColor{ Utils::Drawing::toU32(themer->dagDeleteNodeColor) };
+				const ImU32 elementColor{ Utils::Drawing::toU32(themer->dagNodeEl) };
+				const ImU32 inactiveElementColor{ Utils::Drawing::toU32(cinolib::Color::lerp(themer->dagNodeEl, Utils::Drawing::toVec(backgroundColor), 0.5f)) };
+				const ImU32 highlightedElementColor{ Utils::Drawing::toU32(themer->dagNodeElHi) };
+				const ImU32 refineNodeColor{ Utils::Drawing::toU32(themer->dagNodeRefine) };
+				const ImU32 extrudeNodeColor{ Utils::Drawing::toU32(themer->dagNodeExtrude) };
+				const ImU32 deleteNodeColor{ Utils::Drawing::toU32(themer->dagNodeDelete) };
 
 				for (const Layout::Node& node : m_layout.nodes())
 				{

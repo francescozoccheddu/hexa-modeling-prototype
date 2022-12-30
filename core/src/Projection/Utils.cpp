@@ -11,6 +11,46 @@
 namespace HMP::Projection::Utils
 {
 
+    bool EidsPath::empty() const
+    {
+        return sourceEids.empty() && targetEids.empty();
+    }
+
+    bool EidsPath::empty(bool _source) const
+    {
+        return eids(_source).empty();
+    }
+
+    const std::vector<Id>& EidsPath::eids(bool _source) const
+    {
+        return _source ? sourceEids : targetEids;
+    }
+
+    std::vector<Id>& EidsPath::eids(bool _source)
+    {
+        return _source ? sourceEids : targetEids;
+    }
+
+    bool VidsPath::empty() const
+    {
+        return sourceVids.empty() && targetVids.empty();
+    }
+
+    bool VidsPath::empty(bool _source) const
+    {
+        return vids(_source).empty();
+    }
+
+    const std::vector<Id>& VidsPath::vids(bool _source) const
+    {
+        return _source ? sourceVids : targetVids;
+    }
+
+    std::vector<Id>& VidsPath::vids(bool _source)
+    {
+        return _source ? sourceVids : targetVids;
+    }
+
     SurfaceExporter::SurfaceExporter(const Meshing::Mesher::Mesh& _mesh): vol{ _mesh }
     {
         cinolib::export_surface(_mesh, surf, m_v2s, m_s2v, false);

@@ -3,6 +3,8 @@
 #include <cinolib/gl/file_dialog_save.h>
 #include <cinolib/gl/file_dialog_open.h>
 #include <imgui.h>
+#include <HMP/Gui/Utils/Controls.hpp>
+#include <HMP/Gui/themer.hpp>
 
 namespace HMP::Gui::Widgets
 {
@@ -76,23 +78,26 @@ namespace HMP::Gui::Widgets
 
     void Save::draw()
     {
+        const ImVec4
+            sbOk{ Utils::Controls::toImVec4(themer->sbOk) },
+            sbWarn{ Utils::Controls::toImVec4(themer->sbWarn) };
         if (!m_filename.empty())
         {
             const int elapsedMins{ static_cast<int>(std::chrono::duration_cast<std::chrono::minutes>(std::chrono::steady_clock::now() - m_lastTime).count()) };
             const char* actionStr{ m_loaded ? "Loaded" : "Saved" };
             if (elapsedMins < 1)
             {
-                ImGui::Text("%s less than a minute ago", actionStr);
+                ImGui::TextColored(sbOk, "%s less than a minute ago", actionStr);
             }
             else if (elapsedMins == 1)
             {
-                ImGui::Text("%s a minute ago", actionStr);
+                ImGui::TextColored(sbOk, "%s a minute ago", actionStr);
             }
             else
             {
-                ImGui::Text("%s %d minutes ago", actionStr, elapsedMins);
+                ImGui::TextColored(elapsedMins > 5 ? sbWarn : sbOk, "%s %d minutes ago", actionStr, elapsedMins);
             }
-            ImGui::TextDisabled("%s", m_filename.c_str());
+            ImGui::Text("%s", m_filename.c_str());
             ImGui::Spacing();
             if (ImGui::Button("Save"))
             {
@@ -106,7 +111,7 @@ namespace HMP::Gui::Widgets
         }
         else
         {
-            ImGui::Text("Not saved");
+            ImGui::TextColored(sbWarn, "Not saved");
             ImGui::Spacing();
             if (ImGui::Button("Save"))
             {

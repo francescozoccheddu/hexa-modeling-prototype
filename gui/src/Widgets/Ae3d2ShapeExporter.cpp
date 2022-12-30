@@ -1,6 +1,7 @@
 #include <HMP/Gui/Widgets/Ae3d2ShapeExporter.hpp>
 
 #include <HMP/Gui/Utils/Controls.hpp>
+#include <HMP/Gui/themer.hpp>
 #include <cinolib/gl/file_dialog_save.h>
 #include <algorithm>
 #include <imgui.h>
@@ -214,11 +215,12 @@ namespace HMP::Gui::Widgets
 			clear();
 		}
 		ImGui::SameLine();
-		ImGui::TextDisabled("%d keyframes", static_cast<int>(keyframeCount()));
+		ImGui::TextColored(Utils::Controls::toImVec4(empty() ? themer->sbWarn : themer->sbOk), "%d keyframes", static_cast<int>(keyframeCount()));
 		if (m_sampleError)
 		{
-			ImGui::TextColored(Utils::Controls::toImVec4(warningTextColor), "%s", m_sampleError->c_str());
+			ImGui::TextColored(Utils::Controls::toImVec4(themer->sbErr), "%s", m_sampleError->c_str());
 		}
+		ImGui::Spacing();
 		if (Utils::Controls::disabledButton("Export", !empty()))
 		{
 			requestExport();

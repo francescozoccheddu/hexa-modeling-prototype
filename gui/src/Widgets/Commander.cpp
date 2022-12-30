@@ -46,46 +46,41 @@ namespace HMP::Gui::Widgets
 	{
 		constexpr auto actionsControl{ [](HMP::Commander::Stack& _stack, const std::string& _name) {
 			int limit{ static_cast<int>(_stack.limit()) };
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
 			ImGui::SliderInt((_name + " limit").c_str(), &limit, 0, 100, "Max %d actions", ImGuiSliderFlags_AlwaysClamp);
 			_stack.limit(static_cast<I>(limit));
-			if (!_stack.empty())
+			ImGui::TableNextColumn();
+			if (Utils::Controls::disabledButton((std::string{ "Clear " } + std::to_string(_stack.size()) + " actions").c_str(), !_stack.empty()))
 			{
-				ImGui::SameLine();
-				if (ImGui::Button((std::string{ "Clear " } + std::to_string(_stack.size()) + " actions").c_str()))
-				{
-					_stack.clear();
-				}
+				_stack.clear();
 			}
 		} };
+		ImGui::BeginTable("stacks", 2, ImGuiTableFlags_RowBg);
+		ImGui::TableSetupColumn("size", ImGuiTableColumnFlags_WidthStretch);
+		ImGui::TableSetupColumn("clear", ImGuiTableColumnFlags_WidthFixed);
 		actionsControl(m_commander.applied(), "Undo");
 		actionsControl(m_commander.unapplied(), "Redo");
+		ImGui::EndTable();
 		ImGui::Spacing();
-		// history
-		if (ImGui::TreeNode("History"))
+
+		ImGui::Text("History");
+		ImGui::BeginChild("history", { ImGui::GetContentRegionAvail().x, 200 }, true);
+		if (m_vertEdit.pendingAction())
 		{
-
-			if (m_commander.applied().empty() && m_commander.unapplied().empty() && !m_vertEdit.pendingAction())
-			{
-				ImGui::TextDisabled("empty");
-			}
-
-			if (m_vertEdit.pendingAction())
-			{
-				ImGui::TextColored(Utils::Controls::toImVec4(themer->commanderPendingActionColor), "Pending vertex edit action on %d vertices", static_cast<int>(m_vertEdit.vids().size()));
-			}
-
-			for (const auto& action : m_commander.unapplied().reverse())
-			{
-				ImGui::TextColored(Utils::Controls::toImVec4(themer->commanderUnappliedActionColor), "%s", Utils::HrDescriptions::describe(action, m_dagNamer).c_str());
-			}
-
-			for (const HMP::Commander::Action& action : m_commander.applied())
-			{
-				ImGui::TextColored(Utils::Controls::toImVec4(themer->commanderAppliedActionColor), "%s", Utils::HrDescriptions::describe(action, m_dagNamer).c_str());
-			}
-
-			ImGui::TreePop();
+			ImGui::TextColored(Utils::Controls::toImVec4(themer->sbWarn), "Pending vertex edit action on %d vertices", static_cast<int>(m_vertEdit.vids().size()));
 		}
+
+		for (const auto& action : m_commander.unapplied().reverse())
+		{
+			ImGui::TextColored(Utils::Controls::toImVec4(themer->sbErr), "%s", Utils::HrDescriptions::describe(action, m_dagNamer).c_str());
+		}
+
+		for (const HMP::Commander::Action& action : m_commander.applied())
+		{
+			ImGui::TextColored(Utils::Controls::toImVec4(themer->sbOk), "%s", Utils::HrDescriptions::describe(action, m_dagNamer).c_str());
+		}
+		ImGui::EndChild();
 	}
 
 }
