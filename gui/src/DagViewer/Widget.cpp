@@ -11,7 +11,6 @@
 #include <imgui.h>
 #include <imgui_impl_opengl2.h>
 #include <string>
-#include <string>
 #include <HMP/Gui/Utils/HrDescriptions.hpp>
 #include <HMP/Gui/Utils/Drawing.hpp>
 #include <limits>
@@ -83,7 +82,8 @@ namespace HMP::Gui::DagViewer
 
 		// window
 
-		const Vec2 windowSize_s{ toVec(ImGui::GetContentRegionAvail()) };
+		const Vec2 availWindowSize_s{ toVec(ImGui::GetContentRegionAvail()) };
+		const Vec2 windowSize_s{ availWindowSize_s.x(), std::max(availWindowSize_s.x(), availWindowSize_s.y()) };
 		if (windowSize_s.x() <= 0.0 || windowSize_s.y() <= 0.0)
 		{
 			return;
