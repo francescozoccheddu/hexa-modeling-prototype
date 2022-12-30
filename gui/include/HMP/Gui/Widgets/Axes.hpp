@@ -13,8 +13,6 @@ namespace HMP::Gui::Widgets
 
 	public:
 
-		float colorSat{ 1.0f }, colorVal{ 1.0f };
-
 		void draw(const cinolib::GLcanvas& _canvas) override;
 
 	};

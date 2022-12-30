@@ -17,7 +17,7 @@ namespace HMP::Gui::Utils
     using Drawing::toImU32;
     using Controls::toImVec4;
 
-    static constexpr float okHue{ 0.35f }, warnHue{ 0.16f }, errHue{ 0.05f };
+    static constexpr float okHue{ 0.4f }, warnHue{ 0.15f }, errHue{ 0.02f };
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
     static constexpr float dagNodeRefineHueShift{ 0.4f }, dagNodeExtrudeHueShift{ 0.6f }, dagNodeDeleteHueShift{ 0.8f };
@@ -29,32 +29,32 @@ namespace HMP::Gui::Utils
         return Theme{
             .hue = hue,
             .dark = false,
-            .sbOk{ toImVec4(hsv(okHue, 0.6f, 0.75f)) },
-            .sbWarn{ toImVec4(hsv(warnHue, 0.6f, 0.75f))},
-            .sbErr{ toImVec4(hsv(errHue, 0.6f, 0.75f))},
-            .bg{ hsv(hue, 0.0f, 0.95f) },
+            .sbOk{ toImVec4(hsv(okHue, 0.8f, 0.4f)) },
+            .sbWarn{ toImVec4(hsv(warnHue, 0.8f, 0.45f))},
+            .sbErr{ toImVec4(hsv(errHue, 0.85f, 0.45f))},
+            .bg{ hsv(hue, 0.0f, 0.97f) },
             .ovHi{ toImU32(hsv(hue, 0.8f, 1.0f)) },
-            .ovMut{ toImU32(hsv(hue, 0.0f, 0.0f, 0.25f)) },
-            .ovWarn{ toImU32(hsv(warnHue, 1.0f, 0.75f)) },
+            .ovMut{ toImU32(hsv(hue, 0.0f, 0.0f, 0.28f)) },
+            .ovWarn{ toImU32(hsv(warnHue, 0.8f, 0.55f)) },
             .ovErr{ toImU32(hsv(errHue, 1.0f, 0.75f)) },
-            .ovPolyHi{ toImU32(hsv(hue, 0.3f, 0.85f, 0.1f)) },
-            .ovFaceHi{ toImU32(hsv(hue, 0.75f, 1.0f, 0.2f)) },
-            .srcFace{ hsv(hue, 0.0f, 0.75f) },
-            .srcEdge{ hsv(hue, 0.0f, 0.1f) },
-            .tgtFace{ hsv(hue, 0.0f, 0.0f, 0.1f) },
-            .tgtEdge{ hsv(hue, 0.0f, 0.0f, 0.3f) },
+            .ovPolyHi{ toImU32(hsv(hue, 0.3f, 0.85f, 0.2f)) },
+            .ovFaceHi{ toImU32(hsv(hue, 0.75f, 1.0f, 0.3f)) },
+            .srcFace{ hsv(hue, 0.0f, 0.8f) },
+            .srcEdge{ hsv(hue, 0.0f, 0.22f) },
+            .tgtFace{ hsv(hue, 0.0f, 0.0f, 0.08f) },
+            .tgtEdge{ hsv(hue, 0.0f, 0.0f, 0.24f) },
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
             .dagNodeEl{ toImU32(hsv(hue, 0.0f, 0.6f)) },
-            .dagNodeElHi{ toImU32(hsv(hue, 0.8f, 1.0f)) },
-            .dagNodeElMut{ toImU32(hsv(hue, 0.0f, 0.85f)) },
-            .dagNodeRefine{ toImU32(hsv(std::fmod(hue + dagNodeRefineHueShift, 1.0f), 0.75f, 0.75f)) },
-            .dagNodeExtrude{ toImU32(hsv(std::fmod(hue + dagNodeExtrudeHueShift, 1.0f), 0.75f, 0.75f)) },
-            .dagNodeDelete{ toImU32(hsv(std::fmod(hue + dagNodeDeleteHueShift, 1.0f), 0.75f, 0.75f)) },
+            .dagNodeElHi{ toImU32(hsv(hue, 0.7f, 0.9f)) },
+            .dagNodeElMut{ toImU32(hsv(hue, 0.0f, 0.83f)) },
+            .dagNodeRefine{ toImU32(hsv(std::fmod(hue + dagNodeRefineHueShift, 1.0f), 0.7f, 0.75f)) },
+            .dagNodeExtrude{ toImU32(hsv(std::fmod(hue + dagNodeExtrudeHueShift, 1.0f), 0.7f, 0.75f)) },
+            .dagNodeDelete{ toImU32(hsv(std::fmod(hue + dagNodeDeleteHueShift, 1.0f), 0.7f, 0.75f)) },
 #endif
-            .ovAxesSat = 0.9f,
-            .ovAxesVal = 0.8f,
-            .ovPathSat = 0.9f,
-            .ovPathVal = 0.8f
+            .ovAxesSat = 0.55f,
+            .ovAxesVal = 0.9f,
+            .ovPathSat = 0.8f,
+            .ovPathVal = 0.75f
         };
     }
 
@@ -64,32 +64,32 @@ namespace HMP::Gui::Utils
         return Theme{
             .hue = hue,
             .dark = true,
-            .sbOk{ toImVec4(hsv(okHue, 0.6f, 0.75f))},
-            .sbWarn{ toImVec4(hsv(warnHue, 0.6f, 0.75f))},
-            .sbErr{ toImVec4(hsv(errHue, 0.6f, 0.75f))},
-            .bg{ hsv(hue, 0.0f, 0.1f) },
+            .sbOk{ toImVec4(hsv(okHue, 0.5f, 0.8f))},
+            .sbWarn{ toImVec4(hsv(warnHue, 0.5f, 0.81f))},
+            .sbErr{ toImVec4(hsv(errHue, 0.5f, 0.83f))},
+            .bg{ hsv(hue, 0.0f, 0.09f) },
             .ovHi{ toImU32(hsv(hue, 0.5f, 1.0f)) },
-            .ovMut{ toImU32(hsv(hue, 0.0f, 1.0f, 0.25f)) },
-            .ovWarn{ toImU32(hsv(warnHue, 0.6f, 0.6f)) },
-            .ovErr{ toImU32(hsv(errHue, 0.6f, 0.6f)) },
+            .ovMut{ toImU32(hsv(hue, 0.0f, 1.0f, 0.27f)) },
+            .ovWarn{ toImU32(hsv(warnHue, 0.5f, 0.55f)) },
+            .ovErr{ toImU32(hsv(errHue, 0.7f, 0.7f)) },
             .ovPolyHi{ toImU32(hsv(hue, 0.75f, 0.5f, 0.1f)) },
             .ovFaceHi{ toImU32(hsv(hue, 0.75f, 1.0f, 0.2f)) },
-            .srcFace{ hsv(hue, 0.0f, 0.35f) },
+            .srcFace{ hsv(hue, 0.0f, 0.25f) },
             .srcEdge{ hsv(hue, 0.0f, 0.0f) },
-            .tgtFace{ hsv(hue, 0.0f, 1.0f, 0.1f) },
-            .tgtEdge{ hsv(hue, 0.0f, 1.0f, 0.3f) },
+            .tgtFace{ hsv(hue, 0.0f, 1.0f, 0.09f) },
+            .tgtEdge{ hsv(hue, 0.0f, 1.0f, 0.27f) },
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
-            .dagNodeEl{ toImU32(hsv(hue, 0.0f, 0.35f)) },
-            .dagNodeElHi{ toImU32(hsv(hue, 0.5f, 1.0f)) },
-            .dagNodeElMut{ toImU32(hsv(hue, 0.0f, 0.2f)) },
-            .dagNodeRefine{ toImU32(hsv(std::fmod(hue + dagNodeRefineHueShift, 1.0f), 0.75f, 0.75f)) },
-            .dagNodeExtrude{ toImU32(hsv(std::fmod(hue + dagNodeExtrudeHueShift, 1.0f), 0.75f, 0.75f)) },
-            .dagNodeDelete{ toImU32(hsv(std::fmod(hue + dagNodeDeleteHueShift, 1.0f), 0.75f, 0.75f)) },
+            .dagNodeEl{ toImU32(hsv(hue, 0.0f, 0.37f)) },
+            .dagNodeElHi{ toImU32(hsv(hue, 0.55f, 1.0f)) },
+            .dagNodeElMut{ toImU32(hsv(hue, 0.0f, 0.22f)) },
+            .dagNodeRefine{ toImU32(hsv(std::fmod(hue + dagNodeRefineHueShift, 1.0f), 0.5f, 0.75f)) },
+            .dagNodeExtrude{ toImU32(hsv(std::fmod(hue + dagNodeExtrudeHueShift, 1.0f), 0.5f, 0.75f)) },
+            .dagNodeDelete{ toImU32(hsv(std::fmod(hue + dagNodeDeleteHueShift, 1.0f), 0.5f, 0.75f)) },
 #endif
             .ovAxesSat = 0.6f,
-            .ovAxesVal = 1.0f,
-            .ovPathSat = 0.9f,
-            .ovPathVal = 0.8f
+            .ovAxesVal = 0.8f,
+            .ovPathSat = 0.65f,
+            .ovPathVal = 0.85f
         };
     }
 
