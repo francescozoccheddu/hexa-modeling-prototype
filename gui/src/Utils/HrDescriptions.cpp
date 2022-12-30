@@ -348,7 +348,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 		}
 		if (const Actions::Project* action{ dynamic_cast<const Actions::Project*>(&_action) }; action)
 		{
-			return describe(*action, _dagNamer);
+			return describe(*action);
 		}
 		if (const Actions::Refine* action{ dynamic_cast<const Actions::Refine*>(&_action) }; action)
 		{
@@ -356,7 +356,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 		}
 		if (const Actions::Transform* action{ dynamic_cast<const Actions::Transform*>(&_action) }; action)
 		{
-			return describe(*action, _dagNamer);
+			return describe(*action);
 		}
 		return "Unknown action";
 	}

@@ -12,7 +12,7 @@
 namespace HMP::Gui::Widgets
 {
 
-    class Ae3d2ShapeExporter final : public cinolib::SideBarItem
+    class Ae3d2ShapeExporter final: public cinolib::SideBarItem
     {
 
     private:

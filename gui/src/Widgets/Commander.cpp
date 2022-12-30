@@ -1,12 +1,14 @@
 #include <HMP/Gui/Widgets/Commander.hpp>
 
 #include <HMP/Meshing/types.hpp>
+#include <HMP/Gui/Utils/Controls.hpp>
 #include <imgui.h>
 #include <cinolib/deg_rad.h>
 #include <cinolib/gl/glcanvas.h>
 #include <cmath>
 #include <array>
 #include <algorithm>
+#include <HMP/Gui/themer.hpp>
 
 namespace HMP::Gui::Widgets
 {
@@ -62,24 +64,24 @@ namespace HMP::Gui::Widgets
 		if (ImGui::TreeNode("History"))
 		{
 
-			if (m_commander.applied().empty() && m_commander.unapplied().empty())
+			if (m_commander.applied().empty() && m_commander.unapplied().empty() && !m_vertEdit.pendingAction())
 			{
-				ImGui::TextColored(ImVec4(0.5f, 0.5f, 0.5f, 1.0f), "empty");
+				ImGui::TextDisabled("empty");
 			}
 
 			if (m_vertEdit.pendingAction())
 			{
-				ImGui::TextColored(ImVec4(0.75f, 0.75f, 0.2f, 1.0f), "Pending vertex edit action on %d vertices", static_cast<int>(m_vertEdit.vids().size()));
+				ImGui::TextColored(Utils::Controls::toImVec4(themer->commanderPendingActionColor), "Pending vertex edit action on %d vertices", static_cast<int>(m_vertEdit.vids().size()));
 			}
 
 			for (const auto& action : m_commander.unapplied().reverse())
 			{
-				ImGui::TextColored(ImVec4(0.75f, 0.2f, 0.2f, 1.0f), "%s", Utils::HrDescriptions::describe(action, m_dagNamer).c_str());
+				ImGui::TextColored(Utils::Controls::toImVec4(themer->commanderUnappliedActionColor), "%s", Utils::HrDescriptions::describe(action, m_dagNamer).c_str());
 			}
 
 			for (const HMP::Commander::Action& action : m_commander.applied())
 			{
-				ImGui::TextColored(ImVec4(0.2f, 0.75f, 0.2f, 1.0f), "%s", Utils::HrDescriptions::describe(action, m_dagNamer).c_str());
+				ImGui::TextColored(Utils::Controls::toImVec4(themer->commanderAppliedActionColor), "%s", Utils::HrDescriptions::describe(action, m_dagNamer).c_str());
 			}
 
 			ImGui::TreePop();

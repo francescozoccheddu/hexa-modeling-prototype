@@ -7,6 +7,7 @@
 #include <HMP/Gui/Utils/Drawing.hpp>
 #include <algorithm>
 #include <string>
+#include <HMP/Gui/themer.hpp>
 
 namespace HMP::Gui::Widgets
 {
@@ -15,33 +16,12 @@ namespace HMP::Gui::Widgets
         : cinolib::SideBarItem{ "Debug" }, m_mesher{ _mesher }, m_dagNamer{ _dagNamer }, m_vertEdit{ _vertEdit }
     {}
 
-    void Debug::selectCloseVerts()
-    {
-        const Meshing::Mesher::Mesh& mesh{ m_mesher.mesh() };
-        std::map<Vec, Id, Meshing::Utils::VertComparer> vertMap{ {.eps = m_eps} };
-        m_vertEdit.clear();
-        for (Id vid{}; vid < mesh.num_verts(); vid++)
-        {
-            const Vec vert{ mesh.vert(vid) };
-            const auto it{ vertMap.find(vert) };
-            if (it != vertMap.end())
-            {
-                m_vertEdit.add(vid);
-                m_vertEdit.add(it->second);
-            }
-            else
-            {
-                vertMap.insert(it, { vert, vid });
-            }
-        }
-    }
-
     void Debug::draw(const cinolib::GLcanvas& _canvas)
     {
         using namespace Utils::Drawing;
         const Meshing::Mesher::Mesh& mesh{ m_mesher.mesh() };
         ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
-        const ImU32 colorU32{ toU32(nameColor) };
+        const ImU32 colorU32{ toU32(themer->overlayColor) };
         if (showVids)
         {
             const Id count{ std::min<Id>(mesh.num_verts(), 100) };
@@ -100,6 +80,7 @@ namespace HMP::Gui::Widgets
             {
                 m_dagNamer.reset();
             }
+            ImGui::SliderFloat("Font size", &fontSize, 10, 14, "%.1fpx", ImGuiSliderFlags_AlwaysClamp);
             ImGui::Checkbox("Show pids", &showPids);
             ImGui::Checkbox("Show fids", &showFids);
             ImGui::Checkbox("Show eids", &showEids);
@@ -113,11 +94,11 @@ namespace HMP::Gui::Widgets
             ImGui::Spacing();
             if (ImGui::Checkbox("Dark", &themeDark))
             {
-                requestThemeUpdate();
+                updateTheme();
             }
             if (ImGui::SliderFloat("Hue", &themeHue, 0.0f, 360.0f, "%.0f deg", ImGuiSliderFlags_AlwaysClamp))
             {
-                requestThemeUpdate();
+                updateTheme();
             }
             ImGui::Spacing();
             ImGui::TreePop();
@@ -127,7 +108,7 @@ namespace HMP::Gui::Widgets
         {
             ImGui::Spacing();
             static constexpr double minEps{ 1e-9 }, maxEps{ 1e-3 };
-            ImGui::SliderScalar("Epsilon", ImGuiDataType_Double, &m_eps, &minEps, &maxEps, "%.3e", ImGuiSliderFlags_AlwaysClamp);
+            ImGui::SliderScalar("Epsilon", ImGuiDataType_Double, &testEps, &minEps, &maxEps, "%.3e", ImGuiSliderFlags_AlwaysClamp);
             if (ImGui::SmallButton("Select close verts"))
             {
                 selectCloseVerts();
@@ -165,9 +146,30 @@ namespace HMP::Gui::Widgets
         }
     }
 
-    void Debug::requestThemeUpdate()
+    void Debug::updateTheme() const
     {
-        onThemeChangeRequested(themeDark, themeHue);
+        themer.setTheme(Utils::Theme::make(themeDark, themeHue));
+    }
+
+    void Debug::selectCloseVerts()
+    {
+        const Meshing::Mesher::Mesh& mesh{ m_mesher.mesh() };
+        std::map<Vec, Id, Meshing::Utils::VertComparer> vertMap{ {.eps = testEps} };
+        m_vertEdit.clear();
+        for (Id vid{}; vid < mesh.num_verts(); vid++)
+        {
+            const Vec vert{ mesh.vert(vid) };
+            const auto it{ vertMap.find(vert) };
+            if (it != vertMap.end())
+            {
+                m_vertEdit.add(vid);
+                m_vertEdit.add(it->second);
+            }
+            else
+            {
+                vertMap.insert(it, { vert, vid });
+            }
+        }
     }
 
 }

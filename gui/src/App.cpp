@@ -34,7 +34,7 @@
 #include <cstring>
 #include <cinolib/geometry/plane.h>
 #include <HMP/Gui/Utils/Theme.hpp>
-#include <cinolib/memory_usage.h>
+#include <HMP/Gui/themer.hpp>
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 #include <HMP/Gui/DagViewer/createLayout.hpp>
@@ -112,6 +112,10 @@ namespace HMP::Gui
 	void App::requestDagViewerUpdate()
 	{
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
+		if (!m_dagViewerWidget.show_open)
+		{
+			m_dagViewerWidget.showLayoutPerformanceWarning = false;
+		}
 		m_dagViewerNeedsUpdate = true;
 #endif
 	}
@@ -472,10 +476,14 @@ namespace HMP::Gui
 
 	void App::onDrawCustomGui()
 	{
-		const ImVec4 warningColor{ Utils::Controls::toImGui(warningTextColor) };
+		const ImVec4 warningColor{ Utils::Controls::toImVec4(themer->warningTextColor) };
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
 		using namespace Utils::Drawing;
-		const ImU32 colorU32{ toU32(overlayColor) }, mutedColorU32{ toU32(mutedOverlayColor) }, hPolyColorU32{ toU32(highlightedPolyColor) }, hFaceColorU32{ toU32(highlightedFaceColor) };
+		const ImU32
+			colorU32{ toU32(themer->overlayColor) },
+			mutedColorU32{ toU32(themer->mutedOverlayColor) },
+			hPolyColorU32{ toU32(themer->sourceHighlightedPolyColor) },
+			hFaceColorU32{ toU32(themer->sourceHighlightedFaceColor) };
 		if (m_copy.element && !m_mouse.element)
 		{
 			const Id cPid{ m_copy.element->pid };
@@ -984,21 +992,12 @@ namespace HMP::Gui
 		}
 	}
 
-	void App::setTheme(bool _dark, float _hue)
+	void App::onThemeChanged()
 	{
-		const Utils::Theme theme{ Utils::Theme::make(_dark, _hue) };
-		theme.applyImGui();
-		theme.apply(m_mesher);
-		theme.apply(m_axesWidget);
-		theme.apply(m_directVertEditWidget);
-		theme.apply(m_targetWidget);
-		theme.apply(m_vertEditWidget);
-		theme.apply(*this);
-		theme.apply(m_canvas);
-		theme.apply(m_debugWidget);
-#ifdef HMP_GUI_ENABLE_DAG_VIEWER
-		theme.apply(m_dagViewerWidget);
-#endif
+		m_canvas.background = themer->backgroundColor;
+		m_mesher.edgeColor = themer->sourceEdgeColor;
+		m_mesher.faceColor = themer->sourceFaceColor;
+		m_mesher.updateColors();
 	}
 
 	// launch
@@ -1007,15 +1006,13 @@ namespace HMP::Gui
 		m_project{}, m_canvas{ 700, 600, 13, 1.0f }, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() },
 		m_dagNamer{}, m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{}, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher },
 		m_directVertEditWidget{ m_vertEditWidget, m_canvas }, m_saveWidget{}, m_projectionWidget{ m_targetWidget, m_commander, m_mesher },
-		m_debugWidget{ m_mesher, m_dagNamer, m_vertEditWidget },
+		m_debugWidget{ m_mesher, m_dagNamer, m_vertEditWidget }
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
-		m_dagViewerWidget{ m_dagNamer }, m_dagViewerNeedsUpdate{ true },
+		, m_dagViewerWidget{ m_dagNamer }, m_dagViewerNeedsUpdate{ true }
 #endif
 #ifdef HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER
-		m_ae3d2ShapeExporter{ m_mesh, m_canvas.camera },
+		, m_ae3d2ShapeExporter{ m_mesh, m_canvas.camera }
 #endif
-		warningTextColor{ cinolib::Color::YELLOW() }, overlayColor{ cinolib::Color::YELLOW() }, mutedOverlayColor{ cinolib::Color::GRAY() },
-		highlightedPolyColor{ cinolib::Color::PASTEL_YELLOW() }, highlightedFaceColor{ cinolib::Color::YELLOW() }
 	{
 
 #ifdef NDEBUG
@@ -1062,8 +1059,6 @@ namespace HMP::Gui
 		m_canvas.push(&m_dagViewerWidget);
 #endif
 
-		m_debugWidget.onThemeChangeRequested += [this](bool _dark, float _hue) { setTheme(_dark, _hue); };
-
 		m_saveWidget.onExportMesh += [this](const std::string& _filename) { onExportMesh(_filename); };
 		m_saveWidget.onSave += [this](const std::string& _filename) { onSaveState(_filename); };
 		m_saveWidget.onLoad += [this](const std::string& _filename) { onLoadState(_filename); };
@@ -1093,7 +1088,9 @@ namespace HMP::Gui
 #endif
 		requestDagViewerUpdate();
 
-		m_debugWidget.requestThemeUpdate();
+		themer.onThemeChange += [this]() { onThemeChanged(); };
+
+		m_debugWidget.updateTheme();
 
 	}
 

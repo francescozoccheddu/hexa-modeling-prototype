@@ -34,8 +34,6 @@ namespace HMP::Gui::Widgets
 
     public:
 
-        cinolib::Color mutedColor{ cinolib::Color::hsv2rgb(0.0f, 0.0f, 1.0f, 0.2f) };
-        cinolib::Color color{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 1.0f, 0.7f) };
         float lineThickness{ 1.0f };
         float textSize{ 20.0f };
         Vec2 textMargin{ 10.0f };

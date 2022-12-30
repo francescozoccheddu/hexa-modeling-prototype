@@ -22,20 +22,14 @@ namespace HMP::Gui::Widgets
         cpputils::collections::SetNamer<const HMP::Dag::Node*>& m_dagNamer;
         VertEdit& m_vertEdit;
 
-        Real m_eps{ 1e-9 };
-
-        void selectCloseVerts();
-
     public:
 
-        cinolib::Color nameColor{ cinolib::Color::YELLOW() };
+        Real testEps{ 1e-9 };
 
         float fontSize{ 12.0f };
         float themeHue{ 32.0f };
         bool themeDark{ true };
         bool showElements{ false }, showVids{ false }, showEids{ false }, showFids{ false }, showPids{ false };
-
-        cpputils::collections::Event<Debug, bool, float> onThemeChangeRequested;
 
         Debug(Meshing::Mesher& _mesher, cpputils::collections::SetNamer<const HMP::Dag::Node*>& _dagNamer, VertEdit& _vertEdit);
 
@@ -43,7 +37,8 @@ namespace HMP::Gui::Widgets
 
         void draw() override;
 
-        void requestThemeUpdate();
+        void updateTheme() const;
+        void selectCloseVerts();
 
     };
 

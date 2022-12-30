@@ -35,8 +35,6 @@ namespace HMP::Gui::Widgets
 
 	public:
 
-		cinolib::Color color{ cinolib::Color::YELLOW() };
-
 		using Vids = decltype(cpputils::range::ofc(m_verts).map(&vertsToVidsConvert));
 
 		cpputils::collections::Event<VertEdit> onVidsChanged{};
