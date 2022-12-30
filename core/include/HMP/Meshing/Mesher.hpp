@@ -67,7 +67,7 @@ namespace HMP::Meshing
 
 		Mesh m_mesh;
 		cinolib::Octree m_octree;
-		std::vector<Id> m_visibleFaceIndices, m_visibleEdgeIndices;
+		std::vector<Id> m_fidVisibleTriId, m_eidVisibleEid;
 		bool m_dirty;
 
 		void updateOctree();
