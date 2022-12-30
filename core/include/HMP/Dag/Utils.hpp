@@ -18,7 +18,6 @@ namespace HMP::Dag::Utils
 	void serialize(HMP::Utils::Serialization::Serializer& _serializer, const Node& _node);
 	Node& deserialize(HMP::Utils::Serialization::Deserializer& _deserializer);
 
-	Node& cloneNode(const Node& _node);
-	Node& clone(const Node& _root);
+	Node& clone(const Node& _node);
 
 }

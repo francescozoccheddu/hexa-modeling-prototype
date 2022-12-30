@@ -61,16 +61,77 @@ namespace HMP::Actions
 		return vidsMap;
 	}
 
+	Dag::Extrude& cloneTree(const Meshing::Mesher& _mesher, const Dag::Extrude& _source)
+	{
+		std::unordered_map<const Dag::Node*, Dag::Node*> src2clone;
+		const std::vector<const Dag::Node*> srcNodes{ Dag::Utils::descendants(_source) };
+		src2clone.reserve(srcNodes.size());
+		for (const Dag::Node* src : srcNodes)
+		{
+			src2clone.insert({ src, &Dag::Utils::clone(*src) });
+		}
+		for (const auto [src, clone] : src2clone)
+		{
+			if (src->isOperation() && src->operation().primitive == Dag::Operation::EPrimitive::Extrude)
+			{
+				Dag::Extrude& cloneOp{ static_cast<Dag::Extrude&>(*clone) };
+				const Dag::Extrude& srcOp{ static_cast<const Dag::Extrude&>(*src) };
+				cloneOp.fis.clear();
+				for (const auto& [srcParent, srcParentFi] : cpputils::range::zip(srcOp.parents, srcOp.fis))
+				{
+					const auto it{ src2clone.find(&srcParent) };
+					if (it != src2clone.end())
+					{
+						cloneOp.parents.attach(it->second->element());
+						cloneOp.fis.addLast(srcParentFi);
+						if (cloneOp.parents.isSingle())
+						{
+							const Id vid{ srcOp.parents.first().vids[srcOp.firstVi] };
+							cloneOp.firstVi = Meshing::Utils::vi(cloneOp.parents.first().vids, vid);
+						}
+					}
+				}
+			}
+			else if (src != &_source)
+			{
+				for (const Dag::Node& srcParent : src->parents)
+				{
+					const auto it{ src2clone.find(&srcParent) };
+					clone->parents.attach(*src2clone.at(&srcParent));
+				}
+			}
+		}
+		return static_cast<Dag::Extrude&>(*src2clone.at(&_source));
+	}
+
 	void Paste::apply()
 	{
 		m_oldState = mesher().state();
-		for (Dag::Element* parent : m_elements)
-		{
-			m_operation->parents.attach(*parent);
-		}
 		if (!m_prepared)
 		{
 			m_prepared = true;
+			m_operation = cloneTree(mesher(), m_sourceOperation);
+			m_operation->fis = m_fis;
+			m_operation->clockwise = m_clockwise;
+			m_operation->firstVi = m_firstVi;
+			switch (m_elements.size())
+			{
+				case 1:
+					m_operation->source = Dag::Extrude::ESource::Face;
+					break;
+				case 2:
+					m_operation->source = Dag::Extrude::ESource::Edge;
+					break;
+				case 3:
+					m_operation->source = Dag::Extrude::ESource::Vertex;
+					break;
+				default:
+					cpputils::unreachable();
+			}
+			for (Dag::Element* parent : m_elements)
+			{
+				m_operation->parents.attach(*parent);
+			}
 			std::array<std::array<I, 4>, 3> indices{
 				std::array<I, 4>{0,1,2,3},
 				std::array<I, 4>{0,4,5,1},
@@ -137,6 +198,13 @@ namespace HMP::Actions
 				}
 			}
 		}
+		else
+		{
+			for (Dag::Element* parent : m_elements)
+			{
+				m_operation->parents.attach(*parent);
+			}
+		}
 		Meshing::Utils::addTree(mesher(), *m_operation, m_newVerts);
 		mesher().updateMesh();
 	}
@@ -149,26 +217,8 @@ namespace HMP::Actions
 	}
 
 	Paste::Paste(const cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, const cpputils::collections::FixedVector<I, 3>& _fis, I _firstVi, bool _clockwise, const Dag::Extrude& _source)
-		: m_elements{ _elements }, m_operation{ static_cast<Dag::Extrude&>(Dag::Utils::clone(_source)) }, m_sourceOperation{ _source }
-	{
-		m_operation->fis = _fis;
-		m_operation->clockwise = _clockwise;
-		m_operation->firstVi = _firstVi;
-		switch (m_elements.size())
-		{
-			case 1:
-				m_operation->source = Dag::Extrude::ESource::Face;
-				break;
-			case 2:
-				m_operation->source = Dag::Extrude::ESource::Edge;
-				break;
-			case 3:
-				m_operation->source = Dag::Extrude::ESource::Vertex;
-				break;
-			default:
-				cpputils::unreachable();
-		}
-	}
+		: m_elements{ _elements }, m_sourceOperation{ _source }, m_fis{ _fis }, m_firstVi{ _firstVi }, m_clockwise{ _clockwise }, m_operation{}
+	{}
 
 	Paste::Elements Paste::elements() const
 	{

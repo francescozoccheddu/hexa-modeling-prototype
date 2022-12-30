@@ -212,7 +212,7 @@ namespace HMP::Dag::Utils
 		return *nodes[0];
 	}
 
-	Node& cloneNode(const Node& _node)
+	Node& clone(const Node& _node)
 	{
 		switch (_node.type)
 		{
@@ -260,26 +260,6 @@ namespace HMP::Dag::Utils
 			default:
 				cpputils::unreachable();
 		}
-	}
-
-	Node& clone(const Node& _root)
-	{
-		std::vector<const Node*> sources{ descendants(_root) };
-		std::unordered_map<const Node*, Node*> cloneMap{};
-		cloneMap.reserve(sources.size());
-		for (const Node* source : sources)
-		{
-			cloneMap.insert({ source, &cloneNode(*source) });
-		}
-		for (const Node* source : sources)
-		{
-			Node& clone{ *cloneMap.at(source) };
-			for (const Node& sourceChild : source->children)
-			{
-				clone.children.attach(*cloneMap.at(&sourceChild));
-			}
-		}
-		return *cloneMap.at(&_root);
 	}
 
 }
