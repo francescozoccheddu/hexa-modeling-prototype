@@ -20,4 +20,5 @@ Sorted by priority:
 - **\[FEATURE\]** Add a command to refine all the elements (maybe with a density threshold?).
 - **\[FEATURE\]** Allow the user to change the transform origin when editing vertices (or add a command to lock the origin in the current location).
 - **\[FEATURE\]** Add As-Rigid-As-Possible vertex editing support.
+- **\[IMPROVEMENT\]** `HMP::Gui::DagViewer::Widget` view should try to remain stable on layout change.
 - **\[FEATURE\]** Enable undo/redo support for every user action, not just meshing operations.

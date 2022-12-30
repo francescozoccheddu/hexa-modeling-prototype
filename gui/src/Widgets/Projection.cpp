@@ -369,6 +369,14 @@ namespace HMP::Gui::Widgets
 			ImGui::Checkbox("Show all", &m_showAllPaths);
 			ImGui::SameLine();
 			ImGui::TextDisabled("%u paths", static_cast<unsigned int>(m_paths.size()));
+			if (!m_showAllPaths && !m_paths.empty())
+			{
+				int currentPath{ static_cast<int>(m_currentPath) };
+				if (ImGui::InputInt("Current path", &currentPath, 1, 1))
+				{
+					m_currentPath = static_cast<I>(std::clamp(currentPath, 0, static_cast<int>(m_paths.size() - 1)));
+				}
+			}
 			ImGui::Spacing();
 			if (ImGui::TreeNode("List"))
 			{
