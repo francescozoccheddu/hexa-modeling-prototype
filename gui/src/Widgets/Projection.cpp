@@ -124,10 +124,9 @@ namespace HMP::Gui::Widgets
 	{
 		cinolib::Polygonmesh<> target{ m_targetWidget.meshForProjection() };
 		const Meshing::Mesher::Mesh& source{ m_mesher.mesh() };
-		for (auto& path : m_paths)
+		for (I i{ _first }; i < _lastEx; i++)
 		{
-			std::vector<Id>& eids{ _fromSource ? path.targetEids : path.sourceEids };
-			eids.clear();
+			m_paths[i].eids(!_fromSource).clear();
 		}
 		std::vector<std::vector<Id>> from(_lastEx - _first), to;
 		for (I i{ _first }; i < _lastEx; i++)
@@ -148,11 +147,17 @@ namespace HMP::Gui::Widgets
 					vid = vol2surf[vid];
 				}
 			}
-			cinolib::feature_mapping(sourceSurf, from, target, to);
+			if (!cinolib::feature_mapping(sourceSurf, from, target, to))
+			{
+				return;
+			}
 		}
 		else
 		{
-			cinolib::feature_mapping(target, from, sourceSurf, to);
+			if (!cinolib::feature_mapping(target, from, sourceSurf, to))
+			{
+				return;
+			}
 			for (auto& vids : to)
 			{
 				for (Id& vid : vids)
@@ -380,7 +385,7 @@ namespace HMP::Gui::Widgets
 				ImGui::TableNextColumn();
 				ImGui::ColorButton("##color", pathColor(i), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoTooltip);
 				ImGui::TableNextColumn();
-				ImGui::TextColored(m_paths[i].empty() ? themer->sbWarn : themer->sbOk, "[%u/%u]", static_cast<unsigned int>(m_paths[i].sourceEids.size()), static_cast<unsigned int>(m_paths[i].sourceEids.size()));
+				ImGui::TextColored(m_paths[i].empty() ? themer->sbWarn : themer->sbOk, "[%u/%u]", static_cast<unsigned int>(m_paths[i].sourceEids.size()), static_cast<unsigned int>(m_paths[i].targetEids.size()));
 				ImGui::TableNextColumn();
 				bool removed{ false };
 				if (ImGui::Button("Remove"))
@@ -393,7 +398,7 @@ namespace HMP::Gui::Widgets
 				{
 					m_paths[i].sourceEids.clear();
 				}
-				if (m_targetWidget.hasMesh()) { ImGui::BeginDisabled(); }
+				if (!m_targetWidget.hasMesh()) { ImGui::BeginDisabled(); }
 				ImGui::TableNextColumn();
 				if (Utils::Controls::disabledButton("Clear target", !removed && !m_paths[i].targetEids.empty()))
 				{
@@ -409,7 +414,7 @@ namespace HMP::Gui::Widgets
 				{
 					matchPaths(i, i + 1, true);
 				}
-				if (m_targetWidget.hasMesh()) { ImGui::EndDisabled(); }
+				if (!m_targetWidget.hasMesh()) { ImGui::EndDisabled(); }
 				ImGui::PopID();
 			}
 			ImGui::EndTable();

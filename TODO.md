@@ -4,7 +4,6 @@ Sorted by priority:
 - **\[BUG\]** On paste `HMP::Dag::Extrude` nodes must be unlinked from parents outside the subtree.
 - **\[IMPROVEMENT\]** `HMP::Refinement::Utils::apply` should use `HMP::Refinement::Scheme::facesSurfVisIs` in place of `HMP::Refinement::Utils::weldAdjacencies_TEMP_NAIVE` (how do I rotate the scheme vertices and match the adjacent faces?).
 - **\[IMPROVEMENT\]** Improve `HMP::Actions::MakeConforming` either by implementing a balancing preprocessing phase, or by defining more adapter schemes.
-- **\[BUG\]** `cinolib::feature_mapping` and `HMP::Gui::Widgets::Projection::matchPaths` crash with relatively short paths.
 - **\[FEATURE\]** The extrude operation could automatically determine the number of parents, or at least give the user a warning in case of unintentionally duplicate vertices.
 - **\[IMPROVEMENT\]** `HMP::Actions::MakeConforming` performance can be improved a lot by keeping a queue of non-conforming refinements.
 - **\[FEATURE\]** Projection feature paths, widget options and camera could be serialized too.

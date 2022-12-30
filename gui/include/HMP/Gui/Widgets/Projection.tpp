@@ -19,7 +19,7 @@ namespace HMP::Gui::Widgets
             return;
         }
         EidsPath& pathPair{ m_paths[m_currentPath] };
-        std::vector<Id>& path{ _source ? pathPair.sourceEids : pathPair.targetEids };
+        std::vector<Id>& path{ pathPair.eids(_source) };
         const bool has1{ path.size() > 0 }, has2{ path.size() > 1 }, has3{ path.size() > 2 };
         const I lastI{ path.size() - 1 };
         const std::vector<Id> endEids{ has1 ? has2 ? std::vector<Id>{path[0], path[lastI]} : std::vector<Id>{ path[0] } : std::vector<Id>{} };
