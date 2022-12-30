@@ -491,10 +491,7 @@ namespace HMP::Gui
 				const ImVec2 parentFidCenter2d{ project(m_canvas, parentFidCenter) };
 				dashedLine(drawList, { parentFidCenter2d, cPidCenter2d }, themer->ovMut, 1.5f);
 			}
-			if (!m_mesh.poly_is_on_surf(cPid))
-			{
-				circle(drawList, cPidCenter2d, 4.0f, m_mouse.element == m_copy.element ? themer->ovHi : themer->ovMut, 1.5f);
-			}
+			circle(drawList, cPidCenter2d, 4.0f, m_mouse.element == m_copy.element ? themer->ovHi : themer->ovMut, 1.5f);
 			const Dag::Element& firstParent{ extrude.parents.first() };
 			const Id firstVid{ firstParent.vids[extrude.firstVi] };
 			const QuadVertIds firstParentVids{ Meshing::Utils::align(Meshing::Utils::fiVids(firstParent.vids, extrude.fis[0]), firstVid, extrude.clockwise) };
