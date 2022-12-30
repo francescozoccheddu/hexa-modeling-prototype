@@ -365,9 +365,6 @@ namespace HMP::Gui::Widgets
 				ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY | ImGuiTableFlags_BordersOuter,
 				{ ImGui::GetContentRegionAvail().x, 200 }
 			);
-			const ImVec4
-				sbOk{ Utils::Controls::toImVec4(themer->sbOk) },
-				sbWarn{ Utils::Controls::toImVec4(themer->sbWarn) };
 			for (I i{}; i < m_paths.size(); i++)
 			{
 				ImGui::PushID(static_cast<int>(i));
@@ -383,7 +380,7 @@ namespace HMP::Gui::Widgets
 				ImGui::TableNextColumn();
 				ImGui::ColorButton("##color", pathColor(i), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoTooltip);
 				ImGui::TableNextColumn();
-				ImGui::TextColored(m_paths.empty() ? sbWarn : sbOk, "[%u/%u]", static_cast<unsigned int>(m_paths[i].sourceEids.size()), static_cast<unsigned int>(m_paths[i].sourceEids.size()));
+				ImGui::TextColored(m_paths.empty() ? themer->sbWarn : themer->sbOk, "[%u/%u]", static_cast<unsigned int>(m_paths[i].sourceEids.size()), static_cast<unsigned int>(m_paths[i].sourceEids.size()));
 				ImGui::TableNextColumn();
 				bool removed{ false };
 				if (ImGui::Button("Remove"))

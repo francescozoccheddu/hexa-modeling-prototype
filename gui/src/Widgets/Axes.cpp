@@ -48,9 +48,9 @@ namespace HMP::Gui::Widgets
 		} };
 		origin = project(origin);
 		std::array<std::pair<Vec, ImColor>, 3> tips{
-			std::pair<Vec, ImColor>{project(right), Utils::Drawing::toU32(cinolib::Color::hsv2rgb(0.0f / 3.0f, colorSat, colorVal)) },
-			std::pair<Vec, ImColor>{project(up), Utils::Drawing::toU32(cinolib::Color::hsv2rgb(1.0f / 3.0f, colorSat, colorVal)) },
-			std::pair<Vec, ImColor>{project(forward), Utils::Drawing::toU32(cinolib::Color::hsv2rgb(2.0f / 3.0f, colorSat, colorVal)) }
+			std::pair<Vec, ImColor>{project(right), Utils::Drawing::toImU32(cinolib::Color::hsv2rgb(0.0f / 3.0f, colorSat, colorVal)) },
+			std::pair<Vec, ImColor>{project(up), Utils::Drawing::toImU32(cinolib::Color::hsv2rgb(1.0f / 3.0f, colorSat, colorVal)) },
+			std::pair<Vec, ImColor>{project(forward), Utils::Drawing::toImU32(cinolib::Color::hsv2rgb(2.0f / 3.0f, colorSat, colorVal)) }
 		};
 		std::sort(tips.begin(), tips.end(), [](const std::pair<Vec, ImColor>& _a, const std::pair<Vec, ImColor>& _b) { return _a.first.z() > _b.first.z(); });
 		for (const auto& [tip, color] : tips)

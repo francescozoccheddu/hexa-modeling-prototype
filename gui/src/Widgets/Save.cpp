@@ -78,24 +78,21 @@ namespace HMP::Gui::Widgets
 
     void Save::draw()
     {
-        const ImVec4
-            sbOk{ Utils::Controls::toImVec4(themer->sbOk) },
-            sbWarn{ Utils::Controls::toImVec4(themer->sbWarn) };
         if (!m_filename.empty())
         {
             const int elapsedMins{ static_cast<int>(std::chrono::duration_cast<std::chrono::minutes>(std::chrono::steady_clock::now() - m_lastTime).count()) };
             const char* actionStr{ m_loaded ? "Loaded" : "Saved" };
             if (elapsedMins < 1)
             {
-                ImGui::TextColored(sbOk, "%s less than a minute ago", actionStr);
+                ImGui::TextColored(themer->sbOk, "%s less than a minute ago", actionStr);
             }
             else if (elapsedMins == 1)
             {
-                ImGui::TextColored(sbOk, "%s a minute ago", actionStr);
+                ImGui::TextColored(themer->sbOk, "%s a minute ago", actionStr);
             }
             else
             {
-                ImGui::TextColored(elapsedMins > 5 ? sbWarn : sbOk, "%s %d minutes ago", actionStr, elapsedMins);
+                ImGui::TextColored(elapsedMins > 5 ? themer->sbWarn : themer->sbOk, "%s %d minutes ago", actionStr, elapsedMins);
             }
             ImGui::Text("%s", m_filename.c_str());
             ImGui::Spacing();
@@ -111,7 +108,7 @@ namespace HMP::Gui::Widgets
         }
         else
         {
-            ImGui::TextColored(sbWarn, "Not saved");
+            ImGui::TextColored(themer->sbWarn, "Not saved");
             ImGui::Spacing();
             if (ImGui::Button("Save"))
             {

@@ -173,7 +173,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 				break;
 		}
 		stream << " towards " << describe(cpputils::range::of(_operation.fis).toVector())
-			<< " (" << _operation.firstVi << " " << (_operation.clockwise ? "CW" : " CCW") << ")"
+			<< " (" << _operation.firstVi << " " << (_operation.clockwise ? "CW" : "CCW") << ")"
 			<< " into " << name(_operation.children.single(), _dagNamer)
 			<< " (" << name(_operation, _dagNamer) << ")";
 		return stream.str();

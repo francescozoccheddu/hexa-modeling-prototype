@@ -186,7 +186,7 @@ namespace HMP::Gui::Widgets
 
 	void VertEdit::draw()
 	{
-		ImGui::TextColored(Utils::Controls::toImVec4(m_verts.empty() ? themer->sbWarn : themer->sbOk), "%d vertices selected", static_cast<int>(m_verts.size()));
+		ImGui::TextColored(m_verts.empty() ? themer->sbWarn : themer->sbOk, "%d vertices selected", static_cast<int>(m_verts.size()));
 		if (empty())
 		{
 			return;
@@ -244,16 +244,15 @@ namespace HMP::Gui::Widgets
 	void VertEdit::draw(const cinolib::GLcanvas& _canvas)
 	{
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
-		const ImU32 ovHi{ Utils::Drawing::toU32(themer->ovHi) };
 		for (const Id vid : vids())
 		{
 			const Vec vert{ m_mesher.mesh().vert(vid) };
 			const ImVec2 pos{ Utils::Drawing::project(_canvas, vert) };
-			Utils::Drawing::circle(drawList, pos, 6.0f, ovHi, 2.0f);
+			Utils::Drawing::circle(drawList, pos, 6.0f, themer->ovHi, 2.0f);
 		}
 		if (!empty())
 		{
-			Utils::Drawing::cross(drawList, Utils::Drawing::project(_canvas, m_centroid), 6.0f, ovHi, 1.5f);
+			Utils::Drawing::cross(drawList, Utils::Drawing::project(_canvas, m_centroid), 6.0f, themer->ovHi, 1.5f);
 		}
 	}
 

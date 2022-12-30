@@ -184,7 +184,7 @@ namespace HMP::Gui::Widgets
 		if (hasMesh())
 		{
 			{
-				ImGui::TextColored(Utils::Controls::toImVec4(themer->sbOk), "%s", m_filename.c_str());
+				ImGui::TextColored(themer->sbOk, "%s", m_filename.c_str());
 				ImGui::Spacing();
 				if (ImGui::Button("Clear"))
 				{
@@ -317,8 +317,8 @@ namespace HMP::Gui::Widgets
 		{
 			if (m_missingMeshFile)
 			{
-				ImGui::TextColored(Utils::Controls::toImVec4(themer->sbErr), "Missing mesh file");
-				ImGui::TextColored(Utils::Controls::toImVec4(themer->sbWarn), "%s", m_filename.c_str());
+				ImGui::TextColored(themer->sbErr, "Missing mesh file");
+				ImGui::TextColored(themer->sbWarn, "%s", m_filename.c_str());
 				ImGui::Spacing();
 				if (ImGui::Button("Clear"))
 				{

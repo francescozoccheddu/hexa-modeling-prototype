@@ -68,17 +68,17 @@ namespace HMP::Gui::Widgets
 		ImGui::BeginChild("history", { ImGui::GetContentRegionAvail().x, 200 }, true);
 		if (m_vertEdit.pendingAction())
 		{
-			ImGui::TextColored(Utils::Controls::toImVec4(themer->sbWarn), "Pending vertex edit action on %d vertices", static_cast<int>(m_vertEdit.vids().size()));
+			ImGui::TextColored(themer->sbWarn, "Pending vertex edit action on %d vertices", static_cast<int>(m_vertEdit.vids().size()));
 		}
 
 		for (const auto& action : m_commander.unapplied().reverse())
 		{
-			ImGui::TextColored(Utils::Controls::toImVec4(themer->sbErr), "%s", Utils::HrDescriptions::describe(action, m_dagNamer).c_str());
+			ImGui::TextColored(themer->sbErr, "%s", Utils::HrDescriptions::describe(action, m_dagNamer).c_str());
 		}
 
 		for (const HMP::Commander::Action& action : m_commander.applied())
 		{
-			ImGui::TextColored(Utils::Controls::toImVec4(themer->sbOk), "%s", Utils::HrDescriptions::describe(action, m_dagNamer).c_str());
+			ImGui::TextColored(themer->sbOk, "%s", Utils::HrDescriptions::describe(action, m_dagNamer).c_str());
 		}
 		ImGui::EndChild();
 	}
