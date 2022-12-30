@@ -67,16 +67,6 @@ namespace HMP::Gui::Utils::Controls
 		);
 	}
 
-	ImVec4 toImGui(const cinolib::Color& _color)
-	{
-		return ImVec4{ _color.r(), _color.g(), _color.b(), _color.a() };
-	}
-
-	ImVec2 toImGui(const Vec2& _vec)
-	{
-		return ImVec2{ static_cast<float>(_vec.x()), static_cast<float>(_vec.y()) };
-	}
-
 	bool sliderI(const char* _label, I& _value, I _min, I _max)
 	{
 		int value{ static_cast<int>(_value) };

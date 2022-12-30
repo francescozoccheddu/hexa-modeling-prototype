@@ -217,7 +217,7 @@ namespace HMP::Gui::Widgets
 		ImGui::TextDisabled("%d keyframes", static_cast<int>(keyframeCount()));
 		if (m_sampleError)
 		{
-			ImGui::TextColored(ImVec4{ 1.0f,0.0f,0.0f,1.0f }, "%s", m_sampleError->c_str());
+			ImGui::TextColored(Utils::Controls::toImVec4(warningTextColor), "%s", m_sampleError->c_str());
 		}
 		if (Utils::Controls::disabledButton("Export", !empty()))
 		{

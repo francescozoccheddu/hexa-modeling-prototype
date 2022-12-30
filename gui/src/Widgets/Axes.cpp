@@ -17,7 +17,7 @@ namespace HMP::Gui::Widgets
 
 	void Axes::draw(const cinolib::GLcanvas& _canvas)
 	{
-		using Utils::Controls::toImGui;
+		using Utils::Controls::toImVec2;
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
 		Vec origin;
 		Real radius;
@@ -55,8 +55,8 @@ namespace HMP::Gui::Widgets
 		std::sort(tips.begin(), tips.end(), [](const std::pair<Vec, ImColor>& _a, const std::pair<Vec, ImColor>& _b) { return _a.first.z() > _b.first.z(); });
 		for (const auto& [tip, color] : tips)
 		{
-			Utils::Drawing::line(drawList, { toImGui(origin.rem_coord()), toImGui(tip.rem_coord()) }, color, 3.0f);
-			Utils::Drawing::circleFilled(drawList, toImGui(tip.rem_coord()), 5.0f, color);
+			Utils::Drawing::line(drawList, { toImVec2(origin.rem_coord()), toImVec2(tip.rem_coord()) }, color, 3.0f);
+			Utils::Drawing::circleFilled(drawList, toImVec2(tip.rem_coord()), 5.0f, color);
 		}
 	}
 

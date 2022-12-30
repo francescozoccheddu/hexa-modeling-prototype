@@ -6,6 +6,7 @@
 #include <vector>
 #include <cassert>
 #include <filesystem>
+#include <HMP/Gui/themer.hpp>
 
 namespace HMP::Gui::Widgets
 {
@@ -14,11 +15,20 @@ namespace HMP::Gui::Widgets
 		cinolib::SideBarItem{ "Target mesh" },
 		m_mesh{}, m_sourceMesh{ _sourceMesh },
 		m_missingMeshFile{ false },
-		faceColor{ cinolib::Color::WHITE() }, edgeColor{ cinolib::Color::BLACK() },
+		faceColor{ themer->targetFaceColor }, edgeColor{ themer->targetEdgeColor },
 		transform{},
 		visible{ true },
 		onMeshChanged{}, onApplyTransformToSource{}
-	{}
+	{
+		themer.onThemeChange += [this]() {
+			faceColor = themer->targetFaceColor;
+			edgeColor = themer->targetEdgeColor;
+			if (hasMesh())
+			{
+				updateColor();
+			}
+		};
+	}
 
 	const Meshing::Mesher::Mesh& Target::sourceMesh() const
 	{
@@ -105,11 +115,11 @@ namespace HMP::Gui::Widgets
 	void Target::updateColor(bool _face, bool _edge)
 	{
 		assert(hasMesh());
-		if (_face)
+		if (_face && m_mesh.poly_data(0).color != faceColor)
 		{
 			m_mesh.poly_set_color(faceColor);
 		}
-		if (_edge)
+		if (_edge && m_mesh.edge_data(0).color != edgeColor)
 		{
 			m_mesh.edge_set_color(edgeColor);
 		}
@@ -174,7 +184,7 @@ namespace HMP::Gui::Widgets
 		if (hasMesh())
 		{
 			{
-				ImGui::TextColored(ImVec4(0.75f, 0.75f, 0.75f, 1.0f), "%s", m_filename.c_str());
+				ImGui::TextDisabled("%s", m_filename.c_str());
 				if (ImGui::Button("Clear"))
 				{
 					clearMesh();

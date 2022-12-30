@@ -3,11 +3,12 @@
 add_executable (gui 
     "src/main.cpp" 
     "src/App.cpp"
+    "src/themer.cpp"
     "src/Utils/HrDescriptions.cpp"
     "src/Utils/Transform.cpp"
     "src/Utils/Controls.cpp"
     "src/Utils/Drawing.cpp"
-    "src/Utils/Theme.cpp"
+    "src/Utils/Themer.cpp"
     "src/Widgets/Axes.cpp"
     "src/Widgets/Debug.cpp"
     "src/Widgets/Commander.cpp"

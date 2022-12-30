@@ -4,6 +4,7 @@
 #include <cassert>
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <HMP/Gui/Utils/Drawing.hpp>
+#include <HMP/Gui/themer.hpp>
 
 namespace HMP::Gui::Widgets
 {
@@ -232,7 +233,7 @@ namespace HMP::Gui::Widgets
 	void VertEdit::draw(const cinolib::GLcanvas& _canvas)
 	{
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
-		const ImU32 colorU32{ Utils::Drawing::toU32(this->color) };
+		const ImU32 colorU32{ Utils::Drawing::toU32(themer->overlayColor) };
 		for (const Id vid : vids())
 		{
 			const Vec vert{ m_mesher.mesh().vert(vid) };

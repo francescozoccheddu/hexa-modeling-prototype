@@ -128,13 +128,13 @@ namespace HMP::Gui
 		Widgets::Ae3d2ShapeExporter m_ae3d2ShapeExporter;
 #endif
 
-		// other
-		void setTheme(bool _dark, float _hue);
-
 		// actions
 		void onActionApplied();
 		void applyAction(Commander::Action& _action);
 		void requestDagViewerUpdate();
+
+		// other events
+		void onThemeChanged();
 
 		// mesher events
 		void onMesherRestored(const Meshing::Mesher::State& _state);
@@ -187,12 +187,6 @@ namespace HMP::Gui
 		void onSelectAll(bool _selected);
 
 	public:
-
-		cinolib::Color warningTextColor;
-		cinolib::Color overlayColor;
-		cinolib::Color mutedOverlayColor;
-		cinolib::Color highlightedPolyColor;
-		cinolib::Color highlightedFaceColor;
 
 		App();
 

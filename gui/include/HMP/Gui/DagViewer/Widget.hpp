@@ -31,7 +31,7 @@ namespace HMP::Gui::DagViewer
 
 	public:
 
-		cinolib::Color elementColor{ cinolib::Color::WHITE() }, highlightedElementColor{ cinolib::Color::YELLOW() };
+		bool showLayoutPerformanceWarning{ false };
 
 		mutable cpputils::collections::Event<Widget> onDraw{};
 

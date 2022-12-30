@@ -13,8 +13,11 @@
 #include <string>
 #include <HMP/Gui/Utils/HrDescriptions.hpp>
 #include <HMP/Gui/Utils/Drawing.hpp>
+#include <HMP/Gui/Utils/Controls.hpp>
 #include <limits>
+#include <chrono>
 #include <HMP/Meshing/Utils.hpp>
+#include <HMP/Gui/themer.hpp>
 
 namespace HMP::Gui::DagViewer
 {
@@ -68,7 +71,22 @@ namespace HMP::Gui::DagViewer
 	void Widget::draw()
 	{
 
-		onDraw();
+		{
+			const auto t1{ std::chrono::high_resolution_clock::now() };
+			onDraw();
+			const auto t2{ std::chrono::high_resolution_clock::now() };
+			const int64_t elapsedMs{ std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() };
+			static constexpr int64_t warningTimeThresholdMs{ 200 };
+			if (elapsedMs >= warningTimeThresholdMs)
+			{
+				showLayoutPerformanceWarning = true;
+			}
+		}
+
+		if (showLayoutPerformanceWarning)
+		{
+			ImGui::TextColored(Utils::Controls::toImVec4(themer->warningTextColor), "Leaving this widget open will affect meshing performance!");
+		}
 
 		// types
 
@@ -82,8 +100,10 @@ namespace HMP::Gui::DagViewer
 
 		// window
 
+		const ImGuiStyle& style{ ImGui::GetStyle() };
+
 		const Vec2 availWindowSize_s{ toVec(ImGui::GetContentRegionAvail()) };
-		const Vec2 windowSize_s{ availWindowSize_s.x(), std::max(availWindowSize_s.x(), availWindowSize_s.y()) };
+		const Vec2 windowSize_s{ availWindowSize_s.x(), std::max(availWindowSize_s.x(), availWindowSize_s.y() - static_cast<Real>(style.ItemSpacing.y)) };
 		if (windowSize_s.x() <= 0.0 || windowSize_s.y() <= 0.0)
 		{
 			return;
@@ -184,7 +204,6 @@ namespace HMP::Gui::DagViewer
 
 		{
 			ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
-			const ImGuiStyle& style{ ImGui::GetStyle() };
 			const ImU32 borderColor{ ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]) };
 			const ImU32 gridColor{ ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_TableBorderLight]) };
 			const ImU32 strokeColor{ ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_PlotLines]) };
@@ -231,9 +250,12 @@ namespace HMP::Gui::DagViewer
 				const Vec2 nodeHalfDiag_s{ nodeRadius_s, nodeRadius_s };
 				const Vec2 copiedNodeHalfDiag_s{ copiedNodeRadius_s, copiedNodeRadius_s };
 
-				const ImU32 elementColor{ Utils::Drawing::toU32(this->elementColor) };
-				const ImU32 inactiveElementColor{ Utils::Drawing::toU32(cinolib::Color::lerp(this->elementColor, Utils::Drawing::toVec(backgroundColor), 0.5f)) };
-				const ImU32 highlightedElementColor{ Utils::Drawing::toU32(this->highlightedElementColor) };
+				const ImU32 elementColor{ Utils::Drawing::toU32(themer->dagElementColor) };
+				const ImU32 inactiveElementColor{ Utils::Drawing::toU32(cinolib::Color::lerp(themer->dagElementColor, Utils::Drawing::toVec(backgroundColor), 0.5f)) };
+				const ImU32 highlightedElementColor{ Utils::Drawing::toU32(themer->dagHighlightedElementColor) };
+				const ImU32 refineNodeColor{ Utils::Drawing::toU32(themer->dagRefineNodeColor) };
+				const ImU32 extrudeNodeColor{ Utils::Drawing::toU32(themer->dagExtrudeNodeColor) };
+				const ImU32 deleteNodeColor{ Utils::Drawing::toU32(themer->dagDeleteNodeColor) };
 
 				for (const Layout::Node& node : m_layout.nodes())
 				{
@@ -261,13 +283,13 @@ namespace HMP::Gui::DagViewer
 							switch (node.node().operation().primitive)
 							{
 								case Dag::Operation::EPrimitive::Extrude:
-									operationColor = IM_COL32(252, 109, 171, 255);
+									operationColor = extrudeNodeColor;
 									break;
 								case Dag::Operation::EPrimitive::Refine:
-									operationColor = IM_COL32(192, 76, 253, 255);
+									operationColor = refineNodeColor;
 									break;
 								case Dag::Operation::EPrimitive::Delete:
-									operationColor = IM_COL32(94, 43, 255, 255);
+									operationColor = deleteNodeColor;
 									break;
 							}
 							drawList.AddCircleFilled(toImVec(center), nodeRadius_s, operationColor, circleSegments);

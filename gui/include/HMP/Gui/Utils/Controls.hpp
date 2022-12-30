@@ -35,9 +35,15 @@ namespace HMP::Gui::Utils::Controls
 
 	bool disabledSmallButton(const char* _label, bool _enabled = false);
 
-	ImVec4 toImGui(const cinolib::Color& _color);
+	constexpr ImVec4 toImVec4(const cinolib::Color& _color)
+	{
+		return ImVec4{ _color.r(), _color.g(), _color.b(), _color.a() };
+	}
 
-	ImVec2 toImGui(const Vec2& _vec);
+	constexpr ImVec2 toImVec2(const Vec2& _vec)
+	{
+		return ImVec2{ static_cast<float>(_vec._vec[0]), static_cast<float>(_vec._vec[1]) };
+	}
 
 }
 

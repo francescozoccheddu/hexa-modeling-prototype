@@ -93,6 +93,7 @@ namespace HMP::Gui::Widgets
                 ImGui::Text("%s %d minutes ago", actionStr, elapsedMins);
             }
             ImGui::TextDisabled("%s", m_filename.c_str());
+            ImGui::Spacing();
             if (ImGui::Button("Save"))
             {
                 requestSave();
@@ -106,6 +107,7 @@ namespace HMP::Gui::Widgets
         else
         {
             ImGui::Text("Not saved");
+            ImGui::Spacing();
             if (ImGui::Button("Save"))
             {
                 requestSaveNew();
@@ -116,6 +118,7 @@ namespace HMP::Gui::Widgets
         {
             requestLoad();
         }
+        ImGui::SameLine();
         if (ImGui::Button("Export mesh"))
         {
             requestExportMesh();
