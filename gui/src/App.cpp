@@ -124,11 +124,11 @@ namespace HMP::Gui
 
 	void App::onMesherRestored(const Meshing::Mesher::State&)
 	{
-		if (m_mouse.element && m_mouse.element->pid == noId)
+		if (m_mouse.element && m_mouse.element->pid >= m_mesh.num_polys())
 		{
 			m_mouse.element = nullptr;
 		}
-		if (m_copy.element && m_copy.element->pid == noId)
+		if (m_copy.element && m_copy.element->pid >= m_mesh.num_polys())
 		{
 			m_copy.element = nullptr;
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
