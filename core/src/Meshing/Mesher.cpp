@@ -292,6 +292,19 @@ namespace HMP::Meshing
 			ensure(m_mesh.face_is_visible(_fid, _pid));
 			_eid = Meshing::Utils::closestFidEid(m_mesh, _fid, point);
 			_vid = Meshing::Utils::closestFidVid(m_mesh, _fid, point);
+			if (!m_mesh.edge_contains_vert(_eid, _vid))
+			{
+				const Vec eidCentroid{ Utils::centroid(Utils::verts(m_mesh, Utils::eidVids(m_mesh, _eid))) };
+				const Vec vert{ m_mesh.vert(_vid) };
+				if (point.dist(vert) < point.dist(eidCentroid))
+				{
+					_eid = Meshing::Utils::closestFidEidByVid(m_mesh, _fid, _vid, point);
+				}
+				else
+				{
+					_vid = Meshing::Utils::closestEidVid(m_mesh, _eid, point);
+				}
+			}
 			return true;
 		}
 		else
