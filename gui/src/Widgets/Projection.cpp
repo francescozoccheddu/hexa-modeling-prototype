@@ -356,7 +356,7 @@ namespace HMP::Gui::Widgets
 			ImGui::SameLine();
 			ImGui::Checkbox("Show all", &m_showAllPaths);
 			ImGui::SameLine();
-			ImGui::Text("%u paths", static_cast<unsigned int>(m_paths.size()));
+			ImGui::TextColored(m_paths.empty() ? themer->sbWarn : themer->sbOk, "%u paths", static_cast<unsigned int>(m_paths.size()));
 			ImGui::Spacing();
 			ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2{ 4.0f, 4.0f });
 			ImGui::BeginTable(
@@ -380,7 +380,7 @@ namespace HMP::Gui::Widgets
 				ImGui::TableNextColumn();
 				ImGui::ColorButton("##color", pathColor(i), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoTooltip);
 				ImGui::TableNextColumn();
-				ImGui::TextColored(m_paths.empty() ? themer->sbWarn : themer->sbOk, "[%u/%u]", static_cast<unsigned int>(m_paths[i].sourceEids.size()), static_cast<unsigned int>(m_paths[i].sourceEids.size()));
+				ImGui::TextColored(m_paths[i].empty() ? themer->sbWarn : themer->sbOk, "[%u/%u]", static_cast<unsigned int>(m_paths[i].sourceEids.size()), static_cast<unsigned int>(m_paths[i].sourceEids.size()));
 				ImGui::TableNextColumn();
 				bool removed{ false };
 				if (ImGui::Button("Remove"))

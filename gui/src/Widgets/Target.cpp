@@ -147,13 +147,13 @@ namespace HMP::Gui::Widgets
 			m_mesh = cinolib::DrawablePolygonmesh<>{ m_filename.c_str() };
 			m_mesh.show_marked_edge(false);
 			m_mesh.draw_back_faces = false;
+			updateColor();
+			updateVisibility();
 			if (!_keepTransform)
 			{
 				transform = {};
 				fit();
 			}
-			updateVisibility();
-			updateColor();
 			updateTransform();
 		}
 		else
