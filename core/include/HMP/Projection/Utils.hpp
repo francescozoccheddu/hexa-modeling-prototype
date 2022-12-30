@@ -38,11 +38,22 @@ namespace HMP::Projection::Utils
     struct EidsPath final
     {
         std::vector<Id> sourceEids, targetEids;
+
+        bool empty() const;
+        bool empty(bool _source) const;
+        const std::vector<Id>& eids(bool _source) const;
+        std::vector<Id>& eids(bool _source);
+
     };
 
     struct VidsPath final
     {
         std::vector<Id> sourceVids, targetVids;
+
+        bool empty() const;
+        bool empty(bool _source) const;
+        const std::vector<Id>& vids(bool _source) const;
+        std::vector<Id>& vids(bool _source);
     };
 
     class SurfaceExporter final

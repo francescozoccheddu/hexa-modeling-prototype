@@ -18,7 +18,7 @@ namespace HMP::Gui::Widgets
         {
             return;
         }
-        HMP::Projection::Utils::EidsPath& pathPair{ m_paths[m_currentPath] };
+        EidsPath& pathPair{ m_paths[m_currentPath] };
         std::vector<Id>& path{ _source ? pathPair.sourceEids : pathPair.targetEids };
         const bool has1{ path.size() > 0 }, has2{ path.size() > 1 }, has3{ path.size() > 2 };
         const I lastI{ path.size() - 1 };

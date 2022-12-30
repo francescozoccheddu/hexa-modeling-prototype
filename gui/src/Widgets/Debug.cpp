@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Gui/Utils/Drawing.hpp>
+#include <HMP/Gui/Utils/Controls.hpp>
 #include <algorithm>
 #include <string>
 #include <HMP/Gui/themer.hpp>
@@ -21,14 +22,14 @@ namespace HMP::Gui::Widgets
         using namespace Utils::Drawing;
         const Meshing::Mesher::Mesh& mesh{ m_mesher.mesh() };
         ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
-        const ImU32 colorU32{ toU32(themer->overlayColor) };
+        const ImU32 ovHi{ toU32(themer->ovHi) };
         if (showVids)
         {
             const Id count{ std::min<Id>(mesh.num_verts(), 100) };
             for (Id vid{}; vid < count; vid++)
             {
                 const Vec vert{ mesh.vert(vid) };
-                text(drawList, std::to_string(vid).c_str(), project(_canvas, vert), fontSize, colorU32);
+                text(drawList, std::to_string(vid).c_str(), project(_canvas, vert), fontSize, ovHi);
             }
         }
         if (showEids)
@@ -37,7 +38,7 @@ namespace HMP::Gui::Widgets
             for (Id eid{}; eid < count; eid++)
             {
                 const Vec vert{ Meshing::Utils::centroid(Meshing::Utils::verts(mesh, Meshing::Utils::eidVids(mesh, eid))) };
-                text(drawList, std::to_string(eid).c_str(), project(_canvas, vert), fontSize, colorU32);
+                text(drawList, std::to_string(eid).c_str(), project(_canvas, vert), fontSize, ovHi);
             }
         }
         if (showFids)
@@ -46,7 +47,7 @@ namespace HMP::Gui::Widgets
             for (Id fid{}; fid < count; fid++)
             {
                 const Vec vert{ mesh.face_centroid(fid) };
-                text(drawList, std::to_string(fid).c_str(), project(_canvas, vert), fontSize, colorU32);
+                text(drawList, std::to_string(fid).c_str(), project(_canvas, vert), fontSize, ovHi);
             }
         }
         if (showPids)
@@ -55,7 +56,7 @@ namespace HMP::Gui::Widgets
             for (Id pid{}; pid < count; pid++)
             {
                 const Vec vert{ mesh.poly_centroid(pid) };
-                text(drawList, std::to_string(pid).c_str(), project(_canvas, vert), fontSize, colorU32);
+                text(drawList, std::to_string(pid).c_str(), project(_canvas, vert), fontSize, ovHi);
             }
         }
         if (showElements)
@@ -64,7 +65,7 @@ namespace HMP::Gui::Widgets
             for (Id pid{}; pid < count; pid++)
             {
                 const Vec vert{ mesh.poly_centroid(pid) };
-                text(drawList, m_dagNamer.nameOrUnknown(&m_mesher.element(pid)).c_str(), project(_canvas, vert), fontSize, colorU32);
+                text(drawList, m_dagNamer.nameOrUnknown(&m_mesher.element(pid)).c_str(), project(_canvas, vert), fontSize, ovHi);
             }
         }
     }
@@ -74,17 +75,48 @@ namespace HMP::Gui::Widgets
         if (ImGui::TreeNode("Names"))
         {
             ImGui::Spacing();
-            ImGui::Checkbox("Show elements", &showElements);
-            ImGui::SameLine();
-            if (ImGui::SmallButton("Reset"))
+            ImGui::BeginTable("names", 3, ImGuiTableFlags_RowBg);
+            ImGui::TableSetupColumn("doit", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("desc", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn("reset", ImGuiTableColumnFlags_WidthFixed);
+
+            ImGui::TableNextColumn();
+            ImGui::Checkbox("##elements", &showElements);
+            ImGui::TableNextColumn();
+            ImGui::Text("Elements");
+            ImGui::TableNextColumn();
+            if (ImGui::Button("Reset"))
             {
                 m_dagNamer.reset();
             }
-            ImGui::SliderFloat("Font size", &fontSize, 10, 14, "%.1fpx", ImGuiSliderFlags_AlwaysClamp);
-            ImGui::Checkbox("Show pids", &showPids);
-            ImGui::Checkbox("Show fids", &showFids);
-            ImGui::Checkbox("Show eids", &showEids);
-            ImGui::Checkbox("Show vids", &showVids);
+
+            ImGui::TableNextColumn();
+            ImGui::Checkbox("##pids", &showPids);
+            ImGui::TableNextColumn();
+            ImGui::Text("Pids");
+            ImGui::TableNextColumn();
+
+            ImGui::TableNextColumn();
+            ImGui::Checkbox("##fids", &showFids);
+            ImGui::TableNextColumn();
+            ImGui::Text("Fids");
+            ImGui::TableNextColumn();
+
+            ImGui::TableNextColumn();
+            ImGui::Checkbox("##eids", &showEids);
+            ImGui::TableNextColumn();
+            ImGui::Text("Eids");
+            ImGui::TableNextColumn();
+
+            ImGui::TableNextColumn();
+            ImGui::Checkbox("##vids", &showVids);
+            ImGui::TableNextColumn();
+            ImGui::Text("Vids");
+            ImGui::TableNextColumn();
+
+            ImGui::EndTable();
+            ImGui::Spacing();
+            ImGui::SliderFloat("Font size", &fontSize, 9.0f, 18.0f, "%.1fpx", ImGuiSliderFlags_AlwaysClamp);
             ImGui::Spacing();
             ImGui::TreePop();
         }
@@ -96,6 +128,7 @@ namespace HMP::Gui::Widgets
             {
                 updateTheme();
             }
+            ImGui::SameLine();
             if (ImGui::SliderFloat("Hue", &themeHue, 0.0f, 360.0f, "%.0f deg", ImGuiSliderFlags_AlwaysClamp))
             {
                 updateTheme();
@@ -109,14 +142,24 @@ namespace HMP::Gui::Widgets
             ImGui::Spacing();
             static constexpr double minEps{ 1e-9 }, maxEps{ 1e-3 };
             ImGui::SliderScalar("Epsilon", ImGuiDataType_Double, &testEps, &minEps, &maxEps, "%.3e", ImGuiSliderFlags_AlwaysClamp);
-            if (ImGui::SmallButton("Select close verts"))
+            ImGui::BeginTable("tests", 2, ImGuiTableFlags_RowBg);
+            ImGui::TableSetupColumn("run", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("desc", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableNextColumn();
+            if (ImGui::SmallButton("Run##closeverts"))
             {
                 selectCloseVerts();
             }
-            if (ImGui::SmallButton("Crash me!"))
+            ImGui::TableNextColumn();
+            ImGui::Text("Select close verts");
+            ImGui::TableNextColumn();
+            if (ImGui::SmallButton("Run##crash"))
             {
-                throw std::runtime_error{ "user requested crash" };
+                throw std::runtime_error{ "user requested test crash" };
             }
+            ImGui::TableNextColumn();
+            ImGui::TextColored(Utils::Controls::toImVec4(themer->sbWarn), "Throw an exception");
+            ImGui::EndTable();
             ImGui::Spacing();
             ImGui::TreePop();
         }
@@ -124,23 +167,36 @@ namespace HMP::Gui::Widgets
         if (ImGui::TreeNode("Stats"))
         {
             ImGui::Spacing();
+            ImGui::BeginTable("stats", 2, ImGuiTableFlags_RowBg);
+            ImGui::TableNextColumn(); ImGui::Text("Configuration");
 #ifdef NDEBUG
-            ImGui::TextDisabled("Release build");
+            ImGui::TableNextColumn(); ImGui::Text("Release");
 #else
-            ImGui::TextDisabled("Debug build");
+            ImGui::TableNextColumn(); ImGui::Text("Debug");
 #endif
-            ImGui::TextDisabled("Version: " HMP_VERSION);
-            ImGui::TextDisabled("Date: " __DATE__);
-            ImGui::TextDisabled("Time: " __TIME__);
-            ImGui::TextDisabled("Compiler ID: " HMP_GUI_COMPILER_ID);
-            ImGui::TextDisabled("Memory usage: %dMB", static_cast<int>(cinolib::memory_usage_in_mega_bytes() + 0.5f));
-            ImGui::TextDisabled("Poly count: %u", static_cast<unsigned int>(m_mesher.mesh().num_polys()));
-            ImGui::TextDisabled("Face count: %u", static_cast<unsigned int>(m_mesher.mesh().num_faces()));
-            ImGui::TextDisabled("Edge count: %u", static_cast<unsigned int>(m_mesher.mesh().num_edges()));
-            ImGui::TextDisabled("Vert count: %u", static_cast<unsigned int>(m_mesher.mesh().num_verts()));
+            ImGui::TableNextColumn(); ImGui::Text("Version");
+            ImGui::TableNextColumn(); ImGui::Text(HMP_VERSION);
+            ImGui::TableNextColumn(); ImGui::Text("Build date");
+            ImGui::TableNextColumn(); ImGui::Text(__DATE__);
+            ImGui::TableNextColumn(); ImGui::Text("Build time");
+            ImGui::TableNextColumn(); ImGui::Text(__TIME__);
+            ImGui::TableNextColumn(); ImGui::Text("Compiler ID");
+            ImGui::TableNextColumn(); ImGui::Text(HMP_GUI_COMPILER_ID);
+            ImGui::TableNextColumn(); ImGui::Text("Memory usage");
+            ImGui::TableNextColumn(); ImGui::Text("%dMB", static_cast<int>(cinolib::memory_usage_in_mega_bytes() + 0.5f));
+            ImGui::TableNextColumn(); ImGui::Text("Poly count");
+            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(m_mesher.mesh().num_polys()));
+            ImGui::TableNextColumn(); ImGui::Text("Face count");
+            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(m_mesher.mesh().num_faces()));
+            ImGui::TableNextColumn(); ImGui::Text("Edge count");
+            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(m_mesher.mesh().num_edges()));
+            ImGui::TableNextColumn(); ImGui::Text("Vert count");
+            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(m_mesher.mesh().num_verts()));
 #ifndef NDEBUG
-            ImGui::TextDisabled("Allocated node count: %u", static_cast<unsigned int>(Dag::Node::allocatedNodeCount()));
+            ImGui::TableNextColumn(); ImGui::Text("Allocated node count");
+            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(Dag::Node::allocatedNodeCount()));
 #endif
+            ImGui::EndTable();
             ImGui::Spacing();
             ImGui::TreePop();
         }

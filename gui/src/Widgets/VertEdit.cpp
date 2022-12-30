@@ -186,63 +186,74 @@ namespace HMP::Gui::Widgets
 
 	void VertEdit::draw()
 	{
-		ImGui::TextDisabled("%d vertices selected", static_cast<int>(m_verts.size()));
+		ImGui::TextColored(Utils::Controls::toImVec4(m_verts.empty() ? themer->sbWarn : themer->sbOk), "%d vertices selected", static_cast<int>(m_verts.size()));
 		if (empty())
 		{
 			return;
 		}
+		ImGui::Spacing();
+		ImGui::BeginTable("Transform", 2, ImGuiTableFlags_RowBg);
+		ImGui::TableSetupColumn("drag", ImGuiTableColumnFlags_WidthStretch);
+		ImGui::TableSetupColumn("button", ImGuiTableColumnFlags_WidthFixed);
+		ImGui::TableNextColumn();
+		ImGui::Text("Transform");
+		ImGui::TableNextColumn();
+		if (ImGui::Button("Reset##all"))
+		{
+			cancel();
+		}
 		// translation
+		ImGui::TableNextColumn();
 		if (Utils::Controls::dragTranslationVec("Translation", m_unappliedTransform.translation, m_mesher.mesh().scene_radius()))
 		{
 			applyTransform();
 		}
-		ImGui::SameLine();
-		if (ImGui::SmallButton("Reset##translation"))
+		ImGui::TableNextColumn();
+		if (ImGui::Button("Reset##translation"))
 		{
 			m_unappliedTransform.translation = Vec{};
 			applyTransform();
 		}
 		// scale
+		ImGui::TableNextColumn();
 		if (Utils::Controls::dragScaleVec("Scale", m_unappliedTransform.scale))
 		{
 			applyTransform();
 		}
-		ImGui::SameLine();
-		if (ImGui::SmallButton("Reset##scale"))
+		ImGui::TableNextColumn();
+		if (ImGui::Button("Reset##scale"))
 		{
 			m_unappliedTransform.scale = { 1.0 };
 			applyTransform();
 		}
 		// rotation
+		ImGui::TableNextColumn();
 		if (Utils::Controls::dragRotation("Rotation", m_unappliedTransform.rotation))
 		{
 			applyTransform();
 		}
-		ImGui::SameLine();
-		if (ImGui::SmallButton("Reset##rotation"))
+		ImGui::TableNextColumn();
+		if (ImGui::Button("Reset##rotation"))
 		{
 			m_unappliedTransform.rotation = Vec{};
 			applyTransform();
 		}
-		if (ImGui::Button("Reset##all"))
-		{
-			cancel();
-		}
+		ImGui::EndTable();
 	}
 
 	void VertEdit::draw(const cinolib::GLcanvas& _canvas)
 	{
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
-		const ImU32 colorU32{ Utils::Drawing::toU32(themer->overlayColor) };
+		const ImU32 ovHi{ Utils::Drawing::toU32(themer->ovHi) };
 		for (const Id vid : vids())
 		{
 			const Vec vert{ m_mesher.mesh().vert(vid) };
 			const ImVec2 pos{ Utils::Drawing::project(_canvas, vert) };
-			Utils::Drawing::circle(drawList, pos, 6.0f, colorU32, 2.0f);
+			Utils::Drawing::circle(drawList, pos, 6.0f, ovHi, 2.0f);
 		}
 		if (!empty())
 		{
-			Utils::Drawing::cross(drawList, Utils::Drawing::project(_canvas, m_centroid), 6.0f, colorU32, 1.5f);
+			Utils::Drawing::cross(drawList, Utils::Drawing::project(_canvas, m_centroid), 6.0f, ovHi, 1.5f);
 		}
 	}
 

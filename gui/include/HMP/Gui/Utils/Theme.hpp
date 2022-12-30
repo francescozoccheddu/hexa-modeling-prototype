@@ -10,30 +10,31 @@ namespace HMP::Gui::Utils
 
         float hue;
         bool dark;
-        cinolib::Color warningTextColor;
-        cinolib::Color commanderAppliedActionColor;
-        cinolib::Color commanderUnappliedActionColor;
-        cinolib::Color commanderPendingActionColor;
-        cinolib::Color backgroundColor;
-        cinolib::Color overlayColor;
-        cinolib::Color mutedOverlayColor;
-        cinolib::Color sourceFaceColor;
-        cinolib::Color sourceEdgeColor;
-        cinolib::Color sourceHighlightedPolyColor;
-        cinolib::Color sourceHighlightedFaceColor;
-        cinolib::Color targetFaceColor;
-        cinolib::Color targetEdgeColor;
+        cinolib::Color sbOk;
+        cinolib::Color sbWarn;
+        cinolib::Color sbErr;
+        cinolib::Color bg;
+        cinolib::Color ovHi;
+        cinolib::Color ovMut;
+        cinolib::Color ovWarn;
+        cinolib::Color ovErr;
+        cinolib::Color ovPolyHi;
+        cinolib::Color ovFaceHi;
+        cinolib::Color srcFace;
+        cinolib::Color srcEdge;
+        cinolib::Color tgtFace;
+        cinolib::Color tgtEdge;
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
-        cinolib::Color dagElementColor;
-        cinolib::Color dagHighlightedElementColor;
-        cinolib::Color dagRefineNodeColor;
-        cinolib::Color dagExtrudeNodeColor;
-        cinolib::Color dagDeleteNodeColor;
+        cinolib::Color dagNodeEl;
+        cinolib::Color dagNodeElHi;
+        cinolib::Color dagNodeRefine;
+        cinolib::Color dagNodeExtrude;
+        cinolib::Color dagNodeDelete;
 #endif
-        float axesColorSat;
-        float axesColorVal;
-        float projectionPathColorSat;
-        float projectionPathColorVal;
+        float ovAxesSat;
+        float ovAxesVal;
+        float ovPathSat;
+        float ovPathVal;
 
         static constexpr Theme makeLight(float _hueDeg = 0.0f)
         {
@@ -41,30 +42,31 @@ namespace HMP::Gui::Utils
             return Theme{
                 .hue = hue,
                 .dark = false,
-                .warningTextColor{ cinolib::Color::hsv2rgb(0.1f, 1.0f, 0.75f) },
-                .commanderAppliedActionColor{ cinolib::Color::hsv2rgb(0.35f, 0.75f, 0.75f)},
-                .commanderUnappliedActionColor{ cinolib::Color::hsv2rgb(0.0f, 0.75f, 0.75f)},
-                .commanderPendingActionColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 0.75f)},
-                .backgroundColor{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.95f) },
-                .overlayColor{ cinolib::Color::hsv2rgb(hue, 0.8f, 1.0f) },
-                .mutedOverlayColor{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.0f, 0.25f) },
-                .sourceFaceColor{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.75f) },
-                .sourceEdgeColor{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.1f) },
-                .sourceHighlightedPolyColor{ cinolib::Color::hsv2rgb(hue, 0.3f, 0.85f, 0.1f) },
-                .sourceHighlightedFaceColor{ cinolib::Color::hsv2rgb(hue, 0.75f, 1.0f, 0.2f) },
-                .targetFaceColor{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.0f, 0.1f) },
-                .targetEdgeColor{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.0f, 0.3f) },
+                .sbOk{ cinolib::Color::hsv2rgb(0.35f, 0.6f, 0.75f)},
+                .sbWarn{ cinolib::Color::hsv2rgb(0.16f, 0.6f, 0.75f)},
+                .sbErr{ cinolib::Color::hsv2rgb(0.05f, 0.6f, 0.75f)},
+                .bg{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.95f) },
+                .ovHi{ cinolib::Color::hsv2rgb(hue, 0.8f, 1.0f) },
+                .ovMut{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.0f, 0.25f) },
+                .ovWarn{ cinolib::Color::hsv2rgb(0.16f, 1.0f, 0.75f) },
+                .ovErr{ cinolib::Color::hsv2rgb(0.05f, 1.0f, 0.75f) },
+                .ovPolyHi{ cinolib::Color::hsv2rgb(hue, 0.3f, 0.85f, 0.1f) },
+                .ovFaceHi{ cinolib::Color::hsv2rgb(hue, 0.75f, 1.0f, 0.2f) },
+                .srcFace{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.75f) },
+                .srcEdge{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.1f) },
+                .tgtFace{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.0f, 0.1f) },
+                .tgtEdge{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.0f, 0.3f) },
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
-                .dagElementColor{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.75f) },
-                .dagHighlightedElementColor{ cinolib::Color::hsv2rgb(hue, 0.8f, 1.0f) },
-                .dagRefineNodeColor{ cinolib::Color::hsv2rgb(0.4, 0.75f, 0.75f) },
-                .dagExtrudeNodeColor{ cinolib::Color::hsv2rgb(0.6, 0.75f, 0.75f) },
-                .dagDeleteNodeColor{ cinolib::Color::hsv2rgb(0.8, 0.75f, 0.75f) },
+                .dagNodeEl{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.75f) },
+                .dagNodeElHi{ cinolib::Color::hsv2rgb(hue, 0.8f, 1.0f) },
+                .dagNodeRefine{ cinolib::Color::hsv2rgb(0.4, 0.75f, 0.75f) },
+                .dagNodeExtrude{ cinolib::Color::hsv2rgb(0.6, 0.75f, 0.75f) },
+                .dagNodeDelete{ cinolib::Color::hsv2rgb(0.8, 0.75f, 0.75f) },
 #endif
-                .axesColorSat = 0.9f,
-                .axesColorVal = 0.8f,
-                .projectionPathColorSat = 0.9f,
-                .projectionPathColorVal = 0.8f
+                .ovAxesSat = 0.9f,
+                .ovAxesVal = 0.8f,
+                .ovPathSat = 0.9f,
+                .ovPathVal = 0.8f
             };
         }
 
@@ -74,30 +76,31 @@ namespace HMP::Gui::Utils
             return Theme{
                 .hue = hue,
                 .dark = true,
-                .warningTextColor{ cinolib::Color::hsv2rgb(0.2f, 0.6f, 0.6f) },
-                .commanderAppliedActionColor{ cinolib::Color::hsv2rgb(0.35f, 0.75f, 0.75f)},
-                .commanderUnappliedActionColor{ cinolib::Color::hsv2rgb(0.0f, 0.75f, 0.75f)},
-                .commanderPendingActionColor{ cinolib::Color::hsv2rgb(0.1f, 0.75f, 0.75f)},
-                .backgroundColor{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.1f) },
-                .overlayColor{ cinolib::Color::hsv2rgb(hue, 0.5f, 1.0f) },
-                .mutedOverlayColor{ cinolib::Color::hsv2rgb(hue, 0.0f, 1.0f, 0.25f) },
-                .sourceFaceColor{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.35f) },
-                .sourceEdgeColor{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.0f) },
-                .sourceHighlightedPolyColor{ cinolib::Color::hsv2rgb(hue, 0.75f, 0.5f, 0.1f) },
-                .sourceHighlightedFaceColor{ cinolib::Color::hsv2rgb(hue, 0.75f, 1.0f, 0.2f) },
-                .targetFaceColor{ cinolib::Color::hsv2rgb(hue, 0.0f, 1.0f, 0.1f) },
-                .targetEdgeColor{ cinolib::Color::hsv2rgb(hue, 0.0f, 1.0f, 0.3f) },
+                .sbOk{ cinolib::Color::hsv2rgb(0.35f, 0.6f, 0.75f)},
+                .sbWarn{ cinolib::Color::hsv2rgb(0.16f, 0.6f, 0.75f)},
+                .sbErr{ cinolib::Color::hsv2rgb(0.05f, 0.6f, 0.75f)},
+                .bg{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.1f) },
+                .ovHi{ cinolib::Color::hsv2rgb(hue, 0.5f, 1.0f) },
+                .ovMut{ cinolib::Color::hsv2rgb(hue, 0.0f, 1.0f, 0.25f) },
+                .ovWarn{ cinolib::Color::hsv2rgb(0.16f, 0.6f, 0.6f) },
+                .ovErr{ cinolib::Color::hsv2rgb(0.05f, 0.6f, 0.6f) },
+                .ovPolyHi{ cinolib::Color::hsv2rgb(hue, 0.75f, 0.5f, 0.1f) },
+                .ovFaceHi{ cinolib::Color::hsv2rgb(hue, 0.75f, 1.0f, 0.2f) },
+                .srcFace{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.35f) },
+                .srcEdge{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.0f) },
+                .tgtFace{ cinolib::Color::hsv2rgb(hue, 0.0f, 1.0f, 0.1f) },
+                .tgtEdge{ cinolib::Color::hsv2rgb(hue, 0.0f, 1.0f, 0.3f) },
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
-                .dagElementColor{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.35f) },
-                .dagHighlightedElementColor{ cinolib::Color::hsv2rgb(hue, 0.5f, 1.0f) },
-                .dagRefineNodeColor{ cinolib::Color::hsv2rgb(0.4, 0.75f, 0.75f) },
-                .dagExtrudeNodeColor{ cinolib::Color::hsv2rgb(0.6, 0.75f, 0.75f) },
-                .dagDeleteNodeColor{ cinolib::Color::hsv2rgb(0.8, 0.75f, 0.75f) },
+                .dagNodeEl{ cinolib::Color::hsv2rgb(hue, 0.0f, 0.35f) },
+                .dagNodeElHi{ cinolib::Color::hsv2rgb(hue, 0.5f, 1.0f) },
+                .dagNodeRefine{ cinolib::Color::hsv2rgb(0.4, 0.75f, 0.75f) },
+                .dagNodeExtrude{ cinolib::Color::hsv2rgb(0.6, 0.75f, 0.75f) },
+                .dagNodeDelete{ cinolib::Color::hsv2rgb(0.8, 0.75f, 0.75f) },
 #endif
-                .axesColorSat = 0.6f,
-                .axesColorVal = 1.0f,
-                .projectionPathColorSat = 0.9f,
-                .projectionPathColorVal = 0.8f
+                .ovAxesSat = 0.6f,
+                .ovAxesVal = 1.0f,
+                .ovPathSat = 0.9f,
+                .ovPathVal = 0.8f
             };
         }
 

@@ -476,14 +476,14 @@ namespace HMP::Gui
 
 	void App::onDrawCustomGui()
 	{
-		const ImVec4 warningColor{ Utils::Controls::toImVec4(themer->warningTextColor) };
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
 		using namespace Utils::Drawing;
+		const ImVec4 ovWarn{ Utils::Controls::toImVec4(themer->ovWarn) };
 		const ImU32
-			colorU32{ toU32(themer->overlayColor) },
-			mutedColorU32{ toU32(themer->mutedOverlayColor) },
-			hPolyColorU32{ toU32(themer->sourceHighlightedPolyColor) },
-			hFaceColorU32{ toU32(themer->sourceHighlightedFaceColor) };
+			ovHi{ toU32(themer->ovHi) },
+			ovMut{ toU32(themer->ovMut) },
+			ovPolyHi{ toU32(themer->ovPolyHi) },
+			ovFaceHi{ toU32(themer->ovFaceHi) };
 		if (m_copy.element && !m_mouse.element)
 		{
 			const Id cPid{ m_copy.element->pid };
@@ -495,18 +495,18 @@ namespace HMP::Gui
 				const QuadVerts parentFidVerts{ Meshing::Utils::verts(m_mesh, parentFidVids) };
 				const Vec parentFidCenter{ cpputils::range::of(parentFidVerts).sum() / 4.0 };
 				const ImVec2 parentFidCenter2d{ project(m_canvas, parentFidCenter) };
-				dashedLine(drawList, { parentFidCenter2d, cPidCenter2d }, mutedColorU32, 1.5f);
+				dashedLine(drawList, { parentFidCenter2d, cPidCenter2d }, ovMut, 1.5f);
 			}
 			if (!m_mesh.poly_is_on_surf(cPid))
 			{
-				circle(drawList, cPidCenter2d, 4.0f, m_mouse.element == m_copy.element ? colorU32 : mutedColorU32, 1.5f);
+				circle(drawList, cPidCenter2d, 4.0f, m_mouse.element == m_copy.element ? ovHi : ovMut, 1.5f);
 			}
 			const Dag::Element& firstParent{ extrude.parents.first() };
 			const Id firstVid{ firstParent.vids[extrude.firstVi] };
 			const QuadVertIds firstParentVids{ Meshing::Utils::align(Meshing::Utils::fiVids(firstParent.vids, extrude.fis[0]), firstVid, extrude.clockwise) };
 			const EdgeVertData<ImVec2> eid2d{ project(m_canvas, Meshing::Utils::verts(m_mesh, EdgeVertIds{ firstParentVids[0], firstParentVids[1] })) };
-			dashedLine(drawList, eid2d, mutedColorU32, 4.0f);
-			circleFilled(drawList, eid2d[0], 6.0f, mutedColorU32);
+			dashedLine(drawList, eid2d, ovMut, 4.0f);
+			circleFilled(drawList, eid2d[0], 6.0f, ovMut);
 		}
 		if (m_mouse.element)
 		{
@@ -515,7 +515,7 @@ namespace HMP::Gui
 				const I fi{ (i + 1 + m_mouse.fi) % 6 };
 				const QuadVerts fiVerts{ Meshing::Utils::verts(m_mesh, Meshing::Utils::fiVids(m_mouse.element->vids, fi)) };
 				const QuadVertData<ImVec2> fiVerts2d{ project(m_canvas, fiVerts) };
-				quadFilled(drawList, fiVerts2d, fi == m_mouse.fi ? hFaceColorU32 : hPolyColorU32);
+				quadFilled(drawList, fiVerts2d, fi == m_mouse.fi ? ovFaceHi : ovPolyHi);
 			}
 			const ImVec2 hPidCenter2d{ project(m_canvas, m_mesh.poly_centroid(m_mouse.pid)) };
 			for (const Id adjPid : m_mesh.adj_p2p(m_mouse.pid))
@@ -523,18 +523,18 @@ namespace HMP::Gui
 				const Id adjFid{ static_cast<Id>(m_mesh.poly_shared_face(m_mouse.pid, adjPid)) };
 				const ImVec2 adjFidCenter2d{ project(m_canvas, m_mesh.face_centroid(adjFid)) };
 				const ImVec2 adjPidCenter2d{ project(m_canvas, m_mesh.poly_centroid(adjPid)) };
-				const ImU32 adjColorU32{ m_mesher.shown(adjPid) ? colorU32 : mutedColorU32 };
+				const ImU32 adjColorU32{ m_mesher.shown(adjPid) ? ovHi : ovMut };
 				circle(drawList, adjPidCenter2d, 4.0f, adjColorU32, 1.5f);
 				dashedLine(drawList, { adjFidCenter2d, hPidCenter2d }, adjColorU32, 1.5f);
 			}
-			circle(drawList, hPidCenter2d, 4.0f, colorU32, 1.5f);
+			circle(drawList, hPidCenter2d, 4.0f, ovHi, 1.5f);
 			for (const Id adjEid : m_mesh.adj_f2e(m_mouse.fid))
 			{
 				const EdgeVertData<ImVec2> adjEid2d{ project(m_canvas, Meshing::Utils::verts(m_mesh, Meshing::Utils::eidVids(m_mesh, adjEid))) };
-				dashedLine(drawList, adjEid2d, adjEid == m_mouse.eid ? colorU32 : mutedColorU32, 4.0f);
+				dashedLine(drawList, adjEid2d, adjEid == m_mouse.eid ? ovHi : ovMut, 4.0f);
 			}
 			const ImVec2 hVert2d{ project(m_canvas, m_mesh.vert(m_mouse.vid)) };
-			circleFilled(drawList, hVert2d, 6.0f, colorU32);
+			circleFilled(drawList, hVert2d, 6.0f, ovHi);
 		}
 		if (m_mouse.element)
 		{
@@ -547,7 +547,7 @@ namespace HMP::Gui
 				<< ", edge " << m_mouse.ei
 				<< ", vert " << m_mouse.vi
 				<< ")";
-			ImGui::TextDisabled("%s", stream.str().c_str());
+			ImGui::TextColored(Utils::Controls::toImVec4(themer->ovMut), "%s", stream.str().c_str());
 		}
 		if (m_copy.element)
 		{
@@ -555,13 +555,13 @@ namespace HMP::Gui
 			stream
 				<< "Copied"
 				<< " " << Utils::HrDescriptions::name(*m_copy.element, m_dagNamer);
-			ImGui::TextDisabled("%s", stream.str().c_str());
+			ImGui::TextColored(Utils::Controls::toImVec4(themer->ovMut), "%s", stream.str().c_str());
 		}
 		if (!m_vertEditWidget.empty())
 		{
 			const char* verticesLit{ m_vertEditWidget.vids().size() == 1 ? "vertex" : "vertices" };
 			const int vertexCount{ static_cast<int>(m_vertEditWidget.vids().size()) };
-			ImGui::TextDisabled("%d %s selected", vertexCount, verticesLit);
+			ImGui::TextColored(Utils::Controls::toImVec4(themer->ovMut), "%d %s selected", vertexCount, verticesLit);
 			if (m_directVertEditWidget.pending())
 			{
 				switch (m_directVertEditWidget.kind())
@@ -569,19 +569,19 @@ namespace HMP::Gui
 					case Widgets::DirectVertEdit::EKind::Rotation:
 					{
 						const Vec rot{ m_vertEditWidget.transform().rotation };
-						ImGui::TextColored(warningColor, "Rotating %d %s by %1.f,%1.f,%1.f degrees via direct manipulation", vertexCount, verticesLit, rot.x(), rot.y(), rot.z());
+						ImGui::TextColored(ovWarn, "Rotating %d %s by %1.f,%1.f,%1.f degrees via direct manipulation", vertexCount, verticesLit, rot.x(), rot.y(), rot.z());
 					}
 					break;
 					case Widgets::DirectVertEdit::EKind::Scale:
 					{
 						const Vec scl{ m_vertEditWidget.transform().scale * 100.0 };
-						ImGui::TextColored(warningColor, "Scaling %d %s by %2.f,%2.f,%2.f%% via direct manipulation", vertexCount, verticesLit, scl.x(), scl.y(), scl.z());
+						ImGui::TextColored(ovWarn, "Scaling %d %s by %2.f,%2.f,%2.f%% via direct manipulation", vertexCount, verticesLit, scl.x(), scl.y(), scl.z());
 					}
 					break;
 					case Widgets::DirectVertEdit::EKind::Translation:
 					{
 						const Vec trs{ m_vertEditWidget.transform().translation };
-						ImGui::TextColored(warningColor, "Translating %d %s by %3.f,%3.f,%.3f via direct manipulation", vertexCount, verticesLit, trs.x(), trs.y(), trs.z());
+						ImGui::TextColored(ovWarn, "Translating %d %s by %3.f,%3.f,%.3f via direct manipulation", vertexCount, verticesLit, trs.x(), trs.y(), trs.z());
 					}
 					break;
 				}
@@ -994,9 +994,9 @@ namespace HMP::Gui
 
 	void App::onThemeChanged()
 	{
-		m_canvas.background = themer->backgroundColor;
-		m_mesher.edgeColor = themer->sourceEdgeColor;
-		m_mesher.faceColor = themer->sourceFaceColor;
+		m_canvas.background = themer->bg;
+		m_mesher.edgeColor = themer->srcEdge;
+		m_mesher.faceColor = themer->srcFace;
 		m_mesher.updateColors();
 	}
 

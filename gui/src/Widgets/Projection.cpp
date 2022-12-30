@@ -15,6 +15,8 @@
 #include <HMP/Meshing/Utils.hpp>
 #include <unordered_set>
 #include <cpputils/range/of.hpp>
+#include <HMP/Gui/themer.hpp>
+
 
 namespace HMP::Gui::Widgets
 {
@@ -22,7 +24,7 @@ namespace HMP::Gui::Widgets
 	Projection::Projection(const Widgets::Target& _targetWidget, HMP::Commander& _commander, const Meshing::Mesher& _mesher):
 		cinolib::SideBarItem{ "Projection" }, m_targetWidget{ _targetWidget }, m_commander{ _commander }, m_mesher{ _mesher },
 		m_options{}, m_paths(1), m_featureFinderOptions{}, m_usePathAsCrease{ false }, m_featureFinderCreaseAngle{ 60.0f },
-		m_showPaths{ true }, m_showAllPaths{ false }, m_currentPath{}, onProjectRequest{}
+		m_showPaths{ false }, m_showAllPaths{ false }, m_currentPath{}, onProjectRequest{}
 	{
 		m_targetWidget.onMeshChanged += [this]() {
 			for (auto& path : m_paths)
@@ -82,19 +84,19 @@ namespace HMP::Gui::Widgets
 	void Projection::requestProjection()
 	{
 		assert(m_targetWidget.hasMesh());
-		std::vector<HMP::Projection::Utils::Point> points;
+		std::vector<Point> points;
 		points.reserve(m_paths.size() * 2);
-		std::vector<HMP::Projection::Utils::EidsPath> paths;
+		std::vector<EidsPath> paths;
 		paths.reserve(m_paths.size());
 		const cinolib::Polygonmesh<>& targetMesh{ m_targetWidget.meshForProjection() };
-		for (const HMP::Projection::Utils::EidsPath& path : m_paths)
+		for (const EidsPath& path : m_paths)
 		{
 			if (path.sourceEids.empty() || path.targetEids.empty())
 			{
 				continue;
 			}
 			paths.push_back(path);
-			for (const HMP::Projection::Utils::Point& point : HMP::Projection::Utils::endPoints(path, m_mesher.mesh(), targetMesh))
+			for (const Point& point : HMP::Projection::Utils::endPoints(path, m_mesher.mesh(), targetMesh))
 			{
 				points.push_back(point);
 			}
@@ -183,7 +185,7 @@ namespace HMP::Gui::Widgets
 			cinolib::export_surface(m_mesher.mesh(), mesh, vol2surf, surf2vol, false);
 			if (m_usePathAsCrease)
 			{
-				for (const HMP::Projection::Utils::EidsPath path : m_paths)
+				for (const EidsPath path : m_paths)
 				{
 					for (const Id eid : path.sourceEids)
 					{
@@ -201,7 +203,7 @@ namespace HMP::Gui::Widgets
 			mesh = m_targetWidget.meshForDisplay();
 			if (m_usePathAsCrease)
 			{
-				for (const HMP::Projection::Utils::EidsPath path : m_paths)
+				for (const EidsPath path : m_paths)
 				{
 					for (const Id eid : path.targetEids)
 					{
@@ -247,7 +249,7 @@ namespace HMP::Gui::Widgets
 	ImVec4 Projection::pathColor(I _path) const
 	{
 		ImVec4 color;
-		ImGui::ColorConvertHSVtoRGB(static_cast<float>(_path) / static_cast<float>(m_paths.size()), 1.0f, 1.0f, color.x, color.y, color.z);
+		ImGui::ColorConvertHSVtoRGB(static_cast<float>(_path) / static_cast<float>(m_paths.size()), themer->ovPathSat, themer->ovPathVal, color.x, color.y, color.z);
 		color.w = 1.0f;
 		return color;
 	}
@@ -297,6 +299,7 @@ namespace HMP::Gui::Widgets
 			ImGui::Spacing();
 			tweak(m_options.unsetVertsDistWeightTweak, "Fill distance factor");
 			ImGui::Spacing();
+			ImGui::Text("Advance");
 			Utils::Controls::sliderPercentage("Advance percentile", m_options.advancePercentile);
 			ImGui::Spacing();
 			ImGui::TreePop();
@@ -329,114 +332,121 @@ namespace HMP::Gui::Widgets
 			{
 				m_paths.push_back({});
 			}
-			if (!m_paths.empty())
+			ImGui::SameLine();
+			if (Utils::Controls::disabledButton("Clear", !m_paths.empty()))
 			{
-				ImGui::SameLine();
-				if (ImGui::Button("Clear"))
+				m_currentPath = 0;
+				m_paths.clear();
+			}
+			ImGui::SameLine();
+			if (Utils::Controls::disabledButton("Clear empty", !cpputils::range::of(m_paths).filter([](const EidsPath& _path) { return _path.empty(); }).empty()))
+			{
+				for (I i{}; i < m_paths.size();)
 				{
-					m_currentPath = 0;
-					m_paths.clear();
-				}
-				ImGui::SameLine();
-				if (ImGui::Button("Clear empty"))
-				{
-					for (I i{}; i < m_paths.size();)
+					if (m_paths[i].empty())
 					{
-						if (m_paths[i].sourceEids.empty() && m_paths[i].targetEids.empty())
-						{
-							removePath(i);
-						}
-						else
-						{
-							++i;
-						}
+						removePath(i);
 					}
-				}
-				if (m_targetWidget.hasMesh())
-				{
-					ImGui::SameLine();
-					if (ImGui::SmallButton("Match all source"))
+					else
 					{
-						matchPaths(0, m_paths.size(), false);
-					}
-					ImGui::SameLine();
-					if (ImGui::SmallButton("Match all target"))
-					{
-						matchPaths(0, m_paths.size(), true);
+						++i;
 					}
 				}
 			}
+			ImGui::SameLine();
 			ImGui::Checkbox("Show all", &m_showAllPaths);
 			ImGui::SameLine();
-			ImGui::TextDisabled("%u paths", static_cast<unsigned int>(m_paths.size()));
-			if (!m_showAllPaths && !m_paths.empty())
-			{
-				int currentPath{ static_cast<int>(m_currentPath) };
-				if (ImGui::InputInt("Current path", &currentPath, 1, 1))
-				{
-					m_currentPath = static_cast<I>(std::clamp(currentPath, 0, static_cast<int>(m_paths.size() - 1)));
-				}
-			}
+			ImGui::Text("%u paths", static_cast<unsigned int>(m_paths.size()));
 			ImGui::Spacing();
-			if (ImGui::TreeNode("List"))
+			ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2{ 4.0f, 4.0f });
+			ImGui::BeginTable(
+				"List",
+				8,
+				ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY | ImGuiTableFlags_BordersOuter,
+				{ ImGui::GetContentRegionAvail().x, 200 }
+			);
+			const ImVec4
+				sbOk{ Utils::Controls::toImVec4(themer->sbOk) },
+				sbWarn{ Utils::Controls::toImVec4(themer->sbWarn) };
+			for (I i{}; i < m_paths.size(); i++)
 			{
-				ImGui::Spacing();
-				if (m_paths.empty())
+				ImGui::PushID(static_cast<int>(i));
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+				if (m_showAllPaths) { ImGui::BeginDisabled(); }
+				int currentPath = m_showAllPaths ? -1 : static_cast<int>(m_currentPath);
+				if (ImGui::RadioButton("", &currentPath, static_cast<int>(i)))
 				{
-					ImGui::TextDisabled("No paths");
+					m_currentPath = static_cast<I>(currentPath);
 				}
-				else
+				if (m_showAllPaths) { ImGui::EndDisabled(); }
+				ImGui::TableNextColumn();
+				ImGui::ColorButton("##color", pathColor(i), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoTooltip);
+				ImGui::TableNextColumn();
+				ImGui::TextColored(m_paths.empty() ? sbWarn : sbOk, "[%u/%u]", static_cast<unsigned int>(m_paths[i].sourceEids.size()), static_cast<unsigned int>(m_paths[i].sourceEids.size()));
+				ImGui::TableNextColumn();
+				bool removed{ false };
+				if (ImGui::Button("Remove"))
 				{
-					for (I i{}; i < m_paths.size(); i++)
-					{
-						ImGui::PushID(static_cast<int>(i));
-						if (!m_showAllPaths)
-						{
-							int currentPath = static_cast<int>(m_currentPath);
-							if (ImGui::RadioButton("", &currentPath, static_cast<int>(i)))
-							{
-								m_currentPath = static_cast<I>(currentPath);
-							}
-							ImGui::SameLine();
-						}
-						ImGui::ColorButton("##color", pathColor(i), ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoTooltip);
-						ImGui::SameLine();
-						if (ImGui::Button("Remove"))
-						{
-							removePath(i);
-						}
-						else
-						{
-							ImGui::SameLine();
-							if (Utils::Controls::disabledSmallButton("Clear source", !m_paths[i].sourceEids.empty()))
-							{
-								m_paths[i].sourceEids.clear();
-							}
-							if (m_targetWidget.hasMesh())
-							{
-								ImGui::SameLine();
-								if (Utils::Controls::disabledSmallButton("Clear target", !m_paths[i].targetEids.empty()))
-								{
-									m_paths[i].targetEids.clear();
-								}
-								ImGui::SameLine();
-								if (Utils::Controls::disabledSmallButton("Match source", !m_paths[i].targetEids.empty()))
-								{
-									matchPaths(i, i + 1, false);
-								}
-								ImGui::SameLine();
-								if (Utils::Controls::disabledSmallButton("Match target", !m_paths[i].sourceEids.empty()))
-								{
-									matchPaths(i, i + 1, true);
-								}
-							}
-						}
-						ImGui::PopID();
-					}
+					removePath(i);
+					removed = true;
 				}
-				ImGui::Spacing();
-				ImGui::TreePop();
+				ImGui::TableNextColumn();
+				if (Utils::Controls::disabledButton("Clear source", !removed && !m_paths[i].sourceEids.empty()))
+				{
+					m_paths[i].sourceEids.clear();
+				}
+				if (m_targetWidget.hasMesh()) { ImGui::BeginDisabled(); }
+				ImGui::TableNextColumn();
+				if (Utils::Controls::disabledButton("Clear target", !removed && !m_paths[i].targetEids.empty()))
+				{
+					m_paths[i].targetEids.clear();
+				}
+				ImGui::TableNextColumn();
+				if (Utils::Controls::disabledButton("Match source", !removed && !m_paths[i].targetEids.empty()))
+				{
+					matchPaths(i, i + 1, false);
+				}
+				ImGui::TableNextColumn();
+				if (Utils::Controls::disabledButton("Match target", !removed && !m_paths[i].sourceEids.empty()))
+				{
+					matchPaths(i, i + 1, true);
+				}
+				if (m_targetWidget.hasMesh()) { ImGui::EndDisabled(); }
+				ImGui::PopID();
 			}
+			ImGui::EndTable();
+			ImGui::PopStyleVar();
+			ImGui::Spacing();
+			if (m_paths.empty()) { ImGui::BeginDisabled(); }
+			if (ImGui::SmallButton("Sort by source length"))
+			{
+				std::sort(m_paths.begin(), m_paths.end(), [](const EidsPath& _a, const EidsPath& _b) {
+					return _a.sourceEids.size() < _b.sourceEids.size();
+				});
+			}
+			if (m_targetWidget.hasMesh())
+			{
+				ImGui::SameLine();
+				if (ImGui::SmallButton("Sort by target length"))
+				{
+					std::sort(m_paths.begin(), m_paths.end(), [](const EidsPath& _a, const EidsPath& _b) {
+						return _a.targetEids.size() < _b.targetEids.size();
+					});
+				}
+				ImGui::SameLine();
+				if (ImGui::SmallButton("Match all source"))
+				{
+					matchPaths(0, m_paths.size(), false);
+				}
+				ImGui::SameLine();
+				if (ImGui::SmallButton("Match all target"))
+				{
+					matchPaths(0, m_paths.size(), true);
+				}
+			}
+			if (m_paths.empty()) { ImGui::EndDisabled(); }
+			ImGui::Spacing();
 			if (ImGui::TreeNode("Auto finder"))
 			{
 				ImGui::Spacing();
@@ -445,8 +455,13 @@ namespace HMP::Gui::Widgets
 				{
 					ImGui::SliderFloat("Crease angle threshold", &m_featureFinderCreaseAngle, 0, 90, "%.3f deg", ImGuiSliderFlags_AlwaysClamp);
 				}
-				ImGui::SliderFloat("Path angle threshold", &m_featureFinderOptions.ang_thresh_deg, 0.0f, 180.0f, "%.0f deg", ImGuiSliderFlags_AlwaysClamp);
+				ImGui::Spacing();
 				ImGui::Checkbox("Split", &m_featureFinderOptions.split_lines_at_high_curvature_points);
+				if (m_featureFinderOptions.split_lines_at_high_curvature_points)
+				{
+					ImGui::SliderFloat("Split angle threshold", &m_featureFinderOptions.ang_thresh_deg, 0.0f, 180.0f, "%.0f deg", ImGuiSliderFlags_AlwaysClamp);
+				}
+				ImGui::Spacing();
 				if (ImGui::Button("Find in source"))
 				{
 					findPaths(true);
@@ -465,23 +480,27 @@ namespace HMP::Gui::Widgets
 			ImGui::Spacing();
 			ImGui::TreePop();
 		}
-		ImGui::Spacing();
-		Utils::Controls::sliderI("Iterations", m_options.iterations, 1, 10);
-		if (m_targetWidget.hasMesh())
+		if (ImGui::TreeNode("Project"))
 		{
 			ImGui::Spacing();
-			if (ImGui::Button("Project"))
+			Utils::Controls::sliderI("Iterations", m_options.iterations, 1, 10);
+			if (m_targetWidget.hasMesh())
 			{
-				requestProjection();
-			}
-			if (canReproject())
-			{
-				ImGui::SameLine();
-				if (ImGui::Button("Reproject"))
+				if (ImGui::Button("Project"))
 				{
-					requestReprojection();
+					requestProjection();
+				}
+				if (canReproject())
+				{
+					ImGui::SameLine();
+					if (ImGui::Button("Reproject"))
+					{
+						requestReprojection();
+					}
 				}
 			}
+			ImGui::Spacing();
+			ImGui::TreePop();
 		}
 	}
 
@@ -491,7 +510,7 @@ namespace HMP::Gui::Widgets
 		const cinolib::DrawablePolygonmesh<>& targetMesh{ m_targetWidget.meshForDisplay() };
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
 		const auto drawPath{ [&](const I _pathI) {
-			const HMP::Projection::Utils::EidsPath& path { m_paths[_pathI] };
+			const EidsPath& path { m_paths[_pathI] };
 			const ImU32 color{ ImGui::ColorConvertFloat4ToU32(pathColor(_pathI)) };
 			for (const Id eid : path.sourceEids)
 			{
