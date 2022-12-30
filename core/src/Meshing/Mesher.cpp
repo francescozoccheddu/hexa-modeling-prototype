@@ -15,7 +15,7 @@ namespace HMP::Meshing
 
 	Mesher::Mesher()
 		: m_mesh(), m_octree{},
-		m_visibleFaceIndices{}, m_visibleEdgeIndices{},
+		m_fidVisibleTriId{}, m_eidVisibleEid{},
 		m_dirty{ false },
 		faceColor{ cinolib::Color::WHITE() }, edgeColor{ cinolib::Color::BLACK() }
 	{
@@ -69,28 +69,14 @@ namespace HMP::Meshing
 		if (m_dirty)
 		{
 			updateOctree();
-			{
-				m_visibleFaceIndices.resize(toI(m_mesh.num_faces()));
-				Id lastI{};
-				for (I fi{}; fi < m_visibleFaceIndices.size(); fi++)
-				{
-					const Id fid{ toId(fi) };
-					m_visibleFaceIndices[fi] = (m_mesh.face_is_on_srf(fid) && m_mesh.face_is_visible(fid)) ? lastI++ : noId;
-				}
-			}
-			{
-				m_visibleEdgeIndices.resize(toI(m_mesh.num_edges()));
-				Id lastI{};
-				for (I ei{}; ei < m_visibleEdgeIndices.size(); ei++)
-				{
-					const Id eid{ toId(ei) };
-					m_visibleEdgeIndices[ei] = (m_mesh.edge_is_on_srf(eid) && m_mesh.edge_is_visible(eid)) ? lastI++ : noId;
-				}
-			}
+			m_fidVisibleTriId.resize(toI(m_mesh.num_faces()));
+			m_eidVisibleEid.resize(toI(m_mesh.num_edges()));
+			std::fill(m_fidVisibleTriId.begin(), m_fidVisibleTriId.end(), noId);
+			std::fill(m_eidVisibleEid.begin(), m_eidVisibleEid.end(), noId);
 			m_mesh.update_normals();
 			m_mesh.update_bbox();
-			m_mesh.updateGL_out();
-			m_mesh.updateGL_in();
+			m_mesh.updateGL_out(m_fidVisibleTriId, m_eidVisibleEid);
+			m_mesh.updateGL_in(m_fidVisibleTriId, m_eidVisibleEid);
 			m_dirty = false;
 		}
 	}
@@ -103,8 +89,8 @@ namespace HMP::Meshing
 			if (_changedVids.size() >= static_cast<I>(static_cast<double>(m_mesh.num_polys()) * c_threshold))
 			{
 				m_mesh.update_normals();
-				m_mesh.updateGL_out();
-				m_mesh.updateGL_in();
+				m_mesh.updateGL_out(m_fidVisibleTriId, m_eidVisibleEid);
+				m_mesh.updateGL_in(m_fidVisibleTriId, m_eidVisibleEid);
 			}
 			else
 			{
@@ -126,18 +112,32 @@ namespace HMP::Meshing
 				}
 				for (const Id fid : changedFids)
 				{
-					const Id visibleFaceId{ m_visibleFaceIndices[toI(fid)] };
-					if (visibleFaceId != noId)
+					const Id visibleTriId{ m_fidVisibleTriId[toI(fid)] };
+					if (visibleTriId != noId)
 					{
-						m_mesh.updateGL_out_f(fid, visibleFaceId * 2);
+						if (m_mesh.face_is_on_srf(fid))
+						{
+							m_mesh.updateGL_out_f(fid, visibleTriId);
+						}
+						else
+						{
+							m_mesh.updateGL_in_f(fid, visibleTriId);
+						}
 					}
 				}
 				for (const Id eid : changedEids)
 				{
-					const Id visibleEdgeId{ m_visibleEdgeIndices[toI(eid)] };
-					if (visibleEdgeId != noId)
+					const Id visibleEid{ m_eidVisibleEid[toI(eid)] };
+					if (visibleEid != noId)
 					{
-						m_mesh.updateGL_out_e(eid, visibleEdgeId);
+						if (m_mesh.edge_is_on_srf(eid))
+						{
+							m_mesh.updateGL_out_e(eid, visibleEid);
+						}
+						else
+						{
+							m_mesh.updateGL_in_e(eid, visibleEid);
+						}
 					}
 				}
 			}
