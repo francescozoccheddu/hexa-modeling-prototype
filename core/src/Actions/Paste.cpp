@@ -78,8 +78,8 @@ namespace HMP::Actions
 			}
 			if (src->isOperation() && src->operation().primitive == Dag::Operation::EPrimitive::Extrude)
 			{
-				Dag::Extrude& cloneOp{ static_cast<Dag::Extrude&>(*clone) };
-				const Dag::Extrude& srcOp{ static_cast<const Dag::Extrude&>(*src) };
+				Dag::Extrude& cloneOp{ clone->as<Dag::Extrude>() };
+				const Dag::Extrude& srcOp{ src->as<Dag::Extrude>() };
 				cloneOp.fis.clear();
 				for (const auto& [srcParent, srcParentFi] : cpputils::range::zip(srcOp.parents, srcOp.fis))
 				{
@@ -106,7 +106,25 @@ namespace HMP::Actions
 				}
 			}
 		}
-		return static_cast<Dag::Extrude&>(*src2clone.at(&_source));
+		return src2clone.at(&_source)->as<Dag::Extrude>();
+	}
+
+	void fixAdjacencies_TEMP_NAIVE(const Meshing::Mesher& _mesher, Dag::Extrude& _root)
+	{
+		for (Dag::Node* node : Dag::Utils::descendants(_root))
+		{
+			if (node->isOperation() && node->operation().primitive == Dag::Operation::EPrimitive::Extrude && node != &_root)
+			{
+				Dag::Extrude& extrude{ node->as<Dag::Extrude>() };
+				for (const auto& [parent, parentFi] : cpputils::range::zip(extrude.parents, extrude.fis))
+				{
+					const Id fid{ static_cast<Id>(_mesher.mesh().poly_shared_face(parent.pid, extrude.children.single().pid)) };
+					parentFi = Meshing::Utils::fi(parent.vids, Meshing::Utils::fidVids(_mesher.mesh(), fid));
+				}
+				extrude.firstVi = Meshing::Utils::hexFiVis[extrude.fis[0]][0];
+				extrude.clockwise = false;
+			}
+		}
 	}
 
 	void Paste::apply()
@@ -181,7 +199,7 @@ namespace HMP::Actions
 					Dag::Operation& operation{ node->operation() };
 					if (operation.primitive == Dag::Operation::EPrimitive::Refine)
 					{
-						Dag::Refine& refine{ static_cast<Dag::Refine&>(operation) };
+						Dag::Refine& refine{ operation.as<Dag::Refine>() };
 						for (Id& vid : refine.surfVids)
 						{
 							vid = vidMap.at(vid);
@@ -189,6 +207,9 @@ namespace HMP::Actions
 					}
 				}
 			}
+			Meshing::Utils::addTree(mesher(), *m_operation, m_newVerts);
+			fixAdjacencies_TEMP_NAIVE(mesher(), *m_operation);
+			mesher().updateMesh();
 		}
 		else
 		{
@@ -196,9 +217,9 @@ namespace HMP::Actions
 			{
 				m_operation->parents.attach(*parent);
 			}
+			Meshing::Utils::addTree(mesher(), *m_operation, m_newVerts);
+			mesher().updateMesh();
 		}
-		Meshing::Utils::addTree(mesher(), *m_operation, m_newVerts);
-		mesher().updateMesh();
 	}
 
 	void Paste::unapply()

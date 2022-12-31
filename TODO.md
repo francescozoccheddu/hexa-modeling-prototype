@@ -1,6 +1,8 @@
 # Issues and possible improvements
 Sorted by priority:
-- **\[BUG\]** `HMP::Dag::Extrude` and `HMP::Dag::Refine` fis and vis become incorrect after a paste operation (this means that copying from a pasted subtree is a Russian roulette at the moment).
+- **\[BUG\]** `HMP::Dag::Extrude` and `HMP::Dag::Refine` relative fis and vis are cloned incorrectly during a paste operation, so I am recalculating them from scratch in `HMP::Actions::Paste::fixAdjacencies_TEMP_NAIVE`. This implies that:
+    1. The otherwise flawless "*Paste-the-same-way-to-get-the-same-result*" principle is violated (not a big deal; GUI helps a lot here);
+    2. I cannot profit from `HMP::Refinement::Scheme::facesSurfVisIs` until this is fixed.
 - **\[BUG\]** `HMP::Actions::Root::~Root()` leads to `HMP::Dag::Node` double free on app exit (I think the `HMP::Dag::Node` detachment system is broken).
 - **\[IMPROVEMENT\]** `HMP::Refinement::Utils::apply` should use `HMP::Refinement::Scheme::facesSurfVisIs` in place of `HMP::Refinement::Utils::weldAdjacencies_TEMP_NAIVE` (how do I rotate the scheme vertices and match the adjacent faces?).
 - **\[IMPROVEMENT\]** `HMP::Gui::Widgets::Projection` feature paths are awkward to work with and the find/map automatisms hardly ever work.
@@ -11,13 +13,13 @@ Sorted by priority:
 - **\[FEATURE\]** Perhaps pasting a subtree should not preserve the source size (or maybe the choice could be left to the user).
 - **\[REFACTOR\]** `HMP::Meshing::Utils` is a dumpsite full of duplicated code. Keep the few essential primitives and throw everything else away.
 - **\[IMPROVEMENT\]** `OGDF` is overkill for what I need. Consider replacing it with a lighter implementation of the Sugiyama layout algorithm.
-- **\[IMPROVEMENT\]** The `HMP::Gui::Widgets::DirectVertEdit` scale and rotation implementation is a bit janky.
+- **\[IMPROVEMENT\]** The `HMP::Gui::Widgets::DirectVertEdit` scale and rotation implementation is a bit janky. (Also, a global axis-aligned translation feature would be welcome).
 - **\[FEATURE\]** Add a command to select all the vertices in a subtree.
 - **\[FEATURE\]** Add a command to refine all the elements (maybe with a density threshold?).
 - **\[FEATURE\]** Allow the user to change the transform origin when editing vertices (or add a command to lock the origin in the current location).
 - **\[FEATURE\]** Add As-Rigid-As-Possible vertex editing support.
 - **\[REFACTOR\]** All the `HMP::Meshing::Actions` could be replaced with a set of more primitive actions (`MoveVert`, `ShowElement`, `AddElements`, `WeldElements` and `ActionSequence` maybe?).
-- **\[IMPROVEMENT\]** `HMP::Gui::DagViewer::Widget` view should try to remain stable on layout change.
+- **\[IMPROVEMENT\]** The `HMP::Gui::DagViewer::Widget` view should try to remain stable on layout change.
 - **\[REFACTOR\]** The `HMP::Gui::App` class is too big. Keep splitting it into child components.
 - **\[REFACTOR\]** Does the `core`/`gui` CMake project separation still make sense? 
 - **\[FEATURE\]** Enable undo/redo support for every user action, not just meshing operations.
