@@ -17,6 +17,9 @@
 #include <limits>
 #include <chrono>
 #include <HMP/Meshing/Utils.hpp>
+#include <cpputils/unreachable.hpp>
+#include <cpputils/range/zip.hpp>
+#include <sstream>
 #include <HMP/Gui/themer.hpp>
 
 namespace HMP::Gui::DagViewer
@@ -66,6 +69,128 @@ namespace HMP::Gui::DagViewer
 	{
 		m_center_nl = Vec2{ m_layout.aspectRatio(), 1.0 } / 2;
 		m_windowHeight_n = std::numeric_limits<Real>::infinity();
+	}
+
+	void Widget::drawTooltip(const Dag::Node& _node) const
+	{
+		ImGui::BeginTable("tooltip", 2, ImGuiTableFlags_RowBg);
+		ImGui::TableNextColumn(); ImGui::Text("Name");
+		ImGui::TableNextColumn(); ImGui::Text("%s", Utils::HrDescriptions::name(_node, m_namer).c_str());
+		ImGui::TableNextColumn(); ImGui::Text("Kind");
+		switch (_node.type)
+		{
+			case Dag::Node::EType::Element:
+			{
+				const Dag::Element& node{ _node.element() };
+				ImGui::TableNextColumn(); ImGui::Text("Element");
+				ImGui::TableNextColumn(); ImGui::Text("Pid");
+				ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(node.pid));
+				ImGui::TableNextColumn(); ImGui::Text("Vids");
+				ImGui::TableNextColumn(); ImGui::Text("%u,%u,%u,%u,%u,%u,%u,%u",
+					static_cast<unsigned int>(node.vids[0]),
+					static_cast<unsigned int>(node.vids[1]),
+					static_cast<unsigned int>(node.vids[2]),
+					static_cast<unsigned int>(node.vids[3]),
+					static_cast<unsigned int>(node.vids[4]),
+					static_cast<unsigned int>(node.vids[5]),
+					static_cast<unsigned int>(node.vids[6]),
+					static_cast<unsigned int>(node.vids[7])
+				);
+				ImGui::TableNextColumn(); ImGui::Text("Visibility");
+				bool hidden;
+				for (const Dag::Operation& child : node.children)
+				{
+					switch (child.primitive)
+					{
+						case Dag::Operation::EPrimitive::Delete:
+							hidden = true;
+							ImGui::TableNextColumn(); ImGui::Text("Deleted");
+							break;
+						case Dag::Operation::EPrimitive::Refine:
+							hidden = true;
+							ImGui::TableNextColumn(); ImGui::Text("Refined");
+							break;
+						default:
+							break;
+					}
+					if (hidden)
+					{
+						break;
+					}
+				}
+				if (!hidden)
+				{
+					ImGui::TableNextColumn(); ImGui::Text("Visible");
+				}
+				if (&node == copied)
+				{
+					ImGui::TableNextColumn(); ImGui::Text("Copied");
+					ImGui::TableNextColumn(); ImGui::Text("True");
+				}
+			}
+			break;
+			case Dag::Node::EType::Operation:
+				switch (_node.operation().primitive)
+				{
+					case Dag::Operation::EPrimitive::Delete:
+					{
+						const Dag::Delete& node{ static_cast<const Dag::Delete&>(_node) };
+						ImGui::TableNextColumn(); ImGui::Text("Delete Op.");
+					}
+					break;
+					case Dag::Operation::EPrimitive::Refine:
+					{
+						const Dag::Refine& node{ static_cast<const Dag::Refine&>(_node) };
+						ImGui::TableNextColumn(); ImGui::Text("Refine Op.");
+						ImGui::TableNextColumn(); ImGui::Text("Scheme");
+						ImGui::TableNextColumn(); ImGui::Text("%s", Utils::HrDescriptions::describe(node.scheme).c_str());
+						ImGui::TableNextColumn(); ImGui::Text("%s forward face", Utils::HrDescriptions::name(node.parents.first(), m_namer).c_str());
+						ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(node.forwardFi));
+						ImGui::TableNextColumn(); ImGui::Text("%s vert", Utils::HrDescriptions::name(node.parents.first(), m_namer).c_str());
+						ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(node.firstVi));
+						ImGui::TableNextColumn(); ImGui::Text("Surface verts count");
+						ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(node.surfVids.size()));
+						ImGui::TableNextColumn(); ImGui::Text("Surface verts");
+						std::ostringstream ss;
+						for (I i{}; i < node.surfVids.size(); i++)
+						{
+							if (i > 0)
+							{
+								ss << ",";
+							}
+							ss << node.surfVids[i];
+							if (i > 16)
+							{
+								ss << "...";
+								break;
+							}
+						}
+						ImGui::TableNextColumn(); ImGui::Text("%s", ss.str().c_str());
+					}
+					break;
+					case Dag::Operation::EPrimitive::Extrude:
+					{
+						const Dag::Extrude& node{ static_cast<const Dag::Extrude&>(_node) };
+						ImGui::TableNextColumn(); ImGui::Text("Extrude Op.");
+						for (const auto& [parent, parentFi] : cpputils::range::zip(node.parents, node.fis))
+						{
+							ImGui::TableNextColumn(); ImGui::Text("%s face", Utils::HrDescriptions::name(parent, m_namer).c_str());
+							ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(parentFi));
+						}
+						ImGui::TableNextColumn(); ImGui::Text("%s vert", Utils::HrDescriptions::name(node.parents.first(), m_namer).c_str());
+						ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(node.firstVi));
+						ImGui::TableNextColumn(); ImGui::Text("Direction");
+						ImGui::TableNextColumn(); ImGui::Text(node.clockwise ? "CW" : "CCW");
+					}
+					break;
+					default:
+						cpputils::unreachable();
+				}
+				break;
+			default:
+				cpputils::unreachable();
+		}
+		ImGui::EndTable();
 	}
 
 	void Widget::draw()
@@ -202,6 +327,8 @@ namespace HMP::Gui::DagViewer
 
 		// drawing
 
+		const Dag::Node* hoveredNode{ };
+
 		{
 			ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
 			const ImU32 borderColor{ ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_Border]) };
@@ -249,10 +376,12 @@ namespace HMP::Gui::DagViewer
 				const float copiedNodeRadius_s{ static_cast<float>(m_layout.nodeRadius() * l2s) * 1.1f };
 				const Vec2 nodeHalfDiag_s{ nodeRadius_s, nodeRadius_s };
 				const Vec2 copiedNodeHalfDiag_s{ copiedNodeRadius_s, copiedNodeRadius_s };
+				const Vec2 mouse{ toVec(ImGui::GetMousePos()) };
 
 				for (const Layout::Node& node : m_layout.nodes())
 				{
 					const Vec2 center{ ll2ss(node.center()) };
+					bool hovered{ false };
 					switch (node.node().type)
 					{
 						case Dag::Node::EType::Element:
@@ -267,6 +396,12 @@ namespace HMP::Gui::DagViewer
 							{
 								drawList.AddRect(toImVec(center - copiedNodeHalfDiag_s), toImVec(center + copiedNodeHalfDiag_s), strokeColor);
 							}
+							const Vec2 mouseCenterDiff{ mouse - center };
+							hovered =
+								mouseCenterDiff.x() <= nodeHalfDiag_s.x() &&
+								mouseCenterDiff.x() >= -nodeHalfDiag_s.x() &&
+								mouseCenterDiff.y() <= nodeHalfDiag_s.y() &&
+								mouseCenterDiff.y() >= -nodeHalfDiag_s.y();
 						}
 						break;
 						case Dag::Node::EType::Operation:
@@ -287,6 +422,8 @@ namespace HMP::Gui::DagViewer
 							}
 							drawList.AddCircleFilled(toImVec(center), nodeRadius_s, operationColor, circleSegments);
 							drawList.AddCircle(toImVec(center), nodeRadius_s, strokeColor, circleSegments);
+							const Vec2 mouseCenterDiff{ mouse - center };
+							hovered = mouseCenterDiff.norm() <= nodeRadius_s;
 						}
 						break;
 					}
@@ -295,12 +432,27 @@ namespace HMP::Gui::DagViewer
 					const Real maxTextSize{ std::max(textSize.x(), textSize.y()) };
 					const Real fontSize{ nodeRadius_s * 1.25 / maxTextSize };
 					Utils::Drawing::text(drawList, text.c_str(), toImVec(center), static_cast<float>(fontSize), backgroundColor);
+					if (hovered)
+					{
+						hoveredNode = &node.node();
+					}
 				}
 			}
 			drawList.PopClipRect();
 		}
 
+
 		ImGui::PopFont();
+
+		// tooltip
+
+		if (hoveredNode && ImGui::IsItemHovered() && !ImGui::IsItemActive())
+		{
+			ImGui::BeginTooltip();
+			drawTooltip(*hoveredNode);
+			ImGui::EndTooltip();
+		}
+
 	}
 
 }

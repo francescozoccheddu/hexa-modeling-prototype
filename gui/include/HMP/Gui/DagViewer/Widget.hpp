@@ -29,6 +29,8 @@ namespace HMP::Gui::DagViewer
 		void pan(const cinolib::vec2d& _amount);
 		void clampView();
 
+		void drawTooltip(const Dag::Node& _node) const;
+
 	public:
 
 		bool showLayoutPerformanceWarning{ false };
