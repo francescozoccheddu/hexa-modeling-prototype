@@ -28,6 +28,8 @@ namespace HMP::Gui::Utils::Controls
 
 	bool sliderPercentage(const char* _label, Real& _value, Real _min = 0.0, Real _max = 1.0, const char* _format = "%.2f%%");
 
+	bool sliderPercentage(const char* _label, float& _value, float _min = 0.0, float _max = 1.0, const char* _format = "%.2f%%");
+
 	template<typename TEnum> requires std::is_enum_v<TEnum>
 	bool combo(const char* _label, TEnum& _value, const std::initializer_list<const char*>& _values);
 

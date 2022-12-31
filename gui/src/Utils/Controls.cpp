@@ -105,6 +105,17 @@ namespace HMP::Gui::Utils::Controls
 		return false;
 	}
 
+	bool sliderPercentage(const char* _label, float& _value, float _min, float _max, const char* _format)
+	{
+		Real value{ static_cast<Real>(_value) };
+		if (sliderPercentage(_label, value, static_cast<Real>(_min), static_cast<Real>(_max), _format))
+		{
+			_value = static_cast<float>(value);
+			return true;
+		}
+		return false;
+	}
+
 	bool disabledButton(const char* _label, bool _enabled)
 	{
 		if (!_enabled)
