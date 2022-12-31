@@ -476,6 +476,13 @@ namespace HMP::Gui
 
 	void App::onDrawCustomGui()
 	{
+		const float
+			smallVertRadius{ 4.0f * themer->ovScale },
+			vertRadius{ 6.0f * themer->ovScale },
+			lineThickness{ 1.5f * themer->ovScale },
+			semiBoldLineThickness{ 2.5f * themer->ovScale },
+			boldLineThickness{ 3.5f * themer->ovScale },
+			lineSpacing{ (10.0f * themer->ovScale + 10.0f) / 2.0f };
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
 		using namespace Utils::Drawing;
 		if (m_copy.element && !m_mouse.element)
@@ -486,18 +493,17 @@ namespace HMP::Gui
 			for (const auto& [parent, fi] : extrude.parents.zip(extrude.fis))
 			{
 				const QuadVertIds parentFidVids{ Meshing::Utils::fiVids(parent.vids, fi) };
-				const QuadVerts parentFidVerts{ Meshing::Utils::verts(m_mesh, parentFidVids) };
-				const Vec parentFidCenter{ cpputils::range::of(parentFidVerts).sum() / 4.0 };
+				const Vec parentFidCenter{ Meshing::Utils::centroid(Meshing::Utils::verts(m_mesh, parentFidVids)) };
 				const ImVec2 parentFidCenter2d{ project(m_canvas, parentFidCenter) };
-				dashedLine(drawList, { parentFidCenter2d, cPidCenter2d }, themer->ovMut, 1.5f);
+				dashedLine(drawList, { parentFidCenter2d, cPidCenter2d }, themer->ovMut, lineThickness, lineSpacing);
 			}
-			circle(drawList, cPidCenter2d, 4.0f, m_mouse.element == m_copy.element ? themer->ovHi : themer->ovMut, 1.5f);
+			circle(drawList, cPidCenter2d, smallVertRadius, m_mouse.element == m_copy.element ? themer->ovHi : themer->ovMut, lineThickness);
 			const Dag::Element& firstParent{ extrude.parents.first() };
 			const Id firstVid{ firstParent.vids[extrude.firstVi] };
 			const QuadVertIds firstParentVids{ Meshing::Utils::align(Meshing::Utils::fiVids(firstParent.vids, extrude.fis[0]), firstVid, extrude.clockwise) };
 			const EdgeVertData<ImVec2> eid2d{ project(m_canvas, Meshing::Utils::verts(m_mesh, EdgeVertIds{ firstParentVids[0], firstParentVids[1] })) };
-			dashedLine(drawList, eid2d, themer->ovMut, 4.0f);
-			circleFilled(drawList, eid2d[0], 6.0f, themer->ovMut);
+			dashedLine(drawList, eid2d, themer->ovMut, boldLineThickness, lineSpacing);
+			circleFilled(drawList, eid2d[0], vertRadius, themer->ovMut);
 		}
 		if (m_mouse.element)
 		{
@@ -515,17 +521,17 @@ namespace HMP::Gui
 				const ImVec2 adjFidCenter2d{ project(m_canvas, m_mesh.face_centroid(adjFid)) };
 				const ImVec2 adjPidCenter2d{ project(m_canvas, m_mesh.poly_centroid(adjPid)) };
 				const ImU32 adjColorU32{ m_mesher.shown(adjPid) ? themer->ovHi : themer->ovMut };
-				circle(drawList, adjPidCenter2d, 4.0f, adjColorU32, 1.5f);
-				dashedLine(drawList, { adjFidCenter2d, hPidCenter2d }, adjColorU32, 1.5f);
+				circle(drawList, adjPidCenter2d, smallVertRadius, adjColorU32, lineThickness);
+				dashedLine(drawList, { adjFidCenter2d, hPidCenter2d }, adjColorU32, lineThickness, lineSpacing);
 			}
-			circle(drawList, hPidCenter2d, 4.0f, themer->ovHi, 1.5f);
+			circle(drawList, hPidCenter2d, smallVertRadius, themer->ovHi, lineThickness);
 			for (const Id adjEid : m_mesh.adj_f2e(m_mouse.fid))
 			{
 				const EdgeVertData<ImVec2> adjEid2d{ project(m_canvas, Meshing::Utils::verts(m_mesh, Meshing::Utils::eidVids(m_mesh, adjEid))) };
-				dashedLine(drawList, adjEid2d, adjEid == m_mouse.eid ? themer->ovHi : themer->ovMut, 4.0f);
+				dashedLine(drawList, adjEid2d, adjEid == m_mouse.eid ? themer->ovHi : themer->ovMut, boldLineThickness, lineSpacing);
 			}
 			const ImVec2 hVert2d{ project(m_canvas, m_mesh.vert(m_mouse.vid)) };
-			circleFilled(drawList, hVert2d, 6.0f, themer->ovHi);
+			circleFilled(drawList, hVert2d, vertRadius, themer->ovHi);
 		}
 		else
 		{
@@ -543,7 +549,7 @@ namespace HMP::Gui
 				{
 					const EdgeVerts eidVerts{ Meshing::Utils::verts(m_mesh, Meshing::Utils::eidVids(m_mesh, eid)) };
 					const EdgeVertData<ImVec2> eidVerts2d{ project(m_canvas, eidVerts) };
-					dashedLine(drawList, eidVerts2d, themer->ovFaceHi, 2.0f);
+					dashedLine(drawList, eidVerts2d, themer->ovFaceHi, semiBoldLineThickness, lineSpacing);
 				}
 			}
 #endif
@@ -1009,6 +1015,7 @@ namespace HMP::Gui
 		m_canvas.background = themer->bg;
 		m_mesher.edgeColor = themer->srcEdge;
 		m_mesher.faceColor = themer->srcFace;
+		m_mesher.setEdgeThickness(2.0f * themer->ovScale);
 		m_mesher.updateColors();
 	}
 

@@ -35,6 +35,8 @@ namespace HMP::Gui::Widgets
 
 	public:
 
+		float radius{ 6.0f }, lineThickness{ 1.5f };
+
 		using Vids = decltype(cpputils::range::ofc(m_verts).map(&vertsToVidsConvert));
 
 		cpputils::collections::Event<VertEdit> onVidsChanged{};

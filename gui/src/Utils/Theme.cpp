@@ -27,7 +27,8 @@ namespace HMP::Gui::Utils
     {
         const float hue{ _hueDeg / 360.0f };
         return Theme{
-            .scale = _scale,
+            .ovScale = (1.0f + _scale * 2.0f) / 3.0f,
+            .sbScale = _scale,
             .hue = hue,
             .dark = false,
             .sbOk{ toImVec4(hsv(okHue, 0.8f, 0.4f)) },
@@ -63,7 +64,8 @@ namespace HMP::Gui::Utils
     {
         const float hue{ _hueDeg / 360.0f };
         return Theme{
-            .scale = _scale,
+            .ovScale = (1.0f + _scale * 2.0f) / 3.0f,
+            .sbScale = _scale,
             .hue = hue,
             .dark = true,
             .sbOk{ toImVec4(hsv(okHue, 0.5f, 0.8f))},

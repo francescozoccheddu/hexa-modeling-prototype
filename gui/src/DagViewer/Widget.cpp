@@ -246,10 +246,10 @@ namespace HMP::Gui::DagViewer
 			std::max(
 				std::min(
 					availWindowSize_s.x(),
-					750.0 * static_cast<Real>(themer->scale)
+					750.0 * static_cast<Real>(themer->sbScale)
 				),
 				std::max(
-					250.0 * static_cast<Real>(themer->scale),
+					250.0 * static_cast<Real>(themer->sbScale),
 					availWindowSize_s.y() - static_cast<Real>(style.ItemSpacing.y)
 				)
 			)
@@ -360,9 +360,11 @@ namespace HMP::Gui::DagViewer
 			const ImU32 gridColor{ ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_TableBorderLight]) };
 			const ImU32 strokeColor{ ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_PlotLines]) };
 			const ImU32 backgroundColor{ ImGui::ColorConvertFloat4ToU32(style.Colors[ImGuiCol_PopupBg]) };
+			const float gridThickness{ 1.0f * themer->sbScale };
+			const float lineThickness{ 1.5f * themer->sbScale };
 
 			drawList.AddRectFilled(toImVec(topLeft_sw), toImVec(bottomRight_sw), backgroundColor);
-			drawList.AddRect(toImVec(topLeft_sw), toImVec(bottomRight_sw), borderColor);
+			drawList.AddRect(toImVec(topLeft_sw), toImVec(bottomRight_sw), borderColor, 0.0f, 0, gridThickness);
 
 			drawList.PushClipRect(toImVec(topLeft_sw + Vec2{ 1,1 }), toImVec(bottomRight_sw - Vec2{ 1,1 }), true);
 			{
@@ -380,11 +382,11 @@ namespace HMP::Gui::DagViewer
 					const Vec2 origin_ss{ sw2ss(nw2sw(nl2nw(Vec2{0,1}))) };
 					for (Real x_s{ std::fmod(origin_ss.x(), gridStep_s) }; x_s <= bottomRight_sw.x(); x_s += gridStep_s)
 					{
-						drawList.AddLine(toImVec(Vec2{ x_s, topLeft_sw.y() }), toImVec(Vec2{ x_s, bottomRight_sw.y() }), gridColor);
+						drawList.AddLine(toImVec(Vec2{ x_s, topLeft_sw.y() }), toImVec(Vec2{ x_s, bottomRight_sw.y() }), gridColor, gridThickness);
 					}
 					for (Real y_s{ std::fmod(origin_ss.y(), gridStep_s) }; y_s <= bottomRight_sw.y(); y_s += gridStep_s)
 					{
-						drawList.AddLine(toImVec(Vec2{ topLeft_sw.x(), y_s }), toImVec(Vec2{ bottomRight_sw.x(), y_s }), gridColor);
+						drawList.AddLine(toImVec(Vec2{ topLeft_sw.x(), y_s }), toImVec(Vec2{ bottomRight_sw.x(), y_s }), gridColor, gridThickness);
 					}
 				}
 
@@ -392,7 +394,7 @@ namespace HMP::Gui::DagViewer
 
 				for (const auto& [lineA, lineB] : m_layout.lines())
 				{
-					drawList.AddLine(toImVec(ll2ss(lineA)), toImVec(ll2ss(lineB)), strokeColor);
+					drawList.AddLine(toImVec(ll2ss(lineA)), toImVec(ll2ss(lineB)), strokeColor, lineThickness);
 				}
 
 				// nodes
@@ -416,7 +418,7 @@ namespace HMP::Gui::DagViewer
 								? themer->dagNodeElHi
 								: Meshing::Utils::isShown(element) ? themer->dagNodeEl : themer->dagNodeElMut };
 							drawList.AddRectFilled(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), color);
-							drawList.AddRect(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), strokeColor);
+							drawList.AddRect(toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), strokeColor, 0.0f, 0, lineThickness);
 							if (&element == copied)
 							{
 								drawList.AddRect(toImVec(center - copiedNodeHalfDiag_s), toImVec(center + copiedNodeHalfDiag_s), strokeColor);
@@ -446,7 +448,7 @@ namespace HMP::Gui::DagViewer
 									break;
 							}
 							drawList.AddCircleFilled(toImVec(center), nodeRadius_s, operationColor, circleSegments);
-							drawList.AddCircle(toImVec(center), nodeRadius_s, strokeColor, circleSegments);
+							drawList.AddCircle(toImVec(center), nodeRadius_s, strokeColor, circleSegments, lineThickness);
 							const Vec2 mouseCenterDiff{ mouse - center };
 							hovered = mouseCenterDiff.norm() <= nodeRadius_s;
 						}

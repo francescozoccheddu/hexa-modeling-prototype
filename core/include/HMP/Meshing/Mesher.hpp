@@ -97,6 +97,8 @@ namespace HMP::Meshing
 		bool shown(const Dag::Element& _element) const;
 
 		void updateColors(bool _poly = true, bool _edge = true);
+		void setEdgeThickness(float _edgeThickness);
+		float edgeThickness() const;
 
 		void updateMesh();
 		void updateMeshTemp(const std::unordered_set<Id>& _changedVids);

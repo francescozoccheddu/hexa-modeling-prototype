@@ -243,16 +243,19 @@ namespace HMP::Gui::Widgets
 
 	void VertEdit::draw(const cinolib::GLcanvas& _canvas)
 	{
+		const float
+			radius{ this->radius * themer->ovScale },
+			lineThickness{ this->lineThickness * themer->ovScale };
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
 		for (const Id vid : vids())
 		{
 			const Vec vert{ m_mesher.mesh().vert(vid) };
 			const ImVec2 pos{ Utils::Drawing::project(_canvas, vert) };
-			Utils::Drawing::circle(drawList, pos, 6.0f, themer->ovHi, 2.0f);
+			Utils::Drawing::circle(drawList, pos, radius, themer->ovHi, lineThickness);
 		}
 		if (!empty())
 		{
-			Utils::Drawing::cross(drawList, Utils::Drawing::project(_canvas, m_centroid), 6.0f, themer->ovHi, 1.5f);
+			Utils::Drawing::cross(drawList, Utils::Drawing::project(_canvas, m_centroid), radius, themer->ovHi, lineThickness);
 		}
 	}
 

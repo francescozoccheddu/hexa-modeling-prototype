@@ -49,6 +49,8 @@ namespace HMP::Gui::Widgets
 
 	public:
 
+		float lineThickness{ 1.5f };
+
 		Projection(const Widgets::Target& _targetWidget, HMP::Commander& _commander, const HMP::Meshing::Mesher& _mesher);
 
 		cpputils::collections::Event<Projection, const cinolib::Polygonmesh<>&, const std::vector<Point>&, const std::vector<EidsPath>&, const HMP::Projection::Options&> onProjectRequest;

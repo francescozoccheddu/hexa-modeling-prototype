@@ -37,7 +37,7 @@ namespace HMP::Gui::Widgets
 		const Vec up(origin + cinolib::GLcanvas::world_up() * radius);
 		const Vec forward(origin - cinolib::GLcanvas::world_forward() * radius);
 		const Real maxSize{ static_cast<Real>(std::min(_canvas.canvas_width(), _canvas.height())) };
-		const Real size{ std::min((maxSize * 0.1 + 100) / 2, maxSize / 3) };
+		const Real size{ std::min((maxSize * 0.1 + 100 * static_cast<Real>(themer->ovScale)) / 2, maxSize / 3) };
 		const auto project{ [&](const Vec& _point) -> Vec {
 			Vec proj(camera.projectionViewMatrix() * _point);
 			proj.x() *= camera.projection.aspectRatio;

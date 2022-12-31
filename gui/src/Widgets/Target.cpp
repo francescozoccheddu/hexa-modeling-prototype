@@ -23,10 +23,8 @@ namespace HMP::Gui::Widgets
 		themer.onThemeChange += [this]() {
 			faceColor = themer->tgtFace;
 			edgeColor = themer->tgtEdge;
-			if (hasMesh())
-			{
-				updateColor();
-			}
+			updateColor();
+			updateEdgeThickness();
 		};
 	}
 
@@ -112,9 +110,18 @@ namespace HMP::Gui::Widgets
 		m_mesh.show_mesh(visible);
 	}
 
+	void Target::updateEdgeThickness()
+	{
+		const float edgeThickness{ this->edgeThickness * themer->ovScale };
+		m_mesh.show_wireframe_width(edgeThickness);
+	}
+
 	void Target::updateColor(bool _face, bool _edge)
 	{
-		assert(hasMesh());
+		if (!hasMesh())
+		{
+			return;
+		}
 		if (_face && m_mesh.poly_data(0).color != faceColor)
 		{
 			m_mesh.poly_set_color(faceColor);
@@ -148,6 +155,7 @@ namespace HMP::Gui::Widgets
 			m_mesh.show_marked_edge(false);
 			m_mesh.draw_back_faces = false;
 			updateColor();
+			updateEdgeThickness();
 			updateVisibility();
 			if (!_keepTransform)
 			{
@@ -294,16 +302,23 @@ namespace HMP::Gui::Widgets
 				ImGui::TableNextColumn();
 				Utils::Controls::colorButton("Face color", faceColor);
 				ImGui::TableNextColumn();
-				if (ImGui::Button("Apply##face"))
+				if (ImGui::Button("Apply##facecol"))
 				{
 					updateColor(true, false);
 				}
 				ImGui::TableNextColumn();
 				Utils::Controls::colorButton("Edge color", edgeColor);
 				ImGui::TableNextColumn();
-				if (ImGui::Button("Apply##edge"))
+				if (ImGui::Button("Apply##edgecol"))
 				{
 					updateColor(false, true);
+				}
+				ImGui::TableNextColumn();
+				ImGui::SliderFloat("Edge thickness", &edgeThickness, 1.0f, 5.0f, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+				ImGui::TableNextColumn();
+				if (ImGui::Button("Apply##edgethickness"))
+				{
+					updateEdgeThickness();
 				}
 				ImGui::EndTable();
 			}

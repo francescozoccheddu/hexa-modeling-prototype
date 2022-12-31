@@ -35,6 +35,7 @@ namespace HMP::Gui::Widgets
     public:
 
         float lineThickness{ 1.0f };
+        float crossRadius{ 10.0f };
         float textSize{ 20.0f };
         Vec2 textMargin{ 10.0f };
 
