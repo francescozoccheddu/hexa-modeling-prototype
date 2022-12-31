@@ -28,6 +28,8 @@ namespace HMP::Gui::Utils
         static constexpr float lightStyleHue{ 213.0f / 360.0f };
         static constexpr float darkStyleHue{ 213.0f / 360.0f };
         const float styleHue{ m_theme.dark ? darkStyleHue : lightStyleHue };
+        ImGuiStyle& style{ ImGui::GetStyle() };
+        style = {};
         if (m_theme.dark)
         {
             ImGui::StyleColorsDark();
@@ -36,7 +38,8 @@ namespace HMP::Gui::Utils
         {
             ImGui::StyleColorsLight();
         }
-        ImGuiStyle& style{ ImGui::GetStyle() };
+        style.ScaleAllSizes(m_theme.scale);
+        ImGui::GetIO().FontGlobalScale = m_theme.scale;
         for (ImVec4& color : style.Colors)
         {
             float h, s, v;

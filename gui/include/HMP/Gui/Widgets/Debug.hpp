@@ -9,6 +9,7 @@
 #include <cpputils/collections/SetNamer.hpp>
 #include <cpputils/collections/Event.hpp>
 #include <cinolib/color.h>
+#include <imgui.h>
 
 namespace HMP::Gui::Widgets
 {
@@ -26,9 +27,11 @@ namespace HMP::Gui::Widgets
 
         Real testEps{ 1e-9 };
 
+        float fontBuildSize{ 13.0f };
         float namesFontScale{ 1.0f };
         float themeHue{ 32.0f };
         bool themeDark{ true };
+        float themeScale{ 1.0f };
         bool showElements{ false }, showVids{ false }, showEids{ false }, showFids{ false }, showPids{ false };
 
         Debug(Meshing::Mesher& _mesher, cpputils::collections::SetNamer<const HMP::Dag::Node*>& _dagNamer, VertEdit& _vertEdit);

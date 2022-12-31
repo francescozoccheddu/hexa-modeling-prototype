@@ -9,6 +9,7 @@ namespace HMP::Gui::Utils
     struct Theme final
     {
 
+        float scale;
         float hue;
         bool dark;
         ImVec4 sbOk;
@@ -38,11 +39,11 @@ namespace HMP::Gui::Utils
         float ovPathSat;
         float ovPathVal;
 
-        static Theme makeLight(float _hueDeg = 0.0f);
+        static Theme makeLight(float _hueDeg = 0.0f, float _scale = 1.0f);
 
-        static Theme makeDark(float _hueDeg = 0.0f);
+        static Theme makeDark(float _hueDeg = 0.0f, float _scale = 1.0f);
 
-        static Theme make(bool _dark = true, float _hueDeg = 0.0f);
+        static Theme make(bool _dark = true, float _hueDeg = 0.0f, float _scale = 1.0f);
 
     };
 

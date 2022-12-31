@@ -241,7 +241,19 @@ namespace HMP::Gui::DagViewer
 		const ImGuiStyle& style{ ImGui::GetStyle() };
 
 		const Vec2 availWindowSize_s{ toVec(ImGui::GetContentRegionAvail()) };
-		const Vec2 windowSize_s{ availWindowSize_s.x(), std::max(availWindowSize_s.x(), availWindowSize_s.y() - static_cast<Real>(style.ItemSpacing.y)) };
+		const Vec2 windowSize_s{
+			availWindowSize_s.x(),
+			std::max(
+				std::min(
+					availWindowSize_s.x(),
+					750.0 * static_cast<Real>(themer->scale)
+				),
+				std::max(
+					250.0 * static_cast<Real>(themer->scale),
+					availWindowSize_s.y() - static_cast<Real>(style.ItemSpacing.y)
+				)
+			)
+		};
 		if (windowSize_s.x() <= 0.0 || windowSize_s.y() <= 0.0)
 		{
 			return;

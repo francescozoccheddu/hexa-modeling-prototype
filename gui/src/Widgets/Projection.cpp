@@ -368,7 +368,7 @@ namespace HMP::Gui::Widgets
 				"List",
 				8,
 				ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY | ImGuiTableFlags_BordersOuter,
-				{ ImGui::GetContentRegionAvail().x, 200 }
+				{ ImGui::GetContentRegionAvail().x, 170.0f * themer->scale }
 			);
 			for (I i{}; i < m_paths.size(); i++)
 			{

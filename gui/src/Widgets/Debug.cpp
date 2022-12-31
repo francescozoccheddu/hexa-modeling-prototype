@@ -8,6 +8,8 @@
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <algorithm>
 #include <string>
+#include <cinolib/fonts/droid_sans.hpp>
+#include <imgui_impl_opengl2.h>
 #include <HMP/Gui/themer.hpp>
 
 namespace HMP::Gui::Widgets
@@ -116,11 +118,7 @@ namespace HMP::Gui::Widgets
 
             ImGui::EndTable();
             ImGui::Spacing();
-            float fontScalePerc{ namesFontScale * 100.0f };
-            if (ImGui::SliderFloat("Font scale", &fontScalePerc, 25.0f, 200.0f, "%.1f%%", ImGuiSliderFlags_AlwaysClamp))
-            {
-                namesFontScale = fontScalePerc / 100.0f;
-            }
+            Utils::Controls::sliderPercentage("Font scale", namesFontScale, 0.25f, 2.0f);
             ImGui::Spacing();
             ImGui::TreePop();
         }
@@ -135,6 +133,17 @@ namespace HMP::Gui::Widgets
             ImGui::SameLine();
             if (ImGui::SliderFloat("Hue", &themeHue, 0.0f, 360.0f, "%.0f deg", ImGuiSliderFlags_AlwaysClamp))
             {
+                updateTheme();
+            }
+            ImGui::Spacing();
+            if (Utils::Controls::sliderPercentage("Scale", themeScale, 0.25f, 2.0f))
+            {
+                updateTheme();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Reset"))
+            {
+                themeScale = 1.0f;
                 updateTheme();
             }
             ImGui::Spacing();
@@ -208,7 +217,7 @@ namespace HMP::Gui::Widgets
 
     void Debug::updateTheme() const
     {
-        themer.setTheme(Utils::Theme::make(themeDark, themeHue));
+        themer.setTheme(Utils::Theme::make(themeDark, themeHue, themeScale));
     }
 
     void Debug::selectCloseVerts()

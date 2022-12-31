@@ -65,7 +65,7 @@ namespace HMP::Gui::Widgets
 		ImGui::Spacing();
 
 		ImGui::Text("History");
-		ImGui::BeginChild("history", { ImGui::GetContentRegionAvail().x, 200 }, true);
+		ImGui::BeginChild("history", { ImGui::GetContentRegionAvail().x, 130 * themer->scale }, true);
 		if (m_vertEdit.pendingAction())
 		{
 			ImGui::TextColored(themer->sbWarn, "Pending vertex edit action on %d vertices", static_cast<int>(m_vertEdit.vids().size()));

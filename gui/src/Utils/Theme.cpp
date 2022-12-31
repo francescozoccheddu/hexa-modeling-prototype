@@ -23,10 +23,11 @@ namespace HMP::Gui::Utils
     static constexpr float dagNodeRefineHueShift{ 0.4f }, dagNodeExtrudeHueShift{ 0.6f }, dagNodeDeleteHueShift{ 0.8f };
 #endif
 
-    Theme Theme::makeLight(float _hueDeg)
+    Theme Theme::makeLight(float _hueDeg, float _scale)
     {
         const float hue{ _hueDeg / 360.0f };
         return Theme{
+            .scale = _scale,
             .hue = hue,
             .dark = false,
             .sbOk{ toImVec4(hsv(okHue, 0.8f, 0.4f)) },
@@ -58,10 +59,11 @@ namespace HMP::Gui::Utils
         };
     }
 
-    Theme Theme::makeDark(float _hueDeg)
+    Theme Theme::makeDark(float _hueDeg, float _scale)
     {
         const float hue{ _hueDeg / 360.0f };
         return Theme{
+            .scale = _scale,
             .hue = hue,
             .dark = true,
             .sbOk{ toImVec4(hsv(okHue, 0.5f, 0.8f))},
@@ -93,9 +95,9 @@ namespace HMP::Gui::Utils
         };
     }
 
-    Theme Theme::make(bool _dark, float _hueDeg)
+    Theme Theme::make(bool _dark, float _hueDeg, float _scale)
     {
-        return _dark ? makeDark(_hueDeg) : makeLight(_hueDeg);
+        return _dark ? makeDark(_hueDeg, _scale) : makeLight(_hueDeg, _scale);
     }
 
 }
