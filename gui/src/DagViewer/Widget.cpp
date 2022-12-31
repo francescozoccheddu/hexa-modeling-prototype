@@ -221,6 +221,12 @@ namespace HMP::Gui::DagViewer
 			}
 		}
 
+		if (tooManyNodes)
+		{
+			ImGui::TextColored(themer->sbErr, "That's too many nodes! Sorry. :(");
+			return;
+		}
+
 		if (showLayoutPerformanceWarning)
 		{
 			ImGui::TextColored(themer->sbWarn, "Leaving this widget open will affect meshing performance!");

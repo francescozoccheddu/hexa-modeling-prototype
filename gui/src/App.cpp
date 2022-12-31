@@ -112,10 +112,6 @@ namespace HMP::Gui
 	void App::requestDagViewerUpdate()
 	{
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
-		if (!m_dagViewerWidget.show_open)
-		{
-			m_dagViewerWidget.showLayoutPerformanceWarning = false;
-		}
 		m_dagViewerNeedsUpdate = true;
 #endif
 	}
@@ -533,10 +529,10 @@ namespace HMP::Gui
 			const ImVec2 hVert2d{ project(m_canvas, m_mesh.vert(m_mouse.vid)) };
 			circleFilled(drawList, hVert2d, vertRadius, themer->ovHi);
 		}
-		else
-		{
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
-			if (m_canvas.show_sidebar() && m_dagViewerWidget.show_open && m_dagViewerWidget.hasHoveredNode() && m_dagViewerWidget.hoveredNode().isElement())
+		if (m_canvas.show_sidebar() && m_dagViewerWidget.show_open)
+		{
+			if (m_dagViewerWidget.hasHoveredNode() && m_dagViewerWidget.hoveredNode().isElement())
 			{
 				const Id pid{ m_dagViewerWidget.hoveredNode().element().pid };
 				for (const Id fid : m_mesh.adj_p2f(pid))
@@ -552,8 +548,12 @@ namespace HMP::Gui
 					dashedLine(drawList, eidVerts2d, themer->ovFaceHi, semiBoldLineThickness, lineSpacing);
 				}
 			}
-#endif
 		}
+		else
+		{
+			m_dagViewerWidget.showLayoutPerformanceWarning = false;
+		}
+#endif
 		if (m_mouse.element)
 		{
 			std::ostringstream stream{};
@@ -613,9 +613,14 @@ namespace HMP::Gui
 		if (m_dagViewerNeedsUpdate)
 		{
 			m_dagViewerNeedsUpdate = false;
-			if (m_project.root())
+			if (m_project.root() && m_mesh.num_polys() < 1000)
 			{
+				m_dagViewerWidget.tooManyNodes = false;
 				m_dagViewerWidget.layout() = DagViewer::createLayout(*m_project.root());
+			}
+			else
+			{
+				m_dagViewerWidget.tooManyNodes = true;
 			}
 			m_dagViewerWidget.resetView();
 		}
