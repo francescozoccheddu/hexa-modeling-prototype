@@ -72,6 +72,10 @@ namespace HMP::Actions
 		}
 		for (const auto [src, clone] : src2clone)
 		{
+			if (src == &_source)
+			{
+				continue;
+			}
 			if (src->isOperation() && src->operation().primitive == Dag::Operation::EPrimitive::Extrude)
 			{
 				Dag::Extrude& cloneOp{ static_cast<Dag::Extrude&>(*clone) };
@@ -93,7 +97,7 @@ namespace HMP::Actions
 				}
 				cloneOp.source = Dag::Extrude::sourceByParentCount(cloneOp.parents.size());
 			}
-			else if (src != &_source)
+			else
 			{
 				for (const Dag::Node& srcParent : src->parents)
 				{
