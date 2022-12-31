@@ -17,6 +17,8 @@ namespace HMP::Dag
 			Face, Edge, Vertex
 		};
 
+		static ESource sourceByParentCount(I _parentCount);
+
 		Extrude();
 
 		I firstVi;

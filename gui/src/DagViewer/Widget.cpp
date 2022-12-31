@@ -182,6 +182,8 @@ namespace HMP::Gui::DagViewer
 					{
 						const Dag::Extrude& node{ static_cast<const Dag::Extrude&>(_node) };
 						ImGui::TableNextColumn(); ImGui::Text("Extrude Op.");
+						ImGui::TableNextColumn(); ImGui::Text("Source");
+						ImGui::TableNextColumn(); ImGui::Text("%s", Utils::HrDescriptions::describe(node.source).c_str());
 						for (const auto& [parent, parentFi] : cpputils::range::zip(node.parents, node.fis))
 						{
 							ImGui::TableNextColumn(); ImGui::Text("'%s' face", Utils::HrDescriptions::name(parent, m_namer).c_str());

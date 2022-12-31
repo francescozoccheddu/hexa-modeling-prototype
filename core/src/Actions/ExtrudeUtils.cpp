@@ -21,20 +21,7 @@ namespace HMP::Actions::ExtrudeUtils
 		extrude.firstVi = _firstVi;
 		extrude.clockwise = _clockwise;
 		extrude.fis = _fis;
-		switch (_fis.size())
-		{
-			case 1:
-				extrude.source = Dag::Extrude::ESource::Face;
-				break;
-			case 2:
-				extrude.source = Dag::Extrude::ESource::Edge;
-				break;
-			case 3:
-				extrude.source = Dag::Extrude::ESource::Vertex;
-				break;
-			default:
-				cpputils::unreachable();
-		}
+		extrude.source = Dag::Extrude::sourceByParentCount(_fis.size());
 		extrude.children.attach(*new Dag::Element{});
 		return extrude;
 	}

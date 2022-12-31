@@ -26,6 +26,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 
 	std::string name(const HMP::Dag::Node& _node, DagNamer& _dagNamer);
 	std::string describe(Refinement::EScheme _scheme);
+	std::string describe(Dag::Extrude::ESource _source);
 	std::string describe(const Vec& _vec);
 	std::string describe(const Mat4& _mat);
 	std::string describe(const std::vector<I>& _is);
