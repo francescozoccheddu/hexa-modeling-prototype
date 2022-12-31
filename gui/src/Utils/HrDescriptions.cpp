@@ -148,6 +148,21 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return stream.str();
 	}
 
+	std::string describe(Dag::Extrude::ESource _source)
+	{
+		switch (_source)
+		{
+			case HMP::Dag::Extrude::ESource::Face:
+				return "Face";
+			case HMP::Dag::Extrude::ESource::Edge:
+				return "Edge";
+			case HMP::Dag::Extrude::ESource::Vertex:
+				return "Vertex";
+			default:
+				cpputils::unreachable();
+		}
+	}
+
 	std::string describe(const HMP::Dag::Extrude& _operation, const cpputils::collections::FixedVector<const HMP::Dag::Element*, 3>& _elements, DagNamer& _dagNamer)
 	{
 		std::ostringstream stream{};
@@ -160,19 +175,9 @@ namespace HMP::Gui::Utils::HrDescriptions
 			}
 			stream << name(*element, _dagNamer);
 		}
-		switch (_operation.source)
-		{
-			case HMP::Dag::Extrude::ESource::Face:
-				stream << " (face)";
-				break;
-			case HMP::Dag::Extrude::ESource::Edge:
-				stream << " (edge)";
-				break;
-			case HMP::Dag::Extrude::ESource::Vertex:
-				stream << " (vertex)";
-				break;
-		}
-		stream << " towards " << describe(cpputils::range::of(_operation.fis).toVector())
+		stream
+			<< " (" << describe(_operation.source) << ")"
+			<< " towards " << describe(cpputils::range::of(_operation.fis).toVector())
 			<< " (" << _operation.firstVi << " " << (_operation.clockwise ? "CW" : "CCW") << ")"
 			<< " into " << name(_operation.children.single(), _dagNamer)
 			<< " (" << name(_operation, _dagNamer) << ")";
@@ -269,19 +274,9 @@ namespace HMP::Gui::Utils::HrDescriptions
 			}
 			stream << name(element, _dagNamer);
 		}
-		switch (_action.operation().source)
-		{
-			case HMP::Dag::Extrude::ESource::Face:
-				stream << " (face)";
-				break;
-			case HMP::Dag::Extrude::ESource::Edge:
-				stream << " (edge)";
-				break;
-			case HMP::Dag::Extrude::ESource::Vertex:
-				stream << " (vertex)";
-				break;
-		}
-		stream << " towards " << describe(cpputils::range::of(_action.operation().fis).toVector())
+		stream
+			<< " (" << describe(_action.operation().source) << ")"
+			<< " towards " << describe(cpputils::range::of(_action.operation().fis).toVector())
 			<< " (" << _action.operation().firstVi << " " << (_action.operation().clockwise ? "CW" : "CCW") << ")"
 			<< " into " << name(_action.operation().children.single(), _dagNamer)
 			<< " (" << name(_action.operation(), _dagNamer) << ")";

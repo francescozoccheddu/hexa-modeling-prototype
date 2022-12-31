@@ -91,6 +91,7 @@ namespace HMP::Actions
 						}
 					}
 				}
+				cloneOp.source = Dag::Extrude::sourceByParentCount(cloneOp.parents.size());
 			}
 			else if (src != &_source)
 			{
@@ -114,20 +115,7 @@ namespace HMP::Actions
 			m_operation->fis = m_fis;
 			m_operation->clockwise = m_clockwise;
 			m_operation->firstVi = m_firstVi;
-			switch (m_elements.size())
-			{
-				case 1:
-					m_operation->source = Dag::Extrude::ESource::Face;
-					break;
-				case 2:
-					m_operation->source = Dag::Extrude::ESource::Edge;
-					break;
-				case 3:
-					m_operation->source = Dag::Extrude::ESource::Vertex;
-					break;
-				default:
-					cpputils::unreachable();
-			}
+			m_operation->source = Dag::Extrude::sourceByParentCount(m_elements.size());
 			for (Dag::Element* parent : m_elements)
 			{
 				m_operation->parents.attach(*parent);
