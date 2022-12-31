@@ -36,6 +36,7 @@ namespace HMP::Gui::DagViewer
 	public:
 
 		bool showLayoutPerformanceWarning{ false };
+		bool tooManyNodes{ false };
 
 		mutable cpputils::collections::Event<Widget> onDraw{};
 
