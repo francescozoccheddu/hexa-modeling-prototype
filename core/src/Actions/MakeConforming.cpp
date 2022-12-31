@@ -23,7 +23,7 @@ namespace HMP::Actions
 		{
 			if (node->isOperation() && node->operation().primitive == Dag::Operation::EPrimitive::Refine)
 			{
-				Dag::Refine& refine{ static_cast<Dag::Refine&>(node->operation()) };
+				Dag::Refine& refine{ node->as<Dag::Refine>() };
 				if (refine.scheme == Refinement::EScheme::Subdivide3x3)
 				{
 					refines.push_back(&refine);

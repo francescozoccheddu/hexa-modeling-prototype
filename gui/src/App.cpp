@@ -488,7 +488,7 @@ namespace HMP::Gui
 		if (m_copy.element && !m_mouse.element)
 		{
 			const Id cPid{ m_copy.element->pid };
-			const Dag::Extrude& extrude{ m_copy.element->parents.cast<const Dag::Extrude&>().single() };
+			const Dag::Extrude& extrude{ m_copy.element->parents.single().as<Dag::Extrude>() };
 			const ImVec2 cPidCenter2d{ project(m_canvas, m_mesh.poly_centroid(cPid)) };
 			for (const auto& [parent, fi] : extrude.parents.zip(extrude.fis))
 			{
@@ -799,7 +799,7 @@ namespace HMP::Gui
 			bool clockwise;
 			if (hoveredExtrudeElements(_source, elements, fis, firstVi, clockwise))
 			{
-				applyAction(*new Actions::Paste{ elements, fis, firstVi, clockwise, static_cast<const Dag::Extrude&>(m_copy.element->parents.single()) });
+				applyAction(*new Actions::Paste{ elements, fis, firstVi, clockwise, m_copy.element->parents.single().as<Dag::Extrude>() });
 			}
 		}
 	}

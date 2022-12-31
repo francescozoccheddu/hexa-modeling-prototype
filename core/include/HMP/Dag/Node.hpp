@@ -89,6 +89,12 @@ namespace HMP::Dag
 		Operation& operation();
 		const Operation& operation() const;
 
+		template<cpputils::concepts::DerivedSimpleClass<Node> TNode>
+		TNode& as();
+
+		template<cpputils::concepts::DerivedSimpleClass<Node> TNode>
+		const TNode& as() const;
+
 		Set& forward(bool _descending);
 		const Set& forward(bool _descending) const;
 		Set& back(bool _descending);
@@ -97,6 +103,10 @@ namespace HMP::Dag
 	};
 
 }
+
+#define HMP_DAG_NODE_IMPL
+#include <HMP/Dag/Node.tpp>
+#undef HMP_DAG_NODE_IMPL
 
 #include <HMP/Dag/Element.hpp>
 #include <HMP/Dag/Operation.hpp>

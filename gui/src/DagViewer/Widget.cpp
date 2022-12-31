@@ -144,13 +144,13 @@ namespace HMP::Gui::DagViewer
 				{
 					case Dag::Operation::EPrimitive::Delete:
 					{
-						const Dag::Delete& node{ static_cast<const Dag::Delete&>(_node) };
+						const Dag::Delete& node{ _node.as<Dag::Delete>() };
 						ImGui::TableNextColumn(); ImGui::Text("Delete Op.");
 					}
 					break;
 					case Dag::Operation::EPrimitive::Refine:
 					{
-						const Dag::Refine& node{ static_cast<const Dag::Refine&>(_node) };
+						const Dag::Refine& node{ _node.as<Dag::Refine>() };
 						ImGui::TableNextColumn(); ImGui::Text("Refine Op.");
 						ImGui::TableNextColumn(); ImGui::Text("Scheme");
 						ImGui::TableNextColumn(); ImGui::Text("%s", Utils::HrDescriptions::describe(node.scheme).c_str());
@@ -180,7 +180,7 @@ namespace HMP::Gui::DagViewer
 					break;
 					case Dag::Operation::EPrimitive::Extrude:
 					{
-						const Dag::Extrude& node{ static_cast<const Dag::Extrude&>(_node) };
+						const Dag::Extrude& node{ _node.as<Dag::Extrude>() };
 						ImGui::TableNextColumn(); ImGui::Text("Extrude Op.");
 						ImGui::TableNextColumn(); ImGui::Text("Source");
 						ImGui::TableNextColumn(); ImGui::Text("%s", Utils::HrDescriptions::describe(node.source).c_str());
