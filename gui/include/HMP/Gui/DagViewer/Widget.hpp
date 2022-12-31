@@ -31,6 +31,8 @@ namespace HMP::Gui::DagViewer
 
 		void drawTooltip(const Dag::Node& _node) const;
 
+		const Dag::Node* m_hovered{};
+
 	public:
 
 		bool showLayoutPerformanceWarning{ false };
@@ -47,6 +49,10 @@ namespace HMP::Gui::DagViewer
 		const cpputils::collections::Namer<const Dag::Node*>& namer() const;
 
 		void resetView();
+
+		bool hasHoveredNode() const;
+
+		const Dag::Node& hoveredNode() const;
 
 		void draw() override;
 

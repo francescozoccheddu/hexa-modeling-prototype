@@ -22,6 +22,7 @@ namespace HMP::Gui::Widgets
         using namespace Utils::Drawing;
         const Meshing::Mesher::Mesh& mesh{ m_mesher.mesh() };
         ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
+        const float fontSize{ ImGui::GetFontSize() * namesFontScale };
         if (showVids)
         {
             const Id count{ std::min<Id>(mesh.num_verts(), 100) };
@@ -115,7 +116,11 @@ namespace HMP::Gui::Widgets
 
             ImGui::EndTable();
             ImGui::Spacing();
-            ImGui::SliderFloat("Font size", &fontSize, 9.0f, 18.0f, "%.1fpx", ImGuiSliderFlags_AlwaysClamp);
+            float fontScalePerc{ namesFontScale * 100.0f };
+            if (ImGui::SliderFloat("Font scale", &fontScalePerc, 25.0f, 200.0f, "%.1f%%", ImGuiSliderFlags_AlwaysClamp))
+            {
+                namesFontScale = fontScalePerc / 100.0f;
+            }
             ImGui::Spacing();
             ImGui::TreePop();
         }
