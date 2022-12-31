@@ -527,6 +527,27 @@ namespace HMP::Gui
 			const ImVec2 hVert2d{ project(m_canvas, m_mesh.vert(m_mouse.vid)) };
 			circleFilled(drawList, hVert2d, 6.0f, themer->ovHi);
 		}
+		else
+		{
+#ifdef HMP_GUI_ENABLE_DAG_VIEWER
+			if (m_canvas.show_sidebar() && m_dagViewerWidget.show_open && m_dagViewerWidget.hasHoveredNode() && m_dagViewerWidget.hoveredNode().isElement())
+			{
+				const Id pid{ m_dagViewerWidget.hoveredNode().element().pid };
+				for (const Id fid : m_mesh.adj_p2f(pid))
+				{
+					const QuadVerts fidVerts{ Meshing::Utils::verts(m_mesh, Meshing::Utils::fidVids(m_mesh, fid)) };
+					const QuadVertData<ImVec2> fidVerts2d{ project(m_canvas, fidVerts) };
+					quadFilled(drawList, fidVerts2d, themer->ovPolyHi);
+				}
+				for (const Id eid : m_mesh.adj_p2e(pid))
+				{
+					const EdgeVerts eidVerts{ Meshing::Utils::verts(m_mesh, Meshing::Utils::eidVids(m_mesh, eid)) };
+					const EdgeVertData<ImVec2> eidVerts2d{ project(m_canvas, eidVerts) };
+					dashedLine(drawList, eidVerts2d, themer->ovFaceHi, 2.0f);
+				}
+			}
+#endif
+		}
 		if (m_mouse.element)
 		{
 			std::ostringstream stream{};

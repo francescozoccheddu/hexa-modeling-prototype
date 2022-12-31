@@ -50,6 +50,16 @@ namespace HMP::Gui::DagViewer
 		initFonts();
 	}
 
+	bool Widget::hasHoveredNode() const
+	{
+		return m_hovered;
+	}
+
+	const Dag::Node& Widget::hoveredNode() const
+	{
+		return *m_hovered;
+	}
+
 	const cpputils::collections::Namer<const Dag::Node*>& Widget::namer() const
 	{
 		return m_namer;
@@ -144,9 +154,9 @@ namespace HMP::Gui::DagViewer
 						ImGui::TableNextColumn(); ImGui::Text("Refine Op.");
 						ImGui::TableNextColumn(); ImGui::Text("Scheme");
 						ImGui::TableNextColumn(); ImGui::Text("%s", Utils::HrDescriptions::describe(node.scheme).c_str());
-						ImGui::TableNextColumn(); ImGui::Text("%s forward face", Utils::HrDescriptions::name(node.parents.first(), m_namer).c_str());
+						ImGui::TableNextColumn(); ImGui::Text("'%s' forward face", Utils::HrDescriptions::name(node.parents.first(), m_namer).c_str());
 						ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(node.forwardFi));
-						ImGui::TableNextColumn(); ImGui::Text("%s vert", Utils::HrDescriptions::name(node.parents.first(), m_namer).c_str());
+						ImGui::TableNextColumn(); ImGui::Text("'%s' vert", Utils::HrDescriptions::name(node.parents.first(), m_namer).c_str());
 						ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(node.firstVi));
 						ImGui::TableNextColumn(); ImGui::Text("Surface verts count");
 						ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(node.surfVids.size()));
@@ -174,10 +184,10 @@ namespace HMP::Gui::DagViewer
 						ImGui::TableNextColumn(); ImGui::Text("Extrude Op.");
 						for (const auto& [parent, parentFi] : cpputils::range::zip(node.parents, node.fis))
 						{
-							ImGui::TableNextColumn(); ImGui::Text("%s face", Utils::HrDescriptions::name(parent, m_namer).c_str());
+							ImGui::TableNextColumn(); ImGui::Text("'%s' face", Utils::HrDescriptions::name(parent, m_namer).c_str());
 							ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(parentFi));
 						}
-						ImGui::TableNextColumn(); ImGui::Text("%s vert", Utils::HrDescriptions::name(node.parents.first(), m_namer).c_str());
+						ImGui::TableNextColumn(); ImGui::Text("'%s' vert", Utils::HrDescriptions::name(node.parents.first(), m_namer).c_str());
 						ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(node.firstVi));
 						ImGui::TableNextColumn(); ImGui::Text("Direction");
 						ImGui::TableNextColumn(); ImGui::Text(node.clockwise ? "CW" : "CCW");
@@ -195,6 +205,7 @@ namespace HMP::Gui::DagViewer
 
 	void Widget::draw()
 	{
+		m_hovered = nullptr;
 
 		{
 			const auto t1{ std::chrono::high_resolution_clock::now() };
@@ -448,6 +459,7 @@ namespace HMP::Gui::DagViewer
 
 		if (hoveredNode && ImGui::IsItemHovered() && !ImGui::IsItemActive())
 		{
+			m_hovered = hoveredNode;
 			ImGui::BeginTooltip();
 			drawTooltip(*hoveredNode);
 			ImGui::EndTooltip();

@@ -26,7 +26,7 @@ namespace HMP::Gui::Widgets
 
         Real testEps{ 1e-9 };
 
-        float fontSize{ 12.0f };
+        float namesFontScale{ 1.0f };
         float themeHue{ 32.0f };
         bool themeDark{ true };
         bool showElements{ false }, showVids{ false }, showEids{ false }, showFids{ false }, showPids{ false };
