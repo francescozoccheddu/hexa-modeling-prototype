@@ -24,7 +24,7 @@ namespace HMP::Gui::Widgets
         using namespace Utils::Drawing;
         const Meshing::Mesher::Mesh& mesh{ m_mesher.mesh() };
         ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
-        const float fontSize{ ImGui::GetFontSize() * namesFontScale };
+        const float fontSize{ ImGui::GetFontSize() * namesFontScale * themer->ovScale };
         if (showVids)
         {
             const Id count{ std::min<Id>(mesh.num_verts(), 100) };
@@ -118,7 +118,7 @@ namespace HMP::Gui::Widgets
 
             ImGui::EndTable();
             ImGui::Spacing();
-            Utils::Controls::sliderPercentage("Font scale", namesFontScale, 0.25f, 2.0f);
+            Utils::Controls::sliderPercentage("Font scale", namesFontScale, 0.5f, 2.0f);
             ImGui::Spacing();
             ImGui::TreePop();
         }
@@ -136,7 +136,7 @@ namespace HMP::Gui::Widgets
                 updateTheme();
             }
             ImGui::Spacing();
-            if (Utils::Controls::sliderPercentage("Scale", themeScale, 0.25f, 2.0f))
+            if (Utils::Controls::sliderPercentage("Scale", themeScale, 0.5f, 2.0f))
             {
                 updateTheme();
             }

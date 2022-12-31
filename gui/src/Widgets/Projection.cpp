@@ -368,7 +368,7 @@ namespace HMP::Gui::Widgets
 				"List",
 				8,
 				ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollY | ImGuiTableFlags_BordersOuter,
-				{ ImGui::GetContentRegionAvail().x, 170.0f * themer->scale }
+				{ ImGui::GetContentRegionAvail().x, 170.0f * themer->sbScale }
 			);
 			for (I i{}; i < m_paths.size(); i++)
 			{
@@ -510,6 +510,7 @@ namespace HMP::Gui::Widgets
 	{
 		const Meshing::Mesher::Mesh& mesh{ m_mesher.mesh() };
 		const cinolib::DrawablePolygonmesh<>& targetMesh{ m_targetWidget.meshForDisplay() };
+		const float lineThickness{ this->lineThickness * themer->ovScale };
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
 		const auto drawPath{ [&](const I _pathI) {
 			const EidsPath& path { m_paths[_pathI] };
@@ -517,7 +518,7 @@ namespace HMP::Gui::Widgets
 			for (const Id eid : path.sourceEids)
 			{
 				const EdgeVertData<ImVec2> eid2d{ Utils::Drawing::project(_canvas, Meshing::Utils::verts(mesh, Meshing::Utils::eidVids(mesh, eid))) };
-				Utils::Drawing::line(drawList, eid2d, color, 2.0f);
+				Utils::Drawing::line(drawList, eid2d, color, lineThickness);
 			}
 			for (const Id eid : path.targetEids)
 			{
@@ -526,7 +527,7 @@ namespace HMP::Gui::Widgets
 					return targetMesh.transform * targetMesh.vert(_vid);
 				}).toArray<2>() };
 				const EdgeVertData<ImVec2> eid2d{ Utils::Drawing::project(_canvas, verts) };
-				Utils::Drawing::line(drawList, eid2d, color, 2.0f);
+				Utils::Drawing::line(drawList, eid2d, color, lineThickness);
 			}
 		} };
 		if (m_showPaths)

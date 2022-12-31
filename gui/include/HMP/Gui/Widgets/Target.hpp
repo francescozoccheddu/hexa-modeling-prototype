@@ -32,6 +32,7 @@ namespace HMP::Gui::Widgets
 		cinolib::Color faceColor, edgeColor;
 		Utils::Transform transform;
 		bool visible;
+		float edgeThickness{ 2.0f };
 
 		Target(const Meshing::Mesher::Mesh& _sourceMesh);
 
@@ -51,6 +52,7 @@ namespace HMP::Gui::Widgets
 		void updateTransform();
 		void updateVisibility();
 		void updateColor(bool _face = true, bool _edge = true);
+		void updateEdgeThickness();
 
 		bool load(bool _keepTransform = false);
 		void load(const std::string& _filename, bool _keepTransform = false);

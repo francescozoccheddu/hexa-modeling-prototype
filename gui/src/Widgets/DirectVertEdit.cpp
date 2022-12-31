@@ -224,6 +224,11 @@ namespace HMP::Gui::Widgets
         {
             return;
         }
+        const float
+            textSize{ this->textSize * themer->ovScale },
+            lineThickness{ this->lineThickness * themer->ovScale },
+            crossRadius{ this->crossRadius * themer->ovScale };
+        const Vec2 textMargin{ this->textMargin * static_cast<Real>(themer->ovScale) };
         using Utils::Controls::toImVec2;
         using Utils::Controls::toImVec4;
         using namespace Utils::Drawing;
@@ -280,7 +285,6 @@ namespace HMP::Gui::Widgets
             break;
             case EKind::Translation:
             {
-                static constexpr Real crossRadius{ 10.0f };
                 if (m_onX && !m_onY && !m_onZ)
                 {
                     line(drawList, { toImVec2(m_start - Vec2{ maxLen, 0 }), toImVec2(m_start + Vec2{ maxLen, 0 }) }, themer->ovMut, lineThickness);

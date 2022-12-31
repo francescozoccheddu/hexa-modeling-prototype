@@ -23,8 +23,7 @@ namespace HMP::Meshing
 		m_mesh.show_mesh(true);
 		m_mesh.show_mesh_flat();
 		m_mesh.show_marked_face(true);
-		m_mesh.show_out_wireframe_width(2.0f);
-		m_mesh.show_in_wireframe_width(2.0f);
+		setEdgeThickness(2.0f);
 		updateColors();
 	}
 
@@ -311,6 +310,17 @@ namespace HMP::Meshing
 		{
 			return false;
 		}
+	}
+
+	void Mesher::setEdgeThickness(float _thickness)
+	{
+		m_mesh.show_out_wireframe_width(_thickness);
+		m_mesh.show_in_wireframe_width(_thickness);
+	}
+
+	float Mesher::edgeThickness() const
+	{
+		return static_cast<float>(m_mesh.drawlist_out.seg_width);
 	}
 
 	void Mesher::updateOctree()

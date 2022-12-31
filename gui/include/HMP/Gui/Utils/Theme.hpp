@@ -9,7 +9,8 @@ namespace HMP::Gui::Utils
     struct Theme final
     {
 
-        float scale;
+        float ovScale;
+        float sbScale;
         float hue;
         bool dark;
         ImVec4 sbOk;

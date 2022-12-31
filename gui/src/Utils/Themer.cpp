@@ -38,8 +38,8 @@ namespace HMP::Gui::Utils
         {
             ImGui::StyleColorsLight();
         }
-        style.ScaleAllSizes(m_theme.scale);
-        ImGui::GetIO().FontGlobalScale = m_theme.scale;
+        style.ScaleAllSizes(m_theme.sbScale);
+        ImGui::GetIO().FontGlobalScale = m_theme.sbScale;
         for (ImVec4& color : style.Colors)
         {
             float h, s, v;
