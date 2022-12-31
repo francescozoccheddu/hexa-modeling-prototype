@@ -187,6 +187,18 @@ namespace HMP::Gui::Widgets
 #else
             ImGui::TableNextColumn(); ImGui::Text("Debug");
 #endif
+            ImGui::TableNextColumn(); ImGui::Text("Aggressive debug");
+#ifdef HMP_AGGRESSIVE_DEBUG
+            ImGui::TableNextColumn(); ImGui::Text("Enabled");
+#else
+            ImGui::TableNextColumn(); ImGui::Text("Disabled");
+#endif
+            ImGui::TableNextColumn(); ImGui::Text("Dag viewer");
+#ifdef HMP_GUI_ENABLE_DAG_VIEWER
+            ImGui::TableNextColumn(); ImGui::Text("Enabled");
+#else
+            ImGui::TableNextColumn(); ImGui::Text("Disabled");
+#endif
             ImGui::TableNextColumn(); ImGui::Text("Version");
             ImGui::TableNextColumn(); ImGui::Text(HMP_VERSION);
             ImGui::TableNextColumn(); ImGui::Text("Build date");
