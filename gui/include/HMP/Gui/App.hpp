@@ -159,7 +159,7 @@ namespace HMP::Gui
 		// save events
 		void onSaveState(const std::string& _filename);
 		void onLoadState(const std::string& _filename);
-		void onExportMesh(const std::string& _filename);
+		void onExportMesh(const std::string& _filename) const;
 
 		// user operation
 		void onSetPathEdge(bool _add);
@@ -172,7 +172,6 @@ namespace HMP::Gui
 		void onRefineFace();
 		void onRefineTest();
 		void onMakeConformant();
-		void onExportMesh();
 		void onSaveState();
 		void onSaveNewState();
 		void onLoadState();

@@ -161,9 +161,17 @@ namespace HMP::Gui
 
 	// save events
 
-	void App::onExportMesh(const std::string& _filename)
+	void App::onExportMesh(const std::string& _filename) const
 	{
-		m_mesh.save(_filename.c_str());
+		Meshing::Mesher::Mesh mesh{ m_mesh };
+		for (Id pidPlusOne{ mesh.num_polys() }; pidPlusOne > 0; --pidPlusOne)
+		{
+			if (!m_mesher.shown(pidPlusOne - 1))
+			{
+				mesh.poly_remove(pidPlusOne - 1, true);
+			}
+		}
+		mesh.save(_filename.c_str());
 	}
 
 	void App::onSaveState(const std::string& _filename)
