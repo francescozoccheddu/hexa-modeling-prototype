@@ -107,7 +107,7 @@ namespace HMP::Gui::DagViewer
 					static_cast<unsigned int>(node.vids[7])
 				);
 				ImGui::TableNextColumn(); ImGui::Text("Visibility");
-				bool hidden;
+				bool hidden{ false };
 				for (const Dag::Operation& child : node.children)
 				{
 					switch (child.primitive)
