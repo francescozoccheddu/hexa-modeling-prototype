@@ -167,7 +167,10 @@ namespace HMP::Projection
         {
             for (const Id adjPid : _mesh.adj_v2p(vid))
             {
-                pids.insert(adjPid);
+                if (!_mesh.poly_data(adjPid).flags[cinolib::HIDDEN])
+                {
+                    pids.insert(adjPid);
+                }
             }
         }
         std::unordered_map<Id, I> vidToVidsIMap;
