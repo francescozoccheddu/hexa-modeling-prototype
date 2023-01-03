@@ -78,7 +78,7 @@ namespace HMP::Projection
         return weights;
     }
 
-    std::vector<Real> surfaceVertNormDistances(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const Id _vid, const std::vector<std::vector<Match::SourceToTargetVid>>& _matches)
+    std::vector<Real> surfaceVertNormzedDists(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const Id _vid, const std::vector<std::vector<Match::SourceToTargetVid>>& _matches)
     {
         const std::vector<Id>& adjFids{ _source.adj_v2p(_vid) };
         std::vector<Real> weights;
@@ -96,31 +96,30 @@ namespace HMP::Projection
         const Vec& sourceVert{ _source.vert(_vid) };
         for (const Id adjFid : adjFids)
         {
-            if (_matches[toI(adjFid)].empty())
+            for (const Match::SourceToTargetVid& match : _matches[toI(adjFid)])
             {
-                continue;
+                const Vec& targetVert{ _target.vert(match.targetVid) };
+                weights.push_back(targetVert.dist(sourceVert));
             }
-            const Vec& targetVert{ _target.vert(adjFid) };
-            weights.push_back(targetVert.dist(sourceVert));
         }
         Utils::normalizeWeights(weights);
         return weights;
     }
 
-    std::optional<Vec> projectsurfaceVert(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const Id _vid, const std::vector<std::vector<Match::SourceToTargetVid>>& _matches, const Options& _options)
+    std::optional<Vec> projectSurfaceVert(const cinolib::AbstractPolygonMesh<>& _source, const cinolib::AbstractPolygonMesh<>& _target, const Id _vid, const std::vector<std::vector<Match::SourceToTargetVid>>& _matches, const Options& _options)
     {
         const std::vector<Id>& adjFids{ _source.adj_v2p(_vid) };
         const Vec& sourceVert{ _source.vert(_vid) };
         const std::vector<Real>& baseWeights{ surfaceVertBaseWeights(_source, _vid, _matches, _options.baseWeightMode) };
-        const std::vector<Real>& normDistances{ surfaceVertNormDistances(_source, _target, _vid, _matches) };
-        const Vec sourceNorm{ _source.vert_data(_vid).normal };
+        const std::vector<Real>& normzedDists{ surfaceVertNormzedDists(_source, _target, _vid, _matches) };
+        const Vec sourceNormal{ _source.vert_data(_vid).normal };
         Vec targetVertSum{};
         Vec dirSum{};
-        Vec normDirSum{};
+        Vec normzedDirSum{};
         Real dirLengthSum{};
         Real weightSum{};
         std::vector<Real>::const_iterator baseWeightIt{ baseWeights.begin() };
-        std::vector<Real>::const_iterator normDistanceIt{ normDistances.begin() };
+        std::vector<Real>::const_iterator normzedDistIt{ normzedDists.begin() };
         for (I i{}; i < adjFids.size(); i++)
         {
             for (const Match::SourceToTargetVid& match : _matches[toI(adjFids[i])])
@@ -130,26 +129,22 @@ namespace HMP::Projection
                 {
                     continue;
                 }
-                const Vec targetNorm{ _target.vert_data(match.targetVid).normal };
-                const Real dot{ sourceNorm.dot(targetNorm) };
-                if (_options.normalDotTweak.shouldSkip(dot))
+                const Vec targetNormal{ _target.vert_data(match.targetVid).normal };
+                const Real normalDot{ sourceNormal.dot(targetNormal) };
+                if (_options.normalDotTweak.shouldSkip(normalDot))
                 {
                     continue;
                 }
-                const Real normDistance{ *normDistanceIt };
-                const Real distanceWeight{ std::pow(normDistance, _options.distanceWeightPower) * _options.distanceWeight + 1.0 };
-                const Real weight{ _options.baseWeightTweak.apply(baseWeight) * _options.normalDotTweak.apply(dot) * distanceWeight };
+                const Real normzedDist{ *normzedDistIt++ };
+                const Real distanceWeight{ std::pow(normzedDist, _options.distanceWeightPower) * _options.distanceWeight + 1.0 };
+                const Real weight{ _options.baseWeightTweak.apply(baseWeight) * _options.normalDotTweak.apply(normalDot) * distanceWeight };
                 const Vec targetVert{ _target.vert(match.targetVid) };
                 const Vec dir{ targetVert - sourceVert };
                 weightSum += weight;
                 targetVertSum += targetVert * weight;
                 dirSum += dir * weight;
-                normDirSum += dir.is_null() ? Vec{} : (dir.normalized() * weight);
+                normzedDirSum += dir.is_null() ? Vec{} : (dir.normalized() * weight);
                 dirLengthSum += dir.norm() * weight;
-            }
-            if (!_matches[toI(adjFids[i])].empty())
-            {
-                normDistanceIt++;
             }
         }
         if (weightSum == 0)
@@ -166,9 +161,9 @@ namespace HMP::Projection
                 case EDisplaceMode::DirAvg:
                     return sourceVert + dirSum / weightSum;
                 case EDisplaceMode::NormDirAvgAndDirAvg:
-                    return sourceVert + normDirSum * ((dirSum / weightSum).norm() / weightSum);
+                    return sourceVert + normzedDirSum * ((dirSum / weightSum).norm() / weightSum);
                 case EDisplaceMode::NormDirAvgAndDirNormAvg:
-                    return sourceVert + normDirSum * dirLengthSum / weightSum / weightSum;
+                    return sourceVert + normzedDirSum * dirLengthSum / weightSum / weightSum;
                 default:
                     cpputils::unreachable();
             }
@@ -180,7 +175,7 @@ namespace HMP::Projection
         const std::vector<std::vector<Match::SourceToTargetVid>>& matches{ Match::matchSurfaceFid(_source, _target) };
         std::vector<std::optional<Vec>> projected(toI(_source.num_verts()));
         const auto func{ [&](const Id _vid) {
-            projected[toI(_vid)] = projectsurfaceVert(_source, _target, _vid, matches, _options);
+            projected[toI(_vid)] = projectSurfaceVert(_source, _target, _vid, matches, _options);
         } };
         cinolib::PARALLEL_FOR(0, _source.num_verts(), c_minVertsForParallelFor, func);
         return fill(_source, projected, _options.unsetVertsDistWeightTweak);
