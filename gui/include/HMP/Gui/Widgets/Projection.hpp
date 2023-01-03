@@ -9,6 +9,7 @@
 #include <HMP/Gui/Widgets/VertEdit.hpp>
 #include <HMP/Commander.hpp>
 #include <cinolib/feature_network.h>
+#include <HMP/Utils/Serialization.hpp>
 #include <array>
 #include <imgui.h>
 
@@ -70,6 +71,9 @@ namespace HMP::Gui::Widgets
 		void draw() override;
 
 		void draw(const cinolib::GLcanvas& _canvas) override;
+
+		void serialize(HMP::Utils::Serialization::Serializer& _serializer) const;
+		void deserialize(HMP::Utils::Serialization::Deserializer& _deserializer);
 
 	};
 

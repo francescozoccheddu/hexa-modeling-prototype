@@ -9,8 +9,8 @@ Sorted by priority:
 - **\[IMPROVEMENT\]** Improve `HMP::Actions::MakeConforming` either by implementing a balancing preprocessing phase, or by defining more adapter schemes.
 - **\[FEATURE\]** The extrude operation could automatically determine the number of parents, or at least give the user a warning in case of unintentionally duplicate vertices.
 - **\[IMPROVEMENT\]** `HMP::Actions::MakeConforming` performance can be improved a lot by keeping a queue of non-conforming refinements.
-- **\[FEATURE\]** Projection feature paths, widget options and camera could be serialized too.
 - **\[FEATURE\]** Perhaps pasting a subtree should not preserve the source size (or maybe the choice could be left to the user).
+- **\[FEATURE\]** Widget options and camera could be serialized too.
 - **\[REFACTOR\]** `HMP::Meshing::Utils` is a dumpsite full of duplicated code. Keep the few essential primitives and throw everything else away.
 - **\[IMPROVEMENT\]** `OGDF` is overkill for what I need. Consider replacing it with a lighter implementation of the Sugiyama layout algorithm.
 - **\[IMPROVEMENT\]** The `HMP::Gui::Widgets::DirectVertEdit` scale and rotation implementation is a bit janky. (Also, a global axis-aligned translation feature would be welcome).
