@@ -90,11 +90,14 @@ namespace HMP::Gui::Widgets
         m_negJacTestRes = 0;
         for (Id pid{}; pid < m_mesher.mesh().num_polys(); pid++)
         {
-            const std::vector<Vec>& verts{ m_mesher.mesh().poly_verts(pid) };
-            if (cinolib::hex_scaled_jacobian(verts[0], verts[1], verts[2], verts[3], verts[4], verts[5], verts[6], verts[7]) < 0.0)
+            if (m_mesher.shown(pid))
             {
-                m_vertEdit.add(m_mesher.mesh().adj_p2v(pid));
-                m_negJacTestRes++;
+                const std::vector<Vec>& verts{ m_mesher.mesh().poly_verts(pid) };
+                if (cinolib::hex_scaled_jacobian(verts[0], verts[1], verts[2], verts[3], verts[4], verts[5], verts[6], verts[7]) < 0.0)
+                {
+                    m_vertEdit.add(m_mesher.mesh().adj_p2v(pid));
+                    m_negJacTestRes++;
+                }
             }
         }
     }
