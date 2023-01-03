@@ -15,7 +15,7 @@ namespace HMP::Gui::Widgets
 
     void Pad::draw()
     {
-        Utils::Controls::sliderI("Smooth iterations", smoothIterations, 0, 10);
+        Utils::Controls::sliderI("Smooth iterations", smoothIterations, 0, 20);
         Utils::Controls::sliderPercentage("Smooth surface weight", smoothSurfVertWeight, 0.5, 2.0);
         Utils::Controls::sliderPercentage("Corner shrink factor", cornerShrinkFactor);
         const Real meshSize{ m_mesh.bbox().diag() };
