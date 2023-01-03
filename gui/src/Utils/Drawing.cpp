@@ -21,6 +21,15 @@ namespace HMP::Gui::Utils::Drawing
         return std::clamp(static_cast<int>(std::round(_radius / 8)), 6, 36);
     }
 
+    bool outside(const ImVec2& _vert)
+    {
+        const ImVec2 min{ ImGui::GetWindowPos() }, size{ ImGui::GetWindowSize() }, max{ min.x + size.x, min.y + size.y };
+        return _vert.x < min.x
+            || _vert.x > max.x
+            || _vert.y < min.y
+            || _vert.y > max.y;
+    }
+
     void dashedLine(ImDrawList& _drawList, const EdgeVertData<ImVec2>& _verts, ImU32 _color, float _thickness, float _spacing)
     {
         const cinolib::vec2f from{ _verts[0].x, _verts[0].y }, to{ _verts[1].x, _verts[1].y };
@@ -46,6 +55,10 @@ namespace HMP::Gui::Utils::Drawing
 
     void line(ImDrawList& _drawList, const EdgeVertData<ImVec2>& _verts, ImU32 _color, float _thickness)
     {
+        if (outside(_verts[0]) && outside(_verts[1]))
+        {
+            return;
+        }
         _drawList.AddLine(_verts[0], _verts[1], _color, _thickness);
     }
 
