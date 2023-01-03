@@ -25,6 +25,8 @@ namespace HMP::Gui::Widgets
         VertEdit& m_vertEdit;
         cinolib::DrawableSegmentSoup m_sectionSoup;
 
+        unsigned int m_negJacTestRes{}, m_closeVertsTestRes{};
+
     public:
 
         Real testEps{ 1e-9 };
@@ -49,7 +51,9 @@ namespace HMP::Gui::Widgets
         void draw() override;
 
         void updateTheme() const;
+
         void selectCloseVerts();
+        void selectNegJacobianHexes();
 
     };
 

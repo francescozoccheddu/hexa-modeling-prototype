@@ -12,6 +12,7 @@
 #include <cinolib/fonts/droid_sans.hpp>
 #include <imgui_impl_opengl2.h>
 #include <HMP/Gui/themer.hpp>
+#include <cinolib/quality_hex.h>
 
 namespace HMP::Gui::Widgets
 {
@@ -79,6 +80,21 @@ namespace HMP::Gui::Widgets
             {
                 const Vec vert{ mesh.poly_centroid(pid) };
                 text(drawList, m_dagNamer.nameOrUnknown(&m_mesher.element(pid)).c_str(), project(_canvas, vert), fontSize, themer->ovHi);
+            }
+        }
+    }
+
+    void Debug::selectNegJacobianHexes()
+    {
+        m_vertEdit.clear();
+        m_negJacTestRes = 0;
+        for (Id pid{}; pid < m_mesher.mesh().num_polys(); pid++)
+        {
+            const std::vector<Vec>& verts{ m_mesher.mesh().poly_verts(pid) };
+            if (cinolib::hex_scaled_jacobian(verts[0], verts[1], verts[2], verts[3], verts[4], verts[5], verts[6], verts[7]) < 0.0)
+            {
+                m_vertEdit.add(m_mesher.mesh().adj_p2v(pid));
+                m_negJacTestRes++;
             }
         }
     }
@@ -218,9 +234,12 @@ namespace HMP::Gui::Widgets
             ImGui::Spacing();
             static constexpr double minEps{ 1e-9 }, maxEps{ 1e-3 };
             ImGui::SliderScalar("Epsilon", ImGuiDataType_Double, &testEps, &minEps, &maxEps, "%.3e", ImGuiSliderFlags_AlwaysClamp);
-            ImGui::BeginTable("tests", 2, ImGuiTableFlags_RowBg);
+            ImGui::BeginTable("tests", 3, ImGuiTableFlags_RowBg);
             ImGui::TableSetupColumn("run", ImGuiTableColumnFlags_WidthFixed);
             ImGui::TableSetupColumn("desc", ImGuiTableColumnFlags_WidthStretch);
+            ImGui::TableSetupColumn("result", ImGuiTableColumnFlags_WidthFixed);
+
+            ImGui::TableNextRow();
             ImGui::TableNextColumn();
             if (ImGui::SmallButton("Run##closeverts"))
             {
@@ -229,12 +248,28 @@ namespace HMP::Gui::Widgets
             ImGui::TableNextColumn();
             ImGui::Text("Select close verts");
             ImGui::TableNextColumn();
+            ImGui::Text("%u", m_closeVertsTestRes);
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
+            if (ImGui::SmallButton("Run##jacobian"))
+            {
+                selectNegJacobianHexes();
+            }
+            ImGui::TableNextColumn();
+            ImGui::Text("Select negative jacobian hexes");
+            ImGui::TableNextColumn();
+            ImGui::Text("%u", m_negJacTestRes);
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
             if (ImGui::SmallButton("Run##crash"))
             {
                 throw std::runtime_error{ "user requested test crash" };
             }
             ImGui::TableNextColumn();
             ImGui::TextColored(themer->sbWarn, "Throw an exception");
+
             ImGui::EndTable();
             ImGui::Spacing();
             ImGui::TreePop();
@@ -343,6 +378,7 @@ namespace HMP::Gui::Widgets
                 vertMap.insert(it, { vert, vid });
             }
         }
+        m_closeVertsTestRes = m_vertEdit.vids().size();
     }
 
 }
