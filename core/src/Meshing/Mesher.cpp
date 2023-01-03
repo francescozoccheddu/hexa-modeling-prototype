@@ -77,6 +77,7 @@ namespace HMP::Meshing
 			m_mesh.updateGL_out(m_fidVisibleTriId, m_eidVisibleEid);
 			m_mesh.updateGL_in(m_fidVisibleTriId, m_eidVisibleEid);
 			m_dirty = false;
+			onUpdated();
 		}
 	}
 

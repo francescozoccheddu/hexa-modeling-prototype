@@ -110,7 +110,7 @@ namespace HMP::Projection::Utils
         std::vector<Id> vids;
         for (Id vid{}; vid < _mesh.num_verts(); vid++)
         {
-            if (_mesh.vert_is_on_srf(vid))
+            if (_mesh.vert_is_visible(vid))
             {
                 vids.push_back(vid);
             }

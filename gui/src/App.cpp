@@ -12,6 +12,7 @@
 #include <utility>
 #include <HMP/Dag/Operation.hpp>
 #include <HMP/Actions/Root.hpp>
+#include <HMP/Actions/Pad.hpp>
 #include <HMP/Actions/Delete.hpp>
 #include <HMP/Actions/Extrude.hpp>
 #include <HMP/Actions/MakeConforming.hpp>
@@ -1032,13 +1033,18 @@ namespace HMP::Gui
 		m_mesher.updateColors();
 	}
 
+	void App::onPad(Real _length, I _smoothIterations, Real _smoothSurfVertWeight, Real _cornerShrinkFactor)
+	{
+		applyAction(*new Actions::Pad{ _length, _smoothIterations, _smoothSurfVertWeight, _cornerShrinkFactor });
+	}
+
 	// launch
 
 	App::App():
 		m_project{}, m_canvas{ 700, 600, 13, 1.0f }, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() },
 		m_dagNamer{}, m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{}, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher },
 		m_directVertEditWidget{ m_vertEditWidget, m_canvas }, m_saveWidget{}, m_projectionWidget{ m_targetWidget, m_commander, m_mesher },
-		m_debugWidget{ m_mesher, m_dagNamer, m_vertEditWidget }
+		m_debugWidget{ m_mesher, m_dagNamer, m_vertEditWidget }, m_padWidget{ m_mesh }
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		, m_dagViewerWidget{ m_dagNamer }, m_dagViewerNeedsUpdate{ true }
 #endif
@@ -1081,6 +1087,7 @@ namespace HMP::Gui
 		m_canvas.push(static_cast<cinolib::CanvasGuiItem*>(&m_vertEditWidget));
 		m_canvas.push(static_cast<cinolib::SideBarItem*>(&m_vertEditWidget));
 		m_canvas.push(&m_targetWidget);
+		m_canvas.push(&m_padWidget);
 		m_canvas.push(static_cast<cinolib::CanvasGuiItem*>(&m_projectionWidget));
 		m_canvas.push(static_cast<cinolib::SideBarItem*>(&m_projectionWidget));
 
@@ -1091,6 +1098,8 @@ namespace HMP::Gui
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		m_canvas.push(&m_dagViewerWidget);
 #endif
+
+		m_padWidget.onPadRequested += [this](const auto&& ... _args) { onPad(_args...); };
 
 		m_saveWidget.onExportMesh += [this](const std::string& _filename) { onExportMesh(_filename); };
 		m_saveWidget.onSave += [this](const std::string& _filename) { onSaveState(_filename); };

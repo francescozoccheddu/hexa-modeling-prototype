@@ -35,7 +35,6 @@ namespace HMP::Gui::Widgets
         Real sectionFactor{ 0.0 };
         int sectionDim{ 1 };
         float sectionLineThickness{ 1.0f };
-        bool updateSectionOnSliderChange{ false };
         float themeHue{ 32.0f };
         bool themeDark{ true };
         float themeScale{ 1.0f };

@@ -1,6 +1,7 @@
 #include <HMP/Gui/Utils/Controls.hpp>
 
 #include <HMP/Gui/Utils/Transform.hpp>
+#include <algorithm>
 
 namespace HMP::Gui::Utils::Controls
 {
@@ -69,7 +70,7 @@ namespace HMP::Gui::Utils::Controls
 
 	bool sliderI(const char* _label, I& _value, I _min, I _max)
 	{
-		int value{ static_cast<int>(_value) };
+		int value{ static_cast<int>(std::clamp(_value, _min, _max)) };
 		if (ImGui::SliderInt(_label, &value, static_cast<int>(_min), static_cast<int>(_max), "%d", ImGuiSliderFlags_AlwaysClamp))
 		{
 			_value = static_cast<I>(value);
@@ -80,7 +81,7 @@ namespace HMP::Gui::Utils::Controls
 
 	bool sliderReal(const char* _label, Real& _value, Real _min, Real _max, bool _logarithmic, const char* _format)
 	{
-		float value{ static_cast<float>(_value) };
+		float value{ static_cast<float>(std::clamp(_value, _min, _max)) };
 		ImGuiSliderFlags flags{ ImGuiSliderFlags_AlwaysClamp };
 		if (_logarithmic)
 		{
