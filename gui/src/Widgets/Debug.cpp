@@ -3,6 +3,7 @@
 #include <imgui.h>
 #include <cinolib/memory_usage.h>
 #include <unordered_map>
+#include <unordered_set>
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Gui/Utils/Drawing.hpp>
 #include <HMP/Gui/Utils/Controls.hpp>
@@ -16,8 +17,18 @@ namespace HMP::Gui::Widgets
 {
 
     Debug::Debug(Meshing::Mesher& _mesher, cpputils::collections::SetNamer<const HMP::Dag::Node*>& _dagNamer, VertEdit& _vertEdit)
-        : cinolib::SideBarItem{ "Debug" }, m_mesher{ _mesher }, m_dagNamer{ _dagNamer }, m_vertEdit{ _vertEdit }
-    {}
+        : cinolib::SideBarItem{ "Debug" }, m_mesher{ _mesher }, m_dagNamer{ _dagNamer }, m_vertEdit{ _vertEdit }, m_sectionSoup{}
+    {
+        m_sectionSoup.set_color(Utils::Drawing::toColor(themer->ovHi));
+        m_sectionSoup.set_thickness(sectionLineThickness* themer->ovScale);
+        themer.onThemeChange += [this]() {
+            m_sectionSoup.set_color(Utils::Drawing::toColor(themer->ovHi));
+            m_sectionSoup.set_thickness(sectionLineThickness * themer->ovScale);
+        };
+        m_sectionSoup.show = true;
+        m_sectionSoup.use_gl_lines = true;
+        m_sectionSoup.no_depth_test = true;
+    }
 
     void Debug::draw(const cinolib::GLcanvas& _canvas)
     {
@@ -70,6 +81,58 @@ namespace HMP::Gui::Widgets
                 text(drawList, m_dagNamer.nameOrUnknown(&m_mesher.element(pid)).c_str(), project(_canvas, vert), fontSize, themer->ovHi);
             }
         }
+    }
+
+    void Debug::updateSection()
+    {
+        const Id dim{ static_cast<Id>(sectionDim) };
+        const Meshing::Mesher::Mesh& mesh{ m_mesher.mesh() };
+        const Real v{ mesh.bbox().delta()[dim] * sectionFactor + mesh.bbox().min[dim] };
+        std::vector<Id> pids;
+        for (Id pid{}; pid < mesh.num_polys(); ++pid)
+        {
+            if (m_mesher.shown(pid))
+            {
+                const cinolib::AABB& aabb{ mesh.poly_aabb(pid) };
+                if (aabb.min[dim] < v && aabb.max[dim] >= v)
+                {
+                    pids.push_back(pid);
+                }
+            }
+        }
+        std::unordered_set<Id> eids;
+        for (const Id pid : pids)
+        {
+            for (const Id adjPid : mesh.adj_p2p(pid))
+            {
+                if (m_mesher.shown(adjPid))
+                {
+                    const cinolib::AABB& aabb{ mesh.poly_aabb(adjPid) };
+                    if (aabb.max[dim] < v)
+                    {
+                        const Id fid{ static_cast<Id>(mesh.poly_shared_face(pid, adjPid)) };
+                        for (const Id eid : mesh.adj_f2e(fid))
+                        {
+                            eids.insert(eid);
+                        }
+                    }
+                }
+            }
+        }
+        m_sectionSoup.clear();
+        m_sectionSoup.reserve(eids.size() * 2);
+        for (const Id eid : eids)
+        {
+            m_sectionSoup.push_seg(
+                mesh.edge_vert(eid, 0),
+                mesh.edge_vert(eid, 1)
+            );
+        }
+    }
+
+    const cinolib::DrawableSegmentSoup& Debug::sectionSoup() const
+    {
+        return m_sectionSoup;
     }
 
     void Debug::draw()
@@ -176,7 +239,36 @@ namespace HMP::Gui::Widgets
             ImGui::Spacing();
             ImGui::TreePop();
         }
-        // debug
+        // section
+        if (ImGui::TreeNode("Section"))
+        {
+            ImGui::Spacing();
+            if (Utils::Controls::sliderPercentage("Factor", sectionFactor) && updateSectionOnSliderChange)
+            {
+                updateSection();
+            }
+            if (ImGui::Combo("Dimension", &sectionDim, "X\0Y\0Z\0") && updateSectionOnSliderChange)
+            {
+                updateSection();
+            }
+            if (Utils::Controls::disabledButton("Clear", !m_sectionSoup.empty()))
+            {
+                m_sectionSoup.clear();
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Update"))
+            {
+                updateSection();
+            }
+            ImGui::SameLine();
+            if (ImGui::Checkbox("Update on factor change", &updateSectionOnSliderChange) && updateSectionOnSliderChange)
+            {
+                updateSection();
+            }
+            ImGui::Spacing();
+            ImGui::TreePop();
+        }
+        // stats
         if (ImGui::TreeNode("Stats"))
         {
             ImGui::Spacing();
