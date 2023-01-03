@@ -30,12 +30,12 @@ namespace HMP::Projection
 
         EBaseWeightMode baseWeightMode{ EBaseWeightMode::Distance };
         EDisplaceMode displaceMode{ EDisplaceMode::DirAvg };
-        EJacobianCheckMode jacobianCheckMode{ EJacobianCheckMode::Surface };
+        EJacobianCheckMode jacobianCheckMode{ EJacobianCheckMode::All };
         EJacobianAdvanceMode jacobianAdvanceMode{ EJacobianAdvanceMode::Length };
         I jacobianAdvanceMaxTests{ 7 };
         I smoothInternalIterations{ 1 };
         I smoothSurfaceIterations{ true };
-        Real smoothInternalDoneWeight{ 2.0 };
+        Real smoothInternalDoneWeight{ 1.0 };
         Real jacobianAdvanceStopThreshold{ 0.1 };
         Utils::Tweak baseWeightTweak{ 0.0, 1.0 };
         Utils::Tweak normalDotTweak{ -1.0, 0.0 };

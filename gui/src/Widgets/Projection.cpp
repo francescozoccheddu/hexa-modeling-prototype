@@ -312,9 +312,9 @@ namespace HMP::Gui::Widgets
 		if (ImGui::TreeNode("Smoothing"))
 		{
 			ImGui::Spacing();
-			Utils::Controls::sliderI("Surface iterations", m_options.smoothSurfaceIterations, 0, 10);
-			Utils::Controls::sliderI("Internal iterations", m_options.smoothInternalIterations, 0, 10);
-			Utils::Controls::sliderPercentage("Internal done weight", m_options.smoothInternalDoneWeight, 1.0, 10.0);
+			Utils::Controls::sliderI("Surface iterations", m_options.smoothSurfaceIterations, 0, 20);
+			Utils::Controls::sliderI("Internal iterations", m_options.smoothInternalIterations, 0, 20);
+			Utils::Controls::sliderPercentage("Internal done weight", m_options.smoothInternalDoneWeight, 0.25, 4.0);
 			ImGui::Spacing();
 			ImGui::TreePop();
 		}
@@ -485,7 +485,7 @@ namespace HMP::Gui::Widgets
 		if (ImGui::TreeNode("Project"))
 		{
 			ImGui::Spacing();
-			Utils::Controls::sliderI("Iterations", m_options.iterations, 1, 10);
+			Utils::Controls::sliderI("Iterations", m_options.iterations, 1, 20);
 			if (m_targetWidget.hasMesh())
 			{
 				if (ImGui::Button("Project"))
