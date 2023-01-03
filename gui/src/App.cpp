@@ -1074,6 +1074,7 @@ namespace HMP::Gui
 		m_canvas.push(&m_axesWidget);
 		m_canvas.push(static_cast<cinolib::CanvasGuiItem*>(&m_debugWidget));
 		m_canvas.push(static_cast<cinolib::SideBarItem*>(&m_debugWidget));
+		m_canvas.push(&m_debugWidget.sectionSoup());
 
 		m_canvas.push(&m_saveWidget);
 		m_canvas.push(&m_commanderWidget);
