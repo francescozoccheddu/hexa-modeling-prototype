@@ -10,6 +10,7 @@ add_library (core STATIC
     "src/Actions/Refine.cpp"
     "src/Actions/Transform.cpp"
     "src/Actions/ExtrudeUtils.cpp"
+    "src/Actions/Pad.cpp"
     "src/Dag/Delete.cpp"
     "src/Dag/Element.cpp"
     "src/Dag/Extrude.cpp"

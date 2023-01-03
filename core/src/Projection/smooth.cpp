@@ -50,6 +50,18 @@ namespace HMP::Projection
         smoothInternal(_mesh, Utils::SurfaceExporter::onSurfVids(_mesh), _doneWeight, _out);
     }
 
+    bool isVidHidden(const Meshing::Mesher::Mesh& _mesh, Id _vid)
+    {
+        for (const Id adjPid : _mesh.adj_v2p(_vid))
+        {
+            if (!_mesh.poly_data(adjPid).flags[cinolib::HIDDEN])
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
     void smoothInternal(const Meshing::Mesher::Mesh& _mesh, const std::vector<Id>& _surfaceVids, Real _doneWeight, std::vector<Vec>& _out)
     {
         _out = _mesh.vector_verts();
@@ -61,12 +73,15 @@ namespace HMP::Projection
             Real weightSum{};
             for (const Id adjVid : _mesh.adj_v2v(vid))
             {
-                vertSum += doneVids[adjVid]
-                    ? _out[toI(adjVid)] * _doneWeight
-                    : _mesh.vert(adjVid);
-                weightSum += doneVids[adjVid]
-                    ? _doneWeight
-                    : 1.0;
+                if (!isVidHidden(_mesh, adjVid))
+                {
+                    vertSum += doneVids[adjVid]
+                        ? _out[toI(adjVid)] * _doneWeight
+                        : _mesh.vert(adjVid);
+                    weightSum += doneVids[adjVid]
+                        ? _doneWeight
+                        : 1.0;
+                }
             }
             _out[toI(vid)] = weightSum != 0
                 ? vertSum / weightSum
@@ -85,12 +100,16 @@ namespace HMP::Projection
             {
                 for (const Id adjVid : _mesh.adj_v2v(vid))
                 {
-                    if (!doneVids[toI(adjVid)])
+                    if (!doneVids[toI(adjVid)] && !isVidHidden(_mesh, adjVid))
                     {
                         nextVids.push_back(adjVid);
                     }
                 }
             }
+        }
+        for (const Id vid : _surfaceVids)
+        {
+            _out[toI(vid)] = _mesh.vert(vid);
         }
     }
 

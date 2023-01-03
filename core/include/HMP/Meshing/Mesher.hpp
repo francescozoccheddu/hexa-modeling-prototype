@@ -81,6 +81,7 @@ namespace HMP::Meshing
 		mutable cpputils::collections::Event<Mesher, State> onAdded;
 		mutable cpputils::collections::Event<Mesher, State> onRestored;
 		mutable cpputils::collections::Event<Mesher, const Dag::Element&, bool> onElementVisibilityChanged;
+		mutable cpputils::collections::Event<Mesher> onUpdated;
 
 		const Mesh& mesh() const;
 

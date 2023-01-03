@@ -12,6 +12,7 @@
 #include <HMP/Actions/MakeConforming.hpp>
 #include <HMP/Actions/Paste.hpp>
 #include <HMP/Actions/Project.hpp>
+#include <HMP/Actions/Pad.hpp>
 #include <HMP/Actions/Refine.hpp>
 #include <HMP/Actions/Transform.hpp>
 #include <HMP/Meshing/Utils.hpp>
@@ -47,6 +48,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 	std::string describe(const Actions::Project& _action);
 	std::string describe(const Actions::Refine& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::Transform& _action);
+	std::string describe(const Actions::Pad& _action);
 	std::string describe(const Commander::Action& _action, DagNamer& _dagNamer);
 
 }

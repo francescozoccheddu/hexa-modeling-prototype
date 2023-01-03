@@ -221,6 +221,16 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return describe(_action.operation(), _action.elements().address().toFixedVector<3>(), _dagNamer);
 	}
 
+	std::string describe(const Actions::Pad& _action)
+	{
+		std::ostringstream stream{};
+		stream
+			<< "Pad"
+			<< " with length " << _action.length()
+			<< " (" << _action.operations().size() << " operations)";
+		return stream.str();
+	}
+
 	std::string describe(const Actions::Root& _action, DagNamer& _dagNamer)
 	{
 		std::ostringstream stream{};
@@ -350,6 +360,10 @@ namespace HMP::Gui::Utils::HrDescriptions
 			return describe(*action, _dagNamer);
 		}
 		if (const Actions::Transform* action{ dynamic_cast<const Actions::Transform*>(&_action) }; action)
+		{
+			return describe(*action);
+		}
+		if (const Actions::Pad* action{ dynamic_cast<const Actions::Pad*>(&_action) }; action)
 		{
 			return describe(*action);
 		}

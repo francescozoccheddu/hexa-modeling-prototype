@@ -112,7 +112,7 @@ namespace HMP::Projection
                 }
                 for (const Id pid : _pids)
                 {
-                    if (!isOk(_mesh, pid))
+                    if (!_mesh.poly_data(pid).flags[cinolib::HIDDEN] && !isOk(_mesh, pid))
                     {
                         failurePid = pid;
                         break;

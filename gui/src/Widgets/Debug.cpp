@@ -29,6 +29,9 @@ namespace HMP::Gui::Widgets
         m_sectionSoup.show = true;
         m_sectionSoup.use_gl_lines = true;
         m_sectionSoup.no_depth_test = true;
+        _mesher.onUpdated += [this]() {
+            updateSection();
+        };
     }
 
     void Debug::draw(const cinolib::GLcanvas& _canvas)
@@ -104,6 +107,11 @@ namespace HMP::Gui::Widgets
 
     void Debug::updateSection()
     {
+        m_sectionSoup.clear();
+        if (sectionFactor <= 0.0)
+        {
+            return;
+        }
         const Id dim{ static_cast<Id>(sectionDim) };
         const Meshing::Mesher::Mesh& mesh{ m_mesher.mesh() };
         const Real v{ mesh.bbox().delta()[dim] * sectionFactor + mesh.bbox().min[dim] };
@@ -138,7 +146,6 @@ namespace HMP::Gui::Widgets
                 }
             }
         }
-        m_sectionSoup.clear();
         m_sectionSoup.reserve(eids.size() * 2);
         for (const Id eid : eids)
         {
@@ -281,26 +288,17 @@ namespace HMP::Gui::Widgets
         if (ImGui::TreeNode("Section"))
         {
             ImGui::Spacing();
-            if (Utils::Controls::sliderPercentage("Factor", sectionFactor) && updateSectionOnSliderChange)
+            if (Utils::Controls::sliderPercentage("Factor", sectionFactor))
             {
                 updateSection();
             }
-            if (ImGui::Combo("Dimension", &sectionDim, "X\0Y\0Z\0") && updateSectionOnSliderChange)
+            if (ImGui::Combo("Dimension", &sectionDim, "X\0Y\0Z\0"))
             {
                 updateSection();
             }
-            if (Utils::Controls::disabledButton("Clear", !m_sectionSoup.empty()))
+            if (Utils::Controls::disabledButton("Clear", sectionFactor > 0.0))
             {
-                m_sectionSoup.clear();
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Update"))
-            {
-                updateSection();
-            }
-            ImGui::SameLine();
-            if (ImGui::Checkbox("Update on factor change", &updateSectionOnSliderChange) && updateSectionOnSliderChange)
-            {
+                sectionFactor = 0.0;
                 updateSection();
             }
             ImGui::Spacing();

@@ -19,6 +19,7 @@
 #include <HMP/Gui/Widgets/Projection.hpp>
 #include <HMP/Gui/Widgets/Save.hpp>
 #include <HMP/Gui/Widgets/Debug.hpp>
+#include <HMP/Gui/Widgets/Pad.hpp>
 #include <vector>
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
@@ -118,6 +119,7 @@ namespace HMP::Gui
 		Widgets::Save m_saveWidget;
 		Widgets::Projection m_projectionWidget;
 		Widgets::Debug m_debugWidget;
+		Widgets::Pad m_padWidget;
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		DagViewer::Widget m_dagViewerWidget;
@@ -184,6 +186,7 @@ namespace HMP::Gui
 		void onClear();
 		void onSelect(ESelectionSource _source, ESelectionMode _mode);
 		void onSelectAll(bool _selected);
+		void onPad(Real _length, I _smoothIterations, Real _smoothSurfVertWeight, Real _cornerShrinkFactor);
 
 	public:
 
