@@ -37,7 +37,7 @@ namespace HMP::Gui::Widgets
 			{
 				for (const Id eid : m_paths[i].sourceEids)
 				{
-					if (!m_mesher.mesh().edge_is_on_srf(eid) || !m_mesher.mesh().edge_is_visible(eid))
+					if (!m_mesher.mesh().edge_is_visible(eid))
 					{
 						m_paths[i].sourceEids.clear();
 						break;
