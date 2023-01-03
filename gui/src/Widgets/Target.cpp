@@ -18,7 +18,7 @@ namespace HMP::Gui::Widgets
 		faceColor{ themer->tgtFace }, edgeColor{ themer->tgtEdge },
 		transform{},
 		visible{ true },
-		onMeshChanged{}, onApplyTransformToSource{}
+		onMeshShapeChanged{}, onApplyTransformToSource{}
 	{
 		themer.onThemeChange += [this]() {
 			faceColor = themer->tgtFace;
@@ -101,7 +101,7 @@ namespace HMP::Gui::Widgets
 	{
 		assert(hasMesh());
 		m_mesh.transform = transform.matrix();
-		onMeshChanged();
+		onMeshShapeChanged();
 	}
 
 	void Target::updateVisibility()
@@ -163,6 +163,7 @@ namespace HMP::Gui::Widgets
 				fit();
 			}
 			updateTransform();
+			onMeshChanged();
 		}
 		else
 		{
@@ -176,6 +177,7 @@ namespace HMP::Gui::Widgets
 		m_filename = "";
 		m_mesh.clear();
 		m_mesh.updateGL();
+		onMeshShapeChanged();
 		onMeshChanged();
 	}
 

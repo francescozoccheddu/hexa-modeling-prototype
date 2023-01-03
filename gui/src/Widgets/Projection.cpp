@@ -335,6 +335,7 @@ namespace HMP::Gui::Widgets
 			ImGui::Spacing();
 			if (ImGui::Button("Add"))
 			{
+				m_currentPath = m_paths.size();
 				m_paths.push_back({});
 			}
 			ImGui::SameLine();
@@ -542,6 +543,62 @@ namespace HMP::Gui::Widgets
 			else if (!m_paths.empty())
 			{
 				drawPath(m_currentPath);
+			}
+		}
+	}
+
+	void Projection::serialize(HMP::Utils::Serialization::Serializer& _serializer) const
+	{
+		_serializer << m_paths.size();
+		for (const EidsPath& path : m_paths)
+		{
+			{
+				const std::vector<Id> vids{ HMP::Projection::Utils::eidsToVidsPath(m_mesher.mesh(), path.sourceEids) };
+				_serializer << vids.size();
+				for (const Id vid : vids)
+				{
+					_serializer << vid;
+				}
+			}
+			{
+				const std::vector<Id> vids{ HMP::Projection::Utils::eidsToVidsPath(m_targetWidget.meshForDisplay(), path.targetEids) };
+				_serializer << vids.size();
+				for (const Id vid : vids)
+				{
+					_serializer << vid;
+				}
+			}
+		}
+	}
+
+	void Projection::deserialize(HMP::Utils::Serialization::Deserializer& _deserializer)
+	{
+		m_paths.clear();
+		m_paths.resize(_deserializer.get<I>());
+		for (EidsPath& path : m_paths)
+		{
+			{
+				std::vector<Id> vids(_deserializer.get<I>());
+				for (Id& vid : vids)
+				{
+					_deserializer >> vid;
+				}
+				path.sourceEids = HMP::Projection::Utils::vidsToEidsPath(m_mesher.mesh(), vids);
+			}
+			{
+				std::vector<Id> vids(_deserializer.get<I>());
+				for (Id& vid : vids)
+				{
+					_deserializer >> vid;
+				}
+				if (m_targetWidget.hasMesh())
+				{
+					path.targetEids = HMP::Projection::Utils::vidsToEidsPath(m_targetWidget.meshForDisplay(), vids);
+				}
+				else
+				{
+					path.targetEids.clear();
+				}
 			}
 		}
 	}

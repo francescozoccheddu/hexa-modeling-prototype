@@ -37,6 +37,7 @@ namespace HMP::Gui::Widgets
 		Target(const Meshing::Mesher::Mesh& _sourceMesh);
 
 		mutable cpputils::collections::Event<Target> onMeshChanged;
+		mutable cpputils::collections::Event<Target> onMeshShapeChanged;
 		mutable cpputils::collections::Event<Target, const Mat4&> onApplyTransformToSource;
 
 		const Meshing::Mesher::Mesh& sourceMesh() const;

@@ -187,6 +187,7 @@ namespace HMP::Gui
 			serializer << vert;
 		}
 		m_targetWidget.serialize(serializer);
+		m_projectionWidget.serialize(serializer);
 		file.close();
 	}
 
@@ -202,9 +203,10 @@ namespace HMP::Gui
 			deserializer >> vert;
 		}
 		m_targetWidget.deserialize(deserializer);
-		file.close();
 		applyAction(*new Actions::Root{ root, verts });
 		m_canvas.reset_camera();
+		m_projectionWidget.deserialize(deserializer);
+		file.close();
 	}
 
 	// canvas events
@@ -1107,7 +1109,7 @@ namespace HMP::Gui
 
 		m_projectionWidget.onProjectRequest += [this](auto && ..._args) { onProjectToTarget(_args ...); };
 
-		m_targetWidget.onMeshChanged += [this]() { m_canvas.refit_scene(); };
+		m_targetWidget.onMeshShapeChanged += [this]() { m_canvas.refit_scene(); };
 		m_targetWidget.onApplyTransformToSource += [this](const Mat4& _transform) { onApplyTargetTransform(_transform); };
 
 		m_vertEditWidget.onApplyAction += [this](std::vector<Id> _vids, Mat4 _transform) { onApplyVertEdit(_vids, _transform); };
