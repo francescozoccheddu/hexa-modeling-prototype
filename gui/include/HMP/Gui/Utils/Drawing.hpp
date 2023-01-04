@@ -76,4 +76,12 @@ namespace HMP::Gui::Utils::Drawing
 
     void quadFilled(ImDrawList& _drawList, const QuadVertData<ImVec2>& _verts, ImU32 _color);
 
+    bool cull(const ImVec2& _min, const ImVec2& _max);
+
+    bool cull(const ImVec2& _center, float _halfSize);
+
+    bool cull(const QuadVertData<ImVec2>& _verts);
+
+    bool cull(const EdgeVertData<ImVec2>& _verts);
+
 }
