@@ -66,7 +66,7 @@ namespace HMP::Actions
 						}).size() };
 						const Real factor{ (1.0 - m_cornerShrinkFactor) + static_cast<Real>(adjPolyCount) * m_cornerShrinkFactor };
 						displacement /= factor * static_cast<Real>(adjFaceCount);
-						tempMesh.vert(vid) += displacement;
+						tempMesh.vert(vid) += displacement * m_length;
 					}
 				}
 				for (I i{}; i < m_smoothIterations; ++i)
