@@ -5,12 +5,29 @@
 #include <imgui.h>
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <HMP/Gui/themer.hpp>
+#include <cctype>
+#include <filesystem>
 
 namespace HMP::Gui::Widgets
 {
 
     Save::Save(): cinolib::SideBarItem{ "Save" }, m_filename{}, m_loaded{ false }, onSave{}, onLoad{}, onExportMesh{}
     {}
+
+    std::string withExt(const std::string& _filename, const std::string& _ext)
+    {
+        if (!_filename.empty())
+        {
+            const std::string dotExt{ "." + _ext };
+            std::string oldExt{ std::filesystem::path{ _filename }.extension().string() };
+            for (char& c : oldExt) c = static_cast<char>(std::tolower(c));
+            if (oldExt != dotExt)
+            {
+                return _filename + dotExt;
+            }
+        }
+        return _filename;
+    }
 
     void Save::apply(bool _load, const std::string& _filename)
     {
@@ -46,7 +63,7 @@ namespace HMP::Gui::Widgets
 
     void Save::requestSaveNew()
     {
-        const std::string filename{ cinolib::file_dialog_save() };
+        const std::string filename{ withExt(cinolib::file_dialog_save(), "hmp") };
         if (!filename.empty())
         {
             apply(false, filename);
@@ -69,7 +86,7 @@ namespace HMP::Gui::Widgets
 
     void Save::requestExportMesh()
     {
-        const std::string filename{ cinolib::file_dialog_save() };
+        const std::string filename{ withExt(cinolib::file_dialog_save(), "mesh") };
         if (!filename.empty())
         {
             onExportMesh(filename);
