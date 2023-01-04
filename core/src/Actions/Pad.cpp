@@ -42,16 +42,31 @@ namespace HMP::Actions
 				std::vector<Id> surfVids;
 				for (Id vid{}; vid < tempMesh.num_verts(); ++vid)
 				{
-					if (tempMesh.vert_is_visible(vid))
+					I adjFaceCount{};
+					Vec displacement{};
+					for (const Id adjFid : mesh.adj_v2f(vid))
 					{
-						surfVids.push_back(vid);
-						newVertsMap.emplace(vid, mesh.num_verts() + toId(m_newVerts.size()));
-						m_newVerts.push_back(mesh.vert(vid));
+						Id adjPid;
+						if (mesh.face_is_visible(adjFid, adjPid))
+						{
+							if (!adjFaceCount)
+							{
+								surfVids.push_back(vid);
+								newVertsMap.emplace(vid, mesh.num_verts() + toId(m_newVerts.size()));
+								m_newVerts.push_back(mesh.vert(vid));
+							}
+							adjFaceCount++;
+							displacement -= mesh.poly_face_normal(adjPid, adjFid);
+						}
+					}
+					if (adjFaceCount)
+					{
 						const I adjPolyCount{ cpputils::range::of(tempMesh.adj_v2p(vid)).filter([&](Id _adjPid) {
 							return mesher().shown(_adjPid);
 						}).size() };
 						const Real factor{ (1.0 - m_cornerShrinkFactor) + static_cast<Real>(adjPolyCount) * m_cornerShrinkFactor };
-						tempMesh.vert(vid) -= tempMesh.vert_data(vid).normal * m_length / factor;
+						displacement /= factor * static_cast<Real>(adjFaceCount);
+						tempMesh.vert(vid) += displacement;
 					}
 				}
 				for (I i{}; i < m_smoothIterations; ++i)
