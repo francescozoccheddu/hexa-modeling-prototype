@@ -1,6 +1,7 @@
 #include <HMP/Gui/Utils/Drawing.hpp>
 
 #include <algorithm>
+#include <limits>
 
 namespace HMP::Gui::Utils::Drawing
 {
@@ -21,17 +22,12 @@ namespace HMP::Gui::Utils::Drawing
         return std::clamp(static_cast<int>(std::round(_radius / 8)), 6, 36);
     }
 
-    bool outside(const ImVec2& _vert)
-    {
-        const ImVec2 min{ ImGui::GetWindowPos() }, size{ ImGui::GetWindowSize() }, max{ min.x + size.x, min.y + size.y };
-        return _vert.x < min.x
-            || _vert.x > max.x
-            || _vert.y < min.y
-            || _vert.y > max.y;
-    }
-
     void dashedLine(ImDrawList& _drawList, const EdgeVertData<ImVec2>& _verts, ImU32 _color, float _thickness, float _spacing)
     {
+        if (cull(_verts))
+        {
+            return;
+        }
         const cinolib::vec2f from{ _verts[0].x, _verts[0].y }, to{ _verts[1].x, _verts[1].y };
         const float length{ static_cast<float>(from.dist(to)) };
         if (length <= _spacing * 2.0f || _spacing <= 0.0f)
@@ -55,7 +51,7 @@ namespace HMP::Gui::Utils::Drawing
 
     void line(ImDrawList& _drawList, const EdgeVertData<ImVec2>& _verts, ImU32 _color, float _thickness)
     {
-        if (outside(_verts[0]) && outside(_verts[1]))
+        if (cull(_verts))
         {
             return;
         }
@@ -64,16 +60,28 @@ namespace HMP::Gui::Utils::Drawing
 
     void circle(ImDrawList& _drawList, const ImVec2& _center, float _radius, ImU32 _color, float _thickness)
     {
+        if (cull(_center, _radius))
+        {
+            return;
+        }
         _drawList.AddCircle(_center, _radius, _color, segCount(_radius), _thickness);
     }
 
     void circleFilled(ImDrawList& _drawList, const ImVec2& _center, float _radius, ImU32 _color)
     {
+        if (cull(_center, _radius))
+        {
+            return;
+        }
         _drawList.AddCircleFilled(_center, _radius, _color, segCount(_radius));
     }
 
     void cross(ImDrawList& _drawList, const ImVec2& _center, float _radius, ImU32 _color, float _thickness)
     {
+        if (cull(_center, _radius))
+        {
+            return;
+        }
         line(_drawList, { ImVec2{ _center.x, _center.y - _radius }, ImVec2{ _center.x, _center.y + _radius } }, _color, _thickness);
         line(_drawList, { ImVec2{ _center.x - _radius, _center.y }, ImVec2{ _center.x + _radius, _center.y } }, _color, _thickness);
     }
@@ -109,17 +117,81 @@ namespace HMP::Gui::Utils::Drawing
             defSize.y * defSizeFactor
         };
         const ImVec2 topLeft{ align(_position, size, _hAlign, _vAlign) };
+        if (cull(topLeft, { topLeft.x + size.x, topLeft.y + size.y }))
+        {
+            return;
+        }
         _drawList.AddText(ImGui::GetFont(), _size, topLeft, _color, _text, nullptr);
     }
 
     void quad(ImDrawList& _drawList, const QuadVertData<ImVec2>& _verts, ImU32 _color, float _thickness)
     {
+        if (cull(_verts))
+        {
+            return;
+        }
         _drawList.AddQuad(_verts[0], _verts[1], _verts[2], _verts[3], _color, _thickness);
     }
 
     void quadFilled(ImDrawList& _drawList, const QuadVertData<ImVec2>& _verts, ImU32 _color)
     {
+        if (cull(_verts))
+        {
+            return;
+        }
         _drawList.AddQuadFilled(_verts[0], _verts[1], _verts[2], _verts[3], _color);
+    }
+
+    bool cull(const ImVec2& _min, const ImVec2& _max)
+    {
+        const ImVec2 smin{ ImGui::GetWindowPos() }, ssize{ ImGui::GetWindowSize() }, smax{ smin.x + ssize.x, smin.y + ssize.y };
+        return _min.x > smax.x
+            || _min.y > smax.y
+            || _max.x < smin.x
+            || _max.y < smin.y;
+    }
+
+    bool cull(const ImVec2& _center, float _halfSize)
+    {
+        return cull({ _center.x - _halfSize, _center.y - _halfSize }, { _center.x + _halfSize, _center.y + _halfSize });
+    }
+
+    bool cull(const ImVec2* _begin, const ImVec2* _end)
+    {
+        ImVec2
+            min{ std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() },
+            max{ -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity() };
+        while (_begin != _end)
+        {
+            const ImVec2& vert{ *_begin++ };
+            if (vert.x < min.x)
+            {
+                min.x = vert.x;
+            }
+            if (vert.x > max.x)
+            {
+                max.x = vert.x;
+            }
+            if (vert.y < min.y)
+            {
+                min.y = vert.y;
+            }
+            if (vert.y > max.y)
+            {
+                max.y = vert.y;
+            }
+        }
+        return cull(min, max);
+    }
+
+    bool cull(const QuadVertData<ImVec2>& _verts)
+    {
+        return cull(_verts.begin(), _verts.end());
+    }
+
+    bool cull(const EdgeVertData<ImVec2>& _verts)
+    {
+        return cull(_verts.begin(), _verts.end());
     }
 
 }
