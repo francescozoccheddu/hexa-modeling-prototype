@@ -83,9 +83,10 @@ namespace HMP::Projection
                         : 1.0;
                 }
             }
-            _out[toI(vid)] = weightSum != 0
-                ? vertSum / weightSum
-                : _mesh.vert(vid);
+            if (weightSum != 0.0)
+            {
+                _out[toI(vid)] = vertSum / weightSum;
+            }
         } };
         while (!nextVids.empty())
         {
