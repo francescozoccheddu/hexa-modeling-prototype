@@ -20,6 +20,7 @@
 #include <HMP/Actions/Refine.hpp>
 #include <HMP/Actions/Paste.hpp>
 #include <HMP/Actions/Transform.hpp>
+#include <HMP/Actions/SubdivideAll.hpp>
 #include <HMP/Utils/Serialization.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Gui/Utils/HrDescriptions.hpp>
@@ -60,6 +61,7 @@ namespace HMP::Gui
 		cinolib::print_binding(c_kbPasteEdge.name(), "paste edge");
 		cinolib::print_binding(c_kbPasteVertex.name(), "paste vertex");
 		cinolib::print_binding(c_kbClear.name(), "clear");
+		cinolib::print_binding(c_kbSubdivideAll.name(), "subdivide all");
 		cinolib::print_binding(c_kbMakeConforming.name(), "make conforming");
 		cinolib::print_binding(c_kbSelectVertex.name(), "select vertex");
 		cinolib::print_binding(c_kbSelectEdge.name(), "select edge vertices");
@@ -447,6 +449,12 @@ namespace HMP::Gui
 		{
 			onSetPathEdge(false);
 		}
+		// subdivide all
+		else if (key == c_kbSubdivideAll)
+		{
+			onSubdivideAll();
+		}
+		// refine test
 		else if (key == c_kbRefineTest)
 		{
 			onRefineTest();
@@ -834,6 +842,11 @@ namespace HMP::Gui
 		{
 			applyAction(*new Actions::Refine{ *m_mouse.element, m_mouse.fi, m_mouse.vi, Refinement::EScheme::Test });
 		}
+	}
+
+	void App::onSubdivideAll()
+	{
+		applyAction(*new Actions::SubdivideAll{});
 	}
 
 	void App::onDelete()

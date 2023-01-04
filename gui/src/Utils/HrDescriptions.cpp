@@ -45,6 +45,8 @@ namespace HMP::Gui::Utils::HrDescriptions
 				return "AdapterEdgeSubdivide3x3";
 			case Refinement::EScheme::AdapterFaceSubdivide3x3:
 				return "AdapterFaceSubdivide3x3";
+			case Refinement::EScheme::Subdivide2x2:
+				return "Subdivide2x2";
 			default:
 				return "Unknown";
 		}
@@ -240,6 +242,15 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return stream.str();
 	}
 
+	std::string describe(const Actions::SubdivideAll& _action)
+	{
+		std::ostringstream stream{};
+		stream
+			<< "SubdivideAll"
+			<< " (" << _action.operations().size() << " operations)";
+		return stream.str();
+	}
+
 	std::string describe(const Actions::MakeConforming& _action, DagNamer& _dagNamer)
 	{
 		std::ostringstream stream{};
@@ -364,6 +375,10 @@ namespace HMP::Gui::Utils::HrDescriptions
 			return describe(*action);
 		}
 		if (const Actions::Pad* action{ dynamic_cast<const Actions::Pad*>(&_action) }; action)
+		{
+			return describe(*action);
+		}
+		if (const Actions::SubdivideAll* action{ dynamic_cast<const Actions::SubdivideAll*>(&_action) }; action)
 		{
 			return describe(*action);
 		}

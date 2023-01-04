@@ -15,7 +15,6 @@ Sorted by priority:
 - **\[IMPROVEMENT\]** `OGDF` is overkill for what I need. Consider replacing it with a lighter implementation of the Sugiyama layout algorithm.
 - **\[IMPROVEMENT\]** The `HMP::Gui::Widgets::DirectVertEdit` scale and rotation implementation is a bit janky. (Also, a global axis-aligned translation feature would be welcome).
 - **\[FEATURE\]** Add a command to select all the vertices in a subtree.
-- **\[FEATURE\]** Add a command to refine all the elements (maybe with a density threshold?).
 - **\[FEATURE\]** Allow the user to change the transform origin when editing vertices (or add a command to lock the origin in the current location).
 - **\[FEATURE\]** Add As-Rigid-As-Possible vertex editing support.
 - **\[REFACTOR\]** All the `HMP::Meshing::Actions` could be replaced with a set of more primitive actions (`MoveVert`, `ShowElement`, `AddElements`, `WeldElements` and `ActionSequence` maybe?).
