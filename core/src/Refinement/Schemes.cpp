@@ -425,6 +425,49 @@ namespace HMP::Refinement
 			}
 		};
 
+		const Scheme subdivide2x2{
+			2,
+			std::vector<IVec>{
+				IVec{0, 0, 0},
+				IVec{1, 0, 0},
+				IVec{0, 1, 0},
+				IVec{1, 1, 0},
+				IVec{0, 0, 1},
+				IVec{1, 0, 1},
+				IVec{0, 1, 1},
+				IVec{1, 1, 1},
+				IVec{0, 0, 2},
+				IVec{1, 0, 2},
+				IVec{0, 1, 2},
+				IVec{1, 1, 2},
+				IVec{0, 2, 0},
+				IVec{1, 2, 0},
+				IVec{0, 2, 1},
+				IVec{1, 2, 1},
+				IVec{0, 2, 2},
+				IVec{1, 2, 2},
+				IVec{2, 0, 0},
+				IVec{2, 1, 0},
+				IVec{2, 0, 1},
+				IVec{2, 1, 1},
+				IVec{2, 0, 2},
+				IVec{2, 1, 2},
+				IVec{2, 2, 0},
+				IVec{2, 2, 1},
+				IVec{2, 2, 2},
+			},
+			std::vector<HexVertIs>{
+				HexVertIs{0, 2, 3, 1, 4, 6, 7, 5, },
+				HexVertIs{4, 6, 7, 5, 8, 10, 11, 9, },
+				HexVertIs{2, 12, 13, 3, 6, 14, 15, 7, },
+				HexVertIs{6, 14, 15, 7, 10, 16, 17, 11, },
+				HexVertIs{1, 3, 19, 18, 5, 7, 21, 20, },
+				HexVertIs{5, 7, 21, 20, 9, 11, 23, 22, },
+				HexVertIs{3, 13, 24, 19, 7, 15, 25, 21, },
+				HexVertIs{7, 15, 25, 21, 11, 17, 26, 23, },
+			}
+		};
+
 	}
 
 	const std::unordered_map<EScheme, const Scheme&> schemes{
@@ -433,7 +476,8 @@ namespace HMP::Refinement
 		{EScheme::Adapter2FacesSubdivide3x3, Schemes::adapter2FacesSubdivide3x3},
 		{EScheme::AdapterEdgeSubdivide3x3, Schemes::adapterEdgeSubdivide3x3},
 		{EScheme::Inset, Schemes::inset},
-		{EScheme::Test, Schemes::test}
+		{EScheme::Test, Schemes::test},
+		{EScheme::Subdivide2x2, Schemes::subdivide2x2}
 	};
 
 }
