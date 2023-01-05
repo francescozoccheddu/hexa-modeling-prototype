@@ -242,8 +242,7 @@ namespace HMP::Gui::Widgets
         if (ImGui::TreeNode("Tests"))
         {
             ImGui::Spacing();
-            static constexpr double minEps{ 1e-9 }, maxEps{ 1e-3 };
-            ImGui::SliderScalar("Epsilon", ImGuiDataType_Double, &testEps, &minEps, &maxEps, "%.3e", ImGuiSliderFlags_AlwaysClamp);
+
             ImGui::BeginTable("tests", 3, ImGuiTableFlags_RowBg);
             ImGui::TableSetupColumn("run", ImGuiTableColumnFlags_WidthFixed);
             ImGui::TableSetupColumn("desc", ImGuiTableColumnFlags_WidthStretch);
@@ -273,6 +272,15 @@ namespace HMP::Gui::Widgets
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
+            if (Utils::Controls::disabledSmallButton("Run##refinesingle", m_mesher.mesh().num_polys() == 1))
+            {
+                refineSingle();
+            }
+            ImGui::TableNextColumn();
+            ImGui::Text("Refine single");
+
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
             if (ImGui::SmallButton("Run##crash"))
             {
                 throw std::runtime_error{ "user requested test crash" };
@@ -281,6 +289,13 @@ namespace HMP::Gui::Widgets
             ImGui::TextColored(themer->sbWarn, "Throw an exception");
 
             ImGui::EndTable();
+
+            ImGui::Spacing();
+
+            static constexpr double minEps{ 1e-9 }, maxEps{ 1e-3 };
+            ImGui::SliderScalar("Epsilon", ImGuiDataType_Double, &testEps, &minEps, &maxEps, "%.3e", ImGuiSliderFlags_AlwaysClamp);
+            Utils::Controls::combo<Refinement::EScheme>("Refinement scheme", refineSingleScheme, { "Subdivide3x3", "AdapterFaceSubdivide3x3", "Adapter2FacesSubdivide3x3", "AdapterEdgeSubdivide3x3", "Inset", "Subdivide2x2", "Test" });
+
             ImGui::Spacing();
             ImGui::TreePop();
         }
@@ -381,5 +396,14 @@ namespace HMP::Gui::Widgets
         }
         m_closeVertsTestRes = m_vertEdit.vids().size();
     }
+
+    void Debug::refineSingle()
+    {
+        if (m_mesher.mesh().num_polys() == 1 && m_mesher.shown(0))
+        {
+            onRefineSingleRequested(refineSingleScheme);
+        }
+    }
+
 
 }

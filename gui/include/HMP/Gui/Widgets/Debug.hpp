@@ -10,6 +10,7 @@
 #include <cpputils/collections/SetNamer.hpp>
 #include <cpputils/collections/Event.hpp>
 #include <cinolib/color.h>
+#include <HMP/Refinement/Schemes.hpp>
 #include <imgui.h>
 
 namespace HMP::Gui::Widgets
@@ -38,7 +39,10 @@ namespace HMP::Gui::Widgets
         float themeHue{ 32.0f };
         bool themeDark{ true };
         float themeScale{ 1.0f };
+        Refinement::EScheme refineSingleScheme{ Refinement::EScheme::Test };
         bool showElements{ false }, showVids{ false }, showEids{ false }, showFids{ false }, showPids{ false };
+
+        cpputils::collections::Event<Debug, Refinement::EScheme> onRefineSingleRequested;
 
         Debug(Meshing::Mesher& _mesher, cpputils::collections::SetNamer<const HMP::Dag::Node*>& _dagNamer, VertEdit& _vertEdit);
 
@@ -53,6 +57,7 @@ namespace HMP::Gui::Widgets
 
         void selectCloseVerts();
         void selectNegJacobianHexes();
+        void refineSingle();
 
     };
 

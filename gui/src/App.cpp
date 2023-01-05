@@ -454,11 +454,6 @@ namespace HMP::Gui
 		{
 			onSubdivideAll();
 		}
-		// refine test
-		else if (key == c_kbRefineTest)
-		{
-			onRefineTest();
-		}
 		else
 		{
 			return false;
@@ -836,11 +831,11 @@ namespace HMP::Gui
 		}
 	}
 
-	void App::onRefineTest()
+	void App::onRefineTest(Refinement::EScheme _scheme)
 	{
-		if (m_mouse.element)
+		if (m_mesh.num_polys() == 1)
 		{
-			applyAction(*new Actions::Refine{ *m_mouse.element, m_mouse.fi, m_mouse.vi, Refinement::EScheme::Test });
+			applyAction(*new Actions::Refine{ m_mesher.element(0), 0, Meshing::Utils::hexFiVis[0][0], _scheme });
 		}
 	}
 
@@ -1129,6 +1124,8 @@ namespace HMP::Gui
 		m_vertEditWidget.onPendingActionChanged += [this]() { onVertEditPendingActionChanged(); };
 
 		m_directVertEditWidget.onPendingChanged += [this]() { updateMouse(); };
+
+		m_debugWidget.onRefineSingleRequested += [this](auto && ..._args) { onRefineTest(_args...); };
 
 		m_canvas.depth_cull_markers = false;
 		m_canvas.callback_mouse_left_click = [this](auto && ..._args) { return onMouseLeftClicked(_args ...); };
