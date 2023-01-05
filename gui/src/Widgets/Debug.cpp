@@ -402,7 +402,7 @@ namespace HMP::Gui::Widgets
                 vertMap.insert(it, { vert, vid });
             }
         }
-        m_closeVertsTestRes = m_vertEdit.vids().size();
+        m_closeVertsTestRes = static_cast<unsigned int>(m_vertEdit.vids().size());
     }
 
     void Debug::refineSingle()
