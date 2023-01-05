@@ -831,11 +831,11 @@ namespace HMP::Gui
 		}
 	}
 
-	void App::onRefineTest(Refinement::EScheme _scheme)
+	void App::onRefineTest(Refinement::EScheme _scheme, I _forwardFi, I _firstVi)
 	{
 		if (m_mesh.num_polys() == 1)
 		{
-			applyAction(*new Actions::Refine{ m_mesher.element(0), 0, Meshing::Utils::hexFiVis[0][0], _scheme });
+			applyAction(*new Actions::Refine{ m_mesher.element(0), _forwardFi, _firstVi, _scheme });
 		}
 	}
 

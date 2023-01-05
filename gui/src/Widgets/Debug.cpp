@@ -292,9 +292,17 @@ namespace HMP::Gui::Widgets
 
             ImGui::Spacing();
 
-            static constexpr double minEps{ 1e-9 }, maxEps{ 1e-3 };
-            ImGui::SliderScalar("Epsilon", ImGuiDataType_Double, &testEps, &minEps, &maxEps, "%.3e", ImGuiSliderFlags_AlwaysClamp);
-            Utils::Controls::combo<Refinement::EScheme>("Refinement scheme", refineSingleScheme, { "Subdivide3x3", "AdapterFaceSubdivide3x3", "Adapter2FacesSubdivide3x3", "AdapterEdgeSubdivide3x3", "Inset", "Subdivide2x2", "Test" });
+            if (ImGui::TreeNode("Options"))
+            {
+                ImGui::Spacing();
+                static constexpr double minEps{ 1e-9 }, maxEps{ 1e-3 };
+                ImGui::SliderScalar("Epsilon", ImGuiDataType_Double, &testEps, &minEps, &maxEps, "%.3e", ImGuiSliderFlags_AlwaysClamp);
+                Utils::Controls::combo<Refinement::EScheme>("Refinement scheme", refineSingleScheme, { "Subdivide3x3", "AdapterFaceSubdivide3x3", "Adapter2FacesSubdivide3x3", "AdapterEdgeSubdivide3x3", "Inset", "Subdivide2x2", "Test" });
+                Utils::Controls::sliderI("Fi", fi, 0, 5);
+                Utils::Controls::sliderI("Fi vi", fiVi, 0, 3);
+                ImGui::Spacing();
+                ImGui::TreePop();
+            }
 
             ImGui::Spacing();
             ImGui::TreePop();
@@ -401,7 +409,7 @@ namespace HMP::Gui::Widgets
     {
         if (m_mesher.mesh().num_polys() == 1 && m_mesher.shown(0))
         {
-            onRefineSingleRequested(refineSingleScheme);
+            onRefineSingleRequested(refineSingleScheme, fi, Meshing::Utils::hexFiVis[fi][fiVi]);
         }
     }
 
