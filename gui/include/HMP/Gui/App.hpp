@@ -172,7 +172,7 @@ namespace HMP::Gui
 		void onRefineElement(bool _twice);
 		void onDelete();
 		void onRefineFace();
-		void onRefineTest(Refinement::EScheme _scheme);
+		void onRefineTest(Refinement::EScheme _scheme, I _forwardFi, I _firstVi);
 		void onMakeConformant();
 		void onSaveState();
 		void onSaveNewState();

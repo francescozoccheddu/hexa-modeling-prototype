@@ -39,10 +39,11 @@ namespace HMP::Gui::Widgets
         float themeHue{ 32.0f };
         bool themeDark{ true };
         float themeScale{ 1.0f };
+        I fi{}, fiVi{};
         Refinement::EScheme refineSingleScheme{ Refinement::EScheme::Test };
         bool showElements{ false }, showVids{ false }, showEids{ false }, showFids{ false }, showPids{ false };
 
-        cpputils::collections::Event<Debug, Refinement::EScheme> onRefineSingleRequested;
+        cpputils::collections::Event<Debug, Refinement::EScheme, I, I> onRefineSingleRequested;
 
         Debug(Meshing::Mesher& _mesher, cpputils::collections::SetNamer<const HMP::Dag::Node*>& _dagNamer, VertEdit& _vertEdit);
 
