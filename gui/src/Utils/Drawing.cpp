@@ -186,12 +186,12 @@ namespace HMP::Gui::Utils::Drawing
 
     bool cull(const QuadVertData<ImVec2>& _verts)
     {
-        return cull(_verts.begin(), _verts.end());
+        return cull(&_verts[0], &_verts[0] + 4);
     }
 
     bool cull(const EdgeVertData<ImVec2>& _verts)
     {
-        return cull(_verts.begin(), _verts.end());
+        return cull(&_verts[0], &_verts[0] + 2);
     }
 
 }
