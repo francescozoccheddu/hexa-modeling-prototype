@@ -2,6 +2,7 @@
 
 #include <HMP/Meshing/types.hpp>
 #include <HMP/Gui/Widgets/VertEdit.hpp>
+#include <HMP/Gui/Widgets/Target.hpp>
 #include <cinolib/gl/side_bar_item.h>
 #include <cinolib/gl/canvas_gui_item.h>
 #include <cinolib/drawable_segment_soup.h>
@@ -23,7 +24,8 @@ namespace HMP::Gui::Widgets
 
         const Meshing::Mesher& m_mesher;
         cpputils::collections::SetNamer<const HMP::Dag::Node*>& m_dagNamer;
-        VertEdit& m_vertEdit;
+        VertEdit& m_vertEditWidget;
+        const Target& m_targetWidget;
         cinolib::DrawableSegmentSoup m_sectionSoup;
 
         unsigned int m_negJacTestRes{}, m_closeVertsTestRes{};
@@ -45,7 +47,7 @@ namespace HMP::Gui::Widgets
 
         cpputils::collections::Event<Debug, Refinement::EScheme, I, I> onRefineSingleRequested;
 
-        Debug(Meshing::Mesher& _mesher, cpputils::collections::SetNamer<const HMP::Dag::Node*>& _dagNamer, VertEdit& _vertEdit);
+        Debug(Meshing::Mesher& _mesher, cpputils::collections::SetNamer<const HMP::Dag::Node*>& _dagNamer, VertEdit& _vertEdit, const Target& _targetWidget);
 
         const cinolib::DrawableSegmentSoup& sectionSoup() const;
         void updateSection();
@@ -59,6 +61,9 @@ namespace HMP::Gui::Widgets
         void selectCloseVerts();
         void selectNegJacobianHexes();
         void refineSingle();
+
+        void exportTarget() const;
+        void exportSource(bool _includeInterior) const;
 
     };
 

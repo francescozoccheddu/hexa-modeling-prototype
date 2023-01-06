@@ -2,23 +2,26 @@
 
 #include <imgui.h>
 #include <cinolib/memory_usage.h>
+#include <cpputils/unreachable.hpp>
 #include <unordered_map>
 #include <unordered_set>
 #include <HMP/Meshing/Utils.hpp>
 #include <HMP/Gui/Utils/Drawing.hpp>
 #include <HMP/Gui/Utils/Controls.hpp>
+#include <HMP/Gui/Utils/FilePicking.hpp>
 #include <algorithm>
 #include <string>
 #include <cinolib/fonts/droid_sans.hpp>
 #include <imgui_impl_opengl2.h>
 #include <HMP/Gui/themer.hpp>
 #include <cinolib/quality_hex.h>
+#include <cinolib/meshes/polygonmesh.h>
 
 namespace HMP::Gui::Widgets
 {
 
-    Debug::Debug(Meshing::Mesher& _mesher, cpputils::collections::SetNamer<const HMP::Dag::Node*>& _dagNamer, VertEdit& _vertEdit)
-        : cinolib::SideBarItem{ "Debug" }, m_mesher{ _mesher }, m_dagNamer{ _dagNamer }, m_vertEdit{ _vertEdit }, m_sectionSoup{}
+    Debug::Debug(Meshing::Mesher& _mesher, cpputils::collections::SetNamer<const HMP::Dag::Node*>& _dagNamer, VertEdit& _vertEditWidget, const Target& _targetWidget)
+        : cinolib::SideBarItem{ "Debug" }, m_mesher{ _mesher }, m_dagNamer{ _dagNamer }, m_vertEditWidget{ _vertEditWidget }, m_targetWidget{ _targetWidget }, m_sectionSoup{}
     {
         m_sectionSoup.set_color(Utils::Drawing::toColor(themer->ovHi));
         m_sectionSoup.set_thickness(sectionLineThickness* themer->ovScale);
@@ -89,7 +92,7 @@ namespace HMP::Gui::Widgets
 
     void Debug::selectNegJacobianHexes()
     {
-        m_vertEdit.clear();
+        m_vertEditWidget.clear();
         m_negJacTestRes = 0;
         for (Id pid{}; pid < m_mesher.mesh().num_polys(); pid++)
         {
@@ -98,7 +101,7 @@ namespace HMP::Gui::Widgets
                 const std::vector<Vec>& verts{ m_mesher.mesh().poly_verts(pid) };
                 if (cinolib::hex_scaled_jacobian(verts[0], verts[1], verts[2], verts[3], verts[4], verts[5], verts[6], verts[7]) < 0.0)
                 {
-                    m_vertEdit.add(m_mesher.mesh().adj_p2v(pid));
+                    m_vertEditWidget.add(m_mesher.mesh().adj_p2v(pid));
                     m_negJacTestRes++;
                 }
             }
@@ -209,6 +212,42 @@ namespace HMP::Gui::Widgets
             ImGui::Spacing();
             Utils::Controls::sliderPercentage("Font scale", namesFontScale, 0.5f, 2.0f);
             ImGui::Spacing();
+            ImGui::TreePop();
+        }
+        // Export
+        if (ImGui::TreeNode("Export"))
+        {
+            ImGui::Spacing();
+            ImGui::BeginTable("names", 2, ImGuiTableFlags_RowBg);
+            ImGui::TableSetupColumn("doit", ImGuiTableColumnFlags_WidthFixed);
+            ImGui::TableSetupColumn("desc", ImGuiTableColumnFlags_WidthStretch);
+
+            ImGui::TableNextColumn();
+            if (ImGui::SmallButton("Export##sourcesurf"))
+            {
+                exportSource(false);
+            }
+            ImGui::TableNextColumn();
+            ImGui::Text("Source surface");
+
+            ImGui::TableNextColumn();
+            if (ImGui::SmallButton("Export##sourcevol"))
+            {
+                exportSource(true);
+            }
+            ImGui::TableNextColumn();
+            ImGui::Text("Source surface and interior");
+
+            ImGui::TableNextColumn();
+            if (ImGui::SmallButton("Export##target"))
+            {
+                exportTarget();
+            }
+            ImGui::TableNextColumn();
+            ImGui::Text("Target surface");
+
+            ImGui::Spacing();
+            ImGui::EndTable();
             ImGui::TreePop();
         }
         // theme
@@ -387,22 +426,22 @@ namespace HMP::Gui::Widgets
     {
         const Meshing::Mesher::Mesh& mesh{ m_mesher.mesh() };
         std::map<Vec, Id, Meshing::Utils::VertComparer> vertMap{ {.eps = testEps} };
-        m_vertEdit.clear();
+        m_vertEditWidget.clear();
         for (Id vid{}; vid < mesh.num_verts(); vid++)
         {
             const Vec vert{ mesh.vert(vid) };
             const auto it{ vertMap.find(vert) };
             if (it != vertMap.end())
             {
-                m_vertEdit.add(vid);
-                m_vertEdit.add(it->second);
+                m_vertEditWidget.add(vid);
+                m_vertEditWidget.add(it->second);
             }
             else
             {
                 vertMap.insert(it, { vert, vid });
             }
         }
-        m_closeVertsTestRes = static_cast<unsigned int>(m_vertEdit.vids().size());
+        m_closeVertsTestRes = static_cast<unsigned int>(m_vertEditWidget.vids().size());
     }
 
     void Debug::refineSingle()
@@ -412,6 +451,72 @@ namespace HMP::Gui::Widgets
             onRefineSingleRequested(refineSingleScheme, fi, Meshing::Utils::hexFiVis[fi][fiVi]);
         }
     }
+
+    void Debug::exportTarget() const
+    {
+        const std::optional<std::string> filename{ Utils::FilePicking::save("obj")};
+        if (filename)
+        {
+            m_targetWidget.meshForProjection().save(filename->c_str());
+        }
+    }
+
+    void Debug::exportSource(bool _includeInterior) const
+    {
+        const std::optional<std::string> filename{ Utils::FilePicking::save("obj")};
+        if (!filename)
+        {
+            return;
+        }
+        const Meshing::Mesher::Mesh& vol{ m_mesher.mesh() };
+        cinolib::Polygonmesh<> srf{};
+        std::vector<Id> vidsMap(toI(vol.num_verts()), noId);
+        std::vector<Id> fidVids{};
+        fidVids.reserve(4);
+        for (Id fid{}; fid < vol.num_faces(); fid++)
+        {
+            bool visible{ false };
+            for (const Id adjPid : vol.adj_f2p(fid))
+            {
+                if (m_mesher.shown(adjPid))
+                {
+                    if (_includeInterior)
+                    {
+                        visible = true;
+                        break;
+                    }
+                    else
+                    {
+                        if (visible)
+                        {
+                            visible = false;
+                            break;
+                        }
+                        visible = true;
+                    }
+                }
+            }
+            if (visible)
+            {
+                fidVids.clear();
+                for (const Id vid : vol.adj_f2v(fid))
+                {
+                    const I vi{ toI(vid) };
+                    if (vidsMap[vi] == noId)
+                    {
+                        vidsMap[vi] = srf.num_verts();
+                        srf.vert_add(vol.vert(vid));
+                    }
+                    fidVids.push_back(vidsMap[vi]);
+                }
+                srf.poly_add(fidVids);
+            }
+        }
+        srf.update_bbox();
+        srf.update_normals();
+        srf.update_p_tessellations();
+        srf.save(filename->c_str());
+    }    
 
 
 }
