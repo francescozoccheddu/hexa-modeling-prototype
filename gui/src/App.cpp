@@ -1058,7 +1058,7 @@ namespace HMP::Gui
 		, m_dagViewerWidget{ m_dagNamer }, m_dagViewerNeedsUpdate{ true }
 #endif
 #ifdef HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER
-		, m_ae3d2ShapeExporter{ m_mesh, m_canvas.camera }
+		, m_ae3d2ShapeExporter{ m_mesh, m_canvas.camera, m_targetWidget }
 #endif
 	{
 
