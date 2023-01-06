@@ -1,8 +1,8 @@
 #include <HMP/Gui/Widgets/Target.hpp>
 
-#include <cinolib/gl/file_dialog_open.h>
 #include <imgui.h>
 #include <HMP/Gui/Utils/Controls.hpp>
+#include <HMP/Gui/Utils/FilePicking.hpp>
 #include <vector>
 #include <cassert>
 #include <filesystem>
@@ -134,11 +134,11 @@ namespace HMP::Gui::Widgets
 
 	bool Target::load(bool _keepTransform)
 	{
-		const std::string filename{ cinolib::file_dialog_open() };
-		if (!filename.empty())
+		const std::optional<std::string> filename{ Utils::FilePicking::open()};
+		if (filename)
 		{
 			visible = true;
-			load(filename, _keepTransform);
+			load(*filename, _keepTransform);
 			return true;
 		}
 		return false;

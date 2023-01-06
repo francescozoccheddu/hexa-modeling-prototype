@@ -27,7 +27,7 @@ namespace HMP::Meshing
 
 			friend class Mesher;
 
-			Dag::Element* m_element;
+			Dag::Element* m_element{};
 
 		};
 

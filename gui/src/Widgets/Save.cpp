@@ -1,9 +1,8 @@
 #include <HMP/Gui/Widgets/Save.hpp>
 
-#include <cinolib/gl/file_dialog_save.h>
-#include <cinolib/gl/file_dialog_open.h>
 #include <imgui.h>
 #include <HMP/Gui/Utils/Controls.hpp>
+#include <HMP/Gui/Utils/FilePicking.hpp>
 #include <HMP/Gui/themer.hpp>
 #include <cctype>
 #include <filesystem>
@@ -14,20 +13,7 @@ namespace HMP::Gui::Widgets
     Save::Save(): cinolib::SideBarItem{ "Save" }, m_filename{}, m_loaded{ false }, onSave{}, onLoad{}, onExportMesh{}
     {}
 
-    std::string withExt(const std::string& _filename, const std::string& _ext)
-    {
-        if (!_filename.empty())
-        {
-            const std::string dotExt{ "." + _ext };
-            std::string oldExt{ std::filesystem::path{ _filename }.extension().string() };
-            for (char& c : oldExt) c = static_cast<char>(std::tolower(c));
-            if (oldExt != dotExt)
-            {
-                return _filename + dotExt;
-            }
-        }
-        return _filename;
-    }
+
 
     void Save::apply(bool _load, const std::string& _filename)
     {
@@ -63,19 +49,19 @@ namespace HMP::Gui::Widgets
 
     void Save::requestSaveNew()
     {
-        const std::string filename{ withExt(cinolib::file_dialog_save(), "hmp") };
-        if (!filename.empty())
+        const std::optional<std::string> filename{ Utils::FilePicking::save("hmp")};
+        if (filename)
         {
-            apply(false, filename);
+            apply(false, *filename);
         }
     }
 
     void Save::requestLoad()
     {
-        const std::string filename{ cinolib::file_dialog_open() };
-        if (!filename.empty())
+        const std::optional<std::string> filename{ Utils::FilePicking::open() };
+        if (filename)
         {
-            apply(true, filename);
+            apply(true, *filename);
         }
     }
 
@@ -86,10 +72,10 @@ namespace HMP::Gui::Widgets
 
     void Save::requestExportMesh()
     {
-        const std::string filename{ withExt(cinolib::file_dialog_save(), "mesh") };
-        if (!filename.empty())
+        const std::optional<std::string> filename{ Utils::FilePicking::save("mesh") };
+        if (filename)
         {
-            onExportMesh(filename);
+            onExportMesh(*filename);
         }
     }
 
