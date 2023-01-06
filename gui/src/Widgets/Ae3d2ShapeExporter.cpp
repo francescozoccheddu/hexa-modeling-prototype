@@ -40,11 +40,11 @@ namespace HMP::Gui::Widgets
 			<< ']';
 	}
 
-	Ae3d2ShapeExporter::Ae3d2ShapeExporter(const Meshing::Mesher::Mesh& _mesh, const cinolib::FreeCamera<Real>& _camera):
-		cinolib::SideBarItem{ "ae-3d2shape exporter" }, m_mesh{ _mesh }, m_camera{ _camera }, m_keyframes{}, m_sampleError{}
+	Ae3d2ShapeExporter::Ae3d2ShapeExporter(const Meshing::Mesher::Mesh& _mesh, const cinolib::FreeCamera<Real>& _camera, const Target& _targetWidget):
+		cinolib::SideBarItem{ "ae-3d2shape exporter" }, m_mesh{ _mesh }, m_camera{ _camera }, m_targetWidget{ _targetWidget }, m_keyframes{}, m_sampleError{}
 	{}
 
-	bool Ae3d2ShapeExporter::requestExport() const
+	bool Ae3d2ShapeExporter::exportKeyframes(const std::vector<Ae3d2ShapeExporter::Keyframe>& _keyframes)
 	{
 		static constexpr double c_keyframeDuration{ 1.0 };
 		assert(!empty());
@@ -61,7 +61,7 @@ namespace HMP::Gui::Widgets
 			file << ','; // project
 			{
 				file << JProp{ "keyframes" } << '['; // project.keyframes
-				for (I k{}; k < keyframeCount(); k++)
+				for (I k{}; k < _keyframes.size(); k++)
 				{
 					if (k > 0)
 					{
@@ -72,7 +72,7 @@ namespace HMP::Gui::Widgets
 						<< JProp{ "time" } << static_cast<double>(k) * c_keyframeDuration << ','
 						<< JProp{ "scene" } << '{'; // project.keyframes[k]
 					{
-						const cinolib::FreeCamera<Real>& camera{ m_keyframes[k].camera };
+						const cinolib::FreeCamera<Real>& camera{ _keyframes[k].camera };
 						file << JProp{ "camera" } << '{'; // project.keyframes[k].scene.camera
 						{
 							file
@@ -102,7 +102,7 @@ namespace HMP::Gui::Widgets
 					}
 					file << ','; // project.keyframes[k].scene
 					{
-						const cinolib::FreeCamera<Real>& camera{ m_keyframes[k].camera };
+						const cinolib::FreeCamera<Real>& camera{ _keyframes[k].camera };
 						file << JProp{ "lights" } << '['
 							<< '{'
 							<< JProp{ "kind" } << '"' << "directional" << '"' << ','
@@ -113,7 +113,7 @@ namespace HMP::Gui::Widgets
 					{
 						file << JProp{ "polygons" } << '['; // project.keyframes[k].polygons
 						bool firstPolygon{ true };
-						for (const QuadVerts& face : m_keyframes[k].polygons)
+						for (const std::vector<Vec>& face : _keyframes[k].polygons)
 						{
 							if (!firstPolygon)
 							{
@@ -144,7 +144,7 @@ namespace HMP::Gui::Widgets
 			file << ','; // project
 			{
 				file << JProp{ "frameSize" } << '{'
-					<< JProp{ "width" } << m_keyframes[0].camera.projection.aspectRatio << ','
+					<< JProp{ "width" } << _keyframes[0].camera.projection.aspectRatio << ','
 					<< JProp{ "height" } << 1
 					<< '}'; // project.frameSize
 			}
@@ -153,6 +153,26 @@ namespace HMP::Gui::Widgets
 			return true;
 		}
 		return false;
+	}
+
+	bool Ae3d2ShapeExporter::requestExport() const
+	{
+		return exportKeyframes(m_keyframes);
+	}
+
+	bool Ae3d2ShapeExporter::requestTargetExport() const
+	{
+		Keyframe frame{
+			.polygons{},
+			.camera { m_camera }
+		};
+		const cinolib::Polygonmesh<>& mesh{ m_targetWidget.meshForProjection() };
+		frame.polygons.reserve(toI(mesh.num_polys()));
+		for (Id fid{}; fid < mesh.num_polys(); fid++)
+		{
+			frame.polygons.push_back(mesh.poly_verts(fid));
+		}
+		return exportKeyframes({ frame });
 	}
 
 	bool Ae3d2ShapeExporter::requestSample()
@@ -174,7 +194,7 @@ namespace HMP::Gui::Widgets
 				{
 					std::reverse(verts.begin(), verts.end());
 				}
-				keyframe.polygons.push_back(cpputils::range::of(verts).toArray<4>());
+				keyframe.polygons.push_back(verts);
 			}
 		}
 		if (!m_keyframes.empty() && m_keyframes[0].polygons.size() != keyframe.polygons.size())
@@ -224,6 +244,11 @@ namespace HMP::Gui::Widgets
 		if (Utils::Controls::disabledButton("Export", !empty()))
 		{
 			requestExport();
+		}
+		ImGui::Spacing();
+		if (Utils::Controls::disabledButton("Export target", m_targetWidget.hasMesh()))
+		{
+			requestTargetExport();
 		}
 	}
 
