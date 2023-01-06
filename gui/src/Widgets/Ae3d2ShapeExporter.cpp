@@ -1,8 +1,8 @@
 #include <HMP/Gui/Widgets/Ae3d2ShapeExporter.hpp>
 
 #include <HMP/Gui/Utils/Controls.hpp>
+#include <HMP/Gui/Utils/FilePicking.hpp>
 #include <HMP/Gui/themer.hpp>
-#include <cinolib/gl/file_dialog_save.h>
 #include <algorithm>
 #include <imgui.h>
 #include <string>
@@ -48,11 +48,11 @@ namespace HMP::Gui::Widgets
 	{
 		static constexpr double c_keyframeDuration{ 1.0 };
 		assert(!empty());
-		const std::string filename{ cinolib::file_dialog_save() };
-		if (!filename.empty())
+		const std::optional<std::string> filename{ Utils::FilePicking::save("json")};
+		if (filename)
 		{
 			std::ofstream file{};
-			file.open(filename);
+			file.open(*filename);
 			file << '{'; // project
 			{
 				std::time_t time = std::time(nullptr);
