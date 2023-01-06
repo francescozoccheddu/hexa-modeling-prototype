@@ -11,6 +11,7 @@
 #include <HMP/Gui/Utils/FilePicking.hpp>
 #include <algorithm>
 #include <string>
+#include <utility>
 #include <cinolib/fonts/droid_sans.hpp>
 #include <imgui_impl_opengl2.h>
 #include <HMP/Gui/themer.hpp>
@@ -108,6 +109,12 @@ namespace HMP::Gui::Widgets
         }
     }
 
+    Real Debug::sectionValue() const
+    {
+        const Id dim{ static_cast<Id>(sectionDim) };
+        return m_mesher.mesh().bbox().delta()[dim] * sectionFactor + m_mesher.mesh().bbox().min[dim];
+    }
+
     void Debug::updateSection()
     {
         m_sectionSoup.clear();
@@ -117,35 +124,35 @@ namespace HMP::Gui::Widgets
         }
         const Id dim{ static_cast<Id>(sectionDim) };
         const Meshing::Mesher::Mesh& mesh{ m_mesher.mesh() };
-        const Real v{ mesh.bbox().delta()[dim] * sectionFactor + mesh.bbox().min[dim] };
-        std::vector<Id> pids;
+        const Real v{ sectionValue() };
+        std::vector<bool> above(toI(mesh.num_polys()), false);
         for (Id pid{}; pid < mesh.num_polys(); ++pid)
         {
-            if (m_mesher.shown(pid))
-            {
-                const cinolib::AABB& aabb{ mesh.poly_aabb(pid) };
-                if (aabb.min[dim] < v && aabb.max[dim] >= v)
-                {
-                    pids.push_back(pid);
-                }
-            }
+            above[toI(pid)] = mesh.poly_centroid(pid)[dim] > v;
         }
         std::unordered_set<Id> eids;
-        for (const Id pid : pids)
+        for (Id fid{}; fid < mesh.num_faces(); ++fid)
         {
-            for (const Id adjPid : mesh.adj_p2p(pid))
+            I aboveCount{}, belowCount{};
+            for (const Id adjPid : mesh.adj_f2p(fid))
             {
                 if (m_mesher.shown(adjPid))
                 {
-                    const cinolib::AABB& aabb{ mesh.poly_aabb(adjPid) };
-                    if (aabb.max[dim] < v)
+                    if (above[toI(adjPid)])
                     {
-                        const Id fid{ static_cast<Id>(mesh.poly_shared_face(pid, adjPid)) };
-                        for (const Id eid : mesh.adj_f2e(fid))
-                        {
-                            eids.insert(eid);
-                        }
+                        aboveCount++;
                     }
+                    else
+                    {
+                        belowCount++;
+                    }
+                }
+            }
+            if (aboveCount == 1 && belowCount == 1)
+            {
+                for (const Id eid : mesh.adj_f2e(fid))
+                {
+                    eids.insert(eid);
                 }
             }
         }
@@ -217,6 +224,13 @@ namespace HMP::Gui::Widgets
         // Export
         if (ImGui::TreeNode("Export"))
         {
+            ImGui::Spacing();
+            ImGui::Checkbox("Section", &sectionExports);
+            if (sectionExports)
+            {
+                ImGui::SameLine();
+                ImGui::Checkbox("Invert", &sectionExportsInv);
+            }
             ImGui::Spacing();
             ImGui::BeginTable("names", 2, ImGuiTableFlags_RowBg);
             ImGui::TableSetupColumn("doit", ImGuiTableColumnFlags_WidthFixed);
@@ -455,10 +469,24 @@ namespace HMP::Gui::Widgets
     void Debug::exportTarget() const
     {
         const std::optional<std::string> filename{ Utils::FilePicking::save("obj")};
-        if (filename)
+        if (!filename)
         {
-            m_targetWidget.meshForProjection().save(filename->c_str());
+            return;
         }
+        cinolib::Polygonmesh<> mesh{ std::move(m_targetWidget.meshForProjection()) };
+        if (sectionExports)
+        {
+            const Id dim{ static_cast<Id>(sectionDim) };
+            const Real v{ sectionValue() };
+            for (Id pidPlusOne{ mesh.num_polys() }; pidPlusOne > 0; pidPlusOne--)
+            {
+                if (sectionExportsInv != mesh.poly_centroid(pidPlusOne-1)[dim] >= v)
+                {
+                    mesh.poly_remove(pidPlusOne - 1);
+                }
+            }
+        }
+        mesh.save(filename->c_str());
     }
 
     void Debug::exportSource(bool _includeInterior) const
@@ -468,6 +496,8 @@ namespace HMP::Gui::Widgets
         {
             return;
         }
+        const Id dim{ static_cast<Id>(sectionDim) };
+        const Real v{ sectionValue() };
         const Meshing::Mesher::Mesh& vol{ m_mesher.mesh() };
         cinolib::Polygonmesh<> srf{};
         std::vector<Id> vidsMap(toI(vol.num_verts()), noId);
@@ -478,7 +508,7 @@ namespace HMP::Gui::Widgets
             bool visible{ false };
             for (const Id adjPid : vol.adj_f2p(fid))
             {
-                if (m_mesher.shown(adjPid))
+                if (m_mesher.shown(adjPid) && (!sectionExports || (sectionExportsInv != vol.poly_centroid(adjPid)[dim] >= v)))
                 {
                     if (_includeInterior)
                     {
