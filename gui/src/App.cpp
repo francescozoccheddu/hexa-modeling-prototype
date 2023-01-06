@@ -1053,7 +1053,7 @@ namespace HMP::Gui
 		m_project{}, m_canvas{ 700, 600, 13, 1.0f }, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() },
 		m_dagNamer{}, m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{}, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher },
 		m_directVertEditWidget{ m_vertEditWidget, m_canvas }, m_saveWidget{}, m_projectionWidget{ m_targetWidget, m_commander, m_mesher },
-		m_debugWidget{ m_mesher, m_dagNamer, m_vertEditWidget }, m_padWidget{ m_mesh }
+		m_debugWidget{ m_mesher, m_dagNamer, m_vertEditWidget, m_targetWidget }, m_padWidget{ m_mesh }
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		, m_dagViewerWidget{ m_dagNamer }, m_dagViewerNeedsUpdate{ true }
 #endif

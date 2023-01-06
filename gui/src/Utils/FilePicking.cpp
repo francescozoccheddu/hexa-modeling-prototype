@@ -11,12 +11,18 @@ namespace HMP::Gui::Utils::FilePicking
 	{
 		if (!_filename.empty())
 		{
-			const std::string dotExt{ "." + _ext };
-			std::string oldExt{ std::filesystem::path{ _filename }.extension().string() };
-			for (char& c : oldExt) c = static_cast<char>(std::tolower(c));
-			if (oldExt != dotExt)
+			std::filesystem::path path{ _filename };
+			std::string oldExtLower{ path.extension().string() };
+			for (char& c : oldExtLower) c = static_cast<char>(std::tolower(c));
+			std::string newExtLower{ _ext };
+			for (char& c : newExtLower) c = static_cast<char>(std::tolower(c));
+			if (oldExtLower != ("." + newExtLower))
 			{
-				return _filename + dotExt;
+				return _filename + "." + _ext;
+			}
+			else
+			{
+				return path.replace_extension(_ext).string();
 			}
 		}
 		return _filename;
