@@ -30,8 +30,12 @@ namespace HMP::Gui::Widgets
 
         unsigned int m_negJacTestRes{}, m_closeVertsTestRes{};
 
+        Real sectionValue() const;
+
     public:
 
+        bool sectionExports{ false };
+        bool sectionExportsInv{ false };
         Real testEps{ 1e-9 };
         float fontBuildSize{ 13.0f };
         float namesFontScale{ 1.0f };
