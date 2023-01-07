@@ -25,7 +25,8 @@ namespace HMP::Actions
 			m_otherVerts = mesher().mesh().vector_verts();
 			for (I i{}; i < m_surfIterations; ++i)
 			{
-				for (const auto& [vi, vert] : cpputils::range::enumerate(Projection::smooth(surf)))
+				const std::vector<Vec>& newSurfVerts{ Projection::smooth(surf) };
+				for (const auto& [vi, vert] : cpputils::range::enumerate(newSurfVerts))
 				{
 					m_otherVerts[surf2vol.at(toId(vi))] = vert;
 				}
