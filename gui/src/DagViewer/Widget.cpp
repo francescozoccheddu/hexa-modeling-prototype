@@ -27,7 +27,7 @@ namespace HMP::Gui::DagViewer
 
 	void Widget::initFonts()
 	{
-		static constexpr float c_minFontSize{ 100.0f };
+		static constexpr float c_minFontSize{ 128.0f };
 		ImGuiIO& io{ ImGui::GetIO() };
 		ImFont** maxFontIt{ std::max_element(io.Fonts->Fonts.begin(), io.Fonts->Fonts.end(), [](ImFont* _a, ImFont* _b) { return _a->FontSize < _b->FontSize; }) };
 		if (maxFontIt == io.Fonts->Fonts.end() || (*maxFontIt)->FontSize < c_minFontSize)
