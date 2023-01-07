@@ -340,6 +340,15 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return stream.str();
 	}
 
+	std::string describe(const Actions::Smooth& _action)
+	{
+		std::ostringstream stream{};
+		stream
+			<< "Smooth "
+			<< "(" << _action.surfaceIterations() << " surf, " << _action.internalIterations() << " int)";
+		return stream.str();
+	}
+
 	std::string describe(const Commander::Action& _action, DagNamer& _dagNamer)
 	{
 		if (const Actions::Delete* action{ dynamic_cast<const Actions::Delete*>(&_action) }; action)
@@ -379,6 +388,10 @@ namespace HMP::Gui::Utils::HrDescriptions
 			return describe(*action);
 		}
 		if (const Actions::SubdivideAll* action{ dynamic_cast<const Actions::SubdivideAll*>(&_action) }; action)
+		{
+			return describe(*action);
+		}
+		if (const Actions::Smooth* action{ dynamic_cast<const Actions::Smooth*>(&_action) }; action)
 		{
 			return describe(*action);
 		}
