@@ -19,6 +19,7 @@
 #include <HMP/Actions/Refine.hpp>
 #include <HMP/Actions/Paste.hpp>
 #include <HMP/Actions/Transform.hpp>
+#include <HMP/Actions/Smooth.hpp>
 #include <HMP/Actions/SubdivideAll.hpp>
 #include <HMP/Utils/Serialization.hpp>
 #include <HMP/Meshing/Utils.hpp>
@@ -1047,13 +1048,18 @@ namespace HMP::Gui
 		applyAction(*new Actions::Pad{ _length, _smoothIterations, _smoothSurfVertWeight, _cornerShrinkFactor });
 	}
 
+	void App::onSmooth(I _surfaceIterations, I _internalIterations, Real _surfVertWeight)
+	{
+		applyAction(*new Actions::Smooth{ _surfaceIterations, _internalIterations, _surfVertWeight });
+	}
+
 	// launch
 
 	App::App():
 		m_project{}, m_canvas{ 700, 600, 13, 1.0f }, m_mesher{ m_project.mesher() }, m_mesh{ m_mesher.mesh() }, m_commander{ m_project.commander() },
 		m_dagNamer{}, m_commanderWidget{ m_commander, m_dagNamer, m_vertEditWidget }, m_axesWidget{}, m_targetWidget{ m_mesh }, m_vertEditWidget{ m_mesher },
 		m_directVertEditWidget{ m_vertEditWidget, m_canvas }, m_saveWidget{}, m_projectionWidget{ m_targetWidget, m_commander, m_mesher },
-		m_debugWidget{ m_mesher, m_dagNamer, m_vertEditWidget, m_targetWidget }, m_padWidget{ m_mesh }
+		m_debugWidget{ m_mesher, m_dagNamer, m_vertEditWidget, m_targetWidget }, m_padWidget{ m_mesh }, m_smoothWidget{}
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		, m_dagViewerWidget{ m_dagNamer }, m_dagViewerNeedsUpdate{ true }
 #endif
@@ -1097,6 +1103,7 @@ namespace HMP::Gui
 		m_canvas.push(static_cast<cinolib::SideBarItem*>(&m_vertEditWidget));
 		m_canvas.push(&m_targetWidget);
 		m_canvas.push(&m_padWidget);
+		m_canvas.push(&m_smoothWidget);
 		m_canvas.push(static_cast<cinolib::CanvasGuiItem*>(&m_projectionWidget));
 		m_canvas.push(static_cast<cinolib::SideBarItem*>(&m_projectionWidget));
 
@@ -1109,6 +1116,7 @@ namespace HMP::Gui
 #endif
 
 		m_padWidget.onPadRequested += [this](const auto&& ... _args) { onPad(_args...); };
+		m_smoothWidget.onSmoothRequested += [this](const auto&& ... _args) { onSmooth(_args...); };
 
 		m_saveWidget.onExportMesh += [this](const std::string& _filename) { onExportMesh(_filename); };
 		m_saveWidget.onSave += [this](const std::string& _filename) { onSaveState(_filename); };

@@ -11,6 +11,7 @@ add_library (core STATIC
     "src/Actions/Transform.cpp"
     "src/Actions/ExtrudeUtils.cpp"
     "src/Actions/Pad.cpp"
+    "src/Actions/Smooth.cpp"
     "src/Actions/SubdivideAll.cpp"
     "src/Dag/Delete.cpp"
     "src/Dag/Element.cpp"

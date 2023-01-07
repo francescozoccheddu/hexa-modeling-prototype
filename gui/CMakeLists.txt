@@ -13,6 +13,7 @@ add_executable (gui
     "src/Utils/Theme.cpp"
     "src/Widgets/Axes.cpp"
     "src/Widgets/Pad.cpp"
+    "src/Widgets/Smooth.cpp"
     "src/Widgets/Debug.cpp"
     "src/Widgets/Commander.cpp"
     "src/Widgets/Target.cpp"
