@@ -50,7 +50,7 @@ FetchContent_MakeAvailable (updatable_priority_queue)
 FetchContent_Declare (
     cpputils
     GIT_REPOSITORY "https://github.com/francescozoccheddu/cpputils.git"
-    GIT_TAG "24d2947832313ba2a71e8c05e1ec2d38ff6e6cc3"
+    GIT_TAG "b38e496fb7983ed472e8f3187e216c97d9aaf691"
     GIT_SHALLOW TRUE
     GIT_PROGRESS TRUE
 )

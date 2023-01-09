@@ -24,6 +24,8 @@ namespace HMP::Gui
 
 		virtual void drawSidebar() = 0;
 
+		bool open() const;
+
 	};
 
 }

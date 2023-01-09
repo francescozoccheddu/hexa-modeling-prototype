@@ -47,7 +47,7 @@ namespace HMP::Gui::Widgets
 	bool Ae3d2ShapeExporter::exportKeyframes(const std::vector<Ae3d2ShapeExporter::Keyframe>& _keyframes)
 	{
 		static constexpr double c_keyframeDuration{ 1.0 };
-		assert(!empty());
+		assert(!_keyframes.empty());
 		const std::optional<std::string> filename{ Utils::FilePicking::save("json")};
 		if (filename)
 		{

@@ -39,48 +39,30 @@ namespace HMP::Gui
 		class Smooth;
 		class Ae3d2ShapeExporter;
 		class Commander;
+		class Actions;
+		class Highlight;
 
 	}
 
-	class App final: public cpputils::mixins::ReferenceClass
+	class App final : public cpputils::mixins::ReferenceClass
 	{
-
-	private:
-
-		static constexpr cinolib::KeyBinding c_kbExtrudeFace{ GLFW_KEY_E };
-		static constexpr cinolib::KeyBinding c_kbExtrudeEdge{ GLFW_KEY_E, GLFW_MOD_ALT };
-		static constexpr cinolib::KeyBinding c_kbExtrudeVertex{ GLFW_KEY_E, GLFW_MOD_ALT | GLFW_MOD_CONTROL };
-		static constexpr cinolib::KeyBinding c_kbExtrudeSelected{ GLFW_KEY_E, GLFW_MOD_SHIFT };
-		static constexpr cinolib::KeyBinding c_kbRefine{ GLFW_KEY_H };
-		static constexpr cinolib::KeyBinding c_kbDoubleRefine{ GLFW_KEY_H, GLFW_MOD_SHIFT };
-		static constexpr cinolib::KeyBinding c_kbFaceRefine{ GLFW_KEY_F };
-		static constexpr cinolib::KeyBinding c_kbDelete{ GLFW_KEY_D };
-		static constexpr cinolib::KeyBinding c_kbCopy{ GLFW_KEY_C };
-		static constexpr cinolib::KeyBinding c_kbPasteFace{ GLFW_KEY_V };
-		static constexpr cinolib::KeyBinding c_kbPasteEdge{ GLFW_KEY_V, GLFW_MOD_ALT };
-		static constexpr cinolib::KeyBinding c_kbPasteVertex{ GLFW_KEY_V, GLFW_MOD_ALT | GLFW_MOD_CONTROL };
-		static constexpr cinolib::KeyBinding c_kbMakeConforming{ GLFW_KEY_Q };
-		static constexpr cinolib::KeyBinding c_kbUndo{ GLFW_KEY_Z, GLFW_MOD_CONTROL };
-		static constexpr cinolib::KeyBinding c_kbRedo{ GLFW_KEY_Z, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT };
-		static constexpr cinolib::KeyBinding c_kbClear{ GLFW_KEY_N, GLFW_MOD_CONTROL };
-		static constexpr cinolib::KeyBinding c_kbSubdivideAll{ GLFW_KEY_0, GLFW_MOD_CONTROL };
-
-		void printUsage() const;
 
 	public:
 
-		struct
+		struct Mouse final
 		{
 			cinolib::vec2d position{};
-			HMP::Dag::Element* element{};
-			I fi, vi, ei;
-			Id pid, fid, vid, eid;
-		} m_mouse;
+			Dag::Element* element{};
+			I fi{}, vi{}, ei{};
+			Id pid{ noId }, fid{ noId }, vid{ noId }, eid{ noId };
+		};
 
-		struct
-		{
-			HMP::Dag::Element* element{};
-		} m_copy;
+	private:
+
+		void printUsage() const;
+
+
+	public:
 
 		HMP::Project project;
 		cinolib::GLcanvas canvas;
@@ -88,6 +70,7 @@ namespace HMP::Gui
 		Commander& commander;
 		cpputils::collections::SetNamer<const HMP::Dag::Node*> dagNamer;
 
+		Widgets::Actions& actionsWidget;
 		Widgets::Commander& commanderWidget;
 		Widgets::Axes& axesWidget;
 		Widgets::Target& targetWidget;
@@ -98,6 +81,7 @@ namespace HMP::Gui
 		Widgets::Debug& debugWidget;
 		Widgets::Pad& padWidget;
 		Widgets::Smooth& smoothWidget;
+		Widgets::Highlight& highlightWidget;
 
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
@@ -114,10 +98,10 @@ namespace HMP::Gui
 	private:
 
 		const std::vector<Widget*> m_widgets;
+		Mouse m_mouse{};
 
 		// actions
 		void onActionApplied();
-		void applyAction(Commander::Action& _action);
 		void requestDagViewerUpdate();
 
 		// other events
@@ -137,11 +121,9 @@ namespace HMP::Gui
 		bool onMouseRightClicked(int _modifiers);
 		bool onKeyPressed(int _key, int _modifiers);
 		bool onMouseMoved(double _x, double _y);
-		void onDrawCustomGui();
 		void onDagViewerDraw();
 		void updateMouse();
 		void onFilesDropped(const std::vector<std::string>& _files);
-		bool hoveredExtrudeElements(Dag::Extrude::ESource _source, cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, cpputils::collections::FixedVector<I, 3>& _fis, I& _firstVi, bool& _clockwise);
 
 		// save events
 		void onSaveState(const std::string& _filename);
@@ -149,36 +131,31 @@ namespace HMP::Gui
 		void onExportMesh(const std::string& _filename) const;
 
 		// user operation
-		void onExtrude(Dag::Extrude::ESource _source);
-		void onExtrudeSelected();
-		void onCopy();
-		void onPaste(Dag::Extrude::ESource _source);
-		void onRefineElement(bool _twice);
-		void onDelete();
-		void onRefineFace();
-		void onRefineTest(Refinement::EScheme _scheme, I _forwardFi, I _firstVi);
-		void onMakeConformant();
-		void onToggleTargetVisibility();
 		void onProjectToTarget(const cinolib::Polygonmesh<>& _target, const std::vector<Projection::Utils::Point>& _pointFeats, const std::vector<Projection::Utils::EidsPath>& _pathFeats, const Projection::Options& _options);
 		void onApplyTargetTransform(const Mat4& _transform);
-		void onUndo();
-		void onRedo();
-		void onClear();
-		void onSubdivideAll();
+		void onRefineTest(Refinement::EScheme _scheme, I _forwardFi, I _firstVi);
 		void onPad(Real _length, I _smoothIterations, Real _smoothSurfVertWeight, Real _cornerShrinkFactor);
 		void onSmooth(I _surfaceIterations, I _internalIterations, Real _surfVertWeight);
 
 	public:
 
+		Dag::Element* copiedElement{};
+
 		App();
 
 		~App();
+
+		void redo();
+		void applyAction(Commander::Action& _action);
+		void undo();
 
 		void loadTargetMeshOrProjectFile(const std::string& _file);
 
 		void serialize(const std::string& _filename);
 
 		void deserialize(const std::string& _filename);
+
+		const Mouse& mouse() const;
 
 		int launch();
 

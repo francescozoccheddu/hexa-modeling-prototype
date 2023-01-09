@@ -16,15 +16,18 @@ namespace HMP::Gui::Widgets
 
 	private:
 
-		HMP::Commander& m_commander;
-		Utils::HrDescriptions::DagNamer& m_dagNamer;
-		const VertEdit& m_vertEdit;
+		static constexpr cinolib::KeyBinding c_kbUndo{ GLFW_KEY_Z, GLFW_MOD_CONTROL };
+		static constexpr cinolib::KeyBinding c_kbRedo{ GLFW_KEY_Z, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT };
 
 		void drawSidebar() override;
 
+		bool keyPressed(const cinolib::KeyBinding& _key) override;
+
+		void printUsage() const override;
+
 	public:
 
-		Commander(HMP::Commander& _commander, Utils::HrDescriptions::DagNamer& _dagNamer, const VertEdit& _vertEdit);
+		Commander();
 
 	};
 

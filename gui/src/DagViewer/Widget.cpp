@@ -21,6 +21,7 @@
 #include <cpputils/range/zip.hpp>
 #include <sstream>
 #include <HMP/Gui/themer.hpp>
+#include <HMP/Gui/App.hpp>
 
 namespace HMP::Gui::DagViewer
 {
@@ -60,24 +61,40 @@ namespace HMP::Gui::DagViewer
 		return *m_hovered;
 	}
 
-	const cpputils::collections::Namer<const Dag::Node*>& Widget::namer() const
+	void Widget::draw(const cinolib::GLcanvas& _canvas)
 	{
-		return m_namer;
-	}
-
-	Layout& Widget::layout()
-	{
-		return m_layout;
-	}
-
-	const Layout& Widget::layout() const
-	{
-		return m_layout;
+		const float
+			semiBoldLineThickness{ 2.5f * themer->ovScale },
+			lineSpacing{ (10.0f * themer->ovScale + 10.0f) / 2.0f };
+		if (app().canvas.show_sidebar() && open())
+		{
+			ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
+			if (app().dagViewerWidget.hasHoveredNode() && app().dagViewerWidget.hoveredNode().isElement())
+			{
+				const Id pid{ app().dagViewerWidget.hoveredNode().element().pid };
+				for (const Id fid : app().mesher.mesh().adj_p2f(pid))
+				{
+					const QuadVerts fidVerts{ Meshing::Utils::verts(app().mesher.mesh(), Meshing::Utils::fidVids(app().mesher.mesh(), fid)) };
+					const auto fidVerts2d{ Utils::Drawing::project(app().canvas, fidVerts) };
+					Utils::Drawing::quadFilled(drawList, fidVerts2d, themer->ovPolyHi);
+				}
+				for (const Id eid : app().mesher.mesh().adj_p2e(pid))
+				{
+					const EdgeVerts eidVerts{ Meshing::Utils::verts(app().mesher.mesh(), Meshing::Utils::eidVids(app().mesher.mesh(), eid)) };
+					const auto eidVerts2d{ Utils::Drawing::project(app().canvas, eidVerts) };
+					Utils::Drawing::dashedLine(drawList, eidVerts2d, themer->ovFaceHi, semiBoldLineThickness, lineSpacing);
+				}
+			}
+		}
+		else
+		{
+			m_showLayoutPerformanceWarning = false;
+		}
 	}
 
 	void Widget::resetView()
 	{
-		m_center_nl = Vec2{ m_layout.aspectRatio(), 1.0 } / 2;
+		m_center_nl = Vec2{ layout.aspectRatio(), 1.0 } / 2;
 		m_windowHeight_n = std::numeric_limits<Real>::infinity();
 	}
 
@@ -217,7 +234,7 @@ namespace HMP::Gui::DagViewer
 			static constexpr int64_t warningTimeThresholdMs{ 200 };
 			if (elapsedMs >= warningTimeThresholdMs)
 			{
-				showLayoutPerformanceWarning = true;
+				m_showLayoutPerformanceWarning = true;
 			}
 		}
 
@@ -227,7 +244,7 @@ namespace HMP::Gui::DagViewer
 			return;
 		}
 
-		if (showLayoutPerformanceWarning)
+		if (m_showLayoutPerformanceWarning)
 		{
 			ImGui::TextColored(themer->sbWarn, "Leaving this widget open will affect meshing performance!");
 		}
@@ -268,7 +285,7 @@ namespace HMP::Gui::DagViewer
 		const Vec2 bottomRight_sw{ topLeft_sw + windowSize_s };
 		const Real windowAspectRatio{ windowSize_s.x() / windowSize_s.y() };
 
-		if (m_layout.size().x() <= 0.0 || m_layout.size().y() <= 0.0)
+		if (layout.size().x() <= 0.0 || layout.size().y() <= 0.0)
 		{
 			return;
 		}
@@ -277,7 +294,7 @@ namespace HMP::Gui::DagViewer
 
 		const Real s2n{ 1.0 / windowSize_s.y() };
 		const Real n2s{ 1.0 / s2n };
-		const Real n2l{ m_layout.size().y() };
+		const Real n2l{ layout.size().y() };
 		const Real l2n{ 1.0 / n2l };
 
 		const auto ss2sw{ [&](const Vec2& _point_ss) {
@@ -305,11 +322,11 @@ namespace HMP::Gui::DagViewer
 		} };
 
 		/*const auto nl2ll{ [&](const Vec2& _point_nl) {
-			return _point_nl * n2l + m_layout.bottomLeft();
+			return _point_nl * n2l + layout.bottomLeft();
 		} };*/
 
 		const auto ll2nl{ [&](const Vec2& _point_ll) {
-			return (_point_ll - m_layout.bottomLeft()) * l2n;
+			return (_point_ll - layout.bottomLeft()) * l2n;
 		} };
 
 		// font
@@ -324,15 +341,15 @@ namespace HMP::Gui::DagViewer
 		ImGui::InvisibleButton("canvas", toImVec(windowSize_s), ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle);
 
 		const auto clampCenter{ [&]() {
-			m_center_nl.x() = cinolib::clamp(m_center_nl.x(), 0.0, m_layout.aspectRatio());
+			m_center_nl.x() = cinolib::clamp(m_center_nl.x(), 0.0, layout.aspectRatio());
 			m_center_nl.y() = cinolib::clamp(m_center_nl.y(), 0.0, 1.0);
 		} };
 
 		const auto clampHeight{ [&]() {
-			const Real fullHeight_n {(windowAspectRatio < m_layout.aspectRatio()) ? m_layout.aspectRatio() / windowAspectRatio : 1};
-			const Real min{ m_layout.nodeRadius() * l2n * 3 };
-			const Real max{ fullHeight_n * 1.1 + m_layout.nodeRadius() * l2n };
-			const Real maxByNumberOfNodes{ m_layout.nodeRadius() * l2n * 100 };
+			const Real fullHeight_n {(windowAspectRatio < layout.aspectRatio()) ? layout.aspectRatio() / windowAspectRatio : 1};
+			const Real min{ layout.nodeRadius() * l2n * 3 };
+			const Real max{ fullHeight_n * 1.1 + layout.nodeRadius() * l2n };
+			const Real maxByNumberOfNodes{ layout.nodeRadius() * l2n * 100 };
 			m_windowHeight_n = cinolib::clamp(m_windowHeight_n, min, std::min(max, maxByNumberOfNodes));
 		} };
 
@@ -399,21 +416,21 @@ namespace HMP::Gui::DagViewer
 
 				// edges
 
-				for (const auto& [lineA, lineB] : m_layout.lines())
+				for (const auto& [lineA, lineB] : layout.lines())
 				{
 					Utils::Drawing::line(drawList, { toImVec(ll2ss(lineA)), toImVec(ll2ss(lineB)) }, strokeColor, lineThickness);
 				}
 
 				// nodes
 
-				const float nodeRadius_s{ static_cast<float>(m_layout.nodeRadius() * l2s) };
-				const float copiedNodeRadius_s{ static_cast<float>(m_layout.nodeRadius() * l2s) * 1.1f };
+				const float nodeRadius_s{ static_cast<float>(layout.nodeRadius() * l2s) };
+				const float copiedNodeRadius_s{ static_cast<float>(layout.nodeRadius() * l2s) * 1.1f };
 				const Vec2 nodeHalfDiag_s{ nodeRadius_s, nodeRadius_s };
 				const Vec2 copiedNodeHalfDiag_s{ copiedNodeRadius_s, copiedNodeRadius_s };
 				const Vec2 mouse{ toVec(ImGui::GetMousePos()) };
 				constexpr int circleSegmentsNear{ 10 }, circleSegmentsFar{ 4 };
 				const int circleSegments{ nodeRadius_s < 10.0 ? circleSegmentsFar : circleSegmentsNear };
-				for (const Layout::Node& node : m_layout.nodes())
+				for (const Layout::Node& node : layout.nodes())
 				{
 					const Vec2 center{ ll2ss(node.center()) };
 					bool hovered{ false };

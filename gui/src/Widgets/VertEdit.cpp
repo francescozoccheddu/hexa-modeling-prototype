@@ -258,6 +258,9 @@ namespace HMP::Gui::Widgets
 		if (!empty())
 		{
 			Utils::Drawing::cross(drawList, Utils::Drawing::project(_canvas, m_centroid), radius, themer->ovHi, lineThickness);
+			const char* verticesLit{ m_verts.size() == 1 ? "vertex" : "vertices" };
+			const int vertexCount{ static_cast<int>(m_verts.size()) };
+			ImGui::TextColored(Utils::Drawing::toImVec4(themer->ovMut), "%d %s selected", vertexCount, verticesLit);
 		}
 	}
 
@@ -352,29 +355,29 @@ namespace HMP::Gui::Widgets
 
 	void VertEdit::onSelect(ESelectionSource _source, ESelectionMode _mode)
 	{
-		const auto& m_mouse{ app().m_mouse };
-		if (m_mouse.element)
+		const App::Mouse& mouse{ app().mouse() };
+		if (mouse.element)
 		{
 			std::vector<Id> vids{};
 			switch (_source)
 			{
 				case ESelectionSource::Vertex:
-					vids = { m_mouse.vid };
+					vids = { mouse.vid };
 					break;
 				case ESelectionSource::Edge:
-					vids = app().mesher.mesh().edge_vert_ids(m_mouse.eid);
+					vids = app().mesher.mesh().edge_vert_ids(mouse.eid);
 					break;
 				case ESelectionSource::Face:
-					vids = app().mesher.mesh().face_verts_id(m_mouse.fid);
+					vids = app().mesher.mesh().face_verts_id(mouse.fid);
 					break;
 				case ESelectionSource::UpFace:
-					vids = app().mesher.mesh().face_verts_id(Meshing::Utils::adjFidInPidByFidAndEid(app().mesher.mesh(), m_mouse.pid, m_mouse.fid, m_mouse.eid));
+					vids = app().mesher.mesh().face_verts_id(Meshing::Utils::adjFidInPidByFidAndEid(app().mesher.mesh(), mouse.pid, mouse.fid, mouse.eid));
 					break;
 				case ESelectionSource::UpEdge:
-					vids = { m_mouse.vid, app().mesher.mesh().poly_vert_opposite_to(m_mouse.pid, m_mouse.fid, m_mouse.vid) };
+					vids = { mouse.vid, app().mesher.mesh().poly_vert_opposite_to(mouse.pid, mouse.fid, mouse.vid) };
 					break;
 				case ESelectionSource::Poly:
-					vids = app().mesher.mesh().poly_verts_id(m_mouse.pid);
+					vids = app().mesher.mesh().poly_verts_id(mouse.pid);
 					break;
 			}
 			if (_mode == ESelectionMode::Set)
