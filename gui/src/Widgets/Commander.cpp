@@ -9,13 +9,36 @@
 #include <array>
 #include <algorithm>
 #include <HMP/Gui/themer.hpp>
+#include <HMP/Gui/App.hpp>
 
 namespace HMP::Gui::Widgets
 {
 
-	Commander::Commander(HMP::Commander& _commander, Utils::HrDescriptions::DagNamer& _dagNamer, const VertEdit& _vertEdit)
-		: SidebarWidget{ "Commander" }, m_commander{ _commander }, m_dagNamer{ _dagNamer }, m_vertEdit{ _vertEdit }
+	Commander::Commander() : SidebarWidget{ "Commander" }
 	{}
+
+	bool Commander::keyPressed(const cinolib::KeyBinding& _key)
+	{
+		if (_key == c_kbUndo)
+		{
+			app().undo();
+		}
+		else if (_key == c_kbRedo)
+		{
+			app().redo();
+		}
+		else
+		{
+			return false;
+		}
+		return true;
+	}
+
+	void Commander::printUsage() const
+	{
+		cinolib::print_binding(c_kbUndo.name(), "undo");
+		cinolib::print_binding(c_kbRedo.name(), "redo");
+	}
 
 	void Commander::drawSidebar()
 	{
@@ -34,26 +57,26 @@ namespace HMP::Gui::Widgets
 		ImGui::BeginTable("stacks", 2, ImGuiTableFlags_RowBg);
 		ImGui::TableSetupColumn("size", ImGuiTableColumnFlags_WidthStretch);
 		ImGui::TableSetupColumn("clear", ImGuiTableColumnFlags_WidthFixed);
-		actionsControl(m_commander.applied(), "Undo");
-		actionsControl(m_commander.unapplied(), "Redo");
+		actionsControl(app().commander.applied(), "Undo");
+		actionsControl(app().commander.unapplied(), "Redo");
 		ImGui::EndTable();
 		ImGui::Spacing();
 
 		ImGui::Text("History");
 		ImGui::BeginChild("history", { ImGui::GetContentRegionAvail().x, 130 * themer->sbScale }, true);
-		if (m_vertEdit.pendingAction())
+		if (app().vertEditWidget.pendingAction())
 		{
-			ImGui::TextColored(themer->sbWarn, "Pending vertex edit action on %d vertices", static_cast<int>(m_vertEdit.vids().size()));
+			ImGui::TextColored(themer->sbWarn, "Pending vertex edit action on %d vertices", static_cast<int>(app().vertEditWidget.vids().size()));
 		}
 
-		for (const auto& action : m_commander.unapplied().reverse())
+		for (const auto& action : app().commander.unapplied().reverse())
 		{
-			ImGui::TextColored(themer->sbErr, "%s", Utils::HrDescriptions::describe(action, m_dagNamer).c_str());
+			ImGui::TextColored(themer->sbErr, "%s", Utils::HrDescriptions::describe(action, app().dagNamer).c_str());
 		}
 
-		for (const HMP::Commander::Action& action : m_commander.applied())
+		for (const HMP::Commander::Action& action : app().commander.applied())
 		{
-			ImGui::TextColored(themer->sbOk, "%s", Utils::HrDescriptions::describe(action, m_dagNamer).c_str());
+			ImGui::TextColored(themer->sbOk, "%s", Utils::HrDescriptions::describe(action, app().dagNamer).c_str());
 		}
 		ImGui::EndChild();
 	}

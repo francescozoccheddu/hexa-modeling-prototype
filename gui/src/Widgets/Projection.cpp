@@ -110,7 +110,7 @@ namespace HMP::Gui::Widgets
 		{
 			return false;
 		}
-		return dynamic_cast<const Actions::Project*>(&m_commander.applied().first());
+		return dynamic_cast<const HMP::Actions::Project*>(&m_commander.applied().first());
 	}
 
 	void Projection::requestReprojection()
@@ -625,7 +625,7 @@ namespace HMP::Gui::Widgets
 			return false;
 		}
 		Vec point;
-		if (app().canvas.unproject(app().m_mouse.position, point))
+		if (app().canvas.unproject(app().mouse().position, point))
 		{
 			if (m_targetWidget.hasMesh() && m_targetWidget.visible)
 			{
