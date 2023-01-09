@@ -44,9 +44,9 @@ namespace HMP::Gui
 
 		virtual void cameraChanged();
 
-		virtual void updated();
+		virtual void actionApplied();
 
-		virtual void goingToUpdate();
+		virtual void actionPrepared();
 
 		virtual void serialize(HMP::Utils::Serialization::Serializer& _serializer) const;
 

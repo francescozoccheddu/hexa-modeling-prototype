@@ -45,11 +45,11 @@ namespace HMP::Gui
 	{
 	}
 
-	void Widget::updated()
+	void Widget::actionApplied()
 	{
 	}
 
-	void Widget::goingToUpdate()
+	void Widget::actionPrepared()
 	{
 	}
 

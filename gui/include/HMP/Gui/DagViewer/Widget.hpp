@@ -19,8 +19,9 @@ namespace HMP::Gui::DagViewer
 
 		static void initFonts();
 
-		cpputils::collections::Namer<const Dag::Node*>& m_namer;
-
+		Layout m_layout;
+		bool m_needsLayoutUpdate{ true };
+		bool m_tooManyNodes{ false };
 		Vec2 m_center_nl{ 0.5, 0.5 };
 		Real m_windowHeight_n{ 1.0 };
 		bool m_showLayoutPerformanceWarning{ false };
@@ -29,7 +30,7 @@ namespace HMP::Gui::DagViewer
 		void pan(const cinolib::vec2d& _amount);
 		void clampView();
 
-		void drawTooltip(const Dag::Node& _node) const;
+		void drawTooltip(const Dag::Node& _node);
 
 		const Dag::Node* m_hovered{};
 
@@ -37,22 +38,15 @@ namespace HMP::Gui::DagViewer
 
 		void draw(const cinolib::GLcanvas& _canvas) override;
 
-	public:
-
-
-		Layout layout;
-		const Dag::Element* highlight{}, * copied{};
-		bool tooManyNodes{ false };
-
-		mutable cpputils::collections::Event<Widget> onDraw{};
-
-		Widget(cpputils::collections::Namer<const Dag::Node*>& _namer);
-
 		void resetView();
 
-		bool hasHoveredNode() const;
+		void updateLayout();
 
-		const Dag::Node& hoveredNode() const;
+		void actionApplied() override;
+
+	public:
+
+		Widget();
 
 	};
 
