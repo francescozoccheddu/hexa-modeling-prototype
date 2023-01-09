@@ -499,21 +499,30 @@ namespace HMP::Gui
 		{
 			const Id cPid{ m_copy.element->pid };
 			const Dag::Extrude& extrude{ m_copy.element->parents.single().as<Dag::Extrude>() };
-			const ImVec2 cPidCenter2d{ project(m_canvas, m_mesh.poly_centroid(cPid)) };
-			for (const auto& [parent, fi] : extrude.parents.zip(extrude.fis))
+			const auto cPidCenter2d{ project(m_canvas, m_mesh.poly_centroid(cPid)) };
+			if (cPidCenter2d)
 			{
-				const QuadVertIds parentFidVids{ Meshing::Utils::fiVids(parent.vids, fi) };
-				const Vec parentFidCenter{ Meshing::Utils::centroid(Meshing::Utils::verts(m_mesh, parentFidVids)) };
-				const ImVec2 parentFidCenter2d{ project(m_canvas, parentFidCenter) };
-				dashedLine(drawList, { parentFidCenter2d, cPidCenter2d }, themer->ovMut, lineThickness, lineSpacing);
+				for (const auto& [parent, fi] : extrude.parents.zip(extrude.fis))
+				{
+					const QuadVertIds parentFidVids{ Meshing::Utils::fiVids(parent.vids, fi) };
+					const Vec parentFidCenter{ Meshing::Utils::centroid(Meshing::Utils::verts(m_mesh, parentFidVids)) };
+					const auto parentFidCenter2d{ project(m_canvas, parentFidCenter) };
+					if (parentFidCenter2d)
+					{
+						dashedLine(drawList, { *parentFidCenter2d, *cPidCenter2d }, themer->ovMut, lineThickness, lineSpacing);
+					}
+				}
 			}
 			circle(drawList, cPidCenter2d, smallVertRadius, m_mouse.element == m_copy.element ? themer->ovHi : themer->ovMut, lineThickness);
 			const Dag::Element& firstParent{ extrude.parents.first() };
 			const Id firstVid{ firstParent.vids[extrude.firstVi] };
 			const QuadVertIds firstParentVids{ Meshing::Utils::align(Meshing::Utils::fiVids(firstParent.vids, extrude.fis[0]), firstVid, extrude.clockwise) };
-			const EdgeVertData<ImVec2> eid2d{ project(m_canvas, Meshing::Utils::verts(m_mesh, EdgeVertIds{ firstParentVids[0], firstParentVids[1] })) };
+			const auto eid2d{ project(m_canvas, Meshing::Utils::verts(m_mesh, EdgeVertIds{ firstParentVids[0], firstParentVids[1] })) };
 			dashedLine(drawList, eid2d, themer->ovMut, boldLineThickness, lineSpacing);
-			circleFilled(drawList, eid2d[0], vertRadius, themer->ovMut);
+			if (eid2d)
+			{
+				circleFilled(drawList, (*eid2d)[0], vertRadius, themer->ovMut);
+			}
 		}
 		if (m_mouse.element)
 		{
@@ -521,26 +530,32 @@ namespace HMP::Gui
 			{
 				const I fi{ (i + 1 + m_mouse.fi) % 6 };
 				const QuadVerts fiVerts{ Meshing::Utils::verts(m_mesh, Meshing::Utils::fiVids(m_mouse.element->vids, fi)) };
-				const QuadVertData<ImVec2> fiVerts2d{ project(m_canvas, fiVerts) };
+				const auto fiVerts2d{ project(m_canvas, fiVerts) };
 				quadFilled(drawList, fiVerts2d, fi == m_mouse.fi ? themer->ovFaceHi : themer->ovPolyHi);
 			}
-			const ImVec2 hPidCenter2d{ project(m_canvas, m_mesh.poly_centroid(m_mouse.pid)) };
-			for (const Id adjPid : m_mesh.adj_p2p(m_mouse.pid))
+			const auto hPidCenter2d{ project(m_canvas, m_mesh.poly_centroid(m_mouse.pid)) };
+			if (hPidCenter2d)
 			{
-				const Id adjFid{ static_cast<Id>(m_mesh.poly_shared_face(m_mouse.pid, adjPid)) };
-				const ImVec2 adjFidCenter2d{ project(m_canvas, m_mesh.face_centroid(adjFid)) };
-				const ImVec2 adjPidCenter2d{ project(m_canvas, m_mesh.poly_centroid(adjPid)) };
-				const ImU32 adjColorU32{ m_mesher.shown(adjPid) ? themer->ovHi : themer->ovMut };
-				circle(drawList, adjPidCenter2d, smallVertRadius, adjColorU32, lineThickness);
-				dashedLine(drawList, { adjFidCenter2d, hPidCenter2d }, adjColorU32, lineThickness, lineSpacing);
+				for (const Id adjPid : m_mesh.adj_p2p(m_mouse.pid))
+				{
+					const Id adjFid{ static_cast<Id>(m_mesh.poly_shared_face(m_mouse.pid, adjPid)) };
+					const auto adjFidCenter2d{ project(m_canvas, m_mesh.face_centroid(adjFid)) };
+					const auto adjPidCenter2d{ project(m_canvas, m_mesh.poly_centroid(adjPid)) };
+					const ImU32 adjColorU32{ m_mesher.shown(adjPid) ? themer->ovHi : themer->ovMut };
+					circle(drawList, adjPidCenter2d, smallVertRadius, adjColorU32, lineThickness);
+					if (adjFidCenter2d)
+					{
+						dashedLine(drawList, { *adjFidCenter2d, *hPidCenter2d }, adjColorU32, lineThickness, lineSpacing);
+					}
+				}
+				circle(drawList, *hPidCenter2d, smallVertRadius, themer->ovHi, lineThickness);
 			}
-			circle(drawList, hPidCenter2d, smallVertRadius, themer->ovHi, lineThickness);
 			for (const Id adjEid : m_mesh.adj_f2e(m_mouse.fid))
 			{
-				const EdgeVertData<ImVec2> adjEid2d{ project(m_canvas, Meshing::Utils::verts(m_mesh, Meshing::Utils::eidVids(m_mesh, adjEid))) };
+				const auto adjEid2d{ project(m_canvas, Meshing::Utils::verts(m_mesh, Meshing::Utils::eidVids(m_mesh, adjEid))) };
 				dashedLine(drawList, adjEid2d, adjEid == m_mouse.eid ? themer->ovHi : themer->ovMut, boldLineThickness, lineSpacing);
 			}
-			const ImVec2 hVert2d{ project(m_canvas, m_mesh.vert(m_mouse.vid)) };
+			const auto hVert2d{ project(m_canvas, m_mesh.vert(m_mouse.vid)) };
 			circleFilled(drawList, hVert2d, vertRadius, themer->ovHi);
 		}
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
@@ -552,13 +567,13 @@ namespace HMP::Gui
 				for (const Id fid : m_mesh.adj_p2f(pid))
 				{
 					const QuadVerts fidVerts{ Meshing::Utils::verts(m_mesh, Meshing::Utils::fidVids(m_mesh, fid)) };
-					const QuadVertData<ImVec2> fidVerts2d{ project(m_canvas, fidVerts) };
+					const auto fidVerts2d{ project(m_canvas, fidVerts) };
 					quadFilled(drawList, fidVerts2d, themer->ovPolyHi);
 				}
 				for (const Id eid : m_mesh.adj_p2e(pid))
 				{
 					const EdgeVerts eidVerts{ Meshing::Utils::verts(m_mesh, Meshing::Utils::eidVids(m_mesh, eid)) };
-					const EdgeVertData<ImVec2> eidVerts2d{ project(m_canvas, eidVerts) };
+					const auto eidVerts2d{ project(m_canvas, eidVerts) };
 					dashedLine(drawList, eidVerts2d, themer->ovFaceHi, semiBoldLineThickness, lineSpacing);
 				}
 			}

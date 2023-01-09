@@ -250,7 +250,7 @@ namespace HMP::Gui::Widgets
 		for (const Id vid : vids())
 		{
 			const Vec vert{ m_mesher.mesh().vert(vid) };
-			const ImVec2 pos{ Utils::Drawing::project(_canvas, vert) };
+			const auto pos{ Utils::Drawing::project(_canvas, vert) };
 			Utils::Drawing::circle(drawList, pos, radius, themer->ovHi, lineThickness);
 		}
 		if (!empty())
