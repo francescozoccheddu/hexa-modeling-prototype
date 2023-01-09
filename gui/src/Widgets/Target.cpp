@@ -11,7 +11,7 @@
 namespace HMP::Gui::Widgets
 {
 
-	Target::Target(const Meshing::Mesher::Mesh& _sourceMesh):
+	Target::Target(const Meshing::Mesher::Mesh& _sourceMesh) :
 		SidebarWidget{ "Target mesh" },
 		m_mesh{}, m_sourceMesh{ _sourceMesh },
 		m_missingMeshFile{ false },
@@ -134,7 +134,7 @@ namespace HMP::Gui::Widgets
 
 	bool Target::load(bool _keepTransform)
 	{
-		const std::optional<std::string> filename{ Utils::FilePicking::open()};
+		const std::optional<std::string> filename{ Utils::FilePicking::open() };
 		if (filename)
 		{
 			visible = true;
@@ -379,6 +379,30 @@ namespace HMP::Gui::Widgets
 			_deserializer >> transform.rotation;
 			load(filename, true);
 		}
+	}
+
+	bool Target::onKeyPressed(const cinolib::KeyBinding& _key)
+	{
+		if (_key == c_kbLoad)
+		{
+			load();
+		}
+		else if (_key == c_kbToggleVisibility)
+		{
+			visible ^= true;
+			updateVisibility();
+		}
+		else
+		{
+			return false;
+		}
+		return true;
+	}
+
+	void Target::printUsage() const
+	{
+		cinolib::print_binding(c_kbLoad.name(), "load target mesh");
+		cinolib::print_binding(c_kbToggleVisibility.name(), "toggle target visibility");
 	}
 
 }

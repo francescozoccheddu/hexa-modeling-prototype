@@ -22,10 +22,22 @@ namespace HMP::Gui::Widgets
 
 	private:
 
+		static constexpr cinolib::KeyBinding c_kbLoad{ GLFW_KEY_L, GLFW_MOD_CONTROL };
+		static constexpr cinolib::KeyBinding c_kbToggleVisibility{ GLFW_KEY_U };
+
 		cinolib::DrawablePolygonmesh<> m_mesh;
 		const Meshing::Mesher::Mesh& m_sourceMesh;
 		std::string m_filename;
 		bool m_missingMeshFile;
+
+		void drawSidebar() override;
+
+		void serialize(HMP::Utils::Serialization::Serializer& _serializer) const;
+		void deserialize(HMP::Utils::Serialization::Deserializer& _deserializer);
+
+		bool onKeyPressed(const cinolib::KeyBinding& _key);
+
+		void printUsage() const;
 
 	public:
 
@@ -57,13 +69,9 @@ namespace HMP::Gui::Widgets
 
 		bool load(bool _keepTransform = false);
 		void load(const std::string& _filename, bool _keepTransform = false);
+
 		void clearMesh();
 		void requestApplyTransformToSource();
-
-		void drawSidebar() override;
-
-		void serialize(HMP::Utils::Serialization::Serializer& _serializer) const;
-		void deserialize(HMP::Utils::Serialization::Deserializer& _deserializer);
 
 	};
 

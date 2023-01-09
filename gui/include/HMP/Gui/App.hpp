@@ -54,43 +54,18 @@ namespace HMP::Gui
 		static constexpr cinolib::KeyBinding c_kbRefine{ GLFW_KEY_H };
 		static constexpr cinolib::KeyBinding c_kbDoubleRefine{ GLFW_KEY_H, GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbFaceRefine{ GLFW_KEY_F };
-		static constexpr cinolib::KeyBinding c_kbSave{ GLFW_KEY_S, GLFW_MOD_CONTROL };
-		static constexpr cinolib::KeyBinding c_kbSaveNew{ GLFW_KEY_S, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT };
-		static constexpr cinolib::KeyBinding c_kbOpen{ GLFW_KEY_O, GLFW_MOD_CONTROL };
-		static constexpr cinolib::KeyBinding c_kbLoadTarget{ GLFW_KEY_L, GLFW_MOD_CONTROL };
 		static constexpr cinolib::KeyBinding c_kbDelete{ GLFW_KEY_D };
 		static constexpr cinolib::KeyBinding c_kbCopy{ GLFW_KEY_C };
 		static constexpr cinolib::KeyBinding c_kbPasteFace{ GLFW_KEY_V };
 		static constexpr cinolib::KeyBinding c_kbPasteEdge{ GLFW_KEY_V, GLFW_MOD_ALT };
 		static constexpr cinolib::KeyBinding c_kbPasteVertex{ GLFW_KEY_V, GLFW_MOD_ALT | GLFW_MOD_CONTROL };
 		static constexpr cinolib::KeyBinding c_kbMakeConforming{ GLFW_KEY_Q };
-		static constexpr cinolib::KeyBinding c_kbToggleTargetVisibility{ GLFW_KEY_U };
 		static constexpr cinolib::KeyBinding c_kbUndo{ GLFW_KEY_Z, GLFW_MOD_CONTROL };
 		static constexpr cinolib::KeyBinding c_kbRedo{ GLFW_KEY_Z, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbClear{ GLFW_KEY_N, GLFW_MOD_CONTROL };
-		static constexpr cinolib::KeyBinding c_kbSelectVertex{ GLFW_KEY_1 };
-		static constexpr cinolib::KeyBinding c_kbSelectEdge{ GLFW_KEY_2 };
-		static constexpr cinolib::KeyBinding c_kbSelectUpEdge{ GLFW_KEY_2, GLFW_MOD_ALT };
-		static constexpr cinolib::KeyBinding c_kbSelectFace{ GLFW_KEY_3 };
-		static constexpr cinolib::KeyBinding c_kbSelectUpFace{ GLFW_KEY_3, GLFW_MOD_ALT };
-		static constexpr cinolib::KeyBinding c_kbSelectPoly{ GLFW_KEY_4 };
-		static constexpr cinolib::KeyBinding c_kbDeselectAll{ GLFW_KEY_A, GLFW_MOD_CONTROL };
-		static constexpr cinolib::KeyBinding c_kbSelectAll{ GLFW_KEY_A, GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbSubdivideAll{ GLFW_KEY_0, GLFW_MOD_CONTROL };
-		static constexpr int c_kmodSelectAdd{ GLFW_MOD_SHIFT };
-		static constexpr int c_kmodSelectRemove{ GLFW_MOD_CONTROL };
 
 		void printUsage() const;
-
-		enum class ESelectionSource
-		{
-			Vertex, Edge, Face, Poly, UpFace, UpEdge
-		};
-
-		enum class ESelectionMode
-		{
-			Add, Remove, Set
-		};
 
 	public:
 
@@ -183,10 +158,6 @@ namespace HMP::Gui
 		void onRefineFace();
 		void onRefineTest(Refinement::EScheme _scheme, I _forwardFi, I _firstVi);
 		void onMakeConformant();
-		void onSaveState();
-		void onSaveNewState();
-		void onLoadState();
-		void onLoadTargetMesh();
 		void onToggleTargetVisibility();
 		void onProjectToTarget(const cinolib::Polygonmesh<>& _target, const std::vector<Projection::Utils::Point>& _pointFeats, const std::vector<Projection::Utils::EidsPath>& _pathFeats, const Projection::Options& _options);
 		void onApplyTargetTransform(const Mat4& _transform);
@@ -194,8 +165,6 @@ namespace HMP::Gui
 		void onRedo();
 		void onClear();
 		void onSubdivideAll();
-		void onSelect(ESelectionSource _source, ESelectionMode _mode);
-		void onSelectAll(bool _selected);
 		void onPad(Real _length, I _smoothIterations, Real _smoothSurfVertWeight, Real _cornerShrinkFactor);
 		void onSmooth(I _surfaceIterations, I _internalIterations, Real _surfVertWeight);
 
@@ -206,6 +175,10 @@ namespace HMP::Gui
 		~App();
 
 		void loadTargetMeshOrProjectFile(const std::string& _file);
+
+		void serialize(const std::string& _filename);
+
+		void deserialize(const std::string& _filename);
 
 		int launch();
 

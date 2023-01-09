@@ -10,14 +10,14 @@ namespace HMP::Gui::Widgets
 
     void Smooth::requestSmooth()
     {
-        onSmoothRequested(surfaceIterations, internalIterations, surfVertWeight);
+        onSmoothRequested(m_surfaceIterations, m_internalIterations, m_surfVertWeight);
     }
 
     void Smooth::drawSidebar()
     {
-        Utils::Controls::sliderI("Surface iterations", surfaceIterations, 0, 20);
-        Utils::Controls::sliderI("Internal iterations", internalIterations, 0, 20);
-        Utils::Controls::sliderPercentage("Smooth surface weight", surfVertWeight, 0.5, 2.0);
+        Utils::Controls::sliderI("Surface iterations", m_surfaceIterations, 0, 20);
+        Utils::Controls::sliderI("Internal iterations", m_internalIterations, 0, 20);
+        Utils::Controls::sliderPercentage("Smooth surface weight", m_surfVertWeight, 0.5, 2.0);
         if (ImGui::Button("Smooth"))
         {
             requestSmooth();

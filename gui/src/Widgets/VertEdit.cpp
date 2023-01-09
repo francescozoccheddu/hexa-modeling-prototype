@@ -5,6 +5,8 @@
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <HMP/Gui/Utils/Drawing.hpp>
 #include <HMP/Gui/themer.hpp>
+#include <HMP/Gui/App.hpp>
+#include <HMP/Meshing/Utils.hpp>
 
 namespace HMP::Gui::Widgets
 {
@@ -257,6 +259,168 @@ namespace HMP::Gui::Widgets
 		{
 			Utils::Drawing::cross(drawList, Utils::Drawing::project(_canvas, m_centroid), radius, themer->ovHi, lineThickness);
 		}
+	}
+
+	bool VertEdit::keyPressed(const cinolib::KeyBinding& _key)
+	{
+		if (_key == c_kbSelectVertex)
+		{
+			onSelect(ESelectionSource::Vertex, ESelectionMode::Set);
+		}
+		else if (_key == c_kbSelectEdge)
+		{
+			onSelect(ESelectionSource::Edge, ESelectionMode::Set);
+		}
+		else if (_key == c_kbSelectUpEdge)
+		{
+			onSelect(ESelectionSource::UpEdge, ESelectionMode::Set);
+		}
+		else if (_key == c_kbSelectFace)
+		{
+			onSelect(ESelectionSource::Face, ESelectionMode::Set);
+		}
+		else if (_key == c_kbSelectUpFace)
+		{
+			onSelect(ESelectionSource::UpFace, ESelectionMode::Set);
+		}
+		else if (_key == c_kbSelectPoly)
+		{
+			onSelect(ESelectionSource::Poly, ESelectionMode::Set);
+		}
+		else if (_key == (c_kbSelectVertex | c_kmodSelectAdd))
+		{
+			onSelect(ESelectionSource::Vertex, ESelectionMode::Add);
+		}
+		else if (_key == (c_kbSelectEdge | c_kmodSelectAdd))
+		{
+			onSelect(ESelectionSource::Edge, ESelectionMode::Add);
+		}
+		else if (_key == (c_kbSelectUpEdge | c_kmodSelectAdd))
+		{
+			onSelect(ESelectionSource::UpEdge, ESelectionMode::Add);
+		}
+		else if (_key == (c_kbSelectFace | c_kmodSelectAdd))
+		{
+			onSelect(ESelectionSource::Face, ESelectionMode::Add);
+		}
+		else if (_key == (c_kbSelectUpFace | c_kmodSelectAdd))
+		{
+			onSelect(ESelectionSource::UpFace, ESelectionMode::Add);
+		}
+		else if (_key == (c_kbSelectPoly | c_kmodSelectAdd))
+		{
+			onSelect(ESelectionSource::Poly, ESelectionMode::Add);
+		}
+		else if (_key == (c_kbSelectVertex | c_kmodSelectRemove))
+		{
+			onSelect(ESelectionSource::Vertex, ESelectionMode::Remove);
+		}
+		else if (_key == (c_kbSelectEdge | c_kmodSelectRemove))
+		{
+			onSelect(ESelectionSource::Edge, ESelectionMode::Remove);
+		}
+		else if (_key == (c_kbSelectUpEdge | c_kmodSelectRemove))
+		{
+			onSelect(ESelectionSource::UpEdge, ESelectionMode::Remove);
+		}
+		else if (_key == (c_kbSelectFace | c_kmodSelectRemove))
+		{
+			onSelect(ESelectionSource::Face, ESelectionMode::Remove);
+		}
+		else if (_key == (c_kbSelectUpFace | c_kmodSelectRemove))
+		{
+			onSelect(ESelectionSource::UpFace, ESelectionMode::Remove);
+		}
+		else if (_key == (c_kbSelectPoly | c_kmodSelectRemove))
+		{
+			onSelect(ESelectionSource::Poly, ESelectionMode::Remove);
+		}
+		else if (_key == c_kbDeselectAll)
+		{
+			onSelectAll(false);
+		}
+		else if (_key == c_kbSelectAll)
+		{
+			onSelectAll(true);
+		}
+		else
+		{
+			return false;
+		}
+		return true;
+	}
+
+	void VertEdit::onSelect(ESelectionSource _source, ESelectionMode _mode)
+	{
+		const auto& m_mouse{ app().m_mouse };
+		if (m_mouse.element)
+		{
+			std::vector<Id> vids{};
+			switch (_source)
+			{
+				case ESelectionSource::Vertex:
+					vids = { m_mouse.vid };
+					break;
+				case ESelectionSource::Edge:
+					vids = app().mesher.mesh().edge_vert_ids(m_mouse.eid);
+					break;
+				case ESelectionSource::Face:
+					vids = app().mesher.mesh().face_verts_id(m_mouse.fid);
+					break;
+				case ESelectionSource::UpFace:
+					vids = app().mesher.mesh().face_verts_id(Meshing::Utils::adjFidInPidByFidAndEid(app().mesher.mesh(), m_mouse.pid, m_mouse.fid, m_mouse.eid));
+					break;
+				case ESelectionSource::UpEdge:
+					vids = { m_mouse.vid, app().mesher.mesh().poly_vert_opposite_to(m_mouse.pid, m_mouse.fid, m_mouse.vid) };
+					break;
+				case ESelectionSource::Poly:
+					vids = app().mesher.mesh().poly_verts_id(m_mouse.pid);
+					break;
+			}
+			if (_mode == ESelectionMode::Set)
+			{
+				clear();
+			}
+			if (_mode == ESelectionMode::Remove)
+			{
+				remove(vids);
+			}
+			else
+			{
+				add(vids);
+			}
+		}
+	}
+
+	void VertEdit::onSelectAll(bool _selected)
+	{
+		if (_selected)
+		{
+			std::vector<Id> vids(toI(app().mesher.mesh().num_verts()));
+			for (I i{}; i < vids.size(); i++)
+			{
+				vids[i] = toId(i);
+			}
+			add(vids);
+		}
+		else
+		{
+			clear();
+		}
+	}
+
+	void VertEdit::printUsage() const
+	{
+		cinolib::print_binding(c_kbSelectVertex.name(), "select vertex");
+		cinolib::print_binding(c_kbSelectEdge.name(), "select edge vertices");
+		cinolib::print_binding(c_kbSelectUpEdge.name(), "select adjacent edge vertices");
+		cinolib::print_binding(c_kbSelectFace.name(), "select face vertices");
+		cinolib::print_binding(c_kbSelectUpFace.name(), "select adjacent face vertices");
+		cinolib::print_binding(c_kbSelectPoly.name(), "select poly vertices");
+		cinolib::print_binding(cinolib::KeyBinding::mod_names(c_kmodSelectAdd), "remove from selection (hold down)");
+		cinolib::print_binding(cinolib::KeyBinding::mod_names(c_kmodSelectRemove), "add to selection (hold down)");
+		cinolib::print_binding(c_kbSelectAll.name(), "select all vertices");
+		cinolib::print_binding(c_kbDeselectAll.name(), "deselect all vertices");
 	}
 
 }

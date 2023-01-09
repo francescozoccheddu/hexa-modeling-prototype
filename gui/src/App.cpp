@@ -82,21 +82,6 @@ namespace HMP::Gui
 		cinolib::print_binding(c_kbClear.name(), "clear");
 		cinolib::print_binding(c_kbSubdivideAll.name(), "subdivide all");
 		cinolib::print_binding(c_kbMakeConforming.name(), "make conforming");
-		cinolib::print_binding(c_kbSelectVertex.name(), "select vertex");
-		cinolib::print_binding(c_kbSelectEdge.name(), "select edge vertices");
-		cinolib::print_binding(c_kbSelectUpEdge.name(), "select adjacent edge vertices");
-		cinolib::print_binding(c_kbSelectFace.name(), "select face vertices");
-		cinolib::print_binding(c_kbSelectUpFace.name(), "select adjacent face vertices");
-		cinolib::print_binding(c_kbSelectPoly.name(), "select poly vertices");
-		cinolib::print_binding(cinolib::KeyBinding::mod_names(c_kmodSelectAdd), "remove from selection (hold down)");
-		cinolib::print_binding(cinolib::KeyBinding::mod_names(c_kmodSelectRemove), "add to selection (hold down)");
-		cinolib::print_binding(c_kbSelectAll.name(), "select all vertices");
-		cinolib::print_binding(c_kbDeselectAll.name(), "deselect all vertices");
-		cinolib::print_binding(c_kbSave.name(), "save");
-		cinolib::print_binding(c_kbSaveNew.name(), "save new");
-		cinolib::print_binding(c_kbOpen.name(), "open");
-		cinolib::print_binding(c_kbLoadTarget.name(), "load target mesh");
-		cinolib::print_binding(c_kbToggleTargetVisibility.name(), "toggle target visibility");
 		cinolib::print_binding(c_kbUndo.name(), "undo");
 		cinolib::print_binding(c_kbRedo.name(), "redo");
 		cinolib::print_binding(c_kbRedo.name(), "redo");
@@ -310,11 +295,6 @@ namespace HMP::Gui
 		{
 			onPaste(Dag::Extrude::ESource::Vertex);
 		}
-		// load target mesh
-		else if (key == c_kbLoadTarget)
-		{
-			onLoadTargetMesh();
-		}
 		// refine hexahedron
 		else if (key == c_kbRefine)
 		{
@@ -340,26 +320,6 @@ namespace HMP::Gui
 		{
 			onMakeConformant();
 		}
-		// save tree
-		else if (key == c_kbSave)
-		{
-			onSaveState();
-		}
-		// save mesh
-		else if (key == c_kbSaveNew)
-		{
-			onSaveNewState();
-		}
-		// load tree
-		else if (key == c_kbOpen)
-		{
-			onLoadState();
-		}
-		// toggle target visibility
-		else if (key == c_kbToggleTargetVisibility)
-		{
-			onToggleTargetVisibility();
-		}
 		// undo
 		else if (key == c_kbUndo)
 		{
@@ -374,87 +334,6 @@ namespace HMP::Gui
 		else if (key == c_kbClear)
 		{
 			onClear();
-		}
-		// selection
-		else if (key == c_kbSelectVertex)
-		{
-			onSelect(ESelectionSource::Vertex, ESelectionMode::Set);
-		}
-		else if (key == c_kbSelectEdge)
-		{
-			onSelect(ESelectionSource::Edge, ESelectionMode::Set);
-		}
-		else if (key == c_kbSelectUpEdge)
-		{
-			onSelect(ESelectionSource::UpEdge, ESelectionMode::Set);
-		}
-		else if (key == c_kbSelectFace)
-		{
-			onSelect(ESelectionSource::Face, ESelectionMode::Set);
-		}
-		else if (key == c_kbSelectUpFace)
-		{
-			onSelect(ESelectionSource::UpFace, ESelectionMode::Set);
-		}
-		else if (key == c_kbSelectPoly)
-		{
-			onSelect(ESelectionSource::Poly, ESelectionMode::Set);
-		}
-		else if (key == (c_kbSelectVertex | c_kmodSelectAdd))
-		{
-			onSelect(ESelectionSource::Vertex, ESelectionMode::Add);
-		}
-		else if (key == (c_kbSelectEdge | c_kmodSelectAdd))
-		{
-			onSelect(ESelectionSource::Edge, ESelectionMode::Add);
-		}
-		else if (key == (c_kbSelectUpEdge | c_kmodSelectAdd))
-		{
-			onSelect(ESelectionSource::UpEdge, ESelectionMode::Add);
-		}
-		else if (key == (c_kbSelectFace | c_kmodSelectAdd))
-		{
-			onSelect(ESelectionSource::Face, ESelectionMode::Add);
-		}
-		else if (key == (c_kbSelectUpFace | c_kmodSelectAdd))
-		{
-			onSelect(ESelectionSource::UpFace, ESelectionMode::Add);
-		}
-		else if (key == (c_kbSelectPoly | c_kmodSelectAdd))
-		{
-			onSelect(ESelectionSource::Poly, ESelectionMode::Add);
-		}
-		else if (key == (c_kbSelectVertex | c_kmodSelectRemove))
-		{
-			onSelect(ESelectionSource::Vertex, ESelectionMode::Remove);
-		}
-		else if (key == (c_kbSelectEdge | c_kmodSelectRemove))
-		{
-			onSelect(ESelectionSource::Edge, ESelectionMode::Remove);
-		}
-		else if (key == (c_kbSelectUpEdge | c_kmodSelectRemove))
-		{
-			onSelect(ESelectionSource::UpEdge, ESelectionMode::Remove);
-		}
-		else if (key == (c_kbSelectFace | c_kmodSelectRemove))
-		{
-			onSelect(ESelectionSource::Face, ESelectionMode::Remove);
-		}
-		else if (key == (c_kbSelectUpFace | c_kmodSelectRemove))
-		{
-			onSelect(ESelectionSource::UpFace, ESelectionMode::Remove);
-		}
-		else if (key == (c_kbSelectPoly | c_kmodSelectRemove))
-		{
-			onSelect(ESelectionSource::Poly, ESelectionMode::Remove);
-		}
-		else if (key == c_kbDeselectAll)
-		{
-			onSelectAll(false);
-		}
-		else if (key == c_kbSelectAll)
-		{
-			onSelectAll(true);
 		}
 		// subdivide all
 		else if (key == c_kbSubdivideAll)
@@ -853,26 +732,6 @@ namespace HMP::Gui
 		applyAction(*new Actions::MakeConforming());
 	}
 
-	void App::onSaveState()
-	{
-		saveWidget.requestSave();
-	}
-
-	void App::onSaveNewState()
-	{
-		saveWidget.requestSaveNew();
-	}
-
-	void App::onLoadState()
-	{
-		saveWidget.requestLoad();
-	}
-
-	void App::onLoadTargetMesh()
-	{
-		targetWidget.load();
-	}
-
 	void App::onToggleTargetVisibility()
 	{
 		if (targetWidget.hasMesh())
@@ -929,64 +788,6 @@ namespace HMP::Gui
 			Vec{-1,-1,-1}, Vec{+1,-1,-1}, Vec{+1,+1,-1}, Vec{-1,+1,-1},
 			Vec{-1,-1,+1}, Vec{+1,-1,+1}, Vec{+1,+1,+1}, Vec{-1,+1,+1},
 		} });
-	}
-
-	void App::onSelect(ESelectionSource _source, ESelectionMode _mode)
-	{
-		if (m_mouse.element)
-		{
-			std::vector<Id> vids{};
-			switch (_source)
-			{
-				case ESelectionSource::Vertex:
-					vids = { m_mouse.vid };
-					break;
-				case ESelectionSource::Edge:
-					vids = mesher.mesh().edge_vert_ids(m_mouse.eid);
-					break;
-				case ESelectionSource::Face:
-					vids = mesher.mesh().face_verts_id(m_mouse.fid);
-					break;
-				case ESelectionSource::UpFace:
-					vids = mesher.mesh().face_verts_id(Meshing::Utils::adjFidInPidByFidAndEid(mesher.mesh(), m_mouse.pid, m_mouse.fid, m_mouse.eid));
-					break;
-				case ESelectionSource::UpEdge:
-					vids = { m_mouse.vid, mesher.mesh().poly_vert_opposite_to(m_mouse.pid, m_mouse.fid, m_mouse.vid) };
-					break;
-				case ESelectionSource::Poly:
-					vids = mesher.mesh().poly_verts_id(m_mouse.pid);
-					break;
-			}
-			if (_mode == ESelectionMode::Set)
-			{
-				vertEditWidget.clear();
-			}
-			if (_mode == ESelectionMode::Remove)
-			{
-				vertEditWidget.remove(vids);
-			}
-			else
-			{
-				vertEditWidget.add(vids);
-			}
-		}
-	}
-
-	void App::onSelectAll(bool _selected)
-	{
-		if (_selected)
-		{
-			std::vector<Id> vids(toI(mesher.mesh().num_verts()));
-			for (I i{}; i < vids.size(); i++)
-			{
-				vids[i] = toId(i);
-			}
-			vertEditWidget.add(vids);
-		}
-		else
-		{
-			vertEditWidget.clear();
-		}
 	}
 
 	void App::onFilesDropped(const std::vector<std::string>& _files)
