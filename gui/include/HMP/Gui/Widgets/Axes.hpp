@@ -13,7 +13,7 @@ namespace HMP::Gui::Widgets
 
 	private:
 
-		void draw(const cinolib::GLcanvas& _canvas) override;
+		void drawCanvas() override;
 
 	};
 

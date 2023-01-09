@@ -45,7 +45,6 @@ namespace HMP::Gui::Widgets
 			return _entry.first;
 		}
 
-		Meshing::Mesher& m_mesher;
 		std::unordered_map<Id, Vec> m_verts;
 		bool m_pendingAction;
 		Utils::Transform m_unappliedTransform, m_appliedTransform;
@@ -73,7 +72,7 @@ namespace HMP::Gui::Widgets
 		cpputils::collections::Event<VertEdit> onPendingActionChanged{};
 		cpputils::collections::Event<VertEdit, std::vector<Id>, Mat4> onApplyAction{};
 
-		VertEdit(Meshing::Mesher& _mesher);
+		VertEdit();
 
 		bool add(Id _vid, bool _update = true);
 
@@ -109,7 +108,7 @@ namespace HMP::Gui::Widgets
 
 		void drawSidebar() override;
 
-		void draw(const cinolib::GLcanvas& _canvas) override;
+		void drawCanvas() override;
 
 	};
 

@@ -26,9 +26,6 @@ namespace HMP::Gui::Widgets
 		using EidsPath = HMP::Projection::Utils::EidsPath;
 		using Point = HMP::Projection::Utils::Point;
 
-		const Widgets::Target& m_targetWidget;
-		HMP::Commander& m_commander;
-		const HMP::Meshing::Mesher& m_mesher;
 		HMP::Projection::Options m_options;
 		std::vector<EidsPath> m_paths;
 		cinolib::FeatureNetworkOptions m_featureFinderOptions;
@@ -36,6 +33,8 @@ namespace HMP::Gui::Widgets
 		float m_featureFinderCreaseAngle;
 		bool m_showPaths, m_showAllPaths;
 		I m_currentPath;
+
+		void attached();
 
 		void matchPaths(I _first, I _lastEx, bool _fromSource);
 
@@ -64,7 +63,7 @@ namespace HMP::Gui::Widgets
 
 		void drawSidebar() override;
 
-		void draw(const cinolib::GLcanvas& _canvas) override;
+		void drawCanvas() override;
 
 		void serialize(HMP::Utils::Serialization::Serializer& _serializer) const override;
 
@@ -78,7 +77,7 @@ namespace HMP::Gui::Widgets
 
 		float lineThickness{ 1.5f };
 
-		Projection(const Widgets::Target& _targetWidget, HMP::Commander& _commander, const HMP::Meshing::Mesher& _mesher);
+		Projection();
 
 		cpputils::collections::Event<Projection, const cinolib::Polygonmesh<>&, const std::vector<Point>&, const std::vector<EidsPath>&, const HMP::Projection::Options&> onProjectRequest;
 

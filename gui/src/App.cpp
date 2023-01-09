@@ -386,13 +386,13 @@ namespace HMP::Gui
 		project{}, canvas{ 700, 600, 13, 1.0f }, mesher{ project.mesher() }, commander{ project.commander() }, dagNamer{}, 
 		commanderWidget{ *new Widgets::Commander{} },
 		axesWidget{ *new Widgets::Axes{} },
-		targetWidget{ *new Widgets::Target{mesher.mesh() } },
-		vertEditWidget{ *new Widgets::VertEdit{mesher } },
-		directVertEditWidget{ *new Widgets::DirectVertEdit{vertEditWidget, canvas } },
+		targetWidget{ *new Widgets::Target{} },
+		vertEditWidget{ *new Widgets::VertEdit{} },
+		directVertEditWidget{ *new Widgets::DirectVertEdit{} },
 		saveWidget{ *new Widgets::Save{} },
-		projectionWidget{ *new Widgets::Projection{ targetWidget, commander, mesher } },
-		debugWidget{ *new Widgets::Debug{mesher, dagNamer, vertEditWidget, targetWidget } },
-		padWidget{ *new Widgets::Pad{ mesher.mesh() } },
+		projectionWidget{ *new Widgets::Projection{} },
+		debugWidget{ *new Widgets::Debug{} },
+		padWidget{ *new Widgets::Pad{} },
 		smoothWidget{ *new Widgets::Smooth{} },
 		highlightWidget{ *new Widgets::Highlight{} },
 		actionsWidget{ *new Widgets::Actions{} },
@@ -400,7 +400,7 @@ namespace HMP::Gui
 		dagViewerWidget{ *new DagViewer::Widget{} },
 #endif
 #ifdef HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER
-		ae3d2ShapeExporter{ *new Widgets::Ae3d2ShapeExporter{ mesher.mesh(), canvas.camera, targetWidget } },
+		ae3d2ShapeExporter{ *new Widgets::Ae3d2ShapeExporter{} },
 #endif
 		m_widgets {
 			&debugWidget, 

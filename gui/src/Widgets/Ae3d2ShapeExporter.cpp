@@ -3,6 +3,7 @@
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <HMP/Gui/Utils/FilePicking.hpp>
 #include <HMP/Gui/themer.hpp>
+#include <HMP/Gui/App.hpp>
 #include <algorithm>
 #include <imgui.h>
 #include <string>
@@ -40,8 +41,7 @@ namespace HMP::Gui::Widgets
 			<< ']';
 	}
 
-	Ae3d2ShapeExporter::Ae3d2ShapeExporter(const Meshing::Mesher::Mesh& _mesh, const cinolib::FreeCamera<Real>& _camera, const Target& _targetWidget):
-		SidebarWidget{ "ae-3d2shape exporter" }, m_mesh{ _mesh }, m_camera{ _camera }, m_targetWidget{ _targetWidget }, m_keyframes{}, m_sampleError{}
+	Ae3d2ShapeExporter::Ae3d2ShapeExporter() : SidebarWidget{ "ae-3d2shape exporter" }, m_keyframes{}, m_sampleError{}
 	{}
 
 	bool Ae3d2ShapeExporter::exportKeyframes(const std::vector<Ae3d2ShapeExporter::Keyframe>& _keyframes)
@@ -164,9 +164,9 @@ namespace HMP::Gui::Widgets
 	{
 		Keyframe frame{
 			.polygons{},
-			.camera { m_camera }
+			.camera { app().canvas.camera }
 		};
-		const cinolib::Polygonmesh<>& mesh{ m_targetWidget.meshForProjection() };
+		const cinolib::Polygonmesh<>& mesh{ app().targetWidget.meshForProjection()};
 		frame.polygons.reserve(toI(mesh.num_polys()));
 		for (Id fid{}; fid < mesh.num_polys(); fid++)
 		{
@@ -177,20 +177,20 @@ namespace HMP::Gui::Widgets
 
 	bool Ae3d2ShapeExporter::requestSample()
 	{
-		if (!m_keyframes.empty() && m_keyframes[0].camera.projection.perspective != m_camera.projection.perspective)
+		if (!m_keyframes.empty() && m_keyframes[0].camera.projection.perspective != app().canvas.camera.projection.perspective)
 		{
 			m_sampleError = "Camera projection kind changed";
 			return false;
 		}
 		Keyframe keyframe{};
-		keyframe.camera = m_camera;
-		for (Id fid{}; fid < m_mesh.num_faces(); fid++)
+		keyframe.camera = app().canvas.camera;
+		for (Id fid{}; fid < app().mesher.mesh().num_faces(); fid++)
 		{
 			Id pid;
-			if (m_mesh.face_is_visible(fid, pid))
+			if (app().mesher.mesh().face_is_visible(fid, pid))
 			{
-				std::vector<Vec> verts{ m_mesh.face_verts(fid) };
-				if (m_mesh.poly_face_is_CW(pid, fid))
+				std::vector<Vec> verts{ app().mesher.mesh().face_verts(fid) };
+				if (app().mesher.mesh().poly_face_is_CW(pid, fid))
 				{
 					std::reverse(verts.begin(), verts.end());
 				}
@@ -246,7 +246,7 @@ namespace HMP::Gui::Widgets
 			requestExport();
 		}
 		ImGui::Spacing();
-		if (Utils::Controls::disabledButton("Export target", m_targetWidget.hasMesh()))
+		if (Utils::Controls::disabledButton("Export target", app().targetWidget.hasMesh()))
 		{
 			requestTargetExport();
 		}

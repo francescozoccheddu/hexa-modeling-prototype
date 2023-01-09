@@ -15,14 +15,14 @@
 #include <cinolib/fonts/droid_sans.hpp>
 #include <imgui_impl_opengl2.h>
 #include <HMP/Gui/themer.hpp>
+#include <HMP/Gui/App.hpp>
 #include <cinolib/quality_hex.h>
 #include <cinolib/meshes/polygonmesh.h>
 
 namespace HMP::Gui::Widgets
 {
 
-    Debug::Debug(Meshing::Mesher& _mesher, cpputils::collections::SetNamer<const HMP::Dag::Node*>& _dagNamer, VertEdit& _vertEditWidget, const Target& _targetWidget)
-        : SidebarWidget{ "Debug" }, m_mesher{ _mesher }, m_dagNamer{ _dagNamer }, m_vertEditWidget{ _vertEditWidget }, m_targetWidget{ _targetWidget }, m_sectionSoup{}
+    Debug::Debug() : SidebarWidget{ "Debug" }, m_sectionSoup{}
     {
         m_sectionSoup.set_color(Utils::Drawing::toColor(themer->ovHi));
         m_sectionSoup.set_thickness(sectionLineThickness* themer->ovScale);
@@ -33,15 +33,19 @@ namespace HMP::Gui::Widgets
         m_sectionSoup.show = true;
         m_sectionSoup.use_gl_lines = true;
         m_sectionSoup.no_depth_test = true;
-        _mesher.onUpdated += [this]() {
+    }
+
+    void Debug::attached()
+    {
+        app().mesher.onUpdated += [this]() {
             updateSection();
         };
     }
 
-    void Debug::draw(const cinolib::GLcanvas& _canvas)
+    void Debug::drawCanvas()
     {
         using namespace Utils::Drawing;
-        const Meshing::Mesher::Mesh& mesh{ m_mesher.mesh() };
+        const Meshing::Mesher::Mesh& mesh{ app().mesher.mesh() };
         ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
         const float fontSize{ ImGui::GetFontSize() * namesFontScale * themer->ovScale };
         if (showVids)
@@ -50,7 +54,7 @@ namespace HMP::Gui::Widgets
             for (Id vid{}; vid < count; vid++)
             {
                 const Vec vert{ mesh.vert(vid) };
-                text(drawList, std::to_string(vid).c_str(), project(_canvas, vert), fontSize, themer->ovHi);
+                text(drawList, std::to_string(vid).c_str(), project(app().canvas, vert), fontSize, themer->ovHi);
             }
         }
         if (showEids)
@@ -59,7 +63,7 @@ namespace HMP::Gui::Widgets
             for (Id eid{}; eid < count; eid++)
             {
                 const Vec vert{ Meshing::Utils::centroid(Meshing::Utils::verts(mesh, Meshing::Utils::eidVids(mesh, eid))) };
-                text(drawList, std::to_string(eid).c_str(), project(_canvas, vert), fontSize, themer->ovHi);
+                text(drawList, std::to_string(eid).c_str(), project(app().canvas, vert), fontSize, themer->ovHi);
             }
         }
         if (showFids)
@@ -68,7 +72,7 @@ namespace HMP::Gui::Widgets
             for (Id fid{}; fid < count; fid++)
             {
                 const Vec vert{ mesh.face_centroid(fid) };
-                text(drawList, std::to_string(fid).c_str(), project(_canvas, vert), fontSize, themer->ovHi);
+                text(drawList, std::to_string(fid).c_str(), project(app().canvas, vert), fontSize, themer->ovHi);
             }
         }
         if (showPids)
@@ -77,7 +81,7 @@ namespace HMP::Gui::Widgets
             for (Id pid{}; pid < count; pid++)
             {
                 const Vec vert{ mesh.poly_centroid(pid) };
-                text(drawList, std::to_string(pid).c_str(), project(_canvas, vert), fontSize, themer->ovHi);
+                text(drawList, std::to_string(pid).c_str(), project(app().canvas, vert), fontSize, themer->ovHi);
             }
         }
         if (showElements)
@@ -86,23 +90,23 @@ namespace HMP::Gui::Widgets
             for (Id pid{}; pid < count; pid++)
             {
                 const Vec vert{ mesh.poly_centroid(pid) };
-                text(drawList, m_dagNamer.nameOrUnknown(&m_mesher.element(pid)).c_str(), project(_canvas, vert), fontSize, themer->ovHi);
+                text(drawList, app().dagNamer.nameOrUnknown(&app().mesher.element(pid)).c_str(), project(app().canvas, vert), fontSize, themer->ovHi);
             }
         }
     }
 
     void Debug::selectNegJacobianHexes()
     {
-        m_vertEditWidget.clear();
+        app().vertEditWidget.clear();
         m_negJacTestRes = 0;
-        for (Id pid{}; pid < m_mesher.mesh().num_polys(); pid++)
+        for (Id pid{}; pid < app().mesher.mesh().num_polys(); pid++)
         {
-            if (m_mesher.shown(pid))
+            if (app().mesher.shown(pid))
             {
-                const std::vector<Vec>& verts{ m_mesher.mesh().poly_verts(pid) };
+                const std::vector<Vec>& verts{ app().mesher.mesh().poly_verts(pid) };
                 if (cinolib::hex_scaled_jacobian(verts[0], verts[1], verts[2], verts[3], verts[4], verts[5], verts[6], verts[7]) < 0.0)
                 {
-                    m_vertEditWidget.add(m_mesher.mesh().adj_p2v(pid));
+                    app().vertEditWidget.add(app().mesher.mesh().adj_p2v(pid));
                     m_negJacTestRes++;
                 }
             }
@@ -112,7 +116,7 @@ namespace HMP::Gui::Widgets
     Real Debug::sectionValue() const
     {
         const Id dim{ static_cast<Id>(sectionDim) };
-        return m_mesher.mesh().bbox().delta()[dim] * sectionFactor + m_mesher.mesh().bbox().min[dim];
+        return app().mesher.mesh().bbox().delta()[dim] * sectionFactor + app().mesher.mesh().bbox().min[dim];
     }
 
     void Debug::updateSection()
@@ -123,7 +127,7 @@ namespace HMP::Gui::Widgets
             return;
         }
         const Id dim{ static_cast<Id>(sectionDim) };
-        const Meshing::Mesher::Mesh& mesh{ m_mesher.mesh() };
+        const Meshing::Mesher::Mesh& mesh{ app().mesher.mesh() };
         const Real v{ sectionValue() };
         std::vector<bool> above(toI(mesh.num_polys()), false);
         for (Id pid{}; pid < mesh.num_polys(); ++pid)
@@ -136,7 +140,7 @@ namespace HMP::Gui::Widgets
             I aboveCount{}, belowCount{};
             for (const Id adjPid : mesh.adj_f2p(fid))
             {
-                if (m_mesher.shown(adjPid))
+                if (app().mesher.shown(adjPid))
                 {
                     if (above[toI(adjPid)])
                     {
@@ -188,7 +192,7 @@ namespace HMP::Gui::Widgets
             ImGui::TableNextColumn();
             if (ImGui::Button("Reset"))
             {
-                m_dagNamer.reset();
+                app().dagNamer.reset();
             }
 
             ImGui::TableNextColumn();
@@ -325,7 +329,7 @@ namespace HMP::Gui::Widgets
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            if (Utils::Controls::disabledSmallButton("Run##refinesingle", m_mesher.mesh().num_polys() == 1))
+            if (Utils::Controls::disabledSmallButton("Run##refinesingle", app().mesher.mesh().num_polys() == 1))
             {
                 refineSingle();
             }
@@ -414,13 +418,13 @@ namespace HMP::Gui::Widgets
             ImGui::TableNextColumn(); ImGui::Text("Memory usage");
             ImGui::TableNextColumn(); ImGui::Text("%dMB", static_cast<int>(cinolib::memory_usage_in_mega_bytes() + 0.5f));
             ImGui::TableNextColumn(); ImGui::Text("Poly count");
-            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(m_mesher.mesh().num_polys()));
+            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(app().mesher.mesh().num_polys()));
             ImGui::TableNextColumn(); ImGui::Text("Face count");
-            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(m_mesher.mesh().num_faces()));
+            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(app().mesher.mesh().num_faces()));
             ImGui::TableNextColumn(); ImGui::Text("Edge count");
-            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(m_mesher.mesh().num_edges()));
+            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(app().mesher.mesh().num_edges()));
             ImGui::TableNextColumn(); ImGui::Text("Vert count");
-            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(m_mesher.mesh().num_verts()));
+            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(app().mesher.mesh().num_verts()));
 #ifndef NDEBUG
             ImGui::TableNextColumn(); ImGui::Text("Allocated node count");
             ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(Dag::Node::allocatedNodeCount()));
@@ -438,29 +442,29 @@ namespace HMP::Gui::Widgets
 
     void Debug::selectCloseVerts()
     {
-        const Meshing::Mesher::Mesh& mesh{ m_mesher.mesh() };
+        const Meshing::Mesher::Mesh& mesh{ app().mesher.mesh() };
         std::map<Vec, Id, Meshing::Utils::VertComparer> vertMap{ {.eps = testEps} };
-        m_vertEditWidget.clear();
+        app().vertEditWidget.clear();
         for (Id vid{}; vid < mesh.num_verts(); vid++)
         {
             const Vec vert{ mesh.vert(vid) };
             const auto it{ vertMap.find(vert) };
             if (it != vertMap.end())
             {
-                m_vertEditWidget.add(vid);
-                m_vertEditWidget.add(it->second);
+                app().vertEditWidget.add(vid);
+                app().vertEditWidget.add(it->second);
             }
             else
             {
                 vertMap.insert(it, { vert, vid });
             }
         }
-        m_closeVertsTestRes = static_cast<unsigned int>(m_vertEditWidget.vids().size());
+        m_closeVertsTestRes = static_cast<unsigned int>(app().vertEditWidget.vids().size());
     }
 
     void Debug::refineSingle()
     {
-        if (m_mesher.mesh().num_polys() == 1 && m_mesher.shown(0))
+        if (app().mesher.mesh().num_polys() == 1 && app().mesher.shown(0))
         {
             onRefineSingleRequested(refineSingleScheme, fi, Meshing::Utils::hexFiVis[fi][fiVi]);
         }
@@ -473,7 +477,7 @@ namespace HMP::Gui::Widgets
         {
             return;
         }
-        cinolib::Polygonmesh<> mesh{ std::move(m_targetWidget.meshForProjection()) };
+        cinolib::Polygonmesh<> mesh{ std::move(app().targetWidget.meshForProjection()) };
         if (sectionExports)
         {
             const Id dim{ static_cast<Id>(sectionDim) };
@@ -498,7 +502,7 @@ namespace HMP::Gui::Widgets
         }
         const Id dim{ static_cast<Id>(sectionDim) };
         const Real v{ sectionValue() };
-        const Meshing::Mesher::Mesh& vol{ m_mesher.mesh() };
+        const Meshing::Mesher::Mesh& vol{ app().mesher.mesh() };
         cinolib::Polygonmesh<> srf{};
         std::vector<Id> vidsMap(toI(vol.num_verts()), noId);
         std::vector<Id> fidVids{};
@@ -508,7 +512,7 @@ namespace HMP::Gui::Widgets
             bool visible{ false };
             for (const Id adjPid : vol.adj_f2p(fid))
             {
-                if (m_mesher.shown(adjPid) && (!sectionExports || (sectionExportsInv != vol.poly_centroid(adjPid)[dim] >= v)))
+                if (app().mesher.shown(adjPid) && (!sectionExports || (sectionExportsInv != vol.poly_centroid(adjPid)[dim] >= v)))
                 {
                     if (_includeInterior)
                     {

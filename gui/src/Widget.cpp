@@ -25,6 +25,11 @@ namespace HMP::Gui
 
 	void Widget::draw(const cinolib::GLcanvas& _canvas)
 	{
+		drawCanvas();
+	}
+
+	void Widget::drawCanvas()
+	{
 	}
 
 	bool Widget::keyPressed(const cinolib::KeyBinding& _binding)

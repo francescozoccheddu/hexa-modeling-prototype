@@ -6,16 +6,20 @@
 #include <cassert>
 #include <imgui.h>
 #include <HMP/Gui/themer.hpp>
+#include <HMP/Gui/App.hpp>
 
 namespace HMP::Gui::Widgets
 {
 
-	DirectVertEdit::DirectVertEdit(VertEdit& _vertEdit, const cinolib::GLcanvas& _canvas) :
-		m_vertEditWidget{ _vertEdit }, m_canvas{ _canvas }, m_pending{ false },
-		m_centroid{}, m_kind{}, m_onX{}, m_onY{}, m_onZ{}, m_start{}, m_mouse{}, onPendingChanged{}
+	DirectVertEdit::DirectVertEdit() :
+		m_pending{ false }, m_centroid{}, m_kind{}, m_onX{}, m_onY{}, m_onZ{}, m_start{}, m_mouse{}, onPendingChanged{}
 	{
-		_vertEdit.onVidsChanged += [&]() {
-			if (m_vertEditWidget.empty())
+	}
+
+	void DirectVertEdit::attached()
+	{
+		app().vertEditWidget.onVidsChanged += [&]() {
+			if (app().vertEditWidget.empty())
 			{
 				cancel();
 			}
@@ -88,24 +92,24 @@ namespace HMP::Gui::Widgets
 
 	void DirectVertEdit::request(EKind _kind)
 	{
-		if (m_vertEditWidget.empty() && !m_pending)
+		if (app().vertEditWidget.empty() && !m_pending)
 		{
 			return;
 		}
 		const bool wasPending{ m_pending };
 		m_pending = false;
-		m_vertEditWidget.applyAction();
+		app().vertEditWidget.applyAction();
 		m_pending = !wasPending || m_kind != _kind;
 		m_onX = m_onY = m_onZ = false;
 		GLdouble depth;
-		m_canvas.project(m_vertEditWidget.centroid(), m_centroid, depth);
+		app().canvas.project(app().vertEditWidget.centroid(), m_centroid, depth);
 		m_start = m_mouse;
 		m_kind = _kind;
-		Utils::Transform& transform{ m_vertEditWidget.transform() };
+		Utils::Transform& transform{ app().vertEditWidget.transform() };
 		transform.translation = { 0.0 };
 		transform.scale = { 1.0 };
 		transform.rotation = { 0.0 };
-		m_vertEditWidget.applyTransform();
+		app().vertEditWidget.applyTransform();
 		if (wasPending != m_pending)
 		{
 			onPendingChanged();
@@ -119,13 +123,13 @@ namespace HMP::Gui::Widgets
 			return;
 		}
 		const bool
-			_onX{ glfwGetKey(m_canvas.window, c_kbOnX) == GLFW_PRESS },
-			_onY{ glfwGetKey(m_canvas.window, c_kbOnY) == GLFW_PRESS },
-			_onZ{ glfwGetKey(m_canvas.window, c_kbOnZ) == GLFW_PRESS };
-		const Vec up{ m_canvas.camera.view.normUp() };
-		const Vec right{ m_canvas.camera.view.normRight() };
-		const Vec forward{ m_canvas.camera.view.normBack() };
-		Utils::Transform& transform{ m_vertEditWidget.transform() };
+			_onX{ glfwGetKey(app().canvas.window, c_kbOnX) == GLFW_PRESS },
+			_onY{ glfwGetKey(app().canvas.window, c_kbOnY) == GLFW_PRESS },
+			_onZ{ glfwGetKey(app().canvas.window, c_kbOnZ) == GLFW_PRESS };
+		const Vec up{ app().canvas.camera.view.normUp() };
+		const Vec right{ app().canvas.camera.view.normRight() };
+		const Vec forward{ app().canvas.camera.view.normBack() };
+		Utils::Transform& transform{ app().vertEditWidget.transform() };
 		transform.translation = { 0.0 };
 		transform.scale = { 1.0 };
 		transform.rotation = { 0.0 };
@@ -150,7 +154,7 @@ namespace HMP::Gui::Widgets
 					diff.y() = 0.0;
 				}
 				const Vec2 newCentroid{ m_centroid + diff };
-				const cinolib::Ray ray{ m_canvas.eye_to_screen_ray(newCentroid) };
+				const cinolib::Ray ray{ app().canvas.eye_to_screen_ray(newCentroid) };
 				Real denom = forward.dot(ray.dir());
 				if (!Utils::Transform::isNull(denom))
 				{
@@ -229,7 +233,7 @@ namespace HMP::Gui::Widgets
 			}
 			break;
 		}
-		m_vertEditWidget.applyTransform();
+		app().vertEditWidget.applyTransform();
 	}
 
 	void DirectVertEdit::apply()
@@ -239,7 +243,7 @@ namespace HMP::Gui::Widgets
 			return;
 		}
 		m_pending = false;
-		m_vertEditWidget.applyAction();
+		app().vertEditWidget.applyAction();
 		onPendingChanged();
 	}
 
@@ -250,7 +254,7 @@ namespace HMP::Gui::Widgets
 			return;
 		}
 		m_pending = false;
-		m_vertEditWidget.cancel();
+		app().vertEditWidget.cancel();
 		onPendingChanged();
 	}
 
@@ -259,7 +263,7 @@ namespace HMP::Gui::Widgets
 		return m_pending;
 	}
 
-	void DirectVertEdit::draw(const cinolib::GLcanvas&)
+	void DirectVertEdit::drawCanvas()
 	{
 		if (!m_pending)
 		{
@@ -275,9 +279,9 @@ namespace HMP::Gui::Widgets
 		using Utils::Drawing::toImVec4;
 		using namespace Utils::Drawing;
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
-		const Real maxLen{ Vec2{static_cast<Real>(m_canvas.canvas_width()), static_cast<Real>(m_canvas.height())}.norm() };
-		const char* verticesLit{ m_vertEditWidget.vids().size() == 1 ? "vertex" : "vertices" };
-		const int vertexCount{ static_cast<int>(m_vertEditWidget.vids().size()) };
+		const Real maxLen{ Vec2{static_cast<Real>(app().canvas.canvas_width()), static_cast<Real>(app().canvas.height())}.norm() };
+		const char* verticesLit{ app().vertEditWidget.vids().size() == 1 ? "vertex" : "vertices" };
+		const int vertexCount{ static_cast<int>(app().vertEditWidget.vids().size()) };
 		switch (m_kind)
 		{
 			case EKind::Rotation:
@@ -309,7 +313,7 @@ namespace HMP::Gui::Widgets
 				const Vec2 dir{ Utils::Transform::dir(m_centroid, m_mouse) };
 				line(drawList, { toImVec2(m_centroid), toImVec2(m_centroid + startDir * maxLen) }, themer->ovMut, lineThickness);
 				line(drawList, { toImVec2(m_centroid), toImVec2(m_centroid + dir * maxLen) }, themer->ovHi, lineThickness);
-				const Vec rot{ m_vertEditWidget.transform().rotation };
+				const Vec rot{ app().vertEditWidget.transform().rotation };
 				ImGui::TextColored(toImVec4(themer->ovWarn), "Rotating %d %s by %1.f,%1.f,%1.f degrees via direct manipulation", vertexCount, verticesLit, rot.x(), rot.y(), rot.z());
 			}
 			break;
@@ -327,7 +331,7 @@ namespace HMP::Gui::Widgets
 				const Real radius{ m_centroid.dist(m_mouse) };
 				circle(drawList, toImVec2(m_centroid), static_cast<float>(startRadius), themer->ovMut, lineThickness);
 				circle(drawList, toImVec2(m_centroid), static_cast<float>(radius), themer->ovHi, lineThickness);
-				const Vec scl{ m_vertEditWidget.transform().scale * 100.0 };
+				const Vec scl{ app().vertEditWidget.transform().scale * 100.0 };
 				ImGui::TextColored(toImVec4(themer->ovWarn), "Scaling %d %s by %2.f,%2.f,%2.f%% via direct manipulation", vertexCount, verticesLit, scl.x(), scl.y(), scl.z());
 			}
 			break;
@@ -358,7 +362,7 @@ namespace HMP::Gui::Widgets
 					line(drawList, { toImVec2(m_start - Vec2{ 0, crossRadius }), toImVec2(m_start + Vec2{ 0, crossRadius }) }, themer->ovMut, lineThickness);
 					text(drawList, "???", toImVec2(m_start + textMargin), textSize, themer->ovErr, EAlign::LeftTop, EAlign::LeftTop);
 				}
-				const Vec trs{ m_vertEditWidget.transform().translation };
+				const Vec trs{ app().vertEditWidget.transform().translation };
 				ImGui::TextColored(toImVec4(themer->ovWarn), "Translating %d %s by %3.f,%3.f,%.3f via direct manipulation", vertexCount, verticesLit, trs.x(), trs.y(), trs.z());
 			}
 			break;

@@ -24,9 +24,6 @@ namespace HMP::Gui::Widgets
 			cinolib::FreeCamera<Real> camera{};
 		};
 
-		const Meshing::Mesher::Mesh& m_mesh;
-		const cinolib::FreeCamera<Real>& m_camera;
-		const Target& m_targetWidget;
 		std::vector<Keyframe> m_keyframes;
 		std::optional<std::string> m_sampleError;
 
@@ -48,7 +45,7 @@ namespace HMP::Gui::Widgets
 
 	public:
 
-		Ae3d2ShapeExporter(const Meshing::Mesher::Mesh& _mesh, const cinolib::FreeCamera<Real>& _camera, const Target& _targetWidget);
+		Ae3d2ShapeExporter();
 
 	};
 

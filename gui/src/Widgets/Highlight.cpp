@@ -19,7 +19,7 @@
 namespace HMP::Gui::Widgets
 {
 
-	void Highlight::draw(const cinolib::GLcanvas& _canvas)
+	void Highlight::drawCanvas()
 	{
 		const float
 			smallVertRadius{ 4.0f * themer->ovScale },
