@@ -1,17 +1,17 @@
 #pragma once
 
 #include <HMP/Meshing/types.hpp>
+#include <HMP/Gui/Widget.hpp>
 #include <cinolib/gl/FreeCamera.hpp>
-#include <cinolib/gl/canvas_gui_item.h>
 #include <cpputils/mixins/ReferenceClass.hpp>
 
 namespace HMP::Gui::Widgets
 {
 
-	class Axes final: public cinolib::CanvasGuiItem, public cpputils::mixins::ReferenceClass
+	class Axes final: public Widget
 	{
 
-	public:
+	private:
 
 		void draw(const cinolib::GLcanvas& _canvas) override;
 

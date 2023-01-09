@@ -10,10 +10,8 @@
 namespace HMP::Gui::Widgets
 {
 
-    Save::Save(): cinolib::SideBarItem{ "Save" }, m_filename{}, m_loaded{ false }, onSave{}, onLoad{}, onExportMesh{}
+    Save::Save(): SidebarWidget{ "Save" }, m_filename{}, m_loaded{ false }, onSave{}, onLoad{}, onExportMesh{}
     {}
-
-
 
     void Save::apply(bool _load, const std::string& _filename)
     {
@@ -79,7 +77,7 @@ namespace HMP::Gui::Widgets
         }
     }
 
-    void Save::draw()
+    void Save::drawSidebar()
     {
         if (!m_filename.empty())
         {

@@ -1,9 +1,9 @@
 #pragma once
 
+#include <HMP/Gui/SidebarWidget.hpp>
 #include <HMP/Gui/DagViewer/Layout.hpp>
 #include <HMP/Dag/Element.hpp>
 #include <HMP/Meshing/types.hpp>
-#include <cinolib/gl/side_bar_item.h>
 #include <cpputils/collections/Namer.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <cpputils/collections/Event.hpp>
@@ -12,7 +12,7 @@
 namespace HMP::Gui::DagViewer
 {
 
-	class Widget final: public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
+	class Widget final: public SidebarWidget
 	{
 
 	private:
@@ -55,7 +55,7 @@ namespace HMP::Gui::DagViewer
 
 		const Dag::Node& hoveredNode() const;
 
-		void draw() override;
+		void drawSidebar() override;
 
 	};
 

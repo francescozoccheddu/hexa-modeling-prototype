@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cinolib/gl/side_bar_item.h>
+#include <HMP/Gui/SidebarWidget.hpp>
 #include <HMP/Meshing/types.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <cpputils/collections/Event.hpp>
@@ -8,7 +8,7 @@
 namespace HMP::Gui::Widgets
 {
 
-    class Smooth final: public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
+    class Smooth final: public SidebarWidget
     {
 
 
@@ -24,7 +24,7 @@ namespace HMP::Gui::Widgets
 
         void requestSmooth();
 
-        void draw() override;
+        void drawSidebar() override;
 
     };
 

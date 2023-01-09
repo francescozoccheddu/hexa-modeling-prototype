@@ -4,14 +4,14 @@
 #include <HMP/Commander.hpp>
 #include <HMP/Gui/Utils/HrDescriptions.hpp>
 #include <HMP/Gui/Widgets/VertEdit.hpp>
-#include <cinolib/gl/side_bar_item.h>
+#include <HMP/Gui/SidebarWidget.hpp>
 #include <cinolib/color.h>
 #include <cpputils/mixins/ReferenceClass.hpp>
 
 namespace HMP::Gui::Widgets
 {
 
-	class Commander final: public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
+	class Commander final: public SidebarWidget
 	{
 
 	private:
@@ -20,19 +20,11 @@ namespace HMP::Gui::Widgets
 		Utils::HrDescriptions::DagNamer& m_dagNamer;
 		const VertEdit& m_vertEdit;
 
+		void drawSidebar() override;
+
 	public:
 
 		Commander(HMP::Commander& _commander, Utils::HrDescriptions::DagNamer& _dagNamer, const VertEdit& _vertEdit);
-
-		const VertEdit& vertEdit() const;
-
-		HMP::Commander& commander();
-		const HMP::Commander& commander() const;
-
-		Utils::HrDescriptions::DagNamer& dagNamer();
-		const Utils::HrDescriptions::DagNamer& dagNamer() const;
-
-		void draw() override;
 
 	};
 

@@ -43,7 +43,7 @@ namespace HMP::Gui::Widgets
 	}
 
 	VertEdit::VertEdit(Meshing::Mesher& _mesher):
-		cinolib::SideBarItem{ "Vertex editor" }, m_mesher{ _mesher },
+		SidebarWidget{ "Vertex editor" }, m_mesher{ _mesher },
 		m_verts{}, m_pendingAction{ false },
 		m_unappliedTransform{}, m_appliedTransform{}, m_centroid{}
 	{ }
@@ -184,7 +184,7 @@ namespace HMP::Gui::Widgets
 		onCentroidChanged();
 	}
 
-	void VertEdit::draw()
+	void VertEdit::drawSidebar()
 	{
 		ImGui::TextColored(m_verts.empty() ? themer->sbWarn : themer->sbOk, "%d vertices selected", static_cast<int>(m_verts.size()));
 		if (empty())

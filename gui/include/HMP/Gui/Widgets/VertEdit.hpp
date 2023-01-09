@@ -1,8 +1,7 @@
 #pragma once
 
+#include <HMP/Gui/SidebarWidget.hpp>
 #include <HMP/Meshing/types.hpp>
-#include <cinolib/gl/side_bar_item.h>
-#include <cinolib/gl/canvas_gui_item.h>
 #include <cinolib/color.h>
 #include <HMP/Meshing/Mesher.hpp>
 #include <HMP/Gui/Utils/Transform.hpp>
@@ -15,7 +14,7 @@
 namespace HMP::Gui::Widgets
 {
 
-	class VertEdit final: public cinolib::SideBarItem, public cinolib::CanvasGuiItem, public cpputils::mixins::ReferenceClass
+	class VertEdit final: public SidebarWidget
 	{
 
 	private:
@@ -79,7 +78,7 @@ namespace HMP::Gui::Widgets
 
 		void updateCentroid();
 
-		void draw() override;
+		void drawSidebar() override;
 
 		void draw(const cinolib::GLcanvas& _canvas) override;
 

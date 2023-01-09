@@ -2,28 +2,34 @@
 
 #include <HMP/Meshing/types.hpp>
 #include <HMP/Gui/Widgets/VertEdit.hpp>
+#include <HMP/Gui/Widget.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <cpputils/collections/Event.hpp>
-#include <cinolib/gl/canvas_gui_item.h>
 #include <cinolib/gl/glcanvas.h>
 #include <cinolib/color.h>
 
 namespace HMP::Gui::Widgets
 {
 
-    class DirectVertEdit final: public cinolib::CanvasGuiItem, public cpputils::mixins::ReferenceClass
+    class DirectVertEdit final: public Widget
     {
 
-    public:
+    private:
+
+        static constexpr cinolib::KeyBinding c_kbCancel{ GLFW_KEY_ESCAPE };
+        static constexpr cinolib::KeyBinding c_kbTranslate{ GLFW_KEY_T };
+        static constexpr cinolib::KeyBinding c_kbScale{ GLFW_KEY_S };
+        static constexpr cinolib::KeyBinding c_kbRotate{ GLFW_KEY_R };
+        static constexpr int c_kbOnX{ GLFW_KEY_LEFT_CONTROL };
+        static constexpr int c_kbOnY{ GLFW_KEY_LEFT_SHIFT };
+        static constexpr int c_kbOnZ{ GLFW_KEY_LEFT_ALT };
 
         enum class EKind
         {
             Translation, Rotation, Scale
         };
 
-    private:
-
-        VertEdit& m_vertEdit;
+        VertEdit& m_vertEditWidget;
         const cinolib::GLcanvas& m_canvas;
         bool m_pending;
         Vec2 m_centroid;
@@ -31,6 +37,26 @@ namespace HMP::Gui::Widgets
         bool m_onX, m_onY, m_onZ;
         Vec2 m_start;
         Vec2 m_mouse;
+
+        void printUsage() const override;
+
+        void mouseMoved(const Vec2& _position) override;
+
+        bool keyPressed(const cinolib::KeyBinding& _key) override;
+
+        void cameraChanged() override;
+
+        bool mouseClicked(bool _right) override;
+
+        void cancel();
+
+        void apply();
+
+        void draw(const cinolib::GLcanvas& _canvas) override;
+
+        void update();
+
+        void request(EKind _kind);
 
     public:
 
@@ -41,29 +67,9 @@ namespace HMP::Gui::Widgets
 
         cpputils::collections::Event<DirectVertEdit> onPendingChanged;
 
-        DirectVertEdit(VertEdit& _vertEdit, const cinolib::GLcanvas& _canvas);
-
-        void request(EKind _kind, const Vec2& _mouse);
-
-        void update(const Vec2& _mouse, bool _onX = false, bool _onY = false, bool _onZ = false);
-
-        void cancel();
-
-        void apply();
+        DirectVertEdit(VertEdit& _vertEditWidget, const cinolib::GLcanvas& _canvas);
 
         bool pending() const;
-
-        EKind kind() const;
-
-        bool locked() const;
-
-        bool onX() const;
-
-        bool onY() const;
-
-        bool onZ() const;
-
-        void draw(const cinolib::GLcanvas& _canvas) override final;
 
     };
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cinolib/gl/side_bar_item.h>
+#include <HMP/Gui/SidebarWidget.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <cpputils/collections/Event.hpp>
 #include <string>
@@ -9,7 +9,7 @@
 namespace HMP::Gui::Widgets
 {
 
-    class Save final: public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
+    class Save final: public SidebarWidget
     {
 
     private:
@@ -38,7 +38,7 @@ namespace HMP::Gui::Widgets
 
         void requestExportMesh();
 
-        void draw() override;
+        void drawSidebar() override;
 
     };
 

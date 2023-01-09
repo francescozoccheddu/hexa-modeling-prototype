@@ -22,7 +22,7 @@ namespace HMP::Gui::Widgets
 {
 
     Debug::Debug(Meshing::Mesher& _mesher, cpputils::collections::SetNamer<const HMP::Dag::Node*>& _dagNamer, VertEdit& _vertEditWidget, const Target& _targetWidget)
-        : cinolib::SideBarItem{ "Debug" }, m_mesher{ _mesher }, m_dagNamer{ _dagNamer }, m_vertEditWidget{ _vertEditWidget }, m_targetWidget{ _targetWidget }, m_sectionSoup{}
+        : SidebarWidget{ "Debug" }, m_mesher{ _mesher }, m_dagNamer{ _dagNamer }, m_vertEditWidget{ _vertEditWidget }, m_targetWidget{ _targetWidget }, m_sectionSoup{}
     {
         m_sectionSoup.set_color(Utils::Drawing::toColor(themer->ovHi));
         m_sectionSoup.set_thickness(sectionLineThickness* themer->ovScale);
@@ -166,12 +166,12 @@ namespace HMP::Gui::Widgets
         }
     }
 
-    const cinolib::DrawableSegmentSoup& Debug::sectionSoup() const
+    std::vector<const cinolib::DrawableObject*> Debug::additionalDrawables() const
     {
-        return m_sectionSoup;
+        return { &m_sectionSoup };
     }
 
-    void Debug::draw()
+    void Debug::drawSidebar()
     {
         if (ImGui::TreeNode("Names"))
         {

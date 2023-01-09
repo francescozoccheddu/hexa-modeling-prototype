@@ -12,7 +12,7 @@ namespace HMP::Gui::Widgets
 {
 
 	Target::Target(const Meshing::Mesher::Mesh& _sourceMesh):
-		cinolib::SideBarItem{ "Target mesh" },
+		SidebarWidget{ "Target mesh" },
 		m_mesh{}, m_sourceMesh{ _sourceMesh },
 		m_missingMeshFile{ false },
 		faceColor{ themer->tgtFace }, edgeColor{ themer->tgtEdge },
@@ -189,7 +189,7 @@ namespace HMP::Gui::Widgets
 		identity();
 	}
 
-	void Target::draw()
+	void Target::drawSidebar()
 	{
 		if (hasMesh())
 		{

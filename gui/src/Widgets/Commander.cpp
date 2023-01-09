@@ -14,35 +14,10 @@ namespace HMP::Gui::Widgets
 {
 
 	Commander::Commander(HMP::Commander& _commander, Utils::HrDescriptions::DagNamer& _dagNamer, const VertEdit& _vertEdit)
-		: cinolib::SideBarItem{ "Commander" }, m_commander{ _commander }, m_dagNamer{ _dagNamer }, m_vertEdit{ _vertEdit }
+		: SidebarWidget{ "Commander" }, m_commander{ _commander }, m_dagNamer{ _dagNamer }, m_vertEdit{ _vertEdit }
 	{}
 
-	const VertEdit& Commander::vertEdit() const
-	{
-		return m_vertEdit;
-	}
-
-	HMP::Commander& Commander::commander()
-	{
-		return m_commander;
-	}
-
-	const HMP::Commander& Commander::commander() const
-	{
-		return m_commander;
-	}
-
-	Utils::HrDescriptions::DagNamer& Commander::dagNamer()
-	{
-		return m_dagNamer;
-	}
-
-	const Utils::HrDescriptions::DagNamer& Commander::dagNamer() const
-	{
-		return m_dagNamer;
-	}
-
-	void Commander::draw()
+	void Commander::drawSidebar()
 	{
 		constexpr auto actionsControl{ [](HMP::Commander::Stack& _stack, const std::string& _name) {
 			int limit{ static_cast<int>(_stack.limit()) };

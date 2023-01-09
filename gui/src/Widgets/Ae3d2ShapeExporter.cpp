@@ -41,7 +41,7 @@ namespace HMP::Gui::Widgets
 	}
 
 	Ae3d2ShapeExporter::Ae3d2ShapeExporter(const Meshing::Mesher::Mesh& _mesh, const cinolib::FreeCamera<Real>& _camera, const Target& _targetWidget):
-		cinolib::SideBarItem{ "ae-3d2shape exporter" }, m_mesh{ _mesh }, m_camera{ _camera }, m_targetWidget{ _targetWidget }, m_keyframes{}, m_sampleError{}
+		SidebarWidget{ "ae-3d2shape exporter" }, m_mesh{ _mesh }, m_camera{ _camera }, m_targetWidget{ _targetWidget }, m_keyframes{}, m_sampleError{}
 	{}
 
 	bool Ae3d2ShapeExporter::exportKeyframes(const std::vector<Ae3d2ShapeExporter::Keyframe>& _keyframes)
@@ -223,7 +223,7 @@ namespace HMP::Gui::Widgets
 		return m_keyframes.empty();
 	}
 
-	void Ae3d2ShapeExporter::draw()
+	void Ae3d2ShapeExporter::drawSidebar()
 	{
 		if (ImGui::Button("Sample"))
 		{
