@@ -19,6 +19,27 @@ namespace HMP::Gui::Widgets
 
 	private:
 
+		static constexpr cinolib::KeyBinding c_kbSelectVertex{ GLFW_KEY_1 };
+		static constexpr cinolib::KeyBinding c_kbSelectEdge{ GLFW_KEY_2 };
+		static constexpr cinolib::KeyBinding c_kbSelectUpEdge{ GLFW_KEY_2, GLFW_MOD_ALT };
+		static constexpr cinolib::KeyBinding c_kbSelectFace{ GLFW_KEY_3 };
+		static constexpr cinolib::KeyBinding c_kbSelectUpFace{ GLFW_KEY_3, GLFW_MOD_ALT };
+		static constexpr cinolib::KeyBinding c_kbSelectPoly{ GLFW_KEY_4 };
+		static constexpr cinolib::KeyBinding c_kbDeselectAll{ GLFW_KEY_A, GLFW_MOD_CONTROL };
+		static constexpr cinolib::KeyBinding c_kbSelectAll{ GLFW_KEY_A, GLFW_MOD_SHIFT };
+		static constexpr int c_kmodSelectAdd{ GLFW_MOD_SHIFT };
+		static constexpr int c_kmodSelectRemove{ GLFW_MOD_CONTROL };
+
+		enum class ESelectionSource
+		{
+			Vertex, Edge, Face, Poly, UpFace, UpEdge
+		};
+
+		enum class ESelectionMode
+		{
+			Add, Remove, Set
+		};
+
 		static constexpr Id vertsToVidsConvert(const std::unordered_map<Id, Vec>::value_type& _entry)
 		{
 			return _entry.first;
@@ -31,6 +52,14 @@ namespace HMP::Gui::Widgets
 		Vec m_centroid;
 
 		bool addOrRemove(const Id* _vids, I _count, bool _add, bool _update);
+
+		bool keyPressed(const cinolib::KeyBinding& _key) override;
+
+		void printUsage() const override;
+
+		void onSelect(ESelectionSource _source, ESelectionMode _mode);
+
+		void onSelectAll(bool _selected);
 
 	public:
 

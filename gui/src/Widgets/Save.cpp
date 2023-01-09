@@ -13,6 +13,34 @@ namespace HMP::Gui::Widgets
     Save::Save(): SidebarWidget{ "Save" }, m_filename{}, m_loaded{ false }, onSave{}, onLoad{}, onExportMesh{}
     {}
 
+    void Save::printUsage() const
+    {
+        cinolib::print_binding(c_kbSave.name(), "save");
+        cinolib::print_binding(c_kbSaveNew.name(), "save new");
+        cinolib::print_binding(c_kbLoad.name(), "load");
+    }
+
+    bool Save::keyPressed(const cinolib::KeyBinding& _key)
+    {
+        if (_key == c_kbSave)
+        {
+            requestSave();
+        }
+        else if (_key == c_kbSaveNew)
+        {
+            requestSaveNew();
+        }
+        else if (_key == c_kbLoad)
+        {
+            requestLoad();
+        }
+        else
+        {
+            return false;
+        }
+        return true;
+    }
+
     void Save::apply(bool _load, const std::string& _filename)
     {
         m_loaded = _load;

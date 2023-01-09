@@ -11,20 +11,21 @@ namespace HMP::Gui::Widgets
     class Smooth final: public SidebarWidget
     {
 
+    private:
+
+        I m_surfaceIterations{ 1 };
+        I m_internalIterations{ 1 };
+        Real m_surfVertWeight{ 1.0 };
+
+        void drawSidebar() override;
 
     public:
 
         cpputils::collections::Event<Smooth, I, I, Real> onSmoothRequested;
 
-        I surfaceIterations{ 1 };
-        I internalIterations{ 1 };
-        Real surfVertWeight{ 1.0 };
-
         Smooth();
 
         void requestSmooth();
-
-        void drawSidebar() override;
 
     };
 
