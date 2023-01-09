@@ -22,6 +22,8 @@ namespace HMP::Gui
 
 		App* m_app;
 
+		void draw(const cinolib::GLcanvas& _canvas) final;
+
 	protected:
 
 		Widget();
@@ -34,7 +36,7 @@ namespace HMP::Gui
 
 		virtual void printUsage() const;
 
-		virtual void draw(const cinolib::GLcanvas& _canvas);
+		virtual void drawCanvas();
 
 		virtual bool keyPressed(const cinolib::KeyBinding& _binding);
 

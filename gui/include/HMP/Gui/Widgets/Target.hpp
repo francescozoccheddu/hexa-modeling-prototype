@@ -26,7 +26,6 @@ namespace HMP::Gui::Widgets
 		static constexpr cinolib::KeyBinding c_kbToggleVisibility{ GLFW_KEY_U };
 
 		cinolib::DrawablePolygonmesh<> m_mesh;
-		const Meshing::Mesher::Mesh& m_sourceMesh;
 		std::string m_filename;
 		bool m_missingMeshFile;
 
@@ -46,13 +45,11 @@ namespace HMP::Gui::Widgets
 		bool visible;
 		float edgeThickness{ 2.0f };
 
-		Target(const Meshing::Mesher::Mesh& _sourceMesh);
+		Target();
 
 		mutable cpputils::collections::Event<Target> onMeshChanged;
 		mutable cpputils::collections::Event<Target> onMeshShapeChanged;
 		mutable cpputils::collections::Event<Target, const Mat4&> onApplyTransformToSource;
-
-		const Meshing::Mesher::Mesh& sourceMesh() const;
 
 		bool hasMesh() const;
 		const cinolib::DrawablePolygonmesh<>& meshForDisplay() const;

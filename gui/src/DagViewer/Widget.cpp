@@ -56,7 +56,7 @@ namespace HMP::Gui::DagViewer
 		m_needsLayoutUpdate = true;
 	}
 
-	void Widget::draw(const cinolib::GLcanvas& _canvas)
+	void Widget::drawCanvas()
 	{
 		const float
 			semiBoldLineThickness{ 2.5f * themer->ovScale },

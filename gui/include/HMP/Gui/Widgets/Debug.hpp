@@ -21,10 +21,6 @@ namespace HMP::Gui::Widgets
 
     private:
 
-        const Meshing::Mesher& m_mesher;
-        cpputils::collections::SetNamer<const HMP::Dag::Node*>& m_dagNamer;
-        VertEdit& m_vertEditWidget;
-        const Target& m_targetWidget;
         cinolib::DrawableSegmentSoup m_sectionSoup;
 
         unsigned int m_negJacTestRes{}, m_closeVertsTestRes{};
@@ -58,18 +54,19 @@ namespace HMP::Gui::Widgets
 
         void updateSection();
 
-        void draw(const cinolib::GLcanvas& _canvas) override;
+        void drawCanvas() override;
 
         void drawSidebar() override;
 
         std::vector<const cinolib::DrawableObject*> additionalDrawables() const override;
 
+        void attached() override;
 
     public:
 
         cpputils::collections::Event<Debug, Refinement::EScheme, I, I> onRefineSingleRequested;
 
-        Debug(Meshing::Mesher& _mesher, cpputils::collections::SetNamer<const HMP::Dag::Node*>& _dagNamer, VertEdit& _vertEdit, const Target& _targetWidget);
+        Debug();
 
         void updateTheme() const;
 

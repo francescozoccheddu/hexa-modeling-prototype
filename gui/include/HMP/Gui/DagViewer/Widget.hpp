@@ -36,7 +36,7 @@ namespace HMP::Gui::DagViewer
 
 		void drawSidebar() override;
 
-		void draw(const cinolib::GLcanvas& _canvas) override;
+		void drawCanvas() override;
 
 		void resetView();
 

@@ -27,7 +27,7 @@ namespace HMP::Gui::Widgets
 				}
 				if (_add)
 				{
-					const Vec pos{ m_mesher.mesh().vert(vid) };
+					const Vec pos{ app().mesher.mesh().vert(vid) };
 					m_verts.insert(it, { vid, pos });
 				}
 				else
@@ -44,8 +44,8 @@ namespace HMP::Gui::Widgets
 		return changed;
 	}
 
-	VertEdit::VertEdit(Meshing::Mesher& _mesher):
-		SidebarWidget{ "Vertex editor" }, m_mesher{ _mesher },
+	VertEdit::VertEdit():
+		SidebarWidget{ "Vertex editor" },
 		m_verts{}, m_pendingAction{ false },
 		m_unappliedTransform{}, m_appliedTransform{}, m_centroid{}
 	{ }
@@ -126,7 +126,7 @@ namespace HMP::Gui::Widgets
 			onApplyAction(vids, transform);
 			for (auto& [vid, pos] : m_verts)
 			{
-				pos = m_mesher.mesh().vert(vid);
+				pos = app().mesher.mesh().vert(vid);
 			}
 			updateCentroid();
 		}
@@ -149,11 +149,11 @@ namespace HMP::Gui::Widgets
 		vids.reserve(m_verts.size());
 		for (const auto& [vid, pos] : m_verts)
 		{
-			m_mesher.moveVert(vid, transform * pos);
+			app().mesher.moveVert(vid, transform * pos);
 			vids.insert(vid);
 		}
 		m_appliedTransform = m_unappliedTransform;
-		m_mesher.updateMeshTemp(vids);
+		app().mesher.updateMeshTemp(vids);
 		onMeshUpdated();
 		updateCentroid();
 		const bool hadPendingAction{ m_pendingAction };
@@ -178,7 +178,7 @@ namespace HMP::Gui::Widgets
 			for (const auto& [vid, pos] : m_verts)
 			{
 				m_unappliedTransform.origin += pos;
-				m_centroid += m_mesher.mesh().vert(vid);
+				m_centroid += app().mesher.mesh().vert(vid);
 			}
 			m_centroid /= static_cast<Real>(m_verts.size());
 			m_unappliedTransform.origin /= static_cast<Real>(m_verts.size());
@@ -206,7 +206,7 @@ namespace HMP::Gui::Widgets
 		}
 		// translation
 		ImGui::TableNextColumn();
-		if (Utils::Controls::dragTranslationVec("Translation", m_unappliedTransform.translation, m_mesher.mesh().scene_radius()))
+		if (Utils::Controls::dragTranslationVec("Translation", m_unappliedTransform.translation, app().mesher.mesh().scene_radius()))
 		{
 			applyTransform();
 		}
@@ -243,7 +243,7 @@ namespace HMP::Gui::Widgets
 		ImGui::EndTable();
 	}
 
-	void VertEdit::draw(const cinolib::GLcanvas& _canvas)
+	void VertEdit::drawCanvas()
 	{
 		const float
 			radius{ this->radius * themer->ovScale },
@@ -251,13 +251,13 @@ namespace HMP::Gui::Widgets
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
 		for (const Id vid : vids())
 		{
-			const Vec vert{ m_mesher.mesh().vert(vid) };
-			const auto pos{ Utils::Drawing::project(_canvas, vert) };
+			const Vec vert{ app().mesher.mesh().vert(vid) };
+			const auto pos{ Utils::Drawing::project(app().canvas, vert) };
 			Utils::Drawing::circle(drawList, pos, radius, themer->ovHi, lineThickness);
 		}
 		if (!empty())
 		{
-			Utils::Drawing::cross(drawList, Utils::Drawing::project(_canvas, m_centroid), radius, themer->ovHi, lineThickness);
+			Utils::Drawing::cross(drawList, Utils::Drawing::project(app().canvas, m_centroid), radius, themer->ovHi, lineThickness);
 			const char* verticesLit{ m_verts.size() == 1 ? "vertex" : "vertices" };
 			const int vertexCount{ static_cast<int>(m_verts.size()) };
 			ImGui::TextColored(Utils::Drawing::toImVec4(themer->ovMut), "%d %s selected", vertexCount, verticesLit);

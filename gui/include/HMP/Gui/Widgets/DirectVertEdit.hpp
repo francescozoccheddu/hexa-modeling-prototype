@@ -29,8 +29,6 @@ namespace HMP::Gui::Widgets
             Translation, Rotation, Scale
         };
 
-        VertEdit& m_vertEditWidget;
-        const cinolib::GLcanvas& m_canvas;
         bool m_pending;
         Vec2 m_centroid;
         EKind m_kind;
@@ -52,11 +50,13 @@ namespace HMP::Gui::Widgets
 
         void apply();
 
-        void draw(const cinolib::GLcanvas& _canvas) override;
+        void drawCanvas() override;
 
         void update();
 
         void request(EKind _kind);
+
+        void attached() override;
 
     public:
 
@@ -67,7 +67,7 @@ namespace HMP::Gui::Widgets
 
         cpputils::collections::Event<DirectVertEdit> onPendingChanged;
 
-        DirectVertEdit(VertEdit& _vertEditWidget, const cinolib::GLcanvas& _canvas);
+        DirectVertEdit();
 
         bool pending() const;
 

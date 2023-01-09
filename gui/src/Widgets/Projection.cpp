@@ -21,23 +21,27 @@
 namespace HMP::Gui::Widgets
 {
 
-	Projection::Projection(const Widgets::Target& _targetWidget, HMP::Commander& _commander, const Meshing::Mesher& _mesher):
-		SidebarWidget{ "Projection" }, m_targetWidget{ _targetWidget }, m_commander{ _commander }, m_mesher{ _mesher },
+	Projection::Projection():
+		SidebarWidget{ "Projection" }, 
 		m_options{}, m_paths(1), m_featureFinderOptions{}, m_usePathAsCrease{ false }, m_featureFinderCreaseAngle{ 60.0f },
 		m_showPaths{ false }, m_showAllPaths{ false }, m_currentPath{}, onProjectRequest{}
 	{
-		m_targetWidget.onMeshChanged += [this]() {
+	}
+
+	void Projection::attached()
+	{
+		app().targetWidget.onMeshChanged += [this]() {
 			for (auto& path : m_paths)
 			{
 				path.targetEids.clear();
 			}
 		};
-		m_mesher.onAdded += [this](const Meshing::Mesher::State&) {
+		app().mesher.onAdded += [this](const Meshing::Mesher::State&) {
 			for (I i{}; i < m_paths.size(); i++)
 			{
 				for (const Id eid : m_paths[i].sourceEids)
 				{
-					if (!m_mesher.mesh().edge_is_visible(eid))
+					if (!app().mesher.mesh().edge_is_visible(eid))
 					{
 						m_paths[i].sourceEids.clear();
 						break;
@@ -45,8 +49,8 @@ namespace HMP::Gui::Widgets
 				}
 			}
 		};
-		m_mesher.onElementVisibilityChanged += [this](const Dag::Element& _element, bool) {
-			const std::vector<Id> removedEids{ m_mesher.mesh().poly_dangling_eids(_element.pid) };
+		app().mesher.onElementVisibilityChanged += [this](const Dag::Element& _element, bool) {
+			const std::vector<Id> removedEids{ app().mesher.mesh().poly_dangling_eids(_element.pid) };
 			const std::unordered_set<Id> removedEidsSet{ removedEids.begin(), removedEids.end() };
 			for (I i{}; i < m_paths.size(); i++)
 			{
@@ -60,8 +64,8 @@ namespace HMP::Gui::Widgets
 				}
 			}
 		};
-		m_mesher.onRestored += [this](const Meshing::Mesher::State&) {
-			const Id eidCount{ m_mesher.mesh().num_edges() };
+		app().mesher.onRestored += [this](const Meshing::Mesher::State&) {
+			const Id eidCount{ app().mesher.mesh().num_edges() };
 			for (I i{}; i < m_paths.size(); i++)
 			{
 				for (const Id eid : m_paths[i].sourceEids)
@@ -83,12 +87,12 @@ namespace HMP::Gui::Widgets
 
 	void Projection::requestProjection()
 	{
-		assert(m_targetWidget.hasMesh());
+		assert(app().targetWidget.hasMesh());
 		std::vector<Point> points;
 		points.reserve(m_paths.size() * 2);
 		std::vector<EidsPath> paths;
 		paths.reserve(m_paths.size());
-		const cinolib::Polygonmesh<>& targetMesh{ m_targetWidget.meshForProjection() };
+		const cinolib::Polygonmesh<>& targetMesh{ app().targetWidget.meshForProjection() };
 		for (const EidsPath& path : m_paths)
 		{
 			if (path.sourceEids.empty() || path.targetEids.empty())
@@ -96,7 +100,7 @@ namespace HMP::Gui::Widgets
 				continue;
 			}
 			paths.push_back(path);
-			for (const Point& point : HMP::Projection::Utils::endPoints(path, m_mesher.mesh(), targetMesh))
+			for (const Point& point : HMP::Projection::Utils::endPoints(path, app().mesher.mesh(), targetMesh))
 			{
 				points.push_back(point);
 			}
@@ -106,24 +110,24 @@ namespace HMP::Gui::Widgets
 
 	bool Projection::canReproject() const
 	{
-		if (!m_commander.canUndo())
+		if (!app().commander.canUndo())
 		{
 			return false;
 		}
-		return dynamic_cast<const HMP::Actions::Project*>(&m_commander.applied().first());
+		return dynamic_cast<const HMP::Actions::Project*>(&app().commander.applied().first());
 	}
 
 	void Projection::requestReprojection()
 	{
 		assert(canReproject());
-		m_commander.undo();
+		app().commander.undo();
 		requestProjection();
 	}
 
 	void Projection::matchPaths(I _first, I _lastEx, bool _fromSource)
 	{
-		cinolib::Polygonmesh<> target{ m_targetWidget.meshForProjection() };
-		const Meshing::Mesher::Mesh& source{ m_mesher.mesh() };
+		cinolib::Polygonmesh<> target{ app().targetWidget.meshForProjection() };
+		const Meshing::Mesher::Mesh& source{ app().mesher.mesh() };
 		for (I i{ _first }; i < _lastEx; i++)
 		{
 			m_paths[i].eids(!_fromSource).clear();
@@ -187,7 +191,7 @@ namespace HMP::Gui::Widgets
 		if (_inSource)
 		{
 			std::unordered_map<Id, Id> vol2surf;
-			cinolib::export_surface(m_mesher.mesh(), mesh, vol2surf, surf2vol, false);
+			cinolib::export_surface(app().mesher.mesh(), mesh, vol2surf, surf2vol, false);
 			if (m_usePathAsCrease)
 			{
 				for (const EidsPath path : m_paths)
@@ -195,8 +199,8 @@ namespace HMP::Gui::Widgets
 					for (const Id eid : path.sourceEids)
 					{
 						const Id surfEid{ static_cast<Id>(mesh.edge_id(
-							vol2surf.at(m_mesher.mesh().edge_vert_id(eid, 0)),
-							vol2surf.at(m_mesher.mesh().edge_vert_id(eid, 1))
+							vol2surf.at(app().mesher.mesh().edge_vert_id(eid, 0)),
+							vol2surf.at(app().mesher.mesh().edge_vert_id(eid, 1))
 						)) };
 						mesh.edge_data(surfEid).flags[cinolib::CREASE] = true;
 					}
@@ -205,7 +209,7 @@ namespace HMP::Gui::Widgets
 		}
 		else
 		{
-			mesh = m_targetWidget.meshForDisplay();
+			mesh = app().targetWidget.meshForDisplay();
 			if (m_usePathAsCrease)
 			{
 				for (const EidsPath path : m_paths)
@@ -232,7 +236,7 @@ namespace HMP::Gui::Widgets
 				{
 					vid = surf2vol.at(vid);
 				}
-				path.sourceEids = HMP::Projection::Utils::vidsToEidsPath(m_mesher.mesh(), featVids);
+				path.sourceEids = HMP::Projection::Utils::vidsToEidsPath(app().mesher.mesh(), featVids);
 			}
 			else
 			{
@@ -243,12 +247,12 @@ namespace HMP::Gui::Widgets
 
 	void Projection::setSourcePathEdgeAtPoint(const Vec& _point, bool _add)
 	{
-		setPathEdgeAtPoint(_point, _add, m_mesher.mesh(), true);
+		setPathEdgeAtPoint(_point, _add, app().mesher.mesh(), true);
 	}
 
 	void Projection::setTargetPathEdgeAtPoint(const Vec& _point, bool _add)
 	{
-		setPathEdgeAtPoint(m_targetWidget.meshForDisplay().transform.inverse() * _point, _add, m_targetWidget.meshForDisplay(), false);
+		setPathEdgeAtPoint(app().targetWidget.meshForDisplay().transform.inverse() * _point, _add, app().targetWidget.meshForDisplay(), false);
 	}
 
 	ImVec4 Projection::pathColor(I _path) const
@@ -399,7 +403,7 @@ namespace HMP::Gui::Widgets
 				{
 					m_paths[i].sourceEids.clear();
 				}
-				if (!m_targetWidget.hasMesh()) { ImGui::BeginDisabled(); }
+				if (!app().targetWidget.hasMesh()) { ImGui::BeginDisabled(); }
 				ImGui::TableNextColumn();
 				if (Utils::Controls::disabledButton("Clear target", !removed && !m_paths[i].targetEids.empty()))
 				{
@@ -415,7 +419,7 @@ namespace HMP::Gui::Widgets
 				{
 					matchPaths(i, i + 1, true);
 				}
-				if (!m_targetWidget.hasMesh()) { ImGui::EndDisabled(); }
+				if (!app().targetWidget.hasMesh()) { ImGui::EndDisabled(); }
 				ImGui::PopID();
 			}
 			ImGui::EndTable();
@@ -428,7 +432,7 @@ namespace HMP::Gui::Widgets
 					return _a.sourceEids.size() < _b.sourceEids.size();
 				});
 			}
-			if (m_targetWidget.hasMesh())
+			if (app().targetWidget.hasMesh())
 			{
 				ImGui::SameLine();
 				if (ImGui::SmallButton("Sort by target length"))
@@ -469,7 +473,7 @@ namespace HMP::Gui::Widgets
 				{
 					findPaths(true);
 				}
-				if (m_targetWidget.hasMesh())
+				if (app().targetWidget.hasMesh())
 				{
 					ImGui::SameLine();
 					if (ImGui::Button("Find in target"))
@@ -487,7 +491,7 @@ namespace HMP::Gui::Widgets
 		{
 			ImGui::Spacing();
 			Utils::Controls::sliderI("Iterations", m_options.iterations, 1, 20);
-			if (m_targetWidget.hasMesh())
+			if (app().targetWidget.hasMesh())
 			{
 				if (ImGui::Button("Project"))
 				{
@@ -507,10 +511,10 @@ namespace HMP::Gui::Widgets
 		}
 	}
 
-	void Projection::draw(const cinolib::GLcanvas& _canvas)
+	void Projection::drawCanvas()
 	{
-		const Meshing::Mesher::Mesh& mesh{ m_mesher.mesh() };
-		const cinolib::DrawablePolygonmesh<>& targetMesh{ m_targetWidget.meshForDisplay() };
+		const Meshing::Mesher::Mesh& mesh{ app().mesher.mesh() };
+		const cinolib::DrawablePolygonmesh<>& targetMesh{ app().targetWidget.meshForDisplay() };
 		const float lineThickness{ this->lineThickness * themer->ovScale };
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
 		const auto drawPath{ [&](const I _pathI) {
@@ -518,7 +522,7 @@ namespace HMP::Gui::Widgets
 			const ImU32 color{ ImGui::ColorConvertFloat4ToU32(pathColor(_pathI)) };
 			for (const Id eid : path.sourceEids)
 			{
-				const auto eid2d{ Utils::Drawing::project(_canvas, Meshing::Utils::verts(mesh, Meshing::Utils::eidVids(mesh, eid))) };
+				const auto eid2d{ Utils::Drawing::project(app().canvas, Meshing::Utils::verts(mesh, Meshing::Utils::eidVids(mesh, eid))) };
 				Utils::Drawing::line(drawList, eid2d, color, lineThickness);
 			}
 			for (const Id eid : path.targetEids)
@@ -527,7 +531,7 @@ namespace HMP::Gui::Widgets
 				const EdgeVerts verts{ cpputils::range::of(vids).map([&](const Id _vid) {
 					return targetMesh.transform * targetMesh.vert(_vid);
 				}).toArray<2>() };
-				const auto eid2d{ Utils::Drawing::project(_canvas, verts) };
+				const auto eid2d{ Utils::Drawing::project(app().canvas, verts) };
 				Utils::Drawing::line(drawList, eid2d, color, lineThickness);
 			}
 		} };
@@ -553,7 +557,7 @@ namespace HMP::Gui::Widgets
 		for (const EidsPath& path : m_paths)
 		{
 			{
-				const std::vector<Id> vids{ HMP::Projection::Utils::eidsToVidsPath(m_mesher.mesh(), path.sourceEids) };
+				const std::vector<Id> vids{ HMP::Projection::Utils::eidsToVidsPath(app().mesher.mesh(), path.sourceEids) };
 				_serializer << vids.size();
 				for (const Id vid : vids)
 				{
@@ -561,7 +565,7 @@ namespace HMP::Gui::Widgets
 				}
 			}
 			{
-				const std::vector<Id> vids{ HMP::Projection::Utils::eidsToVidsPath(m_targetWidget.meshForDisplay(), path.targetEids) };
+				const std::vector<Id> vids{ HMP::Projection::Utils::eidsToVidsPath(app().targetWidget.meshForDisplay(), path.targetEids) };
 				_serializer << vids.size();
 				for (const Id vid : vids)
 				{
@@ -583,7 +587,7 @@ namespace HMP::Gui::Widgets
 				{
 					_deserializer >> vid;
 				}
-				path.sourceEids = HMP::Projection::Utils::vidsToEidsPath(m_mesher.mesh(), vids);
+				path.sourceEids = HMP::Projection::Utils::vidsToEidsPath(app().mesher.mesh(), vids);
 			}
 			{
 				std::vector<Id> vids(_deserializer.get<I>());
@@ -591,9 +595,9 @@ namespace HMP::Gui::Widgets
 				{
 					_deserializer >> vid;
 				}
-				if (m_targetWidget.hasMesh())
+				if (app().targetWidget.hasMesh())
 				{
-					path.targetEids = HMP::Projection::Utils::vidsToEidsPath(m_targetWidget.meshForDisplay(), vids);
+					path.targetEids = HMP::Projection::Utils::vidsToEidsPath(app().targetWidget.meshForDisplay(), vids);
 				}
 				else
 				{
@@ -627,7 +631,7 @@ namespace HMP::Gui::Widgets
 		Vec point;
 		if (app().canvas.unproject(app().mouse().position, point))
 		{
-			if (m_targetWidget.hasMesh() && m_targetWidget.visible)
+			if (app().targetWidget.hasMesh() && app().targetWidget.visible)
 			{
 				setTargetPathEdgeAtPoint(point, add);
 			}

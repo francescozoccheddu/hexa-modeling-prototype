@@ -7,13 +7,14 @@
 #include <cassert>
 #include <filesystem>
 #include <HMP/Gui/themer.hpp>
+#include <HMP/Gui/App.hpp>
 
 namespace HMP::Gui::Widgets
 {
 
-	Target::Target(const Meshing::Mesher::Mesh& _sourceMesh) :
+	Target::Target() :
 		SidebarWidget{ "Target mesh" },
-		m_mesh{}, m_sourceMesh{ _sourceMesh },
+		m_mesh{}, 
 		m_missingMeshFile{ false },
 		faceColor{ themer->tgtFace }, edgeColor{ themer->tgtEdge },
 		transform{},
@@ -26,11 +27,6 @@ namespace HMP::Gui::Widgets
 			updateColor();
 			updateEdgeThickness();
 		};
-	}
-
-	const Meshing::Mesher::Mesh& Target::sourceMesh() const
-	{
-		return m_sourceMesh;
 	}
 
 	bool Target::hasMesh() const
@@ -88,11 +84,11 @@ namespace HMP::Gui::Widgets
 		}
 		if (_translation)
 		{
-			transform.translation = -transform.origin + m_sourceMesh.bbox().center();
+			transform.translation = -transform.origin + app().mesher.mesh().bbox().center();
 		}
 		if (_scale)
 		{
-			transform.scale = { m_sourceMesh.bbox().diag() / m_mesh.bbox().diag() };
+			transform.scale = { app().mesher.mesh().bbox().diag() / m_mesh.bbox().diag() };
 		}
 		updateTransform();
 	}
@@ -250,7 +246,7 @@ namespace HMP::Gui::Widgets
 					fit(true, false, false);
 				}
 				ImGui::TableNextColumn();
-				const float sourceMeshSize{ static_cast<float>(m_sourceMesh.bbox().diag()) * 2 };
+				const float sourceMeshSize{ static_cast<float>(app().mesher.mesh().bbox().diag()) * 2 };
 				if (Utils::Controls::dragTranslationVec("Translation", transform.translation, sourceMeshSize))
 				{
 					updateTransform();
@@ -277,7 +273,7 @@ namespace HMP::Gui::Widgets
 				}
 				ImGui::TableNextColumn();
 				ImGui::TableNextColumn();
-				const Real sourceAndTargetMeshScaleRatio{ m_sourceMesh.bbox().diag() / m_mesh.bbox().diag() * 3 };
+				const Real sourceAndTargetMeshScaleRatio{ app().mesher.mesh().bbox().diag() / m_mesh.bbox().diag() * 3 };
 				Real scale{ transform.avgScale() };
 				if (Utils::Controls::dragScale("Scale##scale", scale, sourceAndTargetMeshScaleRatio))
 				{

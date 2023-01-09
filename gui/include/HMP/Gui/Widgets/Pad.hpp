@@ -16,7 +16,6 @@ namespace HMP::Gui::Widgets
 
     private:
 
-        const Meshing::Mesher::Mesh& m_mesh;
         Real m_length{ 0.0 };
         I m_smoothIterations{ 1 };
         Real m_smoothSurfVertWeight{ 1.0 };
@@ -30,7 +29,7 @@ namespace HMP::Gui::Widgets
 
         cpputils::collections::Event<Pad, Real, I, Real, Real> onPadRequested;
 
-        Pad(const Meshing::Mesher::Mesh& _mesh);
+        Pad();
 
     };
 

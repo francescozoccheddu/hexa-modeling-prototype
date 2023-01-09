@@ -12,17 +12,18 @@
 #include <utility>
 #include <algorithm>
 #include <HMP/Gui/themer.hpp>
+#include <HMP/Gui/App.hpp>
 
 namespace HMP::Gui::Widgets
 {
 
-	void Axes::draw(const cinolib::GLcanvas& _canvas)
+	void Axes::drawCanvas()
 	{
 		using Utils::Controls::toImVec2;
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
 		Vec origin;
 		Real radius;
-		const cinolib::FreeCamera<Real>& camera{ _canvas.camera };
+		const cinolib::FreeCamera<Real>& camera{ app().canvas.camera };
 		if (camera.projection.perspective)
 		{
 			origin = camera.view.centerAt(3);
@@ -36,7 +37,7 @@ namespace HMP::Gui::Widgets
 		const Vec right(origin + cinolib::GLcanvas::world_right() * radius);
 		const Vec up(origin + cinolib::GLcanvas::world_up() * radius);
 		const Vec forward(origin - cinolib::GLcanvas::world_forward() * radius);
-		const Real maxSize{ static_cast<Real>(std::min(_canvas.canvas_width(), _canvas.height())) };
+		const Real maxSize{ static_cast<Real>(std::min(app().canvas.canvas_width(), app().canvas.height())) };
 		const Real size{ std::min((maxSize * 0.1 + 100 * static_cast<Real>(themer->ovScale)) / 2, maxSize / 3) };
 		const auto project{ [&](const Vec& _point) -> Vec {
 			Vec proj(camera.projectionViewMatrix() * _point);
