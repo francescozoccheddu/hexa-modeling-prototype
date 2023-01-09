@@ -28,7 +28,7 @@ namespace HMP::Gui::Utils::Drawing
 
 	void dashedLine(ImDrawList& _drawList, const EdgeVertData<ImVec2>& _verts, ImU32 _color, float _thickness, float _spacing)
 	{
-		if (cull(_verts))
+		if (cull(_drawList, _verts))
 		{
 			return;
 		}
@@ -55,7 +55,7 @@ namespace HMP::Gui::Utils::Drawing
 
 	void line(ImDrawList& _drawList, const EdgeVertData<ImVec2>& _verts, ImU32 _color, float _thickness)
 	{
-		if (cull(_verts))
+		if (cull(_drawList, _verts))
 		{
 			return;
 		}
@@ -64,25 +64,43 @@ namespace HMP::Gui::Utils::Drawing
 
 	void circle(ImDrawList& _drawList, const ImVec2& _center, float _radius, ImU32 _color, float _thickness)
 	{
-		if (cull(_center, _radius))
-		{
-			return;
-		}
-		_drawList.AddCircle(_center, _radius, _color, segCount(_radius), _thickness);
+		circle(_drawList, _center, _radius, _color, _thickness, segCount(_radius));
 	}
 
 	void circleFilled(ImDrawList& _drawList, const ImVec2& _center, float _radius, ImU32 _color)
 	{
-		if (cull(_center, _radius))
+		circleFilled(_drawList, _center, _radius, _color, segCount(_radius));
+	}
+
+	void circle(ImDrawList& _drawList, const ImVec2& _center, float _radius, ImU32 _color, float _thickness, int _segments)
+	{
+		if (cull(_drawList, _center, _radius))
 		{
 			return;
 		}
-		_drawList.AddCircleFilled(_center, _radius, _color, segCount(_radius));
+		if (_radius < 5.0f)
+		{
+			_segments = 4;
+		}
+		_drawList.AddCircle(_center, _radius, _color, _segments, _thickness);
+	}
+
+	void circleFilled(ImDrawList& _drawList, const ImVec2& _center, float _radius, ImU32 _color, int _segments)
+	{
+		if (cull(_drawList, _center, _radius))
+		{
+			return;
+		}
+		if (_radius < 5.0f)
+		{
+			_segments = 4;
+		}
+		_drawList.AddCircleFilled(_center, _radius, _color, _segments);
 	}
 
 	void cross(ImDrawList& _drawList, const ImVec2& _center, float _radius, ImU32 _color, float _thickness)
 	{
-		if (cull(_center, _radius))
+		if (cull(_drawList, _center, _radius))
 		{
 			return;
 		}
@@ -121,7 +139,7 @@ namespace HMP::Gui::Utils::Drawing
 			defSize.y * defSizeFactor
 		};
 		const ImVec2 topLeft{ align(_position, size, _hAlign, _vAlign) };
-		if (cull(topLeft, { topLeft.x + size.x, topLeft.y + size.y }))
+		if (cull(_drawList, topLeft, { topLeft.x + size.x, topLeft.y + size.y }))
 		{
 			return;
 		}
@@ -130,7 +148,7 @@ namespace HMP::Gui::Utils::Drawing
 
 	void quad(ImDrawList& _drawList, const QuadVertData<ImVec2>& _verts, ImU32 _color, float _thickness)
 	{
-		if (cull(_verts))
+		if (cull(_drawList, _verts))
 		{
 			return;
 		}
@@ -139,28 +157,48 @@ namespace HMP::Gui::Utils::Drawing
 
 	void quadFilled(ImDrawList& _drawList, const QuadVertData<ImVec2>& _verts, ImU32 _color)
 	{
-		if (cull(_verts))
+		if (cull(_drawList, _verts))
 		{
 			return;
 		}
 		_drawList.AddQuadFilled(_verts[0], _verts[1], _verts[2], _verts[3], _color);
 	}
 
-	bool cull(const ImVec2& _min, const ImVec2& _max)
+	void rect(ImDrawList& _drawList, const ImVec2& _min, const ImVec2& _max, ImU32 _color, float _thickness)
 	{
-		const ImVec2 smin{ ImGui::GetWindowPos() }, ssize{ ImGui::GetWindowSize() }, smax{ smin.x + ssize.x, smin.y + ssize.y };
+		if (cull(_drawList, _min, _max))
+		{
+			return;
+		}
+		_drawList.AddRect(_min, _max, _color, _thickness);
+	}
+
+	void rectFilled(ImDrawList& _drawList, const ImVec2& _min, const ImVec2& _max, ImU32 _color)
+	{
+		if (cull(_drawList, _min, _max))
+		{
+			return;
+		}
+		_drawList.AddRectFilled(_min, _max, _color);
+	}
+
+	bool cull(const ImDrawList& _drawList, const ImVec2& _min, const ImVec2& _max)
+	{
+		const ImVec2
+			smin{ _drawList.GetClipRectMin() },
+			smax{ _drawList.GetClipRectMax() };
 		return _min.x > smax.x
 			|| _min.y > smax.y
 			|| _max.x < smin.x
 			|| _max.y < smin.y;
 	}
 
-	bool cull(const ImVec2& _center, float _halfSize)
+	bool cull(const ImDrawList& _drawList, const ImVec2& _center, float _halfSize)
 	{
-		return cull({ _center.x - _halfSize, _center.y - _halfSize }, { _center.x + _halfSize, _center.y + _halfSize });
+		return cull(_drawList, { _center.x - _halfSize, _center.y - _halfSize }, { _center.x + _halfSize, _center.y + _halfSize });
 	}
 
-	bool cull(const ImVec2* _begin, const ImVec2* _end)
+	bool cull(const ImDrawList& _drawList, const ImVec2* _begin, const ImVec2* _end)
 	{
 		ImVec2
 			min{ std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() },
@@ -185,17 +223,17 @@ namespace HMP::Gui::Utils::Drawing
 				max.y = vert.y;
 			}
 		}
-		return cull(min, max);
+		return cull(_drawList, min, max);
 	}
 
-	bool cull(const QuadVertData<ImVec2>& _verts)
+	bool cull(const ImDrawList& _drawList, const QuadVertData<ImVec2>& _verts)
 	{
-		return cull(&_verts[0], &_verts[0] + 4);
+		return cull(_drawList, &_verts[0], &_verts[0] + 4);
 	}
 
-	bool cull(const EdgeVertData<ImVec2>& _verts)
+	bool cull(const ImDrawList& _drawList, const EdgeVertData<ImVec2>& _verts)
 	{
-		return cull(&_verts[0], &_verts[0] + 2);
+		return cull(_drawList, &_verts[0], &_verts[0] + 2);
 	}
 
 	void dashedLine(ImDrawList& _drawList, const std::optional<EdgeVertData<ImVec2>>& _verts, ImU32 _color, float _thickness, float _spacing)
@@ -230,6 +268,22 @@ namespace HMP::Gui::Utils::Drawing
 		}
 	}
 
+	void circle(ImDrawList& _drawList, const std::optional<ImVec2>& _center, float _radius, ImU32 _color, float _thickness, int _segments)
+	{
+		if (_center)
+		{
+			circle(_drawList, *_center, _radius, _color, _thickness, _segments);
+		}
+	}
+
+	void circleFilled(ImDrawList& _drawList, const std::optional<ImVec2>& _center, float _radius, ImU32 _color, int _segments)
+	{
+		if (_center)
+		{
+			circleFilled(_drawList, *_center, _radius, _color, _segments);
+		}
+	}
+
 	void cross(ImDrawList& _drawList, const std::optional<ImVec2>& _center, float _radius, ImU32 _color, float _thickness)
 	{
 		if (_center)
@@ -259,6 +313,22 @@ namespace HMP::Gui::Utils::Drawing
 		if (_verts)
 		{
 			quadFilled(_drawList, *_verts, _color);
+		}
+	}
+
+	void rect(ImDrawList& _drawList, const std::optional<ImVec2>& _min, const std::optional<ImVec2>& _max, ImU32 _color, float _thickness)
+	{
+		if (_min && _max)
+		{
+			rect(_drawList, *_min, *_max, _color, _thickness);
+		}
+	}
+
+	void rectFilled(ImDrawList& _drawList, const std::optional<ImVec2>& _min, const std::optional<ImVec2>& _max, ImU32 _color)
+	{
+		if (_min && _max)
+		{
+			rectFilled(_drawList, *_min, *_max, _color);
 		}
 	}
 

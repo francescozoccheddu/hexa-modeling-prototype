@@ -642,7 +642,7 @@ namespace HMP::Gui
 		if (m_dagViewerNeedsUpdate)
 		{
 			m_dagViewerNeedsUpdate = false;
-			if (m_project.root() && m_mesh.num_polys() < 1000)
+			if (m_project.root() && m_mesh.num_polys() < 100000)
 			{
 				m_dagViewerWidget.tooManyNodes = false;
 				m_dagViewerWidget.layout() = DagViewer::createLayout(*m_project.root());

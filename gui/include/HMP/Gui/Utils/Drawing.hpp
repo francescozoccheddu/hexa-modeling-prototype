@@ -72,7 +72,11 @@ namespace HMP::Gui::Utils::Drawing
 
 	void circle(ImDrawList& _drawList, const ImVec2& _center, float _radius, ImU32 _color, float _thickness = 1.0f);
 
+	void circle(ImDrawList& _drawList, const ImVec2& _center, float _radius, ImU32 _color, float _thickness, int _segments);
+
 	void circleFilled(ImDrawList& _drawList, const ImVec2& _center, float _radius, ImU32 _color);
+	
+	void circleFilled(ImDrawList& _drawList, const ImVec2& _center, float _radius, ImU32 _color, int _segments);
 
 	void cross(ImDrawList& _drawList, const ImVec2& _center, float _radius, ImU32 _color, float _thickness = 1.0f);
 
@@ -82,6 +86,10 @@ namespace HMP::Gui::Utils::Drawing
 
 	void quadFilled(ImDrawList& _drawList, const QuadVertData<ImVec2>& _verts, ImU32 _color);
 
+	void rect(ImDrawList& _drawList, const ImVec2& _min, const ImVec2& _max, ImU32 _color, float _thickness = 1.0f);
+
+	void rectFilled(ImDrawList& _drawList, const ImVec2& _min, const ImVec2& _max, ImU32 _color);
+
 	void dashedLine(ImDrawList& _drawList, const std::optional<EdgeVertData<ImVec2>>& _verts, ImU32 _color, float _thickness = 1.0f, float _spacing = 10.0f);
 
 	void line(ImDrawList& _drawList, const std::optional<EdgeVertData<ImVec2>>& _verts, ImU32 _color, float _thickness = 1.0f);
@@ -89,6 +97,10 @@ namespace HMP::Gui::Utils::Drawing
 	void circle(ImDrawList& _drawList, const std::optional<ImVec2>& _center, float _radius, ImU32 _color, float _thickness = 1.0f);
 
 	void circleFilled(ImDrawList& _drawList, const std::optional<ImVec2>& _center, float _radius, ImU32 _color);
+
+	void circle(ImDrawList& _drawList, const std::optional<ImVec2>& _center, float _radius, ImU32 _color, float _thickness, int _segments);
+
+	void circleFilled(ImDrawList& _drawList, const std::optional<ImVec2>& _center, float _radius, ImU32 _color, int _segments);
 
 	void cross(ImDrawList& _drawList, const std::optional<ImVec2>& _center, float _radius, ImU32 _color, float _thickness = 1.0f);
 
@@ -98,12 +110,16 @@ namespace HMP::Gui::Utils::Drawing
 
 	void quadFilled(ImDrawList& _drawList, const std::optional<QuadVertData<ImVec2>>& _verts, ImU32 _color);
 
-	bool cull(const ImVec2& _min, const ImVec2& _max);
+	void rect(ImDrawList& _drawList, const std::optional<ImVec2>& _min, const std::optional<ImVec2>& _max, ImU32 _color, float _thickness = 1.0f);
 
-	bool cull(const ImVec2& _center, float _halfSize);
+	void rectFilled(ImDrawList& _drawList, const std::optional<ImVec2>& _min, const std::optional<ImVec2>& _max, ImU32 _color);
 
-	bool cull(const QuadVertData<ImVec2>& _verts);
+	bool cull(const ImDrawList& _drawList, const ImVec2& _min, const ImVec2& _max);
 
-	bool cull(const EdgeVertData<ImVec2>& _verts);
+	bool cull(const ImDrawList& _drawList, const ImVec2& _center, float _halfSize);
+
+	bool cull(const ImDrawList& _drawList, const QuadVertData<ImVec2>& _verts);
+
+	bool cull(const ImDrawList& _drawList, const EdgeVertData<ImVec2>& _verts);
 
 }
