@@ -6,14 +6,14 @@
 namespace HMP::Gui::Widgets
 {
 
-    Smooth::Smooth(): cinolib::SideBarItem{ "Smooth" } {}
+    Smooth::Smooth(): SidebarWidget{ "Smooth" } {}
 
     void Smooth::requestSmooth()
     {
         onSmoothRequested(surfaceIterations, internalIterations, surfVertWeight);
     }
 
-    void Smooth::draw()
+    void Smooth::drawSidebar()
     {
         Utils::Controls::sliderI("Surface iterations", surfaceIterations, 0, 20);
         Utils::Controls::sliderI("Internal iterations", internalIterations, 0, 20);

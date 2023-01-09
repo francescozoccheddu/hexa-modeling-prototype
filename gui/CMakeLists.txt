@@ -3,6 +3,8 @@
 add_executable (gui 
     "src/main.cpp" 
     "src/App.cpp"
+    "src/Widget.cpp"
+    "src/SidebarWidget.cpp"
     "src/themer.cpp"
     "src/Utils/HrDescriptions.cpp"
     "src/Utils/Transform.cpp"

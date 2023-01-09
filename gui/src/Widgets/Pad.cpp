@@ -6,20 +6,20 @@
 namespace HMP::Gui::Widgets
 {
 
-    Pad::Pad(const Meshing::Mesher::Mesh& _mesh): cinolib::SideBarItem{ "Pad" }, m_mesh{ _mesh } {}
+    Pad::Pad(const Meshing::Mesher::Mesh& _mesh): SidebarWidget{ "Pad" }, m_mesh{ _mesh } {}
 
     void Pad::requestPad()
     {
-        onPadRequested(length, smoothIterations, smoothSurfVertWeight, cornerShrinkFactor);
+        onPadRequested(m_length, m_smoothIterations, m_smoothSurfVertWeight, m_cornerShrinkFactor);
     }
 
-    void Pad::draw()
+    void Pad::drawSidebar()
     {
-        Utils::Controls::sliderI("Smooth iterations", smoothIterations, 0, 20);
-        Utils::Controls::sliderPercentage("Smooth surface weight", smoothSurfVertWeight, 0.5, 2.0);
-        Utils::Controls::sliderPercentage("Corner shrink factor", cornerShrinkFactor);
+        Utils::Controls::sliderI("Smooth iterations", m_smoothIterations, 0, 20);
+        Utils::Controls::sliderPercentage("Smooth surface weight", m_smoothSurfVertWeight, 0.5, 2.0);
+        Utils::Controls::sliderPercentage("Corner shrink factor", m_cornerShrinkFactor);
         const Real meshSize{ m_mesh.bbox().diag() };
-        Utils::Controls::sliderReal("Length", length, meshSize / 500.0, meshSize / 5.0);
+        Utils::Controls::sliderReal("Length", m_length, meshSize / 500.0, meshSize / 5.0);
         if (ImGui::Button("Pad"))
         {
             requestPad();

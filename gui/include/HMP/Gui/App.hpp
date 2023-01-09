@@ -11,38 +11,42 @@
 #include <cpputils/collections/SetNamer.hpp>
 #include <cpputils/collections/FixedVector.hpp>
 #include <string>
-#include <HMP/Gui/Widgets/Axes.hpp>
-#include <HMP/Gui/Widgets/Commander.hpp>
-#include <HMP/Gui/Widgets/Target.hpp>
-#include <HMP/Gui/Widgets/VertEdit.hpp>
-#include <HMP/Gui/Widgets/DirectVertEdit.hpp>
-#include <HMP/Gui/Widgets/Projection.hpp>
-#include <HMP/Gui/Widgets/Save.hpp>
-#include <HMP/Gui/Widgets/Debug.hpp>
-#include <HMP/Gui/Widgets/Pad.hpp>
-#include <HMP/Gui/Widgets/Smooth.hpp>
 #include <vector>
-
-#ifdef HMP_GUI_ENABLE_DAG_VIEWER
-#include <HMP/Gui/DagViewer/Widget.hpp>
-#endif
-
-#ifdef HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER
-#include <HMP/Gui/Widgets/Ae3d2ShapeExporter.hpp>
-#endif
+#include <HMP/Gui/Widget.hpp>
+#include <HMP/Gui/SidebarWidget.hpp>
+#include <HMP/Projection/project.hpp>
+#include <HMP/Refinement/Schemes.hpp>
 
 namespace HMP::Gui
 {
+
+	namespace DagViewer
+	{
+		class Widget;
+	}
+
+	namespace Widgets
+	{
+
+		class Axes;
+		class Debug;
+		class Save;
+		class Pad;
+		class VertEdit;
+		class DirectVertEdit;
+		class Target;
+		class Projection;
+		class Smooth;
+		class Ae3d2ShapeExporter;
+		class Commander;
+
+	}
 
 	class App final: public cpputils::mixins::ReferenceClass
 	{
 
 	private:
 
-		static constexpr cinolib::KeyBinding c_kbCancelDirectEdit{ GLFW_KEY_ESCAPE };
-		static constexpr cinolib::KeyBinding c_kbDirectTranslation{ GLFW_KEY_T };
-		static constexpr cinolib::KeyBinding c_kbDirectScale{ GLFW_KEY_S };
-		static constexpr cinolib::KeyBinding c_kbDirectRotation{ GLFW_KEY_R };
 		static constexpr cinolib::KeyBinding c_kbExtrudeFace{ GLFW_KEY_E };
 		static constexpr cinolib::KeyBinding c_kbExtrudeEdge{ GLFW_KEY_E, GLFW_MOD_ALT };
 		static constexpr cinolib::KeyBinding c_kbExtrudeVertex{ GLFW_KEY_E, GLFW_MOD_ALT | GLFW_MOD_CONTROL };
@@ -72,16 +76,11 @@ namespace HMP::Gui
 		static constexpr cinolib::KeyBinding c_kbSelectPoly{ GLFW_KEY_4 };
 		static constexpr cinolib::KeyBinding c_kbDeselectAll{ GLFW_KEY_A, GLFW_MOD_CONTROL };
 		static constexpr cinolib::KeyBinding c_kbSelectAll{ GLFW_KEY_A, GLFW_MOD_SHIFT };
-		static constexpr cinolib::KeyBinding c_kbAddPathEdge{ GLFW_KEY_I, GLFW_MOD_SHIFT };
-		static constexpr cinolib::KeyBinding c_kbRemovePathEdge{ GLFW_KEY_I, GLFW_MOD_CONTROL };
 		static constexpr cinolib::KeyBinding c_kbSubdivideAll{ GLFW_KEY_0, GLFW_MOD_CONTROL };
 		static constexpr int c_kmodSelectAdd{ GLFW_MOD_SHIFT };
 		static constexpr int c_kmodSelectRemove{ GLFW_MOD_CONTROL };
-		static constexpr int c_kbDirectEditX{ GLFW_KEY_LEFT_CONTROL };
-		static constexpr int c_kbDirectEditY{ GLFW_KEY_LEFT_SHIFT };
-		static constexpr int c_kbDirectEditZ{ GLFW_KEY_LEFT_ALT };
 
-		static void printKeyBindings();
+		void printUsage() const;
 
 		enum class ESelectionSource
 		{
@@ -92,6 +91,8 @@ namespace HMP::Gui
 		{
 			Add, Remove, Set
 		};
+
+	public:
 
 		struct
 		{
@@ -106,31 +107,38 @@ namespace HMP::Gui
 			HMP::Dag::Element* element{};
 		} m_copy;
 
-		HMP::Project m_project;
-		cinolib::GLcanvas m_canvas;
-		Meshing::Mesher& m_mesher;
-		const Meshing::Mesher::Mesh& m_mesh;
-		Commander& m_commander;
-		cpputils::collections::SetNamer<const HMP::Dag::Node*> m_dagNamer;
-		Widgets::Commander m_commanderWidget;
-		Widgets::Axes m_axesWidget;
-		Widgets::Target m_targetWidget;
-		Widgets::VertEdit m_vertEditWidget;
-		Widgets::DirectVertEdit m_directVertEditWidget;
-		Widgets::Save m_saveWidget;
-		Widgets::Projection m_projectionWidget;
-		Widgets::Debug m_debugWidget;
-		Widgets::Pad m_padWidget;
-		Widgets::Smooth m_smoothWidget;
+		HMP::Project project;
+		cinolib::GLcanvas canvas;
+		Meshing::Mesher& mesher;
+		Commander& commander;
+		cpputils::collections::SetNamer<const HMP::Dag::Node*> dagNamer;
+
+		Widgets::Commander& commanderWidget;
+		Widgets::Axes& axesWidget;
+		Widgets::Target& targetWidget;
+		Widgets::VertEdit& vertEditWidget;
+		Widgets::DirectVertEdit& directVertEditWidget;
+		Widgets::Save& saveWidget;
+		Widgets::Projection& projectionWidget;
+		Widgets::Debug& debugWidget;
+		Widgets::Pad& padWidget;
+		Widgets::Smooth& smoothWidget;
+
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
-		DagViewer::Widget m_dagViewerWidget;
+		DagViewer::Widget& dagViewerWidget;
+	private:
 		bool m_dagViewerNeedsUpdate;
+	public:
 #endif
 
 #ifdef HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER
-		Widgets::Ae3d2ShapeExporter m_ae3d2ShapeExporter;
+		Widgets::Ae3d2ShapeExporter& ae3d2ShapeExporter;
 #endif
+
+	private:
+
+		const std::vector<Widget*> m_widgets;
 
 		// actions
 		void onActionApplied();
@@ -166,7 +174,6 @@ namespace HMP::Gui
 		void onExportMesh(const std::string& _filename) const;
 
 		// user operation
-		void onSetPathEdge(bool _add);
 		void onExtrude(Dag::Extrude::ESource _source);
 		void onExtrudeSelected();
 		void onCopy();
@@ -195,6 +202,8 @@ namespace HMP::Gui
 	public:
 
 		App();
+
+		~App();
 
 		void loadTargetMeshOrProjectFile(const std::string& _file);
 

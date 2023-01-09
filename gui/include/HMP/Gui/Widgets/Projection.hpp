@@ -1,11 +1,10 @@
 #pragma once
 
-#include <cinolib/gl/side_bar_item.h>
-#include <cinolib/gl/canvas_gui_item.h>
 #include <cpputils/collections/Event.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <HMP/Projection/project.hpp>
 #include <HMP/Gui/Widgets/Target.hpp>
+#include <HMP/Gui/SidebarWidget.hpp>
 #include <HMP/Gui/Widgets/VertEdit.hpp>
 #include <HMP/Commander.hpp>
 #include <cinolib/feature_network.h>
@@ -16,10 +15,13 @@
 namespace HMP::Gui::Widgets
 {
 
-	class Projection final: public cinolib::SideBarItem, public cinolib::CanvasGuiItem, public cpputils::mixins::ReferenceClass
+	class Projection final: public SidebarWidget
 	{
 
 	private:
+
+		static constexpr cinolib::KeyBinding c_kbAddPathEdge{ GLFW_KEY_I, GLFW_MOD_SHIFT };
+		static constexpr cinolib::KeyBinding c_kbRemovePathEdge{ GLFW_KEY_I, GLFW_MOD_CONTROL };
 
 		using EidsPath = HMP::Projection::Utils::EidsPath;
 		using Point = HMP::Projection::Utils::Point;
@@ -48,14 +50,6 @@ namespace HMP::Gui::Widgets
 
 		void removePath(I _path);
 
-	public:
-
-		float lineThickness{ 1.5f };
-
-		Projection(const Widgets::Target& _targetWidget, HMP::Commander& _commander, const HMP::Meshing::Mesher& _mesher);
-
-		cpputils::collections::Event<Projection, const cinolib::Polygonmesh<>&, const std::vector<Point>&, const std::vector<EidsPath>&, const HMP::Projection::Options&> onProjectRequest;
-
 		const HMP::Projection::Options& options() const;
 
 		void requestProjection();
@@ -68,12 +62,25 @@ namespace HMP::Gui::Widgets
 
 		void setSourcePathEdgeAtPoint(const Vec& _point, bool _add);
 
-		void draw() override;
+		void drawSidebar() override;
 
 		void draw(const cinolib::GLcanvas& _canvas) override;
 
-		void serialize(HMP::Utils::Serialization::Serializer& _serializer) const;
-		void deserialize(HMP::Utils::Serialization::Deserializer& _deserializer);
+		void serialize(HMP::Utils::Serialization::Serializer& _serializer) const override;
+
+		void deserialize(HMP::Utils::Serialization::Deserializer& _deserializer) override;
+
+		void printUsage() const override;
+
+		bool keyPressed(const cinolib::KeyBinding& _key) override;
+
+	public:
+
+		float lineThickness{ 1.5f };
+
+		Projection(const Widgets::Target& _targetWidget, HMP::Commander& _commander, const HMP::Meshing::Mesher& _mesher);
+
+		cpputils::collections::Event<Projection, const cinolib::Polygonmesh<>&, const std::vector<Point>&, const std::vector<EidsPath>&, const HMP::Projection::Options&> onProjectRequest;
 
 	};
 

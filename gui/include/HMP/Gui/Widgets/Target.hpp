@@ -1,8 +1,8 @@
 #pragma once
 
+#include <HMP/Gui/SidebarWidget.hpp>
 #include <HMP/Meshing/types.hpp>
 #include <cinolib/geometry/vec_mat.h>
-#include <cinolib/gl/side_bar_item.h>
 #include <cinolib/meshes/drawable_polygonmesh.h>
 #include <cinolib/meshes/polygonmesh.h>
 #include <HMP/Meshing/Mesher.hpp>
@@ -17,7 +17,7 @@
 namespace HMP::Gui::Widgets
 {
 
-	class Target final: public cinolib::SideBarItem, public cpputils::mixins::ReferenceClass
+	class Target final: public SidebarWidget
 	{
 
 	private:
@@ -60,7 +60,7 @@ namespace HMP::Gui::Widgets
 		void clearMesh();
 		void requestApplyTransformToSource();
 
-		void draw() override;
+		void drawSidebar() override;
 
 		void serialize(HMP::Utils::Serialization::Serializer& _serializer) const;
 		void deserialize(HMP::Utils::Serialization::Deserializer& _deserializer);

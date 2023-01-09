@@ -3,8 +3,7 @@
 #include <HMP/Meshing/types.hpp>
 #include <HMP/Gui/Widgets/VertEdit.hpp>
 #include <HMP/Gui/Widgets/Target.hpp>
-#include <cinolib/gl/side_bar_item.h>
-#include <cinolib/gl/canvas_gui_item.h>
+#include <HMP/Gui/SidebarWidget.hpp>
 #include <cinolib/drawable_segment_soup.h>
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <HMP/Meshing/Mesher.hpp>
@@ -17,7 +16,7 @@
 namespace HMP::Gui::Widgets
 {
 
-    class Debug final: public cinolib::SideBarItem, public cinolib::CanvasGuiItem, public cpputils::mixins::ReferenceClass
+    class Debug final: public SidebarWidget
     {
 
     private:
@@ -31,8 +30,6 @@ namespace HMP::Gui::Widgets
         unsigned int m_negJacTestRes{}, m_closeVertsTestRes{};
 
         Real sectionValue() const;
-
-    public:
 
         bool sectionExports{ false };
         bool sectionExportsInv{ false };
@@ -49,25 +46,32 @@ namespace HMP::Gui::Widgets
         Refinement::EScheme refineSingleScheme{ Refinement::EScheme::Test };
         bool showElements{ false }, showVids{ false }, showEids{ false }, showFids{ false }, showPids{ false };
 
-        cpputils::collections::Event<Debug, Refinement::EScheme, I, I> onRefineSingleRequested;
+        void selectCloseVerts();
+        
+        void selectNegJacobianHexes();
+        
+        void refineSingle();
 
-        Debug(Meshing::Mesher& _mesher, cpputils::collections::SetNamer<const HMP::Dag::Node*>& _dagNamer, VertEdit& _vertEdit, const Target& _targetWidget);
+        void exportTarget() const;
 
-        const cinolib::DrawableSegmentSoup& sectionSoup() const;
+        void exportSource(bool _includeInterior) const;
+
         void updateSection();
 
         void draw(const cinolib::GLcanvas& _canvas) override;
 
-        void draw() override;
+        void drawSidebar() override;
+
+        std::vector<const cinolib::DrawableObject*> additionalDrawables() const override;
+
+
+    public:
+
+        cpputils::collections::Event<Debug, Refinement::EScheme, I, I> onRefineSingleRequested;
+
+        Debug(Meshing::Mesher& _mesher, cpputils::collections::SetNamer<const HMP::Dag::Node*>& _dagNamer, VertEdit& _vertEdit, const Target& _targetWidget);
 
         void updateTheme() const;
-
-        void selectCloseVerts();
-        void selectNegJacobianHexes();
-        void refineSingle();
-
-        void exportTarget() const;
-        void exportSource(bool _includeInterior) const;
 
     };
 

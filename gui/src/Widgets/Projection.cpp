@@ -16,13 +16,13 @@
 #include <unordered_set>
 #include <cpputils/range/of.hpp>
 #include <HMP/Gui/themer.hpp>
-
+#include <HMP/Gui/App.hpp>
 
 namespace HMP::Gui::Widgets
 {
 
 	Projection::Projection(const Widgets::Target& _targetWidget, HMP::Commander& _commander, const Meshing::Mesher& _mesher):
-		cinolib::SideBarItem{ "Projection" }, m_targetWidget{ _targetWidget }, m_commander{ _commander }, m_mesher{ _mesher },
+		SidebarWidget{ "Projection" }, m_targetWidget{ _targetWidget }, m_commander{ _commander }, m_mesher{ _mesher },
 		m_options{}, m_paths(1), m_featureFinderOptions{}, m_usePathAsCrease{ false }, m_featureFinderCreaseAngle{ 60.0f },
 		m_showPaths{ false }, m_showAllPaths{ false }, m_currentPath{}, onProjectRequest{}
 	{
@@ -272,7 +272,7 @@ namespace HMP::Gui::Widgets
 		}
 	}
 
-	void Projection::draw()
+	void Projection::drawSidebar()
 	{
 		static constexpr auto tweak{ [](HMP::Projection::Utils::Tweak& _tweak, const char* _label) {
 			ImGui::PushID(&_tweak);
@@ -601,6 +601,42 @@ namespace HMP::Gui::Widgets
 				}
 			}
 		}
+	}
+
+	void Projection::printUsage() const
+	{
+		cinolib::print_binding(c_kbAddPathEdge.name(), "add path edge");
+		cinolib::print_binding(c_kbRemovePathEdge.name(), "remove path edge");
+	}
+
+	bool Projection::keyPressed(const cinolib::KeyBinding& _key)
+	{
+		bool add;
+		if (_key == c_kbAddPathEdge)
+		{
+			add = true;
+		}
+		else if (_key == c_kbRemovePathEdge)
+		{
+			add = false;
+		}
+		else
+		{
+			return false;
+		}
+		Vec point;
+		if (app().canvas.unproject(app().m_mouse.position, point))
+		{
+			if (m_targetWidget.hasMesh() && m_targetWidget.visible)
+			{
+				setTargetPathEdgeAtPoint(point, add);
+			}
+			else
+			{
+				setSourcePathEdgeAtPoint(point, add);
+			}
+		}
+		return true;
 	}
 
 }

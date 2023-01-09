@@ -45,7 +45,7 @@ namespace HMP::Gui::DagViewer
 	}
 
 	Widget::Widget(cpputils::collections::Namer<const Dag::Node*>& _namer)
-		: cinolib::SideBarItem{ "Dag" }, m_namer{ _namer }, m_center_nl{ 0.5, 0.5 }, m_windowHeight_n{ 1.0 }
+		: SidebarWidget{ "Dag" }, m_namer{ _namer }, m_center_nl{ 0.5, 0.5 }, m_windowHeight_n{ 1.0 }
 	{
 		initFonts();
 	}
@@ -205,7 +205,7 @@ namespace HMP::Gui::DagViewer
 		ImGui::EndTable();
 	}
 
-	void Widget::draw()
+	void Widget::drawSidebar()
 	{
 		m_hovered = nullptr;
 

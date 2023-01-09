@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cinolib/gl/side_bar_item.h>
+#include <HMP/Gui/SidebarWidget.hpp>
 #include <HMP/Meshing/types.hpp>
 #include <HMP/Meshing/Mesher.hpp>
 #include <HMP/Gui/Widgets/Target.hpp>
@@ -13,7 +13,7 @@
 namespace HMP::Gui::Widgets
 {
 
-	class Ae3d2ShapeExporter final : public cinolib::SideBarItem
+	class Ae3d2ShapeExporter final : public SidebarWidget
 	{
 
 	private:
@@ -32,10 +32,6 @@ namespace HMP::Gui::Widgets
 
 		static bool exportKeyframes(const std::vector<Ae3d2ShapeExporter::Keyframe>& _keyframes);
 
-	public:
-
-		Ae3d2ShapeExporter(const Meshing::Mesher::Mesh& _mesh, const cinolib::FreeCamera<Real>& _camera, const Target& _targetWidget);
-
 		bool requestExport() const;
 
 		bool requestTargetExport() const;
@@ -48,7 +44,11 @@ namespace HMP::Gui::Widgets
 
 		bool empty() const;
 
-		void draw() override final;
+		void drawSidebar() override;
+
+	public:
+
+		Ae3d2ShapeExporter(const Meshing::Mesher::Mesh& _mesh, const cinolib::FreeCamera<Real>& _camera, const Target& _targetWidget);
 
 	};
 
