@@ -518,7 +518,7 @@ namespace HMP::Gui::Widgets
 			const ImU32 color{ ImGui::ColorConvertFloat4ToU32(pathColor(_pathI)) };
 			for (const Id eid : path.sourceEids)
 			{
-				const EdgeVertData<ImVec2> eid2d{ Utils::Drawing::project(_canvas, Meshing::Utils::verts(mesh, Meshing::Utils::eidVids(mesh, eid))) };
+				const auto eid2d{ Utils::Drawing::project(_canvas, Meshing::Utils::verts(mesh, Meshing::Utils::eidVids(mesh, eid))) };
 				Utils::Drawing::line(drawList, eid2d, color, lineThickness);
 			}
 			for (const Id eid : path.targetEids)
@@ -527,7 +527,7 @@ namespace HMP::Gui::Widgets
 				const EdgeVerts verts{ cpputils::range::of(vids).map([&](const Id _vid) {
 					return targetMesh.transform * targetMesh.vert(_vid);
 				}).toArray<2>() };
-				const EdgeVertData<ImVec2> eid2d{ Utils::Drawing::project(_canvas, verts) };
+				const auto eid2d{ Utils::Drawing::project(_canvas, verts) };
 				Utils::Drawing::line(drawList, eid2d, color, lineThickness);
 			}
 		} };
