@@ -1,5 +1,9 @@
 # Issues and possible improvements
 Sorted by priority:
+- **\[IMPROVEMENT\]** Revert `HMP::Actions::ExtrudeUtils::apply` new vertex creation to the old method.
+- **\[IMPROVEMENT\]** `HMP::Projection::jacobianAdvance` is too defensive. Try working on one vertex at a time somehow.
+- **\[FEATURE\]** Add a negative weight factor for elements with multiple faces on surface in `HMP::Projection::smoothInternal`.
+- **\[FEATURE\]** Add `HMP::Actions::SplitLayer`.
 - **\[BUG\]** `HMP::Dag::Extrude` and `HMP::Dag::Refine` relative fis and vis are cloned incorrectly during a paste operation, so I am recalculating them from scratch in `HMP::Actions::Paste::fixAdjacencies_TEMP_NAIVE`. This implies that:
     1. The otherwise flawless "*Paste-the-same-way-to-get-the-same-result*" principle is violated (not a big deal; GUI helps a lot here);
     2. I cannot profit from `HMP::Refinement::Scheme::facesSurfVisIs` until this is fixed.
