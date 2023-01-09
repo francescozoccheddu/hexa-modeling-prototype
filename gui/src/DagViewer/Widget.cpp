@@ -22,6 +22,7 @@
 #include <sstream>
 #include <HMP/Gui/themer.hpp>
 #include <HMP/Gui/App.hpp>
+#include <HMP/Gui/DagViewer/createLayout.hpp>
 
 namespace HMP::Gui::DagViewer
 {
@@ -45,20 +46,14 @@ namespace HMP::Gui::DagViewer
 		}
 	}
 
-	Widget::Widget(cpputils::collections::Namer<const Dag::Node*>& _namer)
-		: SidebarWidget{ "Dag" }, m_namer{ _namer }, m_center_nl{ 0.5, 0.5 }, m_windowHeight_n{ 1.0 }
+	Widget::Widget() : SidebarWidget{ "Dag" } 
 	{
 		initFonts();
 	}
 
-	bool Widget::hasHoveredNode() const
+	void Widget::actionApplied()
 	{
-		return m_hovered;
-	}
-
-	const Dag::Node& Widget::hoveredNode() const
-	{
-		return *m_hovered;
+		m_needsLayoutUpdate = true;
 	}
 
 	void Widget::draw(const cinolib::GLcanvas& _canvas)
@@ -69,9 +64,9 @@ namespace HMP::Gui::DagViewer
 		if (app().canvas.show_sidebar() && open())
 		{
 			ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
-			if (app().dagViewerWidget.hasHoveredNode() && app().dagViewerWidget.hoveredNode().isElement())
+			if (m_hovered && m_hovered->isElement())
 			{
-				const Id pid{ app().dagViewerWidget.hoveredNode().element().pid };
+				const Id pid{ m_hovered->element().pid };
 				for (const Id fid : app().mesher.mesh().adj_p2f(pid))
 				{
 					const QuadVerts fidVerts{ Meshing::Utils::verts(app().mesher.mesh(), Meshing::Utils::fidVids(app().mesher.mesh(), fid)) };
@@ -94,15 +89,15 @@ namespace HMP::Gui::DagViewer
 
 	void Widget::resetView()
 	{
-		m_center_nl = Vec2{ layout.aspectRatio(), 1.0 } / 2;
+		m_center_nl = Vec2{ m_layout.aspectRatio(), 1.0 } / 2;
 		m_windowHeight_n = std::numeric_limits<Real>::infinity();
 	}
 
-	void Widget::drawTooltip(const Dag::Node& _node) const
+	void Widget::drawTooltip(const Dag::Node& _node)
 	{
 		ImGui::BeginTable("tooltip", 2, ImGuiTableFlags_RowBg);
 		ImGui::TableNextColumn(); ImGui::Text("Name");
-		ImGui::TableNextColumn(); ImGui::Text("%s", Utils::HrDescriptions::name(_node, m_namer).c_str());
+		ImGui::TableNextColumn(); ImGui::Text("%s", Utils::HrDescriptions::name(_node, app().dagNamer).c_str());
 		ImGui::TableNextColumn(); ImGui::Text("Kind");
 		switch (_node.type)
 		{
@@ -149,7 +144,7 @@ namespace HMP::Gui::DagViewer
 				{
 					ImGui::TableNextColumn(); ImGui::Text("Visible");
 				}
-				if (&node == copied)
+				if (&node == app().copiedElement)
 				{
 					ImGui::TableNextColumn(); ImGui::Text("Copied");
 					ImGui::TableNextColumn(); ImGui::Text("True");
@@ -171,9 +166,9 @@ namespace HMP::Gui::DagViewer
 						ImGui::TableNextColumn(); ImGui::Text("Refine Op.");
 						ImGui::TableNextColumn(); ImGui::Text("Scheme");
 						ImGui::TableNextColumn(); ImGui::Text("%s", Utils::HrDescriptions::describe(node.scheme).c_str());
-						ImGui::TableNextColumn(); ImGui::Text("'%s' forward face", Utils::HrDescriptions::name(node.parents.first(), m_namer).c_str());
+						ImGui::TableNextColumn(); ImGui::Text("'%s' forward face", Utils::HrDescriptions::name(node.parents.first(), app().dagNamer).c_str());
 						ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(node.forwardFi));
-						ImGui::TableNextColumn(); ImGui::Text("'%s' vert", Utils::HrDescriptions::name(node.parents.first(), m_namer).c_str());
+						ImGui::TableNextColumn(); ImGui::Text("'%s' vert", Utils::HrDescriptions::name(node.parents.first(), app().dagNamer).c_str());
 						ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(node.firstVi));
 						ImGui::TableNextColumn(); ImGui::Text("Surface verts count");
 						ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(node.surfVids.size()));
@@ -203,10 +198,10 @@ namespace HMP::Gui::DagViewer
 						ImGui::TableNextColumn(); ImGui::Text("%s", Utils::HrDescriptions::describe(node.source).c_str());
 						for (const auto& [parent, parentFi] : cpputils::range::zip(node.parents, node.fis))
 						{
-							ImGui::TableNextColumn(); ImGui::Text("'%s' face", Utils::HrDescriptions::name(parent, m_namer).c_str());
+							ImGui::TableNextColumn(); ImGui::Text("'%s' face", Utils::HrDescriptions::name(parent, app().dagNamer).c_str());
 							ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(parentFi));
 						}
-						ImGui::TableNextColumn(); ImGui::Text("'%s' vert", Utils::HrDescriptions::name(node.parents.first(), m_namer).c_str());
+						ImGui::TableNextColumn(); ImGui::Text("'%s' vert", Utils::HrDescriptions::name(node.parents.first(), app().dagNamer).c_str());
 						ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(node.firstVi));
 						ImGui::TableNextColumn(); ImGui::Text("Direction");
 						ImGui::TableNextColumn(); ImGui::Text(node.clockwise ? "CW" : "CCW");
@@ -222,23 +217,37 @@ namespace HMP::Gui::DagViewer
 		ImGui::EndTable();
 	}
 
+	void Widget::updateLayout()
+	{
+		if (m_needsLayoutUpdate)
+		{
+			m_needsLayoutUpdate = false;
+			m_tooManyNodes = app().mesher.mesh().num_polys() > 10000;
+			if (!m_tooManyNodes)
+			{
+				const auto t1{ std::chrono::high_resolution_clock::now() };
+				m_layout = DagViewer::createLayout(*app().project.root());
+				const auto t2{ std::chrono::high_resolution_clock::now() };
+				const int64_t elapsedMs{ std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() };
+				static constexpr int64_t warningTimeThresholdMs{ 200 };
+				m_showLayoutPerformanceWarning = elapsedMs >= warningTimeThresholdMs;
+			}
+			else
+			{
+				m_layout = {};
+				m_showLayoutPerformanceWarning = false;
+			}
+			resetView();
+		}
+	}
+
 	void Widget::drawSidebar()
 	{
 		m_hovered = nullptr;
 
-		{
-			const auto t1{ std::chrono::high_resolution_clock::now() };
-			onDraw();
-			const auto t2{ std::chrono::high_resolution_clock::now() };
-			const int64_t elapsedMs{ std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() };
-			static constexpr int64_t warningTimeThresholdMs{ 200 };
-			if (elapsedMs >= warningTimeThresholdMs)
-			{
-				m_showLayoutPerformanceWarning = true;
-			}
-		}
+		updateLayout();
 
-		if (tooManyNodes)
+		if (m_tooManyNodes)
 		{
 			ImGui::TextColored(themer->sbErr, "That's too many nodes! Sorry. :(");
 			return;
@@ -285,7 +294,7 @@ namespace HMP::Gui::DagViewer
 		const Vec2 bottomRight_sw{ topLeft_sw + windowSize_s };
 		const Real windowAspectRatio{ windowSize_s.x() / windowSize_s.y() };
 
-		if (layout.size().x() <= 0.0 || layout.size().y() <= 0.0)
+		if (m_layout.size().x() <= 0.0 || m_layout.size().y() <= 0.0)
 		{
 			return;
 		}
@@ -294,7 +303,7 @@ namespace HMP::Gui::DagViewer
 
 		const Real s2n{ 1.0 / windowSize_s.y() };
 		const Real n2s{ 1.0 / s2n };
-		const Real n2l{ layout.size().y() };
+		const Real n2l{ m_layout.size().y() };
 		const Real l2n{ 1.0 / n2l };
 
 		const auto ss2sw{ [&](const Vec2& _point_ss) {
@@ -322,11 +331,11 @@ namespace HMP::Gui::DagViewer
 		} };
 
 		/*const auto nl2ll{ [&](const Vec2& _point_nl) {
-			return _point_nl * n2l + layout.bottomLeft();
+			return _point_nl * n2l + m_layout.bottomLeft();
 		} };*/
 
 		const auto ll2nl{ [&](const Vec2& _point_ll) {
-			return (_point_ll - layout.bottomLeft()) * l2n;
+			return (_point_ll - m_layout.bottomLeft()) * l2n;
 		} };
 
 		// font
@@ -341,15 +350,15 @@ namespace HMP::Gui::DagViewer
 		ImGui::InvisibleButton("canvas", toImVec(windowSize_s), ImGuiButtonFlags_MouseButtonRight | ImGuiButtonFlags_MouseButtonMiddle);
 
 		const auto clampCenter{ [&]() {
-			m_center_nl.x() = cinolib::clamp(m_center_nl.x(), 0.0, layout.aspectRatio());
+			m_center_nl.x() = cinolib::clamp(m_center_nl.x(), 0.0, m_layout.aspectRatio());
 			m_center_nl.y() = cinolib::clamp(m_center_nl.y(), 0.0, 1.0);
 		} };
 
 		const auto clampHeight{ [&]() {
-			const Real fullHeight_n {(windowAspectRatio < layout.aspectRatio()) ? layout.aspectRatio() / windowAspectRatio : 1};
-			const Real min{ layout.nodeRadius() * l2n * 3 };
-			const Real max{ fullHeight_n * 1.1 + layout.nodeRadius() * l2n };
-			const Real maxByNumberOfNodes{ layout.nodeRadius() * l2n * 100 };
+			const Real fullHeight_n {(windowAspectRatio < m_layout.aspectRatio()) ? m_layout.aspectRatio() / windowAspectRatio : 1};
+			const Real min{ m_layout.nodeRadius() * l2n * 3 };
+			const Real max{ fullHeight_n * 1.1 + m_layout.nodeRadius() * l2n };
+			const Real maxByNumberOfNodes{ m_layout.nodeRadius() * l2n * 100 };
 			m_windowHeight_n = cinolib::clamp(m_windowHeight_n, min, std::min(max, maxByNumberOfNodes));
 		} };
 
@@ -416,21 +425,21 @@ namespace HMP::Gui::DagViewer
 
 				// edges
 
-				for (const auto& [lineA, lineB] : layout.lines())
+				for (const auto& [lineA, lineB] : m_layout.lines())
 				{
 					Utils::Drawing::line(drawList, { toImVec(ll2ss(lineA)), toImVec(ll2ss(lineB)) }, strokeColor, lineThickness);
 				}
 
 				// nodes
 
-				const float nodeRadius_s{ static_cast<float>(layout.nodeRadius() * l2s) };
-				const float copiedNodeRadius_s{ static_cast<float>(layout.nodeRadius() * l2s) * 1.1f };
+				const float nodeRadius_s{ static_cast<float>(m_layout.nodeRadius() * l2s) };
+				const float copiedNodeRadius_s{ static_cast<float>(m_layout.nodeRadius() * l2s) * 1.1f };
 				const Vec2 nodeHalfDiag_s{ nodeRadius_s, nodeRadius_s };
 				const Vec2 copiedNodeHalfDiag_s{ copiedNodeRadius_s, copiedNodeRadius_s };
 				const Vec2 mouse{ toVec(ImGui::GetMousePos()) };
 				constexpr int circleSegmentsNear{ 10 }, circleSegmentsFar{ 4 };
 				const int circleSegments{ nodeRadius_s < 10.0 ? circleSegmentsFar : circleSegmentsNear };
-				for (const Layout::Node& node : layout.nodes())
+				for (const Layout::Node& node : m_layout.nodes())
 				{
 					const Vec2 center{ ll2ss(node.center()) };
 					bool hovered{ false };
@@ -439,12 +448,12 @@ namespace HMP::Gui::DagViewer
 						case Dag::Node::EType::Element:
 						{
 							const Dag::Element& element{ node.node().element() };
-							const ImU32 color{ highlight == &node.node()
+							const ImU32 color{ app().mouse().element == &node.node()
 								? themer->dagNodeElHi
 								: Meshing::Utils::isShown(element) ? themer->dagNodeEl : themer->dagNodeElMut };
 							Utils::Drawing::rectFilled(drawList, toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), color);
 							Utils::Drawing::rect(drawList, toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), strokeColor, lineThickness);
-							if (&element == copied)
+							if (&element == app().copiedElement)
 							{
 								Utils::Drawing::rect(drawList, toImVec(center - copiedNodeHalfDiag_s), toImVec(center + copiedNodeHalfDiag_s), strokeColor, lineThickness);
 							}
@@ -480,7 +489,7 @@ namespace HMP::Gui::DagViewer
 					}
 					if (nodeRadius_s > 10.0f)
 					{
-						const std::string text{ Utils::HrDescriptions::name(node.node(), m_namer) };
+						const std::string text{ Utils::HrDescriptions::name(node.node(), app().dagNamer) };
 						const Vec2 textSize{ toVec(ImGui::CalcTextSize(text.c_str())) / ImGui::GetFontSize() };
 						const Real maxTextSize{ std::max(textSize.x(), textSize.y()) };
 						const Real fontSize{ nodeRadius_s * 1.25 / maxTextSize };

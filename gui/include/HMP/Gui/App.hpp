@@ -83,12 +83,8 @@ namespace HMP::Gui
 		Widgets::Smooth& smoothWidget;
 		Widgets::Highlight& highlightWidget;
 
-
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 		DagViewer::Widget& dagViewerWidget;
-	private:
-		bool m_dagViewerNeedsUpdate;
-	public:
 #endif
 
 #ifdef HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER
@@ -100,9 +96,10 @@ namespace HMP::Gui
 		const std::vector<Widget*> m_widgets;
 		Mouse m_mouse{};
 
+		void resetMouse();
+
 		// actions
 		void onActionApplied();
-		void requestDagViewerUpdate();
 
 		// other events
 		void onThemeChanged();
@@ -121,7 +118,6 @@ namespace HMP::Gui
 		bool onMouseRightClicked(int _modifiers);
 		bool onKeyPressed(int _key, int _modifiers);
 		bool onMouseMoved(double _x, double _y);
-		void onDagViewerDraw();
 		void updateMouse();
 		void onFilesDropped(const std::vector<std::string>& _files);
 

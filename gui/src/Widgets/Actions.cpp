@@ -27,10 +27,6 @@
 #include <HMP/Actions/SubdivideAll.hpp>
 #include <HMP/Gui/Widgets/VertEdit.hpp>
 
-#ifdef HMP_GUI_ENABLE_DAG_VIEWER
-#include <HMP/Gui/DagViewer/Widget.hpp>
-#endif
-
 namespace HMP::Gui::Widgets
 {
 
@@ -270,9 +266,6 @@ namespace HMP::Gui::Widgets
 		{
 			app().copiedElement = nullptr;
 		}
-#ifdef HMP_GUI_ENABLE_DAG_VIEWER
-		app().dagViewerWidget.copied = app().copiedElement;
-#endif
 	}
 
 	void Actions::onPaste(Dag::Extrude::ESource _source)

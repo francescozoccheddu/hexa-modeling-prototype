@@ -52,7 +52,6 @@
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 #include <HMP/Gui/DagViewer/Widget.hpp>
-#include <HMP/Gui/DagViewer/createLayout.hpp>
 #endif
 
 #ifdef HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER
@@ -72,30 +71,37 @@ namespace HMP::Gui
 		std::cout << "-------------------------------\n";
 	}
 
+	void App::resetMouse()
+	{
+		const Vec2 position{ m_mouse.position };
+		m_mouse = {};
+		m_mouse.position = position;
+	}
+
 	// actions
 
 	void App::onActionApplied()
 	{
 		mesher.updateMesh();
 		vertEditWidget.updateCentroid();
-		m_mouse = {};
+		resetMouse();
 		updateMouse();
-		requestDagViewerUpdate();
 		canvas.refit_scene();
+		for (Widget* const widget : m_widgets)
+		{
+			widget->actionApplied();
+		}
 	}
 
 	void App::applyAction(Commander::Action& _action)
 	{
+		for (Widget* const widget : m_widgets)
+		{
+			widget->actionPrepared();
+		}
 		vertEditWidget.applyAction();
 		commander.apply(_action);
 		onActionApplied();
-	}
-
-	void App::requestDagViewerUpdate()
-	{
-#ifdef HMP_GUI_ENABLE_DAG_VIEWER
-		m_dagViewerNeedsUpdate = true;
-#endif
 	}
 
 	// mesher events
@@ -104,14 +110,11 @@ namespace HMP::Gui
 	{
 		if (m_mouse.element && m_mouse.element->pid >= mesher.mesh().num_polys())
 		{
-			m_mouse = {};
+			resetMouse();
 		}
 		if (copiedElement && copiedElement->pid >= mesher.mesh().num_polys())
 		{
 			copiedElement = nullptr;
-#ifdef HMP_GUI_ENABLE_DAG_VIEWER
-			dagViewerWidget.copied = nullptr;
-#endif
 		}
 		vertEditWidget.remove(vertEditWidget.vids().filter([&](const Id _vid) {
 			return _vid >= mesher.mesh().num_verts();
@@ -244,33 +247,13 @@ namespace HMP::Gui
 
 	bool App::onMouseMoved(double _x, double _y)
 	{
+		m_mouse.position = { _x, _y };
+		updateMouse();
 		for (Widget* const widget : m_widgets)
 		{
 			widget->mouseMoved({_x, _y});
 		}
-		m_mouse.position = cinolib::vec2d{ _x, _y };
-		updateMouse();
 		return directVertEditWidget.pending();
-	}
-
-	void App::onDagViewerDraw()
-	{
-#ifdef HMP_GUI_ENABLE_DAG_VIEWER
-		if (m_dagViewerNeedsUpdate)
-		{
-			m_dagViewerNeedsUpdate = false;
-			if (project.root() && mesher.mesh().num_polys() < 100000)
-			{
-				dagViewerWidget.tooManyNodes = false;
-				dagViewerWidget.layout = DagViewer::createLayout(*project.root());
-			}
-			else
-			{
-				dagViewerWidget.tooManyNodes = true;
-			}
-			dagViewerWidget.resetView();
-		}
-#endif
 	}
 
 	const App::Mouse& App::mouse() const
@@ -280,7 +263,6 @@ namespace HMP::Gui
 
 	void App::updateMouse()
 	{
-		m_mouse = {};
 		if (!directVertEditWidget.pending())
 		{
 			const cinolib::Ray ray{ canvas.eye_to_mouse_ray() };
@@ -291,10 +273,15 @@ namespace HMP::Gui
 				m_mouse.ei = Meshing::Utils::ei(m_mouse.element->vids, Meshing::Utils::eidVids(mesher.mesh(), m_mouse.eid));
 				m_mouse.vi = Meshing::Utils::vi(m_mouse.element->vids, m_mouse.vid);
 			}
+			else
+			{
+				resetMouse();
+			}
 		}
-#ifdef HMP_GUI_ENABLE_DAG_VIEWER
-		dagViewerWidget.highlight = m_mouse.element;
-#endif
+		else
+		{
+			resetMouse();
+		}
 	}
 
 	// Commands
@@ -410,8 +397,7 @@ namespace HMP::Gui
 		highlightWidget{ *new Widgets::Highlight{} },
 		actionsWidget{ *new Widgets::Actions{} },
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
-		dagViewerWidget{ *new DagViewer::Widget{ dagNamer } },
-		m_dagViewerNeedsUpdate{ true },
+		dagViewerWidget{ *new DagViewer::Widget{} },
 #endif
 #ifdef HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER
 		ae3d2ShapeExporter{ *new Widgets::Ae3d2ShapeExporter{ mesher.mesh(), canvas.camera, targetWidget } },
@@ -509,11 +495,6 @@ namespace HMP::Gui
 		actionsWidget.clear();
 		commander.applied().clear();
 		canvas.push(&mesher.mesh());
-
-#ifdef HMP_GUI_ENABLE_DAG_VIEWER
-		dagViewerWidget.onDraw += [this]() { onDagViewerDraw(); };
-#endif
-		requestDagViewerUpdate();
 
 	}
 
