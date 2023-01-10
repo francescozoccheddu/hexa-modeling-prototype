@@ -1,15 +1,13 @@
 #pragma once
 
-#include <cpputils/collections/Event.hpp>
-#include <cpputils/mixins/ReferenceClass.hpp>
+#include <HMP/Meshing/types.hpp>
 #include <HMP/Projection/project.hpp>
-#include <HMP/Gui/Widgets/Target.hpp>
+#include <HMP/Projection/Utils.hpp>
 #include <HMP/Gui/SidebarWidget.hpp>
-#include <HMP/Gui/Widgets/VertEdit.hpp>
-#include <HMP/Commander.hpp>
 #include <cinolib/feature_network.h>
-#include <HMP/Utils/Serialization.hpp>
+#include <cinolib/gl/key_bindings.hpp>
 #include <array>
+#include <vector>
 #include <imgui.h>
 
 namespace HMP::Gui::Widgets

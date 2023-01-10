@@ -1,17 +1,9 @@
 #pragma once
 
 #include <HMP/Meshing/types.hpp>
-#include <HMP/Gui/Widgets/VertEdit.hpp>
-#include <HMP/Gui/Widgets/Target.hpp>
 #include <HMP/Gui/SidebarWidget.hpp>
 #include <cinolib/drawable_segment_soup.h>
-#include <cpputils/mixins/ReferenceClass.hpp>
-#include <HMP/Meshing/Mesher.hpp>
-#include <cpputils/collections/SetNamer.hpp>
-#include <cpputils/collections/Event.hpp>
-#include <cinolib/color.h>
 #include <HMP/Refinement/Schemes.hpp>
-#include <imgui.h>
 
 namespace HMP::Gui::Widgets
 {

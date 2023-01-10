@@ -2,15 +2,9 @@
 
 #include <HMP/Meshing/types.hpp>
 #include <imgui.h>
-#include <cinolib/deg_rad.h>
-#include <cinolib/gl/glcanvas.h>
-#include <cinolib/color.h>
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <HMP/Gui/Utils/Drawing.hpp>
-#include <cmath>
-#include <array>
-#include <utility>
-#include <algorithm>
+#include <sstream>
 #include <HMP/Gui/themer.hpp>
 #include <HMP/Gui/App.hpp>
 #include <HMP/Meshing/Utils.hpp>

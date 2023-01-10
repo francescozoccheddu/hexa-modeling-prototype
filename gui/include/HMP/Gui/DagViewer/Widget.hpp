@@ -2,11 +2,8 @@
 
 #include <HMP/Gui/SidebarWidget.hpp>
 #include <HMP/Gui/DagViewer/Layout.hpp>
-#include <HMP/Dag/Element.hpp>
+#include <HMP/Dag/Node.hpp>
 #include <HMP/Meshing/types.hpp>
-#include <cpputils/collections/Namer.hpp>
-#include <cpputils/mixins/ReferenceClass.hpp>
-#include <cinolib/color.h>
 
 namespace HMP::Gui::DagViewer
 {

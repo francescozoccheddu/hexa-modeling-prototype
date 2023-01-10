@@ -6,7 +6,6 @@
 #include <cinolib/clamp.h>
 #include <algorithm>
 #include <cmath>
-#include <cinolib/geometry/vec_mat_utils.h>
 #include <cinolib/fonts/droid_sans.hpp>
 #include <imgui.h>
 #include <imgui_impl_opengl2.h>

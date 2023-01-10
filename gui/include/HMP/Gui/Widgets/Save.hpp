@@ -1,8 +1,7 @@
 #pragma once
 
 #include <HMP/Gui/SidebarWidget.hpp>
-#include <cpputils/mixins/ReferenceClass.hpp>
-#include <cpputils/collections/Event.hpp>
+#include <cinolib/gl/key_bindings.hpp>
 #include <string>
 #include <chrono>
 
@@ -25,7 +24,6 @@ namespace HMP::Gui::Widgets
         void apply(bool _load, const std::string& _filename);
 
         const std::string& filename() const;
-
 
         void drawSidebar() override;
 

@@ -4,8 +4,8 @@
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <HMP/Gui/Utils/FilePicking.hpp>
 #include <vector>
-#include <cassert>
 #include <filesystem>
+#include <string>
 #include <HMP/Gui/themer.hpp>
 #include <HMP/Gui/App.hpp>
 #include <HMP/Actions/Transform.hpp>

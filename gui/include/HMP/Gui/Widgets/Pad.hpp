@@ -2,11 +2,6 @@
 
 #include <HMP/Gui/SidebarWidget.hpp>
 #include <HMP/Meshing/types.hpp>
-#include <HMP/Meshing/Mesher.hpp>
-#include <cpputils/mixins/ReferenceClass.hpp>
-#include <cpputils/collections/Event.hpp>
-#include <string>
-#include <chrono>
 
 namespace HMP::Gui::Widgets
 {

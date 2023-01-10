@@ -1,12 +1,8 @@
 #pragma once
 
 #include <HMP/Meshing/types.hpp>
-#include <HMP/Gui/Widgets/VertEdit.hpp>
 #include <HMP/Gui/Widget.hpp>
-#include <cpputils/mixins/ReferenceClass.hpp>
-#include <cpputils/collections/Event.hpp>
-#include <cinolib/gl/glcanvas.h>
-#include <cinolib/color.h>
+#include <cinolib/gl/key_bindings.hpp>
 
 namespace HMP::Gui::Widgets
 {

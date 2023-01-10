@@ -1,21 +1,25 @@
 #include <HMP/Gui/Widgets/Projection.hpp>
 
-#include <utility>
 #include <cassert>
 #include <HMP/Actions/Project.hpp>
 #include <cinolib/export_surface.h>
 #include <cinolib/deg_rad.h>
-#include <limits>
-#include <algorithm>
-#include <set>
 #include <cinolib/feature_mapping.h>
+#include <cinolib/feature_network.h>
+#include <cinolib/meshes/polygonmesh.h>
+#include <cinolib/meshes/drawable_polygonmesh.h>
+#include <vector>
+#include <utility>
+#include <algorithm>
+#include <unordered_map>
+#include <unordered_set>
 #include <HMP/Projection/Utils.hpp>
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <HMP/Gui/Utils/Drawing.hpp>
 #include <HMP/Meshing/Utils.hpp>
-#include <unordered_set>
 #include <cpputils/range/of.hpp>
 #include <HMP/Gui/themer.hpp>
+#include <HMP/Gui/Widgets/Target.hpp>
 #include <HMP/Gui/App.hpp>
 
 namespace HMP::Gui::Widgets

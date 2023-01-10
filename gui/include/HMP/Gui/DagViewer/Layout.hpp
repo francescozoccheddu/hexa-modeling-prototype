@@ -2,8 +2,6 @@
 
 #include <utility>
 #include <vector>
-#include <string>
-#include <cmath>
 #include <HMP/Dag/Node.hpp>
 #include <HMP/Meshing/types.hpp>
 
