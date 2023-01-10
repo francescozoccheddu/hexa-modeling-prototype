@@ -33,9 +33,9 @@ namespace HMP::Gui::Widgets
 
         bool keyPressed(const cinolib::KeyBinding& _key) override;
 
-    public:
+        void exportMesh(const std::string& _filename) const;
 
-        cpputils::collections::Event<Save, const std::string&> onSave, onLoad, onExportMesh;
+    public:
 
         explicit Save();
 

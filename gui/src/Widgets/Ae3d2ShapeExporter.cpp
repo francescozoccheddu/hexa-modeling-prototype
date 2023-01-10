@@ -184,13 +184,13 @@ namespace HMP::Gui::Widgets
 		}
 		Keyframe keyframe{};
 		keyframe.camera = app().canvas.camera;
-		for (Id fid{}; fid < app().mesher.mesh().num_faces(); fid++)
+		for (Id fid{}; fid < app().mesh.num_faces(); fid++)
 		{
 			Id pid;
-			if (app().mesher.mesh().face_is_visible(fid, pid))
+			if (app().mesh.face_is_visible(fid, pid))
 			{
-				std::vector<Vec> verts{ app().mesher.mesh().face_verts(fid) };
-				if (app().mesher.mesh().poly_face_is_CW(pid, fid))
+				std::vector<Vec> verts{ app().mesh.face_verts(fid) };
+				if (app().mesh.poly_face_is_CW(pid, fid))
 				{
 					std::reverse(verts.begin(), verts.end());
 				}

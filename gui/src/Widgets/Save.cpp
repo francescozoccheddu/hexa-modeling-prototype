@@ -4,13 +4,14 @@
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <HMP/Gui/Utils/FilePicking.hpp>
 #include <HMP/Gui/themer.hpp>
+#include <HMP/Gui/App.hpp>
 #include <cctype>
 #include <filesystem>
 
 namespace HMP::Gui::Widgets
 {
 
-    Save::Save(): SidebarWidget{ "Save" }, m_filename{}, m_loaded{ false }, onSave{}, onLoad{}, onExportMesh{}
+    Save::Save(): SidebarWidget{ "Save" }, m_filename{}, m_loaded{ false }
     {}
 
     void Save::printUsage() const
@@ -48,11 +49,11 @@ namespace HMP::Gui::Widgets
         m_lastTime = std::chrono::steady_clock::now();
         if (_load)
         {
-            onLoad(_filename);
+            app().deserialize(_filename);
         }
         else
         {
-            onSave(_filename);
+            app().serialize(_filename);
         }
     }
 
@@ -75,7 +76,7 @@ namespace HMP::Gui::Widgets
 
     void Save::requestSaveNew()
     {
-        const std::optional<std::string> filename{ Utils::FilePicking::save("hmp")};
+        const std::optional<std::string> filename{ Utils::FilePicking::save("hmp") };
         if (filename)
         {
             apply(false, *filename);
@@ -101,8 +102,21 @@ namespace HMP::Gui::Widgets
         const std::optional<std::string> filename{ Utils::FilePicking::save("mesh") };
         if (filename)
         {
-            onExportMesh(*filename);
+            exportMesh(*filename);
         }
+    }
+
+    void Save::exportMesh(const std::string& _filename) const
+    {
+        Meshing::Mesher::Mesh mesh{ mesh };
+        for (Id pidPlusOne{ mesh.num_polys() }; pidPlusOne > 0; --pidPlusOne)
+        {
+            if (!app().mesher.shown(pidPlusOne - 1))
+            {
+                mesh.poly_remove(pidPlusOne - 1, true);
+            }
+        }
+        mesh.save(_filename.c_str());
     }
 
     void Save::drawSidebar()

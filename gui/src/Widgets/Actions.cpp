@@ -141,20 +141,20 @@ namespace HMP::Gui::Widgets
 			if (_source != Dag::Extrude::ESource::Face)
 			{
 				const cinolib::Plane firstPlane{
-					app().mesher.mesh().face_centroid(fids[0]),
-					app().mesher.mesh().poly_face_normal(pids[0], fids[0])
+					app().mesh.face_centroid(fids[0]),
+					app().mesh.poly_face_normal(pids[0], fids[0])
 				};
-				for (const Id adjFid : app().mesher.mesh().adj_e2f(firstEid))
+				for (const Id adjFid : app().mesh.adj_e2f(firstEid))
 				{
 					Id adjPid;
-					if (app().mesher.mesh().face_is_visible(adjFid, adjPid)
+					if (app().mesh.face_is_visible(adjFid, adjPid)
 						&& adjPid != pids[0]
-						&& firstPlane.point_plane_dist_signed(app().mesher.mesh().face_centroid(adjFid)) > 0)
+						&& firstPlane.point_plane_dist_signed(app().mesh.face_centroid(adjFid)) > 0)
 					{
 						if (fids.size() == 2)
 						{
 							const auto edgeVec{ [&](const Id _pid, const Id _fid) {
-								return app().mesher.mesh().edge_vec(static_cast<Id>(app().mesher.mesh().edge_id(commVid, app().mesher.mesh().poly_vert_opposite_to(_pid, _fid, commVid))), true);
+								return app().mesh.edge_vec(static_cast<Id>(app().mesh.edge_id(commVid, app().mesh.poly_vert_opposite_to(_pid, _fid, commVid))), true);
 							} };
 							const Vec firstEdge{ edgeVec(pids[0], fids[0]) };
 							const Vec currSecondEdge{ edgeVec(pids[1], fids[1]) };
@@ -178,14 +178,14 @@ namespace HMP::Gui::Widgets
 				}
 				if (_source == Dag::Extrude::ESource::Vertex)
 				{
-					for (const Id adjFid : app().mesher.mesh().adj_f2f(fids[0]))
+					for (const Id adjFid : app().mesh.adj_f2f(fids[0]))
 					{
 						Id adjPid;
-						if (app().mesher.mesh().face_is_visible(adjFid, adjPid)
+						if (app().mesh.face_is_visible(adjFid, adjPid)
 							&& adjPid != pids[0] && adjPid != pids[1]
 							&& adjFid != fids[0] && adjFid != fids[1]
-							&& app().mesher.mesh().face_contains_vert(adjFid, commVid)
-							&& app().mesher.mesh().faces_are_adjacent(adjFid, fids[1]))
+							&& app().mesh.face_contains_vert(adjFid, commVid)
+							&& app().mesh.faces_are_adjacent(adjFid, fids[1]))
 						{
 							if (fids.size() == 3)
 							{
@@ -201,13 +201,13 @@ namespace HMP::Gui::Widgets
 					}
 				}
 			}
-			_clockwise = Meshing::Utils::isEdgeCW(app().mesher.mesh(), pids[0], fids[0], commVid, firstEid);
+			_clockwise = Meshing::Utils::isEdgeCW(app().mesh, pids[0], fids[0], commVid, firstEid);
 			_elements = cpputils::range::of(pids).map([&](Id _pid) {
 				return &app().mesher.element(_pid);
 				}).toFixedVector<3>();
 				_fis = cpputils::range::zip(fids, _elements).map([&](const auto& _fidAndElement) {
 					const auto& [fid, element] {_fidAndElement};
-				const QuadVertIds vids{ Meshing::Utils::fidVids(app().mesher.mesh(), fid) };
+				const QuadVertIds vids{ Meshing::Utils::fidVids(app().mesh, fid) };
 				return Meshing::Utils::fi(element->vids, vids);
 					}).toFixedVector<3>();
 					_firstVi = app().mouse().vi;
@@ -235,25 +235,25 @@ namespace HMP::Gui::Widgets
 		{
 			return;
 		}
-		const Id fid{ static_cast<Id>(app().mesher.mesh().face_id(vids)) };
+		const Id fid{ static_cast<Id>(app().mesh.face_id(vids)) };
 		if (fid == noId)
 		{
 			return;
 		}
 		Id pid;
-		if (!app().mesher.mesh().face_is_visible(fid, pid))
+		if (!app().mesh.face_is_visible(fid, pid))
 		{
 			return;
 		}
 		Dag::Element& element{ app().mesher.element(pid) };
-		const I fi{ Meshing::Utils::fi(element.vids, Meshing::Utils::fidVids(app().mesher.mesh(), fid)) };
+		const I fi{ Meshing::Utils::fi(element.vids, Meshing::Utils::fidVids(app().mesh, fid)) };
 		const I vi{ Meshing::Utils::vi(element.vids, vids[0]) };
 		HMP::Actions::Extrude& action{ *new HMP::Actions::Extrude{ {&element}, {fi}, vi, false } };
 		app().applyAction(action);
 		const Id newPid{ action.operation().children.single().pid };
-		const Id newFid{ app().mesher.mesh().poly_face_opposite_to(newPid, fid) };
+		const Id newFid{ app().mesh.poly_face_opposite_to(newPid, fid) };
 		app().vertEditWidget.clear();
-		app().vertEditWidget.add(app().mesher.mesh().face_verts_id(newFid));
+		app().vertEditWidget.add(app().mesh.face_verts_id(newFid));
 	}
 
 	void Actions::onCopy()
@@ -298,7 +298,7 @@ namespace HMP::Gui::Widgets
 
 	void Actions::onDelete()
 	{
-		if (app().mesher.mesh().num_polys() <= 1)
+		if (app().mesh.num_polys() <= 1)
 		{
 			std::cout << "cannot delete the only element" << std::endl;
 			return;

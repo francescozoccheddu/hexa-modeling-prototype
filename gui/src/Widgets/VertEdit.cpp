@@ -27,7 +27,7 @@ namespace HMP::Gui::Widgets
 				}
 				if (_add)
 				{
-					const Vec pos{ app().mesher.mesh().vert(vid) };
+					const Vec pos{ app().mesh.vert(vid) };
 					m_verts.insert(it, { vid, pos });
 				}
 				else
@@ -126,7 +126,7 @@ namespace HMP::Gui::Widgets
 			onApplyAction(vids, transform);
 			for (auto& [vid, pos] : m_verts)
 			{
-				pos = app().mesher.mesh().vert(vid);
+				pos = app().mesh.vert(vid);
 			}
 			updateCentroid();
 		}
@@ -178,7 +178,7 @@ namespace HMP::Gui::Widgets
 			for (const auto& [vid, pos] : m_verts)
 			{
 				m_unappliedTransform.origin += pos;
-				m_centroid += app().mesher.mesh().vert(vid);
+				m_centroid += app().mesh.vert(vid);
 			}
 			m_centroid /= static_cast<Real>(m_verts.size());
 			m_unappliedTransform.origin /= static_cast<Real>(m_verts.size());
@@ -206,7 +206,7 @@ namespace HMP::Gui::Widgets
 		}
 		// translation
 		ImGui::TableNextColumn();
-		if (Utils::Controls::dragTranslationVec("Translation", m_unappliedTransform.translation, app().mesher.mesh().scene_radius()))
+		if (Utils::Controls::dragTranslationVec("Translation", m_unappliedTransform.translation, app().mesh.scene_radius()))
 		{
 			applyTransform();
 		}
@@ -251,7 +251,7 @@ namespace HMP::Gui::Widgets
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
 		for (const Id vid : vids())
 		{
-			const Vec vert{ app().mesher.mesh().vert(vid) };
+			const Vec vert{ app().mesh.vert(vid) };
 			const auto pos{ Utils::Drawing::project(app().canvas, vert) };
 			Utils::Drawing::circle(drawList, pos, radius, themer->ovHi, lineThickness);
 		}
@@ -365,19 +365,19 @@ namespace HMP::Gui::Widgets
 					vids = { mouse.vid };
 					break;
 				case ESelectionSource::Edge:
-					vids = app().mesher.mesh().edge_vert_ids(mouse.eid);
+					vids = app().mesh.edge_vert_ids(mouse.eid);
 					break;
 				case ESelectionSource::Face:
-					vids = app().mesher.mesh().face_verts_id(mouse.fid);
+					vids = app().mesh.face_verts_id(mouse.fid);
 					break;
 				case ESelectionSource::UpFace:
-					vids = app().mesher.mesh().face_verts_id(Meshing::Utils::adjFidInPidByFidAndEid(app().mesher.mesh(), mouse.pid, mouse.fid, mouse.eid));
+					vids = app().mesh.face_verts_id(Meshing::Utils::adjFidInPidByFidAndEid(app().mesh, mouse.pid, mouse.fid, mouse.eid));
 					break;
 				case ESelectionSource::UpEdge:
-					vids = { mouse.vid, app().mesher.mesh().poly_vert_opposite_to(mouse.pid, mouse.fid, mouse.vid) };
+					vids = { mouse.vid, app().mesh.poly_vert_opposite_to(mouse.pid, mouse.fid, mouse.vid) };
 					break;
 				case ESelectionSource::Poly:
-					vids = app().mesher.mesh().poly_verts_id(mouse.pid);
+					vids = app().mesh.poly_verts_id(mouse.pid);
 					break;
 			}
 			if (_mode == ESelectionMode::Set)
@@ -399,7 +399,7 @@ namespace HMP::Gui::Widgets
 	{
 		if (_selected)
 		{
-			std::vector<Id> vids(toI(app().mesher.mesh().num_verts()));
+			std::vector<Id> vids(toI(app().mesh.num_verts()));
 			for (I i{}; i < vids.size(); i++)
 			{
 				vids[i] = toId(i);

@@ -41,7 +41,7 @@ namespace HMP::Gui::Widgets
                     {
                         continue;
                     }
-                    if (_source && !app().mesher.mesh().edge_is_visible(eid))
+                    if (_source && !app().mesh.edge_is_visible(eid))
                     {
                         continue;
                     }
@@ -59,7 +59,7 @@ namespace HMP::Gui::Widgets
                 {
                     for (const Id eid : _mesh.adj_e2e(endEid))
                     {
-                        if (_source && !app().mesher.mesh().edge_is_visible(eid))
+                        if (_source && !app().mesh.edge_is_visible(eid))
                         {
                             continue;
                         }
@@ -117,7 +117,7 @@ namespace HMP::Gui::Widgets
             Id closestEid{ noId };
             for (const Id eid : candidates)
             {
-                if (_source && !app().mesher.mesh().edge_is_visible(eid))
+                if (_source && !app().mesh.edge_is_visible(eid))
                 {
                     continue;
                 }

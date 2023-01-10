@@ -84,11 +84,11 @@ namespace HMP::Gui::Widgets
 		}
 		if (_translation)
 		{
-			transform.translation = -transform.origin + app().mesher.mesh().bbox().center();
+			transform.translation = -transform.origin + app().mesh.bbox().center();
 		}
 		if (_scale)
 		{
-			transform.scale = { app().mesher.mesh().bbox().diag() / m_mesh.bbox().diag() };
+			transform.scale = { app().mesh.bbox().diag() / m_mesh.bbox().diag() };
 		}
 		updateTransform();
 	}
@@ -246,7 +246,7 @@ namespace HMP::Gui::Widgets
 					fit(true, false, false);
 				}
 				ImGui::TableNextColumn();
-				const float sourceMeshSize{ static_cast<float>(app().mesher.mesh().bbox().diag()) * 2 };
+				const float sourceMeshSize{ static_cast<float>(app().mesh.bbox().diag()) * 2 };
 				if (Utils::Controls::dragTranslationVec("Translation", transform.translation, sourceMeshSize))
 				{
 					updateTransform();
@@ -273,7 +273,7 @@ namespace HMP::Gui::Widgets
 				}
 				ImGui::TableNextColumn();
 				ImGui::TableNextColumn();
-				const Real sourceAndTargetMeshScaleRatio{ app().mesher.mesh().bbox().diag() / m_mesh.bbox().diag() * 3 };
+				const Real sourceAndTargetMeshScaleRatio{ app().mesh.bbox().diag() / m_mesh.bbox().diag() * 3 };
 				Real scale{ transform.avgScale() };
 				if (Utils::Controls::dragScale("Scale##scale", scale, sourceAndTargetMeshScaleRatio))
 				{

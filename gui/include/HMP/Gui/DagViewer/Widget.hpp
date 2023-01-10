@@ -6,7 +6,6 @@
 #include <HMP/Meshing/types.hpp>
 #include <cpputils/collections/Namer.hpp>
 #include <cpputils/mixins/ReferenceClass.hpp>
-#include <cpputils/collections/Event.hpp>
 #include <cinolib/color.h>
 
 namespace HMP::Gui::DagViewer

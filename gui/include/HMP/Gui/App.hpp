@@ -44,7 +44,7 @@ namespace HMP::Gui
 
 	}
 
-	class App final : public cpputils::mixins::ReferenceClass
+	class App final: public cpputils::mixins::ReferenceClass
 	{
 
 	public:
@@ -61,12 +61,13 @@ namespace HMP::Gui
 
 		void printUsage() const;
 
+		HMP::Project m_project;
 
 	public:
 
-		HMP::Project project;
 		cinolib::GLcanvas canvas;
 		Meshing::Mesher& mesher;
+		const Meshing::Mesher::Mesh& mesh;
 		Commander& commander;
 		cpputils::collections::SetNamer<const HMP::Dag::Node*> dagNamer;
 
@@ -121,11 +122,6 @@ namespace HMP::Gui
 		void updateMouse();
 		void onFilesDropped(const std::vector<std::string>& _files);
 
-		// save events
-		void onSaveState(const std::string& _filename);
-		void onLoadState(const std::string& _filename);
-		void onExportMesh(const std::string& _filename) const;
-
 		// user operation
 		void onProjectToTarget(const cinolib::Polygonmesh<>& _target, const std::vector<Projection::Utils::Point>& _pointFeats, const std::vector<Projection::Utils::EidsPath>& _pathFeats, const Projection::Options& _options);
 		void onApplyTargetTransform(const Mat4& _transform);
@@ -141,13 +137,15 @@ namespace HMP::Gui
 
 		~App();
 
+		const Dag::Element& root() const;
+
 		void redo();
 		void applyAction(Commander::Action& _action);
 		void undo();
 
 		void loadTargetMeshOrProjectFile(const std::string& _file);
 
-		void serialize(const std::string& _filename);
+		void serialize(const std::string& _filename) const;
 
 		void deserialize(const std::string& _filename);
 

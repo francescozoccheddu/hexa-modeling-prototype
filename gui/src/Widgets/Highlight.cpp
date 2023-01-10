@@ -33,13 +33,13 @@ namespace HMP::Gui::Widgets
 		{
 			const Id cPid{ app().copiedElement->pid };
 			const Dag::Extrude& extrude{ app().copiedElement->parents.single().as<Dag::Extrude>() };
-			const auto cPidCenter2d{ Utils::Drawing::project(app().canvas, app().mesher.mesh().poly_centroid(cPid)) };
+			const auto cPidCenter2d{ Utils::Drawing::project(app().canvas, app().mesh.poly_centroid(cPid)) };
 			if (cPidCenter2d)
 			{
 				for (const auto& [parent, fi] : extrude.parents.zip(extrude.fis))
 				{
 					const QuadVertIds parentFidVids{ Meshing::Utils::fiVids(parent.vids, fi) };
-					const Vec parentFidCenter{ Meshing::Utils::centroid(Meshing::Utils::verts(app().mesher.mesh(), parentFidVids)) };
+					const Vec parentFidCenter{ Meshing::Utils::centroid(Meshing::Utils::verts(app().mesh, parentFidVids)) };
 					const auto parentFidCenter2d{ Utils::Drawing::project(app().canvas, parentFidCenter) };
 					if (parentFidCenter2d)
 					{
@@ -51,7 +51,7 @@ namespace HMP::Gui::Widgets
 			const Dag::Element& firstParent{ extrude.parents.first() };
 			const Id firstVid{ firstParent.vids[extrude.firstVi] };
 			const QuadVertIds firstParentVids{ Meshing::Utils::align(Meshing::Utils::fiVids(firstParent.vids, extrude.fis[0]), firstVid, extrude.clockwise) };
-			const auto eid2d{ Utils::Drawing::project(app().canvas, Meshing::Utils::verts(app().mesher.mesh(), EdgeVertIds{ firstParentVids[0], firstParentVids[1] })) };
+			const auto eid2d{ Utils::Drawing::project(app().canvas, Meshing::Utils::verts(app().mesh, EdgeVertIds{ firstParentVids[0], firstParentVids[1] })) };
 			dashedLine(drawList, eid2d, themer->ovMut, boldLineThickness, lineSpacing);
 			if (eid2d)
 			{
@@ -63,18 +63,18 @@ namespace HMP::Gui::Widgets
 			for (I i{}; i < 6; i++)
 			{
 				const I fi{ (i + 1 + app().mouse().fi) % 6};
-				const QuadVerts fiVerts{ Meshing::Utils::verts(app().mesher.mesh(), Meshing::Utils::fiVids(app().mouse().element->vids, fi)) };
+				const QuadVerts fiVerts{ Meshing::Utils::verts(app().mesh, Meshing::Utils::fiVids(app().mouse().element->vids, fi)) };
 				const auto fiVerts2d{ Utils::Drawing::project(app().canvas, fiVerts) };
 				quadFilled(drawList, fiVerts2d, fi == app().mouse().fi ? themer->ovFaceHi : themer->ovPolyHi);
 			}
-			const auto hPidCenter2d{ Utils::Drawing::project(app().canvas, app().mesher.mesh().poly_centroid(app().mouse().pid)) };
+			const auto hPidCenter2d{ Utils::Drawing::project(app().canvas, app().mesh.poly_centroid(app().mouse().pid)) };
 			if (hPidCenter2d)
 			{
-				for (const Id adjPid : app().mesher.mesh().adj_p2p(app().mouse().pid))
+				for (const Id adjPid : app().mesh.adj_p2p(app().mouse().pid))
 				{
-					const Id adjFid{ static_cast<Id>(app().mesher.mesh().poly_shared_face(app().mouse().pid, adjPid)) };
-					const auto adjFidCenter2d{ Utils::Drawing::project(app().canvas, app().mesher.mesh().face_centroid(adjFid)) };
-					const auto adjPidCenter2d{ Utils::Drawing::project(app().canvas, app().mesher.mesh().poly_centroid(adjPid)) };
+					const Id adjFid{ static_cast<Id>(app().mesh.poly_shared_face(app().mouse().pid, adjPid)) };
+					const auto adjFidCenter2d{ Utils::Drawing::project(app().canvas, app().mesh.face_centroid(adjFid)) };
+					const auto adjPidCenter2d{ Utils::Drawing::project(app().canvas, app().mesh.poly_centroid(adjPid)) };
 					const ImU32 adjColorU32{ app().mesher.shown(adjPid) ? themer->ovHi : themer->ovMut };
 					circle(drawList, adjPidCenter2d, smallVertRadius, adjColorU32, lineThickness);
 					if (adjFidCenter2d)
@@ -84,12 +84,12 @@ namespace HMP::Gui::Widgets
 				}
 				circle(drawList, *hPidCenter2d, smallVertRadius, themer->ovHi, lineThickness);
 			}
-			for (const Id adjEid : app().mesher.mesh().adj_f2e(app().mouse().fid))
+			for (const Id adjEid : app().mesh.adj_f2e(app().mouse().fid))
 			{
-				const auto adjEid2d{ Utils::Drawing::project(app().canvas, Meshing::Utils::verts(app().mesher.mesh(), Meshing::Utils::eidVids(app().mesher.mesh(), adjEid))) };
+				const auto adjEid2d{ Utils::Drawing::project(app().canvas, Meshing::Utils::verts(app().mesh, Meshing::Utils::eidVids(app().mesh, adjEid))) };
 				dashedLine(drawList, adjEid2d, adjEid == app().mouse().eid ? themer->ovHi : themer->ovMut, boldLineThickness, lineSpacing);
 			}
-			const auto hVert2d{ Utils::Drawing::project(app().canvas, app().mesher.mesh().vert(app().mouse().vid)) };
+			const auto hVert2d{ Utils::Drawing::project(app().canvas, app().mesh.vert(app().mouse().vid)) };
 			circleFilled(drawList, hVert2d, vertRadius, themer->ovHi);
 		}
 		if (app().mouse().element)
