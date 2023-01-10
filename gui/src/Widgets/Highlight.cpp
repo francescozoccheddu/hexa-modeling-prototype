@@ -29,7 +29,7 @@ namespace HMP::Gui::Widgets
 			lineSpacing{ (10.0f * themer->ovScale + 10.0f) / 2.0f };
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
 		using namespace Utils::Drawing;
-		if (app().copiedElement && !app().mouse().element)
+		if (app().copiedElement && !app().cursor.element)
 		{
 			const Id cPid{ app().copiedElement->pid };
 			const Dag::Extrude& extrude{ app().copiedElement->parents.single().as<Dag::Extrude>() };
@@ -47,7 +47,7 @@ namespace HMP::Gui::Widgets
 					}
 				}
 			}
-			circle(drawList, cPidCenter2d, smallVertRadius, app().mouse().element == app().copiedElement ? themer->ovHi : themer->ovMut, lineThickness);
+			circle(drawList, cPidCenter2d, smallVertRadius, app().cursor.element == app().copiedElement ? themer->ovHi : themer->ovMut, lineThickness);
 			const Dag::Element& firstParent{ extrude.parents.first() };
 			const Id firstVid{ firstParent.vids[extrude.firstVi] };
 			const QuadVertIds firstParentVids{ Meshing::Utils::align(Meshing::Utils::fiVids(firstParent.vids, extrude.fis[0]), firstVid, extrude.clockwise) };
@@ -58,21 +58,21 @@ namespace HMP::Gui::Widgets
 				circleFilled(drawList, (*eid2d)[0], vertRadius, themer->ovMut);
 			}
 		}
-		if (app().mouse().element)
+		if (app().cursor.element)
 		{
 			for (I i{}; i < 6; i++)
 			{
-				const I fi{ (i + 1 + app().mouse().fi) % 6};
-				const QuadVerts fiVerts{ Meshing::Utils::verts(app().mesh, Meshing::Utils::fiVids(app().mouse().element->vids, fi)) };
+				const I fi{ (i + 1 + app().cursor.fi) % 6 };
+				const QuadVerts fiVerts{ Meshing::Utils::verts(app().mesh, Meshing::Utils::fiVids(app().cursor.element->vids, fi)) };
 				const auto fiVerts2d{ Utils::Drawing::project(app().canvas, fiVerts) };
-				quadFilled(drawList, fiVerts2d, fi == app().mouse().fi ? themer->ovFaceHi : themer->ovPolyHi);
+				quadFilled(drawList, fiVerts2d, fi == app().cursor.fi ? themer->ovFaceHi : themer->ovPolyHi);
 			}
-			const auto hPidCenter2d{ Utils::Drawing::project(app().canvas, app().mesh.poly_centroid(app().mouse().pid)) };
+			const auto hPidCenter2d{ Utils::Drawing::project(app().canvas, app().mesh.poly_centroid(app().cursor.pid)) };
 			if (hPidCenter2d)
 			{
-				for (const Id adjPid : app().mesh.adj_p2p(app().mouse().pid))
+				for (const Id adjPid : app().mesh.adj_p2p(app().cursor.pid))
 				{
-					const Id adjFid{ static_cast<Id>(app().mesh.poly_shared_face(app().mouse().pid, adjPid)) };
+					const Id adjFid{ static_cast<Id>(app().mesh.poly_shared_face(app().cursor.pid, adjPid)) };
 					const auto adjFidCenter2d{ Utils::Drawing::project(app().canvas, app().mesh.face_centroid(adjFid)) };
 					const auto adjPidCenter2d{ Utils::Drawing::project(app().canvas, app().mesh.poly_centroid(adjPid)) };
 					const ImU32 adjColorU32{ app().mesher.shown(adjPid) ? themer->ovHi : themer->ovMut };
@@ -84,24 +84,24 @@ namespace HMP::Gui::Widgets
 				}
 				circle(drawList, *hPidCenter2d, smallVertRadius, themer->ovHi, lineThickness);
 			}
-			for (const Id adjEid : app().mesh.adj_f2e(app().mouse().fid))
+			for (const Id adjEid : app().mesh.adj_f2e(app().cursor.fid))
 			{
 				const auto adjEid2d{ Utils::Drawing::project(app().canvas, Meshing::Utils::verts(app().mesh, Meshing::Utils::eidVids(app().mesh, adjEid))) };
-				dashedLine(drawList, adjEid2d, adjEid == app().mouse().eid ? themer->ovHi : themer->ovMut, boldLineThickness, lineSpacing);
+				dashedLine(drawList, adjEid2d, adjEid == app().cursor.eid ? themer->ovHi : themer->ovMut, boldLineThickness, lineSpacing);
 			}
-			const auto hVert2d{ Utils::Drawing::project(app().canvas, app().mesh.vert(app().mouse().vid)) };
+			const auto hVert2d{ Utils::Drawing::project(app().canvas, app().mesh.vert(app().cursor.vid)) };
 			circleFilled(drawList, hVert2d, vertRadius, themer->ovHi);
 		}
-		if (app().mouse().element)
+		if (app().cursor.element)
 		{
 			std::ostringstream stream{};
 			stream
 				<< "Hovering "
-				<< Utils::HrDescriptions::name(*app().mouse().element, app().dagNamer)
+				<< Utils::HrDescriptions::name(*app().cursor.element, app().dagNamer)
 				<< " ("
-				<< "face " << app().mouse().fi
-				<< ", edge " << app().mouse().ei
-				<< ", vert " << app().mouse().vi
+				<< "face " << app().cursor.fi
+				<< ", edge " << app().cursor.ei
+				<< ", vert " << app().cursor.vi
 				<< ")";
 			ImGui::TextColored(toImVec4(themer->ovMut), "%s", stream.str().c_str());
 		}

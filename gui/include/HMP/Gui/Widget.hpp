@@ -44,7 +44,7 @@ namespace HMP::Gui
 
 		virtual bool mouseMoved(const Vec2& _position);
 
-		virtual void mouseUpdated();
+		virtual void cursorChanged();
 
 		virtual void cameraChanged();
 

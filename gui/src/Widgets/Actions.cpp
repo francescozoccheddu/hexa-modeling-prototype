@@ -132,12 +132,12 @@ namespace HMP::Gui::Widgets
 	bool Actions::hoveredExtrudeElements(Dag::Extrude::ESource _source, cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, cpputils::collections::FixedVector<I, 3>& _fis, I& _firstVi, bool& _clockwise)
 	{
 		cpputils::collections::FixedVector<Id, 3> pids, fids;
-		if (app().mouse().element)
+		if (app().cursor.element)
 		{
-			pids.addLast(app().mouse().pid);
-			fids.addLast(app().mouse().fid);
-			const Id commVid{ app().mouse().vid };
-			const Id firstEid{ app().mouse().eid };
+			pids.addLast(app().cursor.pid);
+			fids.addLast(app().cursor.fid);
+			const Id commVid{ app().cursor.vid };
+			const Id firstEid{ app().cursor.eid };
 			if (_source != Dag::Extrude::ESource::Face)
 			{
 				const cinolib::Plane firstPlane{
@@ -210,7 +210,7 @@ namespace HMP::Gui::Widgets
 				const QuadVertIds vids{ Meshing::Utils::fidVids(app().mesh, fid) };
 				return Meshing::Utils::fi(element->vids, vids);
 					}).toFixedVector<3>();
-					_firstVi = app().mouse().vi;
+					_firstVi = app().cursor.vi;
 					return true;
 		}
 		return false;
@@ -258,9 +258,9 @@ namespace HMP::Gui::Widgets
 
 	void Actions::onCopy()
 	{
-		if (app().mouse().element && app().mouse().element->parents.isSingle() && app().mouse().element->parents.first().primitive == Dag::Operation::EPrimitive::Extrude)
+		if (app().cursor.element && app().cursor.element->parents.isSingle() && app().cursor.element->parents.first().primitive == Dag::Operation::EPrimitive::Extrude)
 		{
-			app().copiedElement = app().mouse().element;
+			app().copiedElement = app().cursor.element;
 		}
 		else
 		{
@@ -285,9 +285,9 @@ namespace HMP::Gui::Widgets
 
 	void Actions::onRefineElement(bool _twice)
 	{
-		if (app().mouse().element)
+		if (app().cursor.element)
 		{
-			app().applyAction(*new HMP::Actions::Refine{ *app().mouse().element, app().mouse().fi, app().mouse().vi, Refinement::EScheme::Subdivide3x3, _twice ? 2u : 1u });
+			app().applyAction(*new HMP::Actions::Refine{ *app().cursor.element, app().cursor.fi, app().cursor.vi, Refinement::EScheme::Subdivide3x3, _twice ? 2u : 1u });
 		}
 	}
 
@@ -303,17 +303,17 @@ namespace HMP::Gui::Widgets
 			std::cout << "cannot delete the only element" << std::endl;
 			return;
 		}
-		if (app().mouse().element)
+		if (app().cursor.element)
 		{
-			app().applyAction(*new HMP::Actions::Delete{ *app().mouse().element });
+			app().applyAction(*new HMP::Actions::Delete{ *app().cursor.element });
 		}
 	}
 
 	void Actions::onRefineFace()
 	{
-		if (app().mouse().element)
+		if (app().cursor.element)
 		{
-			app().applyAction(*new HMP::Actions::Refine{ *app().mouse().element, app().mouse().fi, app().mouse().vi, Refinement::EScheme::Inset });
+			app().applyAction(*new HMP::Actions::Refine{ *app().cursor.element, app().cursor.fi, app().cursor.vi, Refinement::EScheme::Inset });
 		}
 	}
 

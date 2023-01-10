@@ -50,14 +50,13 @@ namespace HMP::Gui
 
 	public:
 
-		struct Mouse final
+		struct Cursor final
 		{
-			cinolib::vec2d position{};
 			Dag::Element* element{};
 			I fi{}, vi{}, ei{};
 			Id pid{ noId }, fid{ noId }, vid{ noId }, eid{ noId };
 
-			bool operator==(const Mouse&) const = default;
+			bool operator==(const Cursor&) const = default;
 		};
 
 	private:
@@ -66,6 +65,8 @@ namespace HMP::Gui
 
 		HMP::Project m_project;
 		cinolib::GLcanvas m_canvas;
+		Vec2 m_mouse;
+		Cursor m_cursor;
 
 	public:
 
@@ -74,6 +75,8 @@ namespace HMP::Gui
 		const Meshing::Mesher::Mesh& mesh;
 		Commander& commander;
 		cpputils::collections::SetNamer<const HMP::Dag::Node*> dagNamer;
+		const Vec2& mouse;
+		const Cursor& cursor;
 
 		Widgets::Actions& actionsWidget;
 		Widgets::Commander& commanderWidget;
@@ -99,9 +102,6 @@ namespace HMP::Gui
 	private:
 
 		const std::vector<Widget*> m_widgets;
-		Mouse m_mouse{};
-
-		void resetMouse();
 
 		// actions
 		void onActionApplied();
@@ -135,7 +135,7 @@ namespace HMP::Gui
 
 		int launch();
 
-		void setMouse();
+		void setCursor();
 
 		App();
 		~App();
@@ -152,13 +152,11 @@ namespace HMP::Gui
 		void applyAction(Commander::Action& _action);
 		bool undo();
 
-		bool updateMouse();
+		bool updateCursor();
 		void refitScene();
 
 		void serialize(const std::string& _filename) const;
 		void deserialize(const std::string& _filename);
-
-		const Mouse& mouse() const;
 
 	};
 

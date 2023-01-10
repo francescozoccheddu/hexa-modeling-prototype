@@ -629,7 +629,7 @@ namespace HMP::Gui::Widgets
 			return false;
 		}
 		Vec point;
-		if (app().canvas.unproject(app().mouse().position, point))
+		if (app().canvas.unproject(app().mouse, point))
 		{
 			if (app().targetWidget.hasMesh() && app().targetWidget.visible)
 			{
