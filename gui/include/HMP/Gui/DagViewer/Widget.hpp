@@ -13,8 +13,6 @@ namespace HMP::Gui::DagViewer
 
 	private:
 
-		static void initFonts();
-
 		Layout m_layout;
 		bool m_needsLayoutUpdate{ true };
 		bool m_tooManyNodes{ false };
@@ -39,6 +37,8 @@ namespace HMP::Gui::DagViewer
 		void updateLayout();
 
 		void actionApplied() override;
+
+		std::vector<cinolib::GLcanvas::Font> additionalFonts(const std::vector<cinolib::GLcanvas::Font>& _fonts) const override;
 
 	public:
 

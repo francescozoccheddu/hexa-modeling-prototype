@@ -70,5 +70,9 @@ namespace HMP::Gui
 		return {};
 	}
 
+	std::vector<cinolib::GLcanvas::Font> Widget::additionalFonts(const std::vector<cinolib::GLcanvas::Font>& _fonts) const
+	{
+		return {};
+	}
 
 }

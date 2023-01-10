@@ -61,6 +61,8 @@ namespace HMP::Gui
 
 		virtual std::vector<const cinolib::DrawableObject*> additionalDrawables() const;
 
+		virtual std::vector<cinolib::GLcanvas::Font> additionalFonts(const std::vector<cinolib::GLcanvas::Font>& _fonts) const;
+
 	};
 
 }
