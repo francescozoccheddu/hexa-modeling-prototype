@@ -6,7 +6,10 @@
 
 #include <HMP/Projection/Utils.hpp>
 #include <HMP/Gui/App.hpp>
-#include <functional>
+#include <algorithm>
+#include <limits>
+#include <vector>
+#include <cinolib/meshes/abstract_mesh.h>
 #include <unordered_set>
 
 namespace HMP::Gui::Widgets

@@ -2,18 +2,15 @@
 
 #include <HMP/Gui/SidebarWidget.hpp>
 #include <HMP/Meshing/types.hpp>
-#include <HMP/Meshing/Mesher.hpp>
-#include <HMP/Gui/Widgets/Target.hpp>
 #include <vector>
 #include <cinolib/gl/FreeCamera.hpp>
-#include <cinolib/color.h>
 #include <string>
 #include <optional>
 
 namespace HMP::Gui::Widgets
 {
 
-	class Ae3d2ShapeExporter final : public SidebarWidget
+	class Ae3d2ShapeExporter final: public SidebarWidget
 	{
 
 	private:

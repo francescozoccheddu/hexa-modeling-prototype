@@ -4,6 +4,7 @@
 #include <cinolib/gl/key_bindings.hpp>
 #include <cinolib/gl/canvas_gui_item.h>
 #include <cinolib/gl/glcanvas.h>
+#include <cinolib/drawable_object.h>
 #include <HMP/Utils/Serialization.hpp>
 #include <HMP/Meshing/types.hpp>
 #include <vector>

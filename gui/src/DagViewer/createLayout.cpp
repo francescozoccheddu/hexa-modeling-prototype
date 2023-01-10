@@ -1,6 +1,5 @@
 #include <HMP/Gui/DagViewer/createLayout.hpp>
 
-#include <deque>
 #include <ogdf/basic/Logger.h>
 #include <ogdf/basic/Graph.h>
 #include <ogdf/basic/GraphAttributes.h>
@@ -8,7 +7,6 @@
 #include <ogdf/layered/OptimalHierarchyLayout.h>
 #include <ogdf/layered/OptimalRanking.h>
 #include <ogdf/layered/SugiyamaLayout.h>
-#include <memory>
 #include <utility>
 #include <HMP/Dag/Utils.hpp>
 #include <HMP/Meshing/types.hpp>

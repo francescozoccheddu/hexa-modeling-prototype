@@ -8,10 +8,10 @@
 #include <imgui.h>
 #include <string>
 #include <fstream>
-#include <sstream>
 #include <ctime>
 #include <cassert>
 #include <iomanip>
+#include <HMP/Gui/Widgets/Target.hpp>
 
 namespace HMP::Gui::Widgets
 {
@@ -41,14 +41,14 @@ namespace HMP::Gui::Widgets
 			<< ']';
 	}
 
-	Ae3d2ShapeExporter::Ae3d2ShapeExporter() : SidebarWidget{ "ae-3d2shape exporter" }, m_keyframes{}, m_sampleError{}
+	Ae3d2ShapeExporter::Ae3d2ShapeExporter(): SidebarWidget{ "ae-3d2shape exporter" }, m_keyframes{}, m_sampleError{}
 	{}
 
 	bool Ae3d2ShapeExporter::exportKeyframes(const std::vector<Ae3d2ShapeExporter::Keyframe>& _keyframes)
 	{
 		static constexpr double c_keyframeDuration{ 1.0 };
 		assert(!_keyframes.empty());
-		const std::optional<std::string> filename{ Utils::FilePicking::save("json")};
+		const std::optional<std::string> filename{ Utils::FilePicking::save("json") };
 		if (filename)
 		{
 			std::ofstream file{};
@@ -166,7 +166,7 @@ namespace HMP::Gui::Widgets
 			.polygons{},
 			.camera { app().canvas.camera }
 		};
-		const cinolib::Polygonmesh<>& mesh{ app().targetWidget.meshForProjection()};
+		const cinolib::Polygonmesh<>& mesh{ app().targetWidget.meshForProjection() };
 		frame.polygons.reserve(toI(mesh.num_polys()));
 		for (Id fid{}; fid < mesh.num_polys(); fid++)
 		{

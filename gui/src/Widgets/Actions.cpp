@@ -3,15 +3,8 @@
 #include <HMP/Meshing/types.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <imgui.h>
-#include <cinolib/deg_rad.h>
-#include <cinolib/gl/glcanvas.h>
-#include <cinolib/color.h>
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <HMP/Gui/Utils/Drawing.hpp>
-#include <cmath>
-#include <array>
-#include <utility>
-#include <algorithm>
 #include <HMP/Gui/themer.hpp>
 #include <HMP/Gui/App.hpp>
 #include <HMP/Actions/Root.hpp>
@@ -26,6 +19,8 @@
 #include <HMP/Actions/Smooth.hpp>
 #include <HMP/Actions/SubdivideAll.hpp>
 #include <HMP/Gui/Widgets/VertEdit.hpp>
+#include <vector>
+#include <iostream>
 
 namespace HMP::Gui::Widgets
 {
@@ -204,14 +199,14 @@ namespace HMP::Gui::Widgets
 			_clockwise = Meshing::Utils::isEdgeCW(app().mesh, pids[0], fids[0], commVid, firstEid);
 			_elements = cpputils::range::of(pids).map([&](Id _pid) {
 				return &app().mesher.element(_pid);
-				}).toFixedVector<3>();
-				_fis = cpputils::range::zip(fids, _elements).map([&](const auto& _fidAndElement) {
-					const auto& [fid, element] {_fidAndElement};
-				const QuadVertIds vids{ Meshing::Utils::fidVids(app().mesh, fid) };
-				return Meshing::Utils::fi(element->vids, vids);
-					}).toFixedVector<3>();
-					_firstVi = app().cursor.vi;
-					return true;
+			}).toFixedVector<3>();
+			_fis = cpputils::range::zip(fids, _elements).map([&](const auto& _fidAndElement) {
+				const auto& [fid, element] {_fidAndElement};
+			const QuadVertIds vids{ Meshing::Utils::fidVids(app().mesh, fid) };
+			return Meshing::Utils::fi(element->vids, vids);
+			}).toFixedVector<3>();
+			_firstVi = app().cursor.vi;
+			return true;
 		}
 		return false;
 	}

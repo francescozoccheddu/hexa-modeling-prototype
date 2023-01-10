@@ -2,21 +2,13 @@
 
 #include <HMP/Project.hpp>
 #include <HMP/Dag/Element.hpp>
-#include <HMP/Dag/Extrude.hpp>
 #include <cinolib/gl/glcanvas.h>
-#include <cinolib/gl/gl_glfw.h>
-#include <cinolib/gl/key_bindings.hpp>
-#include <cinolib/color.h>
 #include <cpputils/mixins/ReferenceClass.hpp>
 #include <cpputils/collections/SetNamer.hpp>
-#include <cpputils/collections/FixedVector.hpp>
 #include <string>
 #include <vector>
 #include <optional>
 #include <HMP/Gui/Widget.hpp>
-#include <HMP/Gui/SidebarWidget.hpp>
-#include <HMP/Projection/project.hpp>
-#include <HMP/Refinement/Schemes.hpp>
 
 namespace HMP::Gui
 {

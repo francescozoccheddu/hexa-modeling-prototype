@@ -3,9 +3,9 @@
 #include <HMP/Gui/Utils/Transform.hpp>
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <HMP/Gui/Utils/Drawing.hpp>
-#include <cassert>
 #include <imgui.h>
 #include <HMP/Gui/themer.hpp>
+#include <HMP/Gui/Widgets/VertEdit.hpp>
 #include <HMP/Gui/App.hpp>
 
 namespace HMP::Gui::Widgets

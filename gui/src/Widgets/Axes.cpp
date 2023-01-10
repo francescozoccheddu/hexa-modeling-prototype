@@ -2,8 +2,6 @@
 
 #include <HMP/Meshing/types.hpp>
 #include <imgui.h>
-#include <cinolib/deg_rad.h>
-#include <cinolib/gl/glcanvas.h>
 #include <cinolib/color.h>
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <HMP/Gui/Utils/Drawing.hpp>

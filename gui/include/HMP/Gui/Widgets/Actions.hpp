@@ -2,8 +2,7 @@
 
 #include <HMP/Meshing/types.hpp>
 #include <HMP/Gui/Widget.hpp>
-#include <cinolib/gl/FreeCamera.hpp>
-#include <cpputils/mixins/ReferenceClass.hpp>
+#include <cinolib/gl/key_bindings.hpp>
 #include <HMP/Dag/Extrude.hpp>
 
 namespace HMP::Gui::Widgets

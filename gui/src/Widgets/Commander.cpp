@@ -2,19 +2,17 @@
 
 #include <HMP/Meshing/types.hpp>
 #include <HMP/Gui/Utils/Controls.hpp>
+#include <HMP/Gui/Utils/HrDescriptions.hpp>
 #include <imgui.h>
-#include <cinolib/deg_rad.h>
-#include <cinolib/gl/glcanvas.h>
-#include <cmath>
-#include <array>
-#include <algorithm>
+#include <string>
+#include <HMP/Gui/Widgets/VertEdit.hpp>
 #include <HMP/Gui/themer.hpp>
 #include <HMP/Gui/App.hpp>
 
 namespace HMP::Gui::Widgets
 {
 
-	Commander::Commander() : SidebarWidget{ "Commander" }
+	Commander::Commander(): SidebarWidget{ "Commander" }
 	{}
 
 	bool Commander::keyPressed(const cinolib::KeyBinding& _key)

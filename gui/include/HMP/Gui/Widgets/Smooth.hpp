@@ -2,8 +2,6 @@
 
 #include <HMP/Gui/SidebarWidget.hpp>
 #include <HMP/Meshing/types.hpp>
-#include <cpputils/mixins/ReferenceClass.hpp>
-#include <cpputils/collections/Event.hpp>
 
 namespace HMP::Gui::Widgets
 {

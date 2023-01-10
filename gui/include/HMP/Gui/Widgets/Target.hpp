@@ -2,16 +2,13 @@
 
 #include <HMP/Gui/SidebarWidget.hpp>
 #include <HMP/Meshing/types.hpp>
-#include <cinolib/geometry/vec_mat.h>
 #include <cinolib/meshes/drawable_polygonmesh.h>
 #include <cinolib/meshes/polygonmesh.h>
-#include <HMP/Meshing/Mesher.hpp>
 #include <cinolib/color.h>
+#include <cinolib/gl/key_bindings.hpp>
 #include <string>
 #include <cpputils/collections/Event.hpp>
 #include <HMP/Gui/Utils/Transform.hpp>
-#include <cpputils/mixins/ReferenceClass.hpp>
-#include <HMP/Utils/Serialization.hpp>
 #include <vector>
 
 namespace HMP::Gui::Widgets

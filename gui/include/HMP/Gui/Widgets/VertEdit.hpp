@@ -2,10 +2,8 @@
 
 #include <HMP/Gui/SidebarWidget.hpp>
 #include <HMP/Meshing/types.hpp>
-#include <cinolib/color.h>
-#include <HMP/Meshing/Mesher.hpp>
+#include <cinolib/gl/key_bindings.hpp>
 #include <HMP/Gui/Utils/Transform.hpp>
-#include <cpputils/mixins/ReferenceClass.hpp>
 #include <cpputils/collections/Event.hpp>
 #include <cpputils/range/of.hpp>
 #include <unordered_map>
