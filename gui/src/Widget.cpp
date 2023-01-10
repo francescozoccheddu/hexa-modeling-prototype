@@ -44,10 +44,8 @@ namespace HMP::Gui
 		return false;
 	}
 
-	void Widget::mouseUpdated()
-	{
-
-	}
+	void Widget::cursorChanged()
+	{}
 
 	void Widget::cameraChanged()
 	{}

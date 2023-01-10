@@ -448,7 +448,7 @@ namespace HMP::Gui::DagViewer
 						case Dag::Node::EType::Element:
 						{
 							const Dag::Element& element{ node.node().element() };
-							const ImU32 color{ app().mouse().element == &node.node()
+							const ImU32 color{ app().cursor.element == &node.node()
 								? themer->dagNodeElHi
 								: Meshing::Utils::isShown(element) ? themer->dagNodeEl : themer->dagNodeElMut };
 							Utils::Drawing::rectFilled(drawList, toImVec(center - nodeHalfDiag_s), toImVec(center + nodeHalfDiag_s), color);

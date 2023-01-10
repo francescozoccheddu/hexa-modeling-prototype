@@ -71,21 +71,13 @@ namespace HMP::Gui
 		std::cout << "-------------------------------\n";
 	}
 
-	void App::resetMouse()
-	{
-		const Vec2 position{ m_mouse.position };
-		m_mouse = {};
-		m_mouse.position = position;
-	}
-
 	// actions
 
 	void App::onActionApplied()
 	{
 		mesher.updateMesh();
 		vertEditWidget.updateCentroid();
-		resetMouse();
-		updateMouse();
+		setCursor();
 		m_canvas.refit_scene();
 		for (Widget* const widget : m_widgets)
 		{
@@ -108,9 +100,13 @@ namespace HMP::Gui
 
 	void App::onMesherRestored(const Meshing::Mesher::State&)
 	{
-		if (m_mouse.element && m_mouse.element->pid >= mesh.num_polys())
+		if (m_cursor.element && m_cursor.element->pid >= mesh.num_polys())
 		{
-			resetMouse();
+			m_cursor = {};
+			for (Widget* const widget : m_widgets)
+			{
+				widget->cursorChanged();
+			}
 		}
 		if (copiedElement && copiedElement->pid >= mesh.num_polys())
 		{
@@ -188,11 +184,11 @@ namespace HMP::Gui
 
 	void App::onCameraChanged()
 	{
+		m_cursor = {};
 		for (Widget* const widget : m_widgets)
 		{
 			widget->cameraChanged();
 		}
-		updateMouse();
 	}
 
 	bool App::onMouseLeftClicked(int)
@@ -234,9 +230,9 @@ namespace HMP::Gui
 
 	bool App::onMouseMoved(double _x, double _y)
 	{
-		m_mouse.position = { _x, _y };
-		const Mouse oldMouse{ m_mouse };
-		resetMouse();
+		m_mouse = { _x, _y };
+		const Cursor oldCursor{ m_cursor };
+		m_cursor = {};
 		bool handled{ false };
 		for (Widget* const widget : m_widgets)
 		{
@@ -248,48 +244,43 @@ namespace HMP::Gui
 		}
 		if (!handled)
 		{
-			setMouse();
+			setCursor();
 		}
-		if (oldMouse != m_mouse)
+		if (oldCursor != m_cursor)
 		{
 			for (Widget* const widget : m_widgets)
 			{
-				widget->mouseUpdated();
+				widget->cursorChanged();
 			}
 		}
 		return handled;
 	}
 
-	const App::Mouse& App::mouse() const
-	{
-		return m_mouse;
-	}
-
-	void App::setMouse()
+	void App::setCursor()
 	{
 		const cinolib::Ray ray{ canvas.eye_to_mouse_ray() };
-		if (mesher.pick(ray.begin(), ray.dir(), m_mouse.pid, m_mouse.fid, m_mouse.eid, m_mouse.vid, !canvas.camera.projection.perspective))
+		if (mesher.pick(ray.begin(), ray.dir(), m_cursor.pid, m_cursor.fid, m_cursor.eid, m_cursor.vid, !canvas.camera.projection.perspective))
 		{
-			m_mouse.element = &mesher.element(m_mouse.pid);
-			m_mouse.fi = Meshing::Utils::fi(m_mouse.element->vids, Meshing::Utils::fidVids(mesh, m_mouse.fid));
-			m_mouse.ei = Meshing::Utils::ei(m_mouse.element->vids, Meshing::Utils::eidVids(mesh, m_mouse.eid));
-			m_mouse.vi = Meshing::Utils::vi(m_mouse.element->vids, m_mouse.vid);
+			m_cursor.element = &mesher.element(m_cursor.pid);
+			m_cursor.fi = Meshing::Utils::fi(m_cursor.element->vids, Meshing::Utils::fidVids(mesh, m_cursor.fid));
+			m_cursor.ei = Meshing::Utils::ei(m_cursor.element->vids, Meshing::Utils::eidVids(mesh, m_cursor.eid));
+			m_cursor.vi = Meshing::Utils::vi(m_cursor.element->vids, m_cursor.vid);
 		}
 		else
 		{
-			resetMouse();
+			m_cursor = {};
 		}
 	}
 
-	bool App::updateMouse()
+	bool App::updateCursor()
 	{
-		const Mouse oldMouse{ m_mouse };
-		setMouse();
-		if (oldMouse != m_mouse)
+		const Cursor oldCursor{ m_cursor };
+		setCursor();
+		if (oldCursor != m_cursor)
 		{
 			for (Widget* const widget : m_widgets)
 			{
-				widget->mouseUpdated();
+				widget->cursorChanged();
 			}
 			return true;
 		}
@@ -388,7 +379,10 @@ namespace HMP::Gui
 	// launch
 
 	App::App():
-		m_project{}, m_canvas{ 700, 600, 13, 1.0f }, canvas{ m_canvas }, mesher{ m_project.mesher() }, mesh{ mesher.mesh() }, commander{ m_project.commander() }, dagNamer{},
+		m_project{}, mesher{ m_project.mesher() }, mesh{ mesher.mesh() }, commander{ m_project.commander() },
+		m_canvas{ 700, 600, 13, 1.0f }, canvas{ m_canvas },
+		dagNamer{},
+		m_mouse{}, m_cursor{}, mouse{ m_mouse }, cursor{ m_cursor },
 		commanderWidget{ *new Widgets::Commander{} },
 		axesWidget{ *new Widgets::Axes{} },
 		targetWidget{ *new Widgets::Target{} },
@@ -481,7 +475,7 @@ namespace HMP::Gui
 		m_canvas.callback_mouse_right_click = [this](auto && ..._args) { return onMouseRightClicked(_args ...); };
 		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMoved(_args...); };
 		m_canvas.callback_key_pressed = [this](auto && ..._args) { return onKeyPressed(_args...); };
-		m_canvas.callback_key_event = [this](auto && ...) { updateMouse(); };
+		m_canvas.callback_key_event = [this](auto && ...) { updateCursor(); };
 		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChanged(_args...); };
 		m_canvas.callback_drop_files = [this](std::vector<std::string> _files) { onFilesDropped(_files); };
 

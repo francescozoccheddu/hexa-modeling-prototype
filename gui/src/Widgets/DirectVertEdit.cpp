@@ -106,7 +106,7 @@ namespace HMP::Gui::Widgets
 		m_onX = m_onY = m_onZ = false;
 		GLdouble depth;
 		app().canvas.project(app().vertEditWidget.centroid(), m_centroid, depth);
-		m_start = app().mouse().position;
+		m_start = app().mouse;
 		m_kind = _kind;
 		Utils::Transform& transform{ app().vertEditWidget.transform() };
 		transform.translation = { 0.0 };
@@ -115,7 +115,7 @@ namespace HMP::Gui::Widgets
 		app().vertEditWidget.applyTransform();
 		if (wasPending != m_pending)
 		{
-			app().updateMouse();
+			app().updateCursor();
 		}
 	}
 
@@ -147,7 +147,7 @@ namespace HMP::Gui::Widgets
 				{
 					break;
 				}
-				Vec2 diff{ app().mouse().position - m_start };
+				Vec2 diff{ app().mouse - m_start };
 				if (m_onY)
 				{
 					diff.x() = 0.0;
@@ -169,7 +169,7 @@ namespace HMP::Gui::Widgets
 			break;
 			case EKind::Scale:
 			{
-				const Vec2 diff{ app().mouse().position - m_centroid };
+				const Vec2 diff{ app().mouse - m_centroid };
 				const Vec2 startDiff{ m_start - m_centroid };
 				if (!m_onX && !m_onY && !m_onZ)
 				{
@@ -229,7 +229,7 @@ namespace HMP::Gui::Widgets
 					axis = -axis;
 				}
 				const Vec2 startDir{ Utils::Transform::dir(m_centroid, m_start) };
-				const Vec2 dir{ Utils::Transform::dir(m_centroid, app().mouse().position) };
+				const Vec2 dir{ Utils::Transform::dir(m_centroid, app().mouse) };
 				const Real angle{ Utils::Transform::angle(startDir, dir) };
 				const Mat3 mat{ Utils::Transform::rotationMat(axis, angle) };
 				transform.rotation = Utils::Transform::rotationMatToVec(mat);
@@ -247,7 +247,7 @@ namespace HMP::Gui::Widgets
 		}
 		m_pending = false;
 		app().vertEditWidget.applyAction();
-		app().updateMouse();
+		app().updateCursor();
 	}
 
 	void DirectVertEdit::cancel()
@@ -258,7 +258,7 @@ namespace HMP::Gui::Widgets
 		}
 		m_pending = false;
 		app().vertEditWidget.cancel();
-		app().updateMouse();
+		app().updateCursor();
 	}
 
 	bool DirectVertEdit::pending() const
@@ -272,7 +272,7 @@ namespace HMP::Gui::Widgets
 		{
 			return;
 		}
-		const Vec2 mouse{ app().mouse().position };
+		const Vec2 mouse{ app().mouse };
 		const float
 			textSize{ this->textSize * themer->ovScale },
 			lineThickness{ this->lineThickness * themer->ovScale },

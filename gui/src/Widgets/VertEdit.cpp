@@ -48,7 +48,7 @@ namespace HMP::Gui::Widgets
 		SidebarWidget{ "Vertex editor" },
 		m_verts{}, m_pendingAction{ false },
 		m_unappliedTransform{}, m_appliedTransform{}, m_centroid{}
-	{ }
+	{}
 
 	bool VertEdit::add(Id _vid, bool _update)
 	{
@@ -355,29 +355,29 @@ namespace HMP::Gui::Widgets
 
 	void VertEdit::onSelect(ESelectionSource _source, ESelectionMode _mode)
 	{
-		const App::Mouse& mouse{ app().mouse() };
-		if (mouse.element)
+		const App::Cursor& curs{ app().cursor };
+		if (curs.element)
 		{
 			std::vector<Id> vids{};
 			switch (_source)
 			{
 				case ESelectionSource::Vertex:
-					vids = { mouse.vid };
+					vids = { curs.vid };
 					break;
 				case ESelectionSource::Edge:
-					vids = app().mesh.edge_vert_ids(mouse.eid);
+					vids = app().mesh.edge_vert_ids(curs.eid);
 					break;
 				case ESelectionSource::Face:
-					vids = app().mesh.face_verts_id(mouse.fid);
+					vids = app().mesh.face_verts_id(curs.fid);
 					break;
 				case ESelectionSource::UpFace:
-					vids = app().mesh.face_verts_id(Meshing::Utils::adjFidInPidByFidAndEid(app().mesh, mouse.pid, mouse.fid, mouse.eid));
+					vids = app().mesh.face_verts_id(Meshing::Utils::adjFidInPidByFidAndEid(app().mesh, curs.pid, curs.fid, curs.eid));
 					break;
 				case ESelectionSource::UpEdge:
-					vids = { mouse.vid, app().mesh.poly_vert_opposite_to(mouse.pid, mouse.fid, mouse.vid) };
+					vids = { curs.vid, app().mesh.poly_vert_opposite_to(curs.pid, curs.fid, curs.vid) };
 					break;
 				case ESelectionSource::Poly:
-					vids = app().mesh.poly_verts_id(mouse.pid);
+					vids = app().mesh.poly_verts_id(curs.pid);
 					break;
 			}
 			if (_mode == ESelectionMode::Set)
