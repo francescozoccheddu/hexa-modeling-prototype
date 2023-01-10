@@ -27,8 +27,6 @@ namespace HMP::Gui::Widgets
 
     public:
 
-        cpputils::collections::Event<Pad, Real, I, Real, Real> onPadRequested;
-
         Pad();
 
     };

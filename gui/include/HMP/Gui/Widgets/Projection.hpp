@@ -79,8 +79,6 @@ namespace HMP::Gui::Widgets
 
 		Projection();
 
-		cpputils::collections::Event<Projection, const cinolib::Polygonmesh<>&, const std::vector<Point>&, const std::vector<EidsPath>&, const HMP::Projection::Options&> onProjectRequest;
-
 	};
 
 }

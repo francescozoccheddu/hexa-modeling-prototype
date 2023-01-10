@@ -2,6 +2,8 @@
 
 #include <imgui.h>
 #include <HMP/Gui/Utils/Controls.hpp>
+#include <HMP/Actions/Smooth.hpp>
+#include <HMP/Gui/App.hpp>
 
 namespace HMP::Gui::Widgets
 {
@@ -10,7 +12,7 @@ namespace HMP::Gui::Widgets
 
     void Smooth::requestSmooth()
     {
-        onSmoothRequested(m_surfaceIterations, m_internalIterations, m_surfVertWeight);
+        app().applyAction(*new HMP::Actions::Smooth{ m_surfaceIterations, m_internalIterations, m_surfVertWeight });
     }
 
     void Smooth::drawSidebar()

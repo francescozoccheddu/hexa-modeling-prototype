@@ -25,6 +25,3 @@ Sorted by priority:
 - **\[REFACTOR\]** All the `HMP::Meshing::Actions` could be replaced with a set of more primitive actions (`MoveVert`, `ShowElement`, `AddElements`, `WeldElements` and `ActionSequence` maybe?).
 - **\[IMPROVEMENT\]** The `HMP::Gui::DagViewer::Widget` view should try to remain stable on layout change.
 - **\[IMPROVEMENT\]** The camera pan speed could be adjusted depending on the relative mesh position (as I do in the `HMP::Gui::Widgets::DirectVertEdit` translation operation).
-- **\[REFACTOR\]** The `HMP::Gui::App` class is too big. Keep splitting it into child components.
-- **\[REFACTOR\]** Does the `core`/`gui` CMake project separation still make sense? 
-- **\[FEATURE\]** Enable undo/redo support for every user action, not just meshing operations.

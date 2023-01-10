@@ -6,6 +6,7 @@
 #include <HMP/Gui/Utils/Drawing.hpp>
 #include <HMP/Gui/themer.hpp>
 #include <HMP/Gui/App.hpp>
+#include <HMP/Actions/Transform.hpp>
 #include <HMP/Meshing/Utils.hpp>
 
 namespace HMP::Gui::Widgets
@@ -123,7 +124,7 @@ namespace HMP::Gui::Widgets
 				vids.push_back(vid);
 			}
 			cancel();
-			onApplyAction(vids, transform);
+			app().applyAction(*new HMP::Actions::Transform{ transform, vids });
 			for (auto& [vid, pos] : m_verts)
 			{
 				pos = app().mesh.vert(vid);
@@ -154,13 +155,12 @@ namespace HMP::Gui::Widgets
 		}
 		m_appliedTransform = m_unappliedTransform;
 		app().mesher.updateMeshTemp(vids);
-		onMeshUpdated();
 		updateCentroid();
 		const bool hadPendingAction{ m_pendingAction };
 		m_pendingAction = !m_appliedTransform.isIdentity();
-		if (m_pendingAction != hadPendingAction)
+		if (m_pendingAction && !hadPendingAction)
 		{
-			onPendingActionChanged();
+			app().commander.unapplied().clear();
 		}
 	}
 
@@ -183,7 +183,31 @@ namespace HMP::Gui::Widgets
 			m_centroid /= static_cast<Real>(m_verts.size());
 			m_unappliedTransform.origin /= static_cast<Real>(m_verts.size());
 		}
-		onCentroidChanged();
+	}
+
+	void VertEdit::attached()
+	{
+		app().mesher.onRestored += [this](const Meshing::Mesher::State&) {
+			remove(vids().filter([&](const Id _vid) {
+				return _vid >= app().mesh.num_verts();
+			}).toVector());
+		};
+		app().mesher.onElementVisibilityChanged += [this](const Dag::Element& _element, bool _visible) {
+			if (!_visible)
+			{
+				remove(app().mesh.poly_dangling_vids(_element.pid));
+			}
+		};
+	}
+
+	void VertEdit::actionApplied()
+	{
+		updateCentroid();
+	}
+
+	void VertEdit::actionPrepared()
+	{
+		applyAction();
 	}
 
 	void VertEdit::drawSidebar()
