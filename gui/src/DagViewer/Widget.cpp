@@ -6,9 +6,7 @@
 #include <cinolib/clamp.h>
 #include <algorithm>
 #include <cmath>
-#include <cinolib/fonts/droid_sans.hpp>
 #include <imgui.h>
-#include <imgui_impl_opengl2.h>
 #include <string>
 #include <HMP/Gui/Utils/HrDescriptions.hpp>
 #include <HMP/Gui/Utils/Drawing.hpp>
@@ -26,33 +24,29 @@
 namespace HMP::Gui::DagViewer
 {
 
-	void Widget::initFonts()
-	{
-		static constexpr float c_minFontSize{ 128.0f };
-		ImGuiIO& io{ ImGui::GetIO() };
-		ImFont** maxFontIt{ std::max_element(io.Fonts->Fonts.begin(), io.Fonts->Fonts.end(), [](ImFont* _a, ImFont* _b) { return _a->FontSize < _b->FontSize; }) };
-		if (maxFontIt == io.Fonts->Fonts.end() || (*maxFontIt)->FontSize < c_minFontSize)
-		{
-			ImVector<ImWchar> ranges{};
-			ImFontGlyphRangesBuilder builder{};
-			builder.AddText("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-?");
-			builder.BuildRanges(&ranges);
-			ImFontConfig config{};
-			io.Fonts->AddFontFromMemoryCompressedTTF(cinolib::droid_sans_data, static_cast<int>(cinolib::droid_sans_size), c_minFontSize, &config, ranges.Data);
-			io.Fonts->Build();
-			ImGui_ImplOpenGL2_DestroyFontsTexture();
-			ImGui_ImplOpenGL2_CreateFontsTexture();
-		}
-	}
-
 	Widget::Widget(): SidebarWidget{ "Dag" }
-	{
-		initFonts();
-	}
+	{}
 
 	void Widget::actionApplied()
 	{
 		m_needsLayoutUpdate = true;
+	}
+
+	std::vector<cinolib::GLcanvas::Font> Widget::additionalFonts(const std::vector<cinolib::GLcanvas::Font>& _fonts) const
+	{
+		constexpr unsigned int c_minSize{ 128 };
+		for (const cinolib::GLcanvas::Font& font : _fonts)
+		{
+			if (font.size >= c_minSize)
+			{
+				return {};
+			}
+		}
+		// FIXME
+		//std::unordered_set<char> alphabet{ app().dagNamer.alphabetChars.begin(), app().dagNamer.alphabetChars.end() };
+		//alphabet.insert(app().dagNamer.padChar);
+		//alphabet.insert(app().dagNamer.unknownChar);
+		return { cinolib::GLcanvas::Font{ c_minSize, /*alphabet*/ {}}};
 	}
 
 	void Widget::drawCanvas()

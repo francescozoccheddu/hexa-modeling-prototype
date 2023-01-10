@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <unordered_set>
 #include <ctime>
+#include <cmath>
 #include <string>
 #include <vector>
 #include <GLFW/glfw3.h>
@@ -302,6 +303,17 @@ namespace HMP::Gui
 	void App::onThemeChanged()
 	{
 		m_canvas.background = themer->bg;
+		const std::vector<cinolib::GLcanvas::Font> oldFonts{ m_canvas.fonts };
+		m_canvas.fonts = { cinolib::GLcanvas::Font{ static_cast<unsigned int>(std::round(themer->sbScale * 13.0f)), {} } };
+		for (Widget* const widget : m_widgets)
+		{
+			const std::vector<cinolib::GLcanvas::Font> additionalFonts{ widget->additionalFonts(m_canvas.fonts) };
+			m_canvas.fonts.insert(m_canvas.fonts.end(), additionalFonts.begin(), additionalFonts.end());
+		}
+		if (m_canvas.fonts != oldFonts)
+		{
+			m_canvas.update_fonts();
+		}
 		mesher.edgeColor = themer->srcEdge;
 		mesher.faceColor = themer->srcFace;
 		mesher.setEdgeThickness(2.0f * themer->ovScale);
