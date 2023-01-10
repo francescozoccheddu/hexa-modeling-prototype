@@ -107,7 +107,7 @@ namespace HMP::Gui::Widgets
 
     void Save::exportMesh(const std::string& _filename) const
     {
-        Meshing::Mesher::Mesh mesh{ mesh };
+        Meshing::Mesher::Mesh mesh{ app().mesh };
         for (Id pidPlusOne{ mesh.num_polys() }; pidPlusOne > 0; --pidPlusOne)
         {
             if (!app().mesher.shown(pidPlusOne - 1))

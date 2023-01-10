@@ -32,7 +32,7 @@ namespace HMP::Gui::Widgets
 		bool m_showPaths, m_showAllPaths;
 		I m_currentPath;
 
-		void attached();
+		void attached() override;
 
 		void matchPaths(I _first, I _lastEx, bool _fromSource);
 
