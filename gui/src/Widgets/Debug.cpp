@@ -45,7 +45,7 @@ namespace HMP::Gui::Widgets
     void Debug::drawCanvas()
     {
         using namespace Utils::Drawing;
-        const Meshing::Mesher::Mesh& mesh{ app().mesher.mesh() };
+        const Meshing::Mesher::Mesh& mesh{ app().mesh };
         ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
         const float fontSize{ ImGui::GetFontSize() * namesFontScale * themer->ovScale };
         if (showVids)
@@ -99,14 +99,14 @@ namespace HMP::Gui::Widgets
     {
         app().vertEditWidget.clear();
         m_negJacTestRes = 0;
-        for (Id pid{}; pid < app().mesher.mesh().num_polys(); pid++)
+        for (Id pid{}; pid < app().mesh.num_polys(); pid++)
         {
             if (app().mesher.shown(pid))
             {
-                const std::vector<Vec>& verts{ app().mesher.mesh().poly_verts(pid) };
+                const std::vector<Vec>& verts{ app().mesh.poly_verts(pid) };
                 if (cinolib::hex_scaled_jacobian(verts[0], verts[1], verts[2], verts[3], verts[4], verts[5], verts[6], verts[7]) < 0.0)
                 {
-                    app().vertEditWidget.add(app().mesher.mesh().adj_p2v(pid));
+                    app().vertEditWidget.add(app().mesh.adj_p2v(pid));
                     m_negJacTestRes++;
                 }
             }
@@ -116,7 +116,7 @@ namespace HMP::Gui::Widgets
     Real Debug::sectionValue() const
     {
         const Id dim{ static_cast<Id>(sectionDim) };
-        return app().mesher.mesh().bbox().delta()[dim] * sectionFactor + app().mesher.mesh().bbox().min[dim];
+        return app().mesh.bbox().delta()[dim] * sectionFactor + app().mesh.bbox().min[dim];
     }
 
     void Debug::updateSection()
@@ -127,7 +127,7 @@ namespace HMP::Gui::Widgets
             return;
         }
         const Id dim{ static_cast<Id>(sectionDim) };
-        const Meshing::Mesher::Mesh& mesh{ app().mesher.mesh() };
+        const Meshing::Mesher::Mesh& mesh{ app().mesh };
         const Real v{ sectionValue() };
         std::vector<bool> above(toI(mesh.num_polys()), false);
         for (Id pid{}; pid < mesh.num_polys(); ++pid)
@@ -329,7 +329,7 @@ namespace HMP::Gui::Widgets
 
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            if (Utils::Controls::disabledSmallButton("Run##refinesingle", app().mesher.mesh().num_polys() == 1))
+            if (Utils::Controls::disabledSmallButton("Run##refinesingle", app().mesh.num_polys() == 1))
             {
                 refineSingle();
             }
@@ -418,13 +418,13 @@ namespace HMP::Gui::Widgets
             ImGui::TableNextColumn(); ImGui::Text("Memory usage");
             ImGui::TableNextColumn(); ImGui::Text("%dMB", static_cast<int>(cinolib::memory_usage_in_mega_bytes() + 0.5f));
             ImGui::TableNextColumn(); ImGui::Text("Poly count");
-            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(app().mesher.mesh().num_polys()));
+            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(app().mesh.num_polys()));
             ImGui::TableNextColumn(); ImGui::Text("Face count");
-            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(app().mesher.mesh().num_faces()));
+            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(app().mesh.num_faces()));
             ImGui::TableNextColumn(); ImGui::Text("Edge count");
-            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(app().mesher.mesh().num_edges()));
+            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(app().mesh.num_edges()));
             ImGui::TableNextColumn(); ImGui::Text("Vert count");
-            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(app().mesher.mesh().num_verts()));
+            ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(app().mesh.num_verts()));
 #ifndef NDEBUG
             ImGui::TableNextColumn(); ImGui::Text("Allocated node count");
             ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(Dag::Node::allocatedNodeCount()));
@@ -442,7 +442,7 @@ namespace HMP::Gui::Widgets
 
     void Debug::selectCloseVerts()
     {
-        const Meshing::Mesher::Mesh& mesh{ app().mesher.mesh() };
+        const Meshing::Mesher::Mesh& mesh{ app().mesh };
         std::map<Vec, Id, Meshing::Utils::VertComparer> vertMap{ {.eps = testEps} };
         app().vertEditWidget.clear();
         for (Id vid{}; vid < mesh.num_verts(); vid++)
@@ -464,7 +464,7 @@ namespace HMP::Gui::Widgets
 
     void Debug::refineSingle()
     {
-        if (app().mesher.mesh().num_polys() == 1 && app().mesher.shown(0))
+        if (app().mesh.num_polys() == 1 && app().mesher.shown(0))
         {
             onRefineSingleRequested(refineSingleScheme, fi, Meshing::Utils::hexFiVis[fi][fiVi]);
         }
@@ -502,7 +502,7 @@ namespace HMP::Gui::Widgets
         }
         const Id dim{ static_cast<Id>(sectionDim) };
         const Real v{ sectionValue() };
-        const Meshing::Mesher::Mesh& vol{ app().mesher.mesh() };
+        const Meshing::Mesher::Mesh& vol{ app().mesh };
         cinolib::Polygonmesh<> srf{};
         std::vector<Id> vidsMap(toI(vol.num_verts()), noId);
         std::vector<Id> fidVids{};

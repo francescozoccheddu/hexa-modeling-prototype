@@ -41,7 +41,7 @@ namespace HMP::Gui::Widgets
 			{
 				for (const Id eid : m_paths[i].sourceEids)
 				{
-					if (!app().mesher.mesh().edge_is_visible(eid))
+					if (!app().mesh.edge_is_visible(eid))
 					{
 						m_paths[i].sourceEids.clear();
 						break;
@@ -50,7 +50,7 @@ namespace HMP::Gui::Widgets
 			}
 		};
 		app().mesher.onElementVisibilityChanged += [this](const Dag::Element& _element, bool) {
-			const std::vector<Id> removedEids{ app().mesher.mesh().poly_dangling_eids(_element.pid) };
+			const std::vector<Id> removedEids{ app().mesh.poly_dangling_eids(_element.pid) };
 			const std::unordered_set<Id> removedEidsSet{ removedEids.begin(), removedEids.end() };
 			for (I i{}; i < m_paths.size(); i++)
 			{
@@ -65,7 +65,7 @@ namespace HMP::Gui::Widgets
 			}
 		};
 		app().mesher.onRestored += [this](const Meshing::Mesher::State&) {
-			const Id eidCount{ app().mesher.mesh().num_edges() };
+			const Id eidCount{ app().mesh.num_edges() };
 			for (I i{}; i < m_paths.size(); i++)
 			{
 				for (const Id eid : m_paths[i].sourceEids)
@@ -100,7 +100,7 @@ namespace HMP::Gui::Widgets
 				continue;
 			}
 			paths.push_back(path);
-			for (const Point& point : HMP::Projection::Utils::endPoints(path, app().mesher.mesh(), targetMesh))
+			for (const Point& point : HMP::Projection::Utils::endPoints(path, app().mesh, targetMesh))
 			{
 				points.push_back(point);
 			}
@@ -127,7 +127,7 @@ namespace HMP::Gui::Widgets
 	void Projection::matchPaths(I _first, I _lastEx, bool _fromSource)
 	{
 		cinolib::Polygonmesh<> target{ app().targetWidget.meshForProjection() };
-		const Meshing::Mesher::Mesh& source{ app().mesher.mesh() };
+		const Meshing::Mesher::Mesh& source{ app().mesh };
 		for (I i{ _first }; i < _lastEx; i++)
 		{
 			m_paths[i].eids(!_fromSource).clear();
@@ -191,7 +191,7 @@ namespace HMP::Gui::Widgets
 		if (_inSource)
 		{
 			std::unordered_map<Id, Id> vol2surf;
-			cinolib::export_surface(app().mesher.mesh(), mesh, vol2surf, surf2vol, false);
+			cinolib::export_surface(app().mesh, mesh, vol2surf, surf2vol, false);
 			if (m_usePathAsCrease)
 			{
 				for (const EidsPath path : m_paths)
@@ -199,8 +199,8 @@ namespace HMP::Gui::Widgets
 					for (const Id eid : path.sourceEids)
 					{
 						const Id surfEid{ static_cast<Id>(mesh.edge_id(
-							vol2surf.at(app().mesher.mesh().edge_vert_id(eid, 0)),
-							vol2surf.at(app().mesher.mesh().edge_vert_id(eid, 1))
+							vol2surf.at(app().mesh.edge_vert_id(eid, 0)),
+							vol2surf.at(app().mesh.edge_vert_id(eid, 1))
 						)) };
 						mesh.edge_data(surfEid).flags[cinolib::CREASE] = true;
 					}
@@ -236,7 +236,7 @@ namespace HMP::Gui::Widgets
 				{
 					vid = surf2vol.at(vid);
 				}
-				path.sourceEids = HMP::Projection::Utils::vidsToEidsPath(app().mesher.mesh(), featVids);
+				path.sourceEids = HMP::Projection::Utils::vidsToEidsPath(app().mesh, featVids);
 			}
 			else
 			{
@@ -247,7 +247,7 @@ namespace HMP::Gui::Widgets
 
 	void Projection::setSourcePathEdgeAtPoint(const Vec& _point, bool _add)
 	{
-		setPathEdgeAtPoint(_point, _add, app().mesher.mesh(), true);
+		setPathEdgeAtPoint(_point, _add, app().mesh, true);
 	}
 
 	void Projection::setTargetPathEdgeAtPoint(const Vec& _point, bool _add)
@@ -513,7 +513,7 @@ namespace HMP::Gui::Widgets
 
 	void Projection::drawCanvas()
 	{
-		const Meshing::Mesher::Mesh& mesh{ app().mesher.mesh() };
+		const Meshing::Mesher::Mesh& mesh{ app().mesh };
 		const cinolib::DrawablePolygonmesh<>& targetMesh{ app().targetWidget.meshForDisplay() };
 		const float lineThickness{ this->lineThickness * themer->ovScale };
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
@@ -557,7 +557,7 @@ namespace HMP::Gui::Widgets
 		for (const EidsPath& path : m_paths)
 		{
 			{
-				const std::vector<Id> vids{ HMP::Projection::Utils::eidsToVidsPath(app().mesher.mesh(), path.sourceEids) };
+				const std::vector<Id> vids{ HMP::Projection::Utils::eidsToVidsPath(app().mesh, path.sourceEids) };
 				_serializer << vids.size();
 				for (const Id vid : vids)
 				{
@@ -587,7 +587,7 @@ namespace HMP::Gui::Widgets
 				{
 					_deserializer >> vid;
 				}
-				path.sourceEids = HMP::Projection::Utils::vidsToEidsPath(app().mesher.mesh(), vids);
+				path.sourceEids = HMP::Projection::Utils::vidsToEidsPath(app().mesh, vids);
 			}
 			{
 				std::vector<Id> vids(_deserializer.get<I>());

@@ -108,16 +108,16 @@ namespace HMP::Gui
 
 	void App::onMesherRestored(const Meshing::Mesher::State&)
 	{
-		if (m_mouse.element && m_mouse.element->pid >= mesher.mesh().num_polys())
+		if (m_mouse.element && m_mouse.element->pid >= mesh.num_polys())
 		{
 			resetMouse();
 		}
-		if (copiedElement && copiedElement->pid >= mesher.mesh().num_polys())
+		if (copiedElement && copiedElement->pid >= mesh.num_polys())
 		{
 			copiedElement = nullptr;
 		}
 		vertEditWidget.remove(vertEditWidget.vids().filter([&](const Id _vid) {
-			return _vid >= mesher.mesh().num_verts();
+			return _vid >= mesh.num_verts();
 		}).toVector());
 	}
 
@@ -125,7 +125,7 @@ namespace HMP::Gui
 	{
 		if (!_visible)
 		{
-			vertEditWidget.remove(mesher.mesh().poly_dangling_vids(_element.pid));
+			vertEditWidget.remove(mesh.poly_dangling_vids(_element.pid));
 		}
 	}
 
@@ -146,27 +146,14 @@ namespace HMP::Gui
 
 	// save events
 
-	void App::onExportMesh(const std::string& _filename) const
-	{
-		Meshing::Mesher::Mesh mesh{ mesher.mesh() };
-		for (Id pidPlusOne{ mesh.num_polys() }; pidPlusOne > 0; --pidPlusOne)
-		{
-			if (!mesher.shown(pidPlusOne - 1))
-			{
-				mesh.poly_remove(pidPlusOne - 1, true);
-			}
-		}
-		mesh.save(_filename.c_str());
-	}
-
-	void App::onSaveState(const std::string& _filename)
+	void App::serialize(const std::string& _filename) const
 	{
 		std::ofstream file;
 		file.open(_filename);
 		HMP::Utils::Serialization::Serializer serializer{ file };
-		HMP::Dag::Utils::serialize(serializer, *project.root());
-		serializer << toI(mesher.mesh().num_verts());
-		for (const Vec& vert : mesher.mesh().vector_verts())
+		HMP::Dag::Utils::serialize(serializer, *m_project.root());
+		serializer << toI(mesh.num_verts());
+		for (const Vec& vert : mesh.vector_verts())
 		{
 			serializer << vert;
 		}
@@ -177,7 +164,7 @@ namespace HMP::Gui
 		file.close();
 	}
 
-	void App::onLoadState(const std::string& _filename)
+	void App::deserialize(const std::string& _filename)
 	{
 		std::ifstream file;
 		file.open(_filename);
@@ -251,7 +238,7 @@ namespace HMP::Gui
 		updateMouse();
 		for (Widget* const widget : m_widgets)
 		{
-			widget->mouseMoved({_x, _y});
+			widget->mouseMoved({ _x, _y });
 		}
 		return directVertEditWidget.pending();
 	}
@@ -269,8 +256,8 @@ namespace HMP::Gui
 			if (mesher.pick(ray.begin(), ray.dir(), m_mouse.pid, m_mouse.fid, m_mouse.eid, m_mouse.vid, !canvas.camera.projection.perspective))
 			{
 				m_mouse.element = &mesher.element(m_mouse.pid);
-				m_mouse.fi = Meshing::Utils::fi(m_mouse.element->vids, Meshing::Utils::fidVids(mesher.mesh(), m_mouse.fid));
-				m_mouse.ei = Meshing::Utils::ei(m_mouse.element->vids, Meshing::Utils::eidVids(mesher.mesh(), m_mouse.eid));
+				m_mouse.fi = Meshing::Utils::fi(m_mouse.element->vids, Meshing::Utils::fidVids(mesh, m_mouse.fid));
+				m_mouse.ei = Meshing::Utils::ei(m_mouse.element->vids, Meshing::Utils::eidVids(mesh, m_mouse.eid));
 				m_mouse.vi = Meshing::Utils::vi(m_mouse.element->vids, m_mouse.vid);
 			}
 			else
@@ -288,7 +275,7 @@ namespace HMP::Gui
 
 	void App::onRefineTest(Refinement::EScheme _scheme, I _forwardFi, I _firstVi)
 	{
-		if (mesher.mesh().num_polys() == 1)
+		if (mesh.num_polys() == 1)
 		{
 			applyAction(*new Actions::Refine{ mesher.element(0), _forwardFi, _firstVi, _scheme });
 		}
@@ -383,7 +370,7 @@ namespace HMP::Gui
 	// launch
 
 	App::App():
-		project{}, canvas{ 700, 600, 13, 1.0f }, mesher{ project.mesher() }, commander{ project.commander() }, dagNamer{}, 
+		m_project{}, canvas{ 700, 600, 13, 1.0f }, mesher{ m_project.mesher() }, mesh{ mesher.mesh() }, commander{ m_project.commander() }, dagNamer{},
 		commanderWidget{ *new Widgets::Commander{} },
 		axesWidget{ *new Widgets::Axes{} },
 		targetWidget{ *new Widgets::Target{} },
@@ -402,26 +389,26 @@ namespace HMP::Gui
 #ifdef HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER
 		ae3d2ShapeExporter{ *new Widgets::Ae3d2ShapeExporter{} },
 #endif
-		m_widgets {
-			&debugWidget, 
-			&saveWidget, 
-			&commanderWidget, 
+		m_widgets{
+			&debugWidget,
+			&saveWidget,
+			&commanderWidget,
 			&highlightWidget,
-			&vertEditWidget, 
-			&directVertEditWidget, 
-			&padWidget, 
+			&vertEditWidget,
+			&directVertEditWidget,
+			&padWidget,
 			&smoothWidget,
-			&targetWidget, 
-			&projectionWidget, 
-			&axesWidget, 
-			&actionsWidget, 
+			&targetWidget,
+			&projectionWidget,
+			&axesWidget,
+			&actionsWidget,
 #ifdef HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER
-			&ae3d2ShapeExporter,
+			& ae3d2ShapeExporter,
 #endif
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
-			&dagViewerWidget,
+			& dagViewerWidget,
 #endif
-		}
+	}
 	{
 
 #ifdef NDEBUG
@@ -463,10 +450,6 @@ namespace HMP::Gui
 		padWidget.onPadRequested += [this](const auto&& ... _args) { onPad(_args...); };
 		smoothWidget.onSmoothRequested += [this](const auto&& ... _args) { onSmooth(_args...); };
 
-		saveWidget.onExportMesh += [this](const std::string& _filename) { onExportMesh(_filename); };
-		saveWidget.onSave += [this](const std::string& _filename) { onSaveState(_filename); };
-		saveWidget.onLoad += [this](const std::string& _filename) { onLoadState(_filename); };
-
 		projectionWidget.onProjectRequest += [this](auto && ..._args) { onProjectToTarget(_args ...); };
 
 		targetWidget.onMeshShapeChanged += [this]() { canvas.refit_scene(); };
@@ -494,7 +477,7 @@ namespace HMP::Gui
 
 		actionsWidget.clear();
 		commander.applied().clear();
-		canvas.push(&mesher.mesh());
+		canvas.push(&mesh);
 
 	}
 
@@ -504,6 +487,11 @@ namespace HMP::Gui
 		{
 			delete widget;
 		}
+	}
+
+	const Dag::Element& App::root() const
+	{
+		return *m_project.root();
 	}
 
 	int App::launch()
@@ -524,7 +512,7 @@ namespace HMP::Gui
 				<< ".hmp";
 			{
 				const std::string filename{ filenameSs.str() };
-				onSaveState(filename);
+				serialize(filename);
 				std::cout << "Wrote state to " << std::filesystem::absolute(filename) << std::endl;
 			}
 			throw;

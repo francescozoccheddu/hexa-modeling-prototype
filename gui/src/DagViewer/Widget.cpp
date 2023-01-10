@@ -46,7 +46,7 @@ namespace HMP::Gui::DagViewer
 		}
 	}
 
-	Widget::Widget() : SidebarWidget{ "Dag" } 
+	Widget::Widget(): SidebarWidget{ "Dag" }
 	{
 		initFonts();
 	}
@@ -67,15 +67,15 @@ namespace HMP::Gui::DagViewer
 			if (m_hovered && m_hovered->isElement())
 			{
 				const Id pid{ m_hovered->element().pid };
-				for (const Id fid : app().mesher.mesh().adj_p2f(pid))
+				for (const Id fid : app().mesh.adj_p2f(pid))
 				{
-					const QuadVerts fidVerts{ Meshing::Utils::verts(app().mesher.mesh(), Meshing::Utils::fidVids(app().mesher.mesh(), fid)) };
+					const QuadVerts fidVerts{ Meshing::Utils::verts(app().mesh, Meshing::Utils::fidVids(app().mesh, fid)) };
 					const auto fidVerts2d{ Utils::Drawing::project(app().canvas, fidVerts) };
 					Utils::Drawing::quadFilled(drawList, fidVerts2d, themer->ovPolyHi);
 				}
-				for (const Id eid : app().mesher.mesh().adj_p2e(pid))
+				for (const Id eid : app().mesh.adj_p2e(pid))
 				{
-					const EdgeVerts eidVerts{ Meshing::Utils::verts(app().mesher.mesh(), Meshing::Utils::eidVids(app().mesher.mesh(), eid)) };
+					const EdgeVerts eidVerts{ Meshing::Utils::verts(app().mesh, Meshing::Utils::eidVids(app().mesh, eid)) };
 					const auto eidVerts2d{ Utils::Drawing::project(app().canvas, eidVerts) };
 					Utils::Drawing::dashedLine(drawList, eidVerts2d, themer->ovFaceHi, semiBoldLineThickness, lineSpacing);
 				}
@@ -222,11 +222,11 @@ namespace HMP::Gui::DagViewer
 		if (m_needsLayoutUpdate)
 		{
 			m_needsLayoutUpdate = false;
-			m_tooManyNodes = app().mesher.mesh().num_polys() > 10000;
+			m_tooManyNodes = app().mesh.num_polys() > 10000;
 			if (!m_tooManyNodes)
 			{
 				const auto t1{ std::chrono::high_resolution_clock::now() };
-				m_layout = DagViewer::createLayout(*app().project.root());
+				m_layout = DagViewer::createLayout(app().root());
 				const auto t2{ std::chrono::high_resolution_clock::now() };
 				const int64_t elapsedMs{ std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() };
 				static constexpr int64_t warningTimeThresholdMs{ 200 };
