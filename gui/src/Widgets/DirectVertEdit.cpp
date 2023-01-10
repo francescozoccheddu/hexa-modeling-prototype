@@ -11,10 +11,9 @@
 namespace HMP::Gui::Widgets
 {
 
-	DirectVertEdit::DirectVertEdit() :
-		m_pending{ false }, m_centroid{}, m_kind{}, m_onX{}, m_onY{}, m_onZ{}, m_start{}, m_mouse{}, onPendingChanged{}
-	{
-	}
+	DirectVertEdit::DirectVertEdit():
+		m_pending{ false }, m_centroid{}, m_kind{}, m_onX{}, m_onY{}, m_onZ{}, m_start{}
+	{}
 
 	void DirectVertEdit::attached()
 	{
@@ -37,10 +36,14 @@ namespace HMP::Gui::Widgets
 		cinolib::print_binding(c_kbCancel.name(), "cancel direct edit");
 	}
 
-	void DirectVertEdit::mouseMoved(const Vec2& _position)
+	bool DirectVertEdit::mouseMoved(const Vec2& _position)
 	{
-		m_mouse = _position;
-		update();
+		if (m_pending)
+		{
+			update();
+			return true;
+		}
+		return false;
 	}
 
 	bool DirectVertEdit::keyPressed(const cinolib::KeyBinding& _key)
@@ -103,7 +106,7 @@ namespace HMP::Gui::Widgets
 		m_onX = m_onY = m_onZ = false;
 		GLdouble depth;
 		app().canvas.project(app().vertEditWidget.centroid(), m_centroid, depth);
-		m_start = m_mouse;
+		m_start = app().mouse().position;
 		m_kind = _kind;
 		Utils::Transform& transform{ app().vertEditWidget.transform() };
 		transform.translation = { 0.0 };
@@ -112,7 +115,7 @@ namespace HMP::Gui::Widgets
 		app().vertEditWidget.applyTransform();
 		if (wasPending != m_pending)
 		{
-			onPendingChanged();
+			app().updateMouse();
 		}
 	}
 
@@ -144,7 +147,7 @@ namespace HMP::Gui::Widgets
 				{
 					break;
 				}
-				Vec2 diff{ m_mouse - m_start };
+				Vec2 diff{ app().mouse().position - m_start };
 				if (m_onY)
 				{
 					diff.x() = 0.0;
@@ -166,7 +169,7 @@ namespace HMP::Gui::Widgets
 			break;
 			case EKind::Scale:
 			{
-				const Vec2 diff{ m_mouse - m_centroid };
+				const Vec2 diff{ app().mouse().position - m_centroid };
 				const Vec2 startDiff{ m_start - m_centroid };
 				if (!m_onX && !m_onY && !m_onZ)
 				{
@@ -226,7 +229,7 @@ namespace HMP::Gui::Widgets
 					axis = -axis;
 				}
 				const Vec2 startDir{ Utils::Transform::dir(m_centroid, m_start) };
-				const Vec2 dir{ Utils::Transform::dir(m_centroid, m_mouse) };
+				const Vec2 dir{ Utils::Transform::dir(m_centroid, app().mouse().position) };
 				const Real angle{ Utils::Transform::angle(startDir, dir) };
 				const Mat3 mat{ Utils::Transform::rotationMat(axis, angle) };
 				transform.rotation = Utils::Transform::rotationMatToVec(mat);
@@ -244,7 +247,7 @@ namespace HMP::Gui::Widgets
 		}
 		m_pending = false;
 		app().vertEditWidget.applyAction();
-		onPendingChanged();
+		app().updateMouse();
 	}
 
 	void DirectVertEdit::cancel()
@@ -255,7 +258,7 @@ namespace HMP::Gui::Widgets
 		}
 		m_pending = false;
 		app().vertEditWidget.cancel();
-		onPendingChanged();
+		app().updateMouse();
 	}
 
 	bool DirectVertEdit::pending() const
@@ -269,6 +272,7 @@ namespace HMP::Gui::Widgets
 		{
 			return;
 		}
+		const Vec2 mouse{ app().mouse().position };
 		const float
 			textSize{ this->textSize * themer->ovScale },
 			lineThickness{ this->lineThickness * themer->ovScale },
@@ -310,7 +314,7 @@ namespace HMP::Gui::Widgets
 				}
 				text(drawList, axisStr, toImVec2(m_centroid + textMargin), textSize, themer->ovMut, EAlign::LeftTop, EAlign::LeftTop);
 				const Vec2 startDir{ Utils::Transform::dir(m_centroid, m_start) };
-				const Vec2 dir{ Utils::Transform::dir(m_centroid, m_mouse) };
+				const Vec2 dir{ Utils::Transform::dir(m_centroid, mouse) };
 				line(drawList, { toImVec2(m_centroid), toImVec2(m_centroid + startDir * maxLen) }, themer->ovMut, lineThickness);
 				line(drawList, { toImVec2(m_centroid), toImVec2(m_centroid + dir * maxLen) }, themer->ovHi, lineThickness);
 				const Vec rot{ app().vertEditWidget.transform().rotation };
@@ -328,7 +332,7 @@ namespace HMP::Gui::Widgets
 					text(drawList, axisStr.c_str(), toImVec2(m_centroid + textMargin), textSize, themer->ovMut, EAlign::LeftTop, EAlign::LeftTop);
 				}
 				const Real startRadius{ m_centroid.dist(m_start) };
-				const Real radius{ m_centroid.dist(m_mouse) };
+				const Real radius{ m_centroid.dist(mouse) };
 				circle(drawList, toImVec2(m_centroid), static_cast<float>(startRadius), themer->ovMut, lineThickness);
 				circle(drawList, toImVec2(m_centroid), static_cast<float>(radius), themer->ovHi, lineThickness);
 				const Vec scl{ app().vertEditWidget.transform().scale * 100.0 };
@@ -341,20 +345,20 @@ namespace HMP::Gui::Widgets
 				{
 					line(drawList, { toImVec2(m_start - Vec2{ maxLen, 0 }), toImVec2(m_start + Vec2{ maxLen, 0 }) }, themer->ovMut, lineThickness);
 					line(drawList, { toImVec2(m_start - Vec2{ 0, crossRadius }), toImVec2(m_start + Vec2{ 0, crossRadius }) }, themer->ovMut, lineThickness);
-					line(drawList, { toImVec2(Vec2{ m_mouse.x(), m_start.y() } - Vec2{ 0, crossRadius }), toImVec2(Vec2{ m_mouse.x(), m_start.y() } + Vec2{ 0, crossRadius }) }, themer->ovHi, lineThickness);
+					line(drawList, { toImVec2(Vec2{ mouse.x(), m_start.y() } - Vec2{ 0, crossRadius }), toImVec2(Vec2{ mouse.x(), m_start.y() } + Vec2{ 0, crossRadius }) }, themer->ovHi, lineThickness);
 					text(drawList, "X", toImVec2(m_start + textMargin), textSize, themer->ovMut, EAlign::LeftTop, EAlign::LeftTop);
 				}
 				else if (!m_onX && m_onY && !m_onZ)
 				{
 					line(drawList, { toImVec2(m_start - Vec2{ 0, maxLen }), toImVec2(m_start + Vec2{ 0, maxLen }) }, themer->ovMut, lineThickness);
 					line(drawList, { toImVec2(m_start - Vec2{ crossRadius, 0 }), toImVec2(m_start + Vec2{ crossRadius, 0 }) }, themer->ovMut, lineThickness);
-					line(drawList, { toImVec2(Vec2{ m_start.x(), m_mouse.y() } - Vec2{ crossRadius, 0 }), toImVec2(Vec2{ m_start.x(), m_mouse.y() } + Vec2{ crossRadius, 0 }) }, themer->ovHi, lineThickness);
+					line(drawList, { toImVec2(Vec2{ m_start.x(), mouse.y() } - Vec2{ crossRadius, 0 }), toImVec2(Vec2{ m_start.x(), mouse.y() } + Vec2{ crossRadius, 0 }) }, themer->ovHi, lineThickness);
 					text(drawList, "Y", toImVec2(m_start + textMargin), textSize, themer->ovMut, EAlign::LeftTop, EAlign::LeftTop);
 				}
 				else if (!m_onX && !m_onY && !m_onZ)
 				{
 					cross(drawList, toImVec2(m_start), crossRadius, themer->ovMut, lineThickness);
-					line(drawList, { toImVec2(m_start), toImVec2(m_mouse) }, themer->ovHi, lineThickness);
+					line(drawList, { toImVec2(m_start), toImVec2(mouse) }, themer->ovHi, lineThickness);
 				}
 				else
 				{

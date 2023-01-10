@@ -43,9 +43,9 @@ namespace HMP::Gui::Widgets
         bool showElements{ false }, showVids{ false }, showEids{ false }, showFids{ false }, showPids{ false };
 
         void selectCloseVerts();
-        
+
         void selectNegJacobianHexes();
-        
+
         void refineSingle();
 
         void exportTarget() const;
@@ -63,8 +63,6 @@ namespace HMP::Gui::Widgets
         void attached() override;
 
     public:
-
-        cpputils::collections::Event<Debug, Refinement::EScheme, I, I> onRefineSingleRequested;
 
         Debug();
 
