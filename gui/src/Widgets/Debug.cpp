@@ -16,16 +16,17 @@
 #include <imgui_impl_opengl2.h>
 #include <HMP/Gui/themer.hpp>
 #include <HMP/Gui/App.hpp>
+#include <HMP/Actions/Refine.hpp>
 #include <cinolib/quality_hex.h>
 #include <cinolib/meshes/polygonmesh.h>
 
 namespace HMP::Gui::Widgets
 {
 
-    Debug::Debug() : SidebarWidget{ "Debug" }, m_sectionSoup{}
+    Debug::Debug(): SidebarWidget{ "Debug" }, m_sectionSoup{}
     {
         m_sectionSoup.set_color(Utils::Drawing::toColor(themer->ovHi));
-        m_sectionSoup.set_thickness(sectionLineThickness* themer->ovScale);
+        m_sectionSoup.set_thickness(sectionLineThickness * themer->ovScale);
         themer.onThemeChange += [this]() {
             m_sectionSoup.set_color(Utils::Drawing::toColor(themer->ovHi));
             m_sectionSoup.set_thickness(sectionLineThickness * themer->ovScale);
@@ -466,13 +467,13 @@ namespace HMP::Gui::Widgets
     {
         if (app().mesh.num_polys() == 1 && app().mesher.shown(0))
         {
-            onRefineSingleRequested(refineSingleScheme, fi, Meshing::Utils::hexFiVis[fi][fiVi]);
+            app().applyAction(*new HMP::Actions::Refine{ app().mesher.element(0), fi, Meshing::Utils::hexFiVis[fi][fiVi], refineSingleScheme });
         }
     }
 
     void Debug::exportTarget() const
     {
-        const std::optional<std::string> filename{ Utils::FilePicking::save("obj")};
+        const std::optional<std::string> filename{ Utils::FilePicking::save("obj") };
         if (!filename)
         {
             return;
@@ -484,7 +485,7 @@ namespace HMP::Gui::Widgets
             const Real v{ sectionValue() };
             for (Id pidPlusOne{ mesh.num_polys() }; pidPlusOne > 0; pidPlusOne--)
             {
-                if (sectionExportsInv != mesh.poly_centroid(pidPlusOne-1)[dim] >= v)
+                if (sectionExportsInv != mesh.poly_centroid(pidPlusOne - 1)[dim] >= v)
                 {
                     mesh.poly_remove(pidPlusOne - 1);
                 }
@@ -495,7 +496,7 @@ namespace HMP::Gui::Widgets
 
     void Debug::exportSource(bool _includeInterior) const
     {
-        const std::optional<std::string> filename{ Utils::FilePicking::save("obj")};
+        const std::optional<std::string> filename{ Utils::FilePicking::save("obj") };
         if (!filename)
         {
             return;
@@ -550,7 +551,7 @@ namespace HMP::Gui::Widgets
         srf.update_normals();
         srf.update_p_tessellations();
         srf.save(filename->c_str());
-    }    
+    }
 
 
 }

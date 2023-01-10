@@ -12,6 +12,7 @@
 #include <cpputils/collections/FixedVector.hpp>
 #include <string>
 #include <vector>
+#include <optional>
 #include <HMP/Gui/Widget.hpp>
 #include <HMP/Gui/SidebarWidget.hpp>
 #include <HMP/Projection/project.hpp>
@@ -55,6 +56,8 @@ namespace HMP::Gui
 			Dag::Element* element{};
 			I fi{}, vi{}, ei{};
 			Id pid{ noId }, fid{ noId }, vid{ noId }, eid{ noId };
+
+			bool operator==(const Mouse&) const = default;
 		};
 
 	private:
@@ -62,10 +65,11 @@ namespace HMP::Gui
 		void printUsage() const;
 
 		HMP::Project m_project;
+		cinolib::GLcanvas m_canvas;
 
 	public:
 
-		cinolib::GLcanvas canvas;
+		const cinolib::GLcanvas& canvas;
 		Meshing::Mesher& mesher;
 		const Meshing::Mesher::Mesh& mesh;
 		Commander& commander;
@@ -119,39 +123,42 @@ namespace HMP::Gui
 		bool onMouseRightClicked(int _modifiers);
 		bool onKeyPressed(int _key, int _modifiers);
 		bool onMouseMoved(double _x, double _y);
-		void updateMouse();
 		void onFilesDropped(const std::vector<std::string>& _files);
 
 		// user operation
 		void onProjectToTarget(const cinolib::Polygonmesh<>& _target, const std::vector<Projection::Utils::Point>& _pointFeats, const std::vector<Projection::Utils::EidsPath>& _pathFeats, const Projection::Options& _options);
 		void onApplyTargetTransform(const Mat4& _transform);
-		void onRefineTest(Refinement::EScheme _scheme, I _forwardFi, I _firstVi);
 		void onPad(Real _length, I _smoothIterations, Real _smoothSurfVertWeight, Real _cornerShrinkFactor);
 		void onSmooth(I _surfaceIterations, I _internalIterations, Real _surfVertWeight);
 
+		void loadTargetMeshOrProjectFile(const std::string& _file);
+
+		int launch();
+
+		void setMouse();
+
+		App();
+		~App();
+
 	public:
+
+		static int run(const std::optional<std::string>& _file = std::nullopt);
 
 		Dag::Element* copiedElement{};
 
-		App();
-
-		~App();
-
 		const Dag::Element& root() const;
 
-		void redo();
+		bool redo();
 		void applyAction(Commander::Action& _action);
-		void undo();
+		bool undo();
 
-		void loadTargetMeshOrProjectFile(const std::string& _file);
+		bool updateMouse();
+		void refitScene();
 
 		void serialize(const std::string& _filename) const;
-
 		void deserialize(const std::string& _filename);
 
 		const Mouse& mouse() const;
-
-		int launch();
 
 	};
 

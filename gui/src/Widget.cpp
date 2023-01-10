@@ -5,9 +5,8 @@
 namespace HMP::Gui
 {
 
-	Widget::Widget() : m_app{}
-	{
-	}
+	Widget::Widget(): m_app{}
+	{}
 
 	App& Widget::app()
 	{
@@ -20,8 +19,7 @@ namespace HMP::Gui
 	}
 
 	void Widget::printUsage() const
-	{
-	}
+	{}
 
 	void Widget::draw(const cinolib::GLcanvas& _canvas)
 	{
@@ -29,8 +27,7 @@ namespace HMP::Gui
 	}
 
 	void Widget::drawCanvas()
-	{
-	}
+	{}
 
 	bool Widget::keyPressed(const cinolib::KeyBinding& _binding)
 	{
@@ -42,33 +39,33 @@ namespace HMP::Gui
 		return false;
 	}
 
-	void Widget::mouseMoved(const Vec2& _position)
+	bool Widget::mouseMoved(const Vec2& _position)
 	{
+		return false;
+	}
+
+	void Widget::mouseUpdated()
+	{
+
 	}
 
 	void Widget::cameraChanged()
-	{
-	}
+	{}
 
 	void Widget::actionApplied()
-	{
-	}
+	{}
 
 	void Widget::actionPrepared()
-	{
-	}
+	{}
 
 	void Widget::serialize(HMP::Utils::Serialization::Serializer& _serializer) const
-	{
-	}
+	{}
 
 	void Widget::deserialize(HMP::Utils::Serialization::Deserializer& _deserializer)
-	{
-	}
+	{}
 
 	void Widget::attached()
-	{
-	}
+	{}
 
 	std::vector<const cinolib::DrawableObject*> Widget::additionalDrawables() const
 	{

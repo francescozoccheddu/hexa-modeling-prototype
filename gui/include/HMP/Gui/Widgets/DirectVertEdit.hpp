@@ -34,11 +34,10 @@ namespace HMP::Gui::Widgets
         EKind m_kind;
         bool m_onX, m_onY, m_onZ;
         Vec2 m_start;
-        Vec2 m_mouse;
 
         void printUsage() const override;
 
-        void mouseMoved(const Vec2& _position) override;
+        bool mouseMoved(const Vec2& _position) override;
 
         bool keyPressed(const cinolib::KeyBinding& _key) override;
 
@@ -64,8 +63,6 @@ namespace HMP::Gui::Widgets
         float crossRadius{ 10.0f };
         float textSize{ 20.0f };
         Vec2 textMargin{ 10.0f };
-
-        cpputils::collections::Event<DirectVertEdit> onPendingChanged;
 
         DirectVertEdit();
 

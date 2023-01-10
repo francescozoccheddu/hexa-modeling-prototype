@@ -13,7 +13,7 @@ namespace HMP::Gui
 
 	class App;
 
-	class Widget : public cpputils::mixins::ReferenceClass, private cinolib::CanvasGuiItem
+	class Widget: public cpputils::mixins::ReferenceClass, private cinolib::CanvasGuiItem
 	{
 
 	private:
@@ -42,7 +42,9 @@ namespace HMP::Gui
 
 		virtual bool mouseClicked(bool _right);
 
-		virtual void mouseMoved(const Vec2& _position);
+		virtual bool mouseMoved(const Vec2& _position);
+
+		virtual void mouseUpdated();
 
 		virtual void cameraChanged();
 
