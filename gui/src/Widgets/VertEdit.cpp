@@ -2,6 +2,8 @@
 
 #include <imgui.h>
 #include <cassert>
+#include <algorithm>
+#include <HMP/Meshing/types.hpp>
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <HMP/Gui/Utils/Drawing.hpp>
 #include <HMP/Gui/themer.hpp>
@@ -267,21 +269,36 @@ namespace HMP::Gui::Widgets
 		ImGui::EndTable();
 	}
 
+	bool VertEdit::mouseMoved(const Vec2&)
+	{
+		return m_boxSelectionStart.has_value();
+	}
+
+	void VertEdit::cameraChanged()
+	{
+		m_boxSelectionStart = std::nullopt;
+	}
+
 	void VertEdit::drawCanvas()
 	{
 		const float
 			radius{ this->radius * themer->ovScale },
-			lineThickness{ this->lineThickness * themer->ovScale };
+			lineThickness{ this->lineThickness * themer->ovScale },
+			lineSpacing{ (10.0f * themer->ovScale + 10.0f) / 2.0f };
 		ImDrawList& drawList{ *ImGui::GetWindowDrawList() };
+		if (m_boxSelectionStart)
+		{
+			Utils::Drawing::dashedRect(drawList, Utils::Controls::toImVec2(*m_boxSelectionStart), Utils::Controls::toImVec2(app().mouse), themer->ovMut, lineThickness, lineSpacing);
+		}
 		for (const Id vid : vids())
 		{
 			const Vec vert{ app().mesh.vert(vid) };
 			const auto pos{ Utils::Drawing::project(app().canvas, vert) };
-			Utils::Drawing::circle(drawList, pos, radius, themer->ovHi, lineThickness);
+			Utils::Drawing::circleFilled(drawList, pos, radius, themer->ovHi,4);
 		}
 		if (!empty())
 		{
-			Utils::Drawing::cross(drawList, Utils::Drawing::project(app().canvas, m_centroid), radius, themer->ovHi, lineThickness);
+			Utils::Drawing::cross(drawList, Utils::Drawing::project(app().canvas, m_centroid), radius*2.0f, themer->ovHi, lineThickness);
 			const char* verticesLit{ m_verts.size() == 1 ? "vertex" : "vertices" };
 			const int vertexCount{ static_cast<int>(m_verts.size()) };
 			ImGui::TextColored(Utils::Drawing::toImVec4(themer->ovMut), "%d %s selected", vertexCount, verticesLit);
@@ -370,11 +387,70 @@ namespace HMP::Gui::Widgets
 		{
 			onSelectAll(true);
 		}
+		else if (_key == c_kbSelectBox)
+		{
+			onBoxSelect(ESelectionMode::Set);
+		}
+		else if (_key == (c_kbSelectBox | c_kmodSelectAdd))
+		{
+			onBoxSelect(ESelectionMode::Add);
+		}
+		else if (_key == (c_kbSelectBox | c_kmodSelectRemove))
+		{
+			onBoxSelect(ESelectionMode::Remove);
+		}
 		else
 		{
 			return false;
 		}
 		return true;
+	}
+
+	void VertEdit::onBoxSelect(ESelectionMode _mode)
+	{
+		if (!m_boxSelectionStart)
+		{
+			m_boxSelectionStart = app().mouse;
+			return;
+		}
+		const Vec2
+			min{
+				std::min(app().mouse.x(), m_boxSelectionStart->x()),
+				std::min(app().mouse.y(), m_boxSelectionStart->y())
+		},
+			max{
+				std::max(app().mouse.x(), m_boxSelectionStart->x()),
+				std::max(app().mouse.y(), m_boxSelectionStart->y())
+		};
+		m_boxSelectionStart = std::nullopt;
+		std::vector<Id> vids{};
+		for (Id vid{}; vid < app().mesh.num_verts(); ++vid)
+		{
+			Vec2 vert2d;
+			GLdouble depth;
+			app().canvas.project(app().mesh.vert(vid), vert2d, depth);
+			if (depth >= 0.0 
+				&& depth <= 1.0
+				&& vert2d.x() >= min.x()
+				&& vert2d.y() >= min.y()
+				&& vert2d.x() <= max.x()
+				&& vert2d.y() <= max.y())
+			{
+				vids.push_back(vid);
+			}
+		}
+		if (_mode == ESelectionMode::Set)
+		{
+			clear();
+		}
+		if (_mode == ESelectionMode::Remove)
+		{
+			remove(vids);
+		}
+		else
+		{
+			add(vids);
+		}
 	}
 
 	void VertEdit::onSelect(ESelectionSource _source, ESelectionMode _mode)

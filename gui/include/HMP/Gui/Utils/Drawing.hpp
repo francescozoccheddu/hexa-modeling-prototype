@@ -88,6 +88,8 @@ namespace HMP::Gui::Utils::Drawing
 
 	void rect(ImDrawList& _drawList, const ImVec2& _min, const ImVec2& _max, ImU32 _color, float _thickness = 1.0f);
 
+	void dashedRect(ImDrawList& _drawList, const ImVec2& _min, const ImVec2& _max, ImU32 _color, float _thickness = 1.0f, float _spacing = 10.0f);
+
 	void rectFilled(ImDrawList& _drawList, const ImVec2& _min, const ImVec2& _max, ImU32 _color);
 
 	void dashedLine(ImDrawList& _drawList, const std::optional<EdgeVertData<ImVec2>>& _verts, ImU32 _color, float _thickness = 1.0f, float _spacing = 10.0f);
@@ -111,6 +113,8 @@ namespace HMP::Gui::Utils::Drawing
 	void quadFilled(ImDrawList& _drawList, const std::optional<QuadVertData<ImVec2>>& _verts, ImU32 _color);
 
 	void rect(ImDrawList& _drawList, const std::optional<ImVec2>& _min, const std::optional<ImVec2>& _max, ImU32 _color, float _thickness = 1.0f);
+
+	void dashedRect(ImDrawList& _drawList, const std::optional<ImVec2>& _min, const std::optional<ImVec2>& _max, ImU32 _color, float _thickness = 1.0f, float _spacing = 10.0f);
 
 	void rectFilled(ImDrawList& _drawList, const std::optional<ImVec2>& _min, const std::optional<ImVec2>& _max, ImU32 _color);
 

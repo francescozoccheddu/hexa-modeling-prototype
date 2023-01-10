@@ -173,6 +173,14 @@ namespace HMP::Gui::Utils::Drawing
 		_drawList.AddRect(_min, _max, _color, _thickness);
 	}
 
+	void dashedRect(ImDrawList& _drawList, const ImVec2& _min, const ImVec2& _max, ImU32 _color, float _thickness, float _spacing)
+	{
+		dashedLine(_drawList, { ImVec2{ _min.x, _min.y }, ImVec2{_max.x, _min.y} }, _color, _thickness, _spacing);
+		dashedLine(_drawList, { ImVec2{ _min.x, _max.y }, ImVec2{_max.x, _max.y} }, _color, _thickness, _spacing);
+		dashedLine(_drawList, { ImVec2{ _min.x, _min.y }, ImVec2{_min.x, _max.y} }, _color, _thickness, _spacing);
+		dashedLine(_drawList, { ImVec2{ _max.x, _min.y }, ImVec2{_max.x, _max.y} }, _color, _thickness, _spacing);
+	}
+
 	void rectFilled(ImDrawList& _drawList, const ImVec2& _min, const ImVec2& _max, ImU32 _color)
 	{
 		if (cull(_drawList, _min, _max))
@@ -321,6 +329,14 @@ namespace HMP::Gui::Utils::Drawing
 		if (_min && _max)
 		{
 			rect(_drawList, *_min, *_max, _color, _thickness);
+		}
+	}
+
+	void dashedRect(ImDrawList& _drawList, const std::optional<ImVec2>& _min, const std::optional<ImVec2>& _max, ImU32 _color, float _thickness, float _spacing)
+	{
+		if (_min && _max)
+		{
+			dashedRect(_drawList, *_min, *_max, _color, _thickness, _spacing);
 		}
 	}
 

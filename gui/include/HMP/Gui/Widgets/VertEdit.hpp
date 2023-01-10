@@ -8,6 +8,7 @@
 #include <cpputils/range/of.hpp>
 #include <unordered_map>
 #include <vector>
+#include <optional>
 
 namespace HMP::Gui::Widgets
 {
@@ -25,6 +26,7 @@ namespace HMP::Gui::Widgets
 		static constexpr cinolib::KeyBinding c_kbSelectPoly{ GLFW_KEY_4 };
 		static constexpr cinolib::KeyBinding c_kbDeselectAll{ GLFW_KEY_A, GLFW_MOD_CONTROL };
 		static constexpr cinolib::KeyBinding c_kbSelectAll{ GLFW_KEY_A, GLFW_MOD_SHIFT };
+		static constexpr cinolib::KeyBinding c_kbSelectBox{ GLFW_KEY_K };
 		static constexpr int c_kmodSelectAdd{ GLFW_MOD_SHIFT };
 		static constexpr int c_kmodSelectRemove{ GLFW_MOD_CONTROL };
 
@@ -47,6 +49,7 @@ namespace HMP::Gui::Widgets
 		bool m_pendingAction;
 		Utils::Transform m_unappliedTransform, m_appliedTransform;
 		Vec m_centroid;
+		std::optional<Vec2> m_boxSelectionStart{ std::nullopt };
 
 		bool addOrRemove(const Id* _vids, I _count, bool _add, bool _update);
 
@@ -62,11 +65,17 @@ namespace HMP::Gui::Widgets
 
 		void onSelectAll(bool _selected);
 
+		void onBoxSelect(ESelectionMode _mode);
+
 		void attached() override;
+
+		bool mouseMoved(const Vec2&) override;
+
+		void cameraChanged() override;
 
 	public:
 
-		float radius{ 6.0f }, lineThickness{ 1.5f };
+		float radius{ 3.0f }, lineThickness{ 1.5f };
 
 		using Vids = decltype(cpputils::range::ofc(m_verts).map(&vertsToVidsConvert));
 

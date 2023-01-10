@@ -49,7 +49,7 @@ namespace HMP::Gui::Widgets
 			dashedLine(drawList, eid2d, themer->ovMut, boldLineThickness, lineSpacing);
 			if (eid2d)
 			{
-				circleFilled(drawList, (*eid2d)[0], vertRadius, themer->ovMut);
+				circle(drawList, (*eid2d)[0], vertRadius, themer->ovMut, lineThickness);
 			}
 		}
 		if (app().cursor.element)
@@ -84,7 +84,7 @@ namespace HMP::Gui::Widgets
 				dashedLine(drawList, adjEid2d, adjEid == app().cursor.eid ? themer->ovHi : themer->ovMut, boldLineThickness, lineSpacing);
 			}
 			const auto hVert2d{ Utils::Drawing::project(app().canvas, app().mesh.vert(app().cursor.vid)) };
-			circleFilled(drawList, hVert2d, vertRadius, themer->ovHi);
+			circle(drawList, hVert2d, vertRadius, themer->ovHi, lineThickness);
 		}
 		if (app().cursor.element)
 		{
