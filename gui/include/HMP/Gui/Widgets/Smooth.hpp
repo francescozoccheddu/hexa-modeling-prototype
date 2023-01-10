@@ -21,8 +21,6 @@ namespace HMP::Gui::Widgets
 
     public:
 
-        cpputils::collections::Event<Smooth, I, I, Real> onSmoothRequested;
-
         Smooth();
 
         void requestSmooth();

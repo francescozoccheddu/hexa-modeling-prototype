@@ -8,18 +8,18 @@
 #include <filesystem>
 #include <HMP/Gui/themer.hpp>
 #include <HMP/Gui/App.hpp>
+#include <HMP/Actions/Transform.hpp>
 
 namespace HMP::Gui::Widgets
 {
 
-	Target::Target() :
+	Target::Target():
 		SidebarWidget{ "Target mesh" },
-		m_mesh{}, 
+		m_mesh{},
 		m_missingMeshFile{ false },
 		faceColor{ themer->tgtFace }, edgeColor{ themer->tgtEdge },
 		transform{},
-		visible{ true },
-		onMeshShapeChanged{}, onApplyTransformToSource{}
+		visible{ true }
 	{
 		themer.onThemeChange += [this]() {
 			faceColor = themer->tgtFace;
@@ -97,7 +97,7 @@ namespace HMP::Gui::Widgets
 	{
 		assert(hasMesh());
 		m_mesh.transform = transform.matrix();
-		onMeshShapeChanged();
+		app().refitScene();
 	}
 
 	void Target::updateVisibility()
@@ -140,6 +140,11 @@ namespace HMP::Gui::Widgets
 		return false;
 	}
 
+	std::vector<const cinolib::DrawableObject*> Target::additionalDrawables() const
+	{
+		return { &m_mesh };
+	}
+
 	void Target::load(const std::string& _filename, bool _keepTransform)
 	{
 		clearMesh();
@@ -159,6 +164,7 @@ namespace HMP::Gui::Widgets
 				fit();
 			}
 			updateTransform();
+			app().refitScene();
 			onMeshChanged();
 		}
 		else
@@ -173,7 +179,7 @@ namespace HMP::Gui::Widgets
 		m_filename = "";
 		m_mesh.clear();
 		m_mesh.updateGL();
-		onMeshShapeChanged();
+		app().refitScene();
 		onMeshChanged();
 	}
 
@@ -181,7 +187,8 @@ namespace HMP::Gui::Widgets
 	{
 		assert(hasMesh());
 		updateTransform();
-		onApplyTransformToSource(m_mesh.transform.inverse());
+		app().applyAction(*new HMP::Actions::Transform{ m_mesh.transform.inverse() });
+		app().resetCamera();
 		identity();
 	}
 
@@ -377,7 +384,7 @@ namespace HMP::Gui::Widgets
 		}
 	}
 
-	bool Target::onKeyPressed(const cinolib::KeyBinding& _key)
+	bool Target::keyPressed(const cinolib::KeyBinding& _key)
 	{
 		if (_key == c_kbLoad)
 		{

@@ -76,13 +76,13 @@ namespace HMP::Gui
 	void App::onActionApplied()
 	{
 		mesher.updateMesh();
-		vertEditWidget.updateCentroid();
+		m_canvas.refit_scene(true, false);
 		setCursor();
-		m_canvas.refit_scene();
 		for (Widget* const widget : m_widgets)
 		{
 			widget->actionApplied();
 		}
+		m_canvas.draw();
 	}
 
 	void App::applyAction(Commander::Action& _action)
@@ -91,7 +91,6 @@ namespace HMP::Gui
 		{
 			widget->actionPrepared();
 		}
-		vertEditWidget.applyAction();
 		commander.apply(_action);
 		onActionApplied();
 	}
@@ -111,32 +110,6 @@ namespace HMP::Gui
 		if (copiedElement && copiedElement->pid >= mesh.num_polys())
 		{
 			copiedElement = nullptr;
-		}
-		vertEditWidget.remove(vertEditWidget.vids().filter([&](const Id _vid) {
-			return _vid >= mesh.num_verts();
-		}).toVector());
-	}
-
-	void App::onMesherElementVisibilityChanged(const Dag::Element& _element, bool _visible)
-	{
-		if (!_visible)
-		{
-			vertEditWidget.remove(mesh.poly_dangling_vids(_element.pid));
-		}
-	}
-
-	// vert edit events
-
-	void App::onApplyVertEdit(const std::vector<Id>& _vids, const Mat4& _transform)
-	{
-		applyAction(*new Actions::Transform{ _transform, _vids });
-	}
-
-	void App::onVertEditPendingActionChanged()
-	{
-		if (vertEditWidget.pendingAction())
-		{
-			commander.unapplied().clear();
 		}
 	}
 
@@ -172,12 +145,13 @@ namespace HMP::Gui
 			deserializer >> vert;
 		}
 		applyAction(*new Actions::Root{ root, verts });
-		m_canvas.reset_camera();
+		m_canvas.reset_camera(true, false);
 		for (Widget* const widget : m_widgets)
 		{
 			widget->deserialize(deserializer);
 		}
 		file.close();
+		m_canvas.draw();
 	}
 
 	// canvas events
@@ -289,24 +263,16 @@ namespace HMP::Gui
 
 	// Commands
 
-	void App::onProjectToTarget(const cinolib::Polygonmesh<>& _target, const std::vector<Projection::Utils::Point>& _pointFeats, const std::vector<Projection::Utils::EidsPath>& _pathFeats, const Projection::Options& _options)
-	{
-		applyAction(*new Actions::Project{ _target, _pointFeats, _pathFeats, _options });
-	}
-
-	void App::onApplyTargetTransform(const Mat4& _transform)
-	{
-		applyAction(*new Actions::Transform{ _transform });
-		m_canvas.reset_camera();
-	}
-
 	bool App::undo()
 	{
 		if (!commander.canUndo())
 		{
 			return false;
 		}
-		vertEditWidget.applyAction();
+		for (Widget* const widget : m_widgets)
+		{
+			widget->actionPrepared();
+		}
 		commander.undo();
 		onActionApplied();
 		return true;
@@ -318,7 +284,10 @@ namespace HMP::Gui
 		{
 			return false;
 		}
-		vertEditWidget.applyAction();
+		for (Widget* const widget : m_widgets)
+		{
+			widget->actionPrepared();
+		}
 		commander.redo();
 		onActionApplied();
 		return true;
@@ -361,19 +330,14 @@ namespace HMP::Gui
 		mesher.updateColors();
 	}
 
-	void App::onPad(Real _length, I _smoothIterations, Real _smoothSurfVertWeight, Real _cornerShrinkFactor)
-	{
-		applyAction(*new Actions::Pad{ _length, _smoothIterations, _smoothSurfVertWeight, _cornerShrinkFactor });
-	}
-
-	void App::onSmooth(I _surfaceIterations, I _internalIterations, Real _surfVertWeight)
-	{
-		applyAction(*new Actions::Smooth{ _surfaceIterations, _internalIterations, _surfVertWeight });
-	}
-
 	void App::refitScene()
 	{
 		m_canvas.refit_scene();
+	}
+
+	void App::resetCamera()
+	{
+		m_canvas.reset_camera();
 	}
 
 	// launch
@@ -434,9 +398,19 @@ namespace HMP::Gui
 		m_canvas.key_bindings.reset_camera = GLFW_KEY_P;
 		m_canvas.key_bindings.store_camera = { GLFW_KEY_C, GLFW_MOD_ALT };
 		m_canvas.key_bindings.restore_camera = { GLFW_KEY_V, GLFW_MOD_ALT };
+		m_canvas.depth_cull_markers = false;
+		m_canvas.callback_mouse_left_click = [this](auto && ..._args) { return onMouseLeftClicked(_args ...); };
+		m_canvas.callback_mouse_right_click = [this](auto && ..._args) { return onMouseRightClicked(_args ...); };
+		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMoved(_args...); };
+		m_canvas.callback_key_pressed = [this](auto && ..._args) { return onKeyPressed(_args...); };
+		m_canvas.callback_key_event = [this](auto && ...) { updateCursor(); };
+		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChanged(_args...); };
+		m_canvas.callback_drop_files = [this](std::vector<std::string> _files) { onFilesDropped(_files); };
+		m_canvas.push(&mesh);
+
+		themer.onThemeChange += [this]() { onThemeChanged(); };
 
 		mesher.onRestored += [this](const Meshing::Mesher::State& _oldState) { onMesherRestored(_oldState); };
-		mesher.onElementVisibilityChanged += [this](const Dag::Element& _element, bool _visible) { onMesherElementVisibilityChanged(_element, _visible); };
 
 		commander.applied().limit(100);
 		commander.unapplied().limit(100);
@@ -451,41 +425,21 @@ namespace HMP::Gui
 			}
 			for (const cinolib::DrawableObject* additionalDrawable : widget->additionalDrawables())
 			{
-				m_canvas.push(additionalDrawable);
+				m_canvas.push(additionalDrawable, false);
 			}
 		}
+
 		for (Widget* widget : m_widgets)
 		{
 			widget->attached();
 		}
 
-		padWidget.onPadRequested += [this](const auto&& ... _args) { onPad(_args...); };
-		smoothWidget.onSmoothRequested += [this](const auto&& ... _args) { onSmooth(_args...); };
-
-		projectionWidget.onProjectRequest += [this](auto && ..._args) { onProjectToTarget(_args ...); };
-
-		targetWidget.onMeshShapeChanged += [this]() { m_canvas.refit_scene(); };
-		targetWidget.onApplyTransformToSource += [this](const Mat4& _transform) { onApplyTargetTransform(_transform); };
-
-		vertEditWidget.onApplyAction += [this](std::vector<Id> _vids, Mat4 _transform) { onApplyVertEdit(_vids, _transform); };
-		vertEditWidget.onPendingActionChanged += [this]() { onVertEditPendingActionChanged(); };
-
-		m_canvas.depth_cull_markers = false;
-		m_canvas.callback_mouse_left_click = [this](auto && ..._args) { return onMouseLeftClicked(_args ...); };
-		m_canvas.callback_mouse_right_click = [this](auto && ..._args) { return onMouseRightClicked(_args ...); };
-		m_canvas.callback_mouse_moved = [this](auto && ..._args) { return onMouseMoved(_args...); };
-		m_canvas.callback_key_pressed = [this](auto && ..._args) { return onKeyPressed(_args...); };
-		m_canvas.callback_key_event = [this](auto && ...) { updateCursor(); };
-		m_canvas.callback_camera_changed = [this](auto && ..._args) { return onCameraChanged(_args...); };
-		m_canvas.callback_drop_files = [this](std::vector<std::string> _files) { onFilesDropped(_files); };
-
-		themer.onThemeChange += [this]() { onThemeChanged(); };
+		actionsWidget.clear();
+		commander.applied().clear();
 
 		debugWidget.updateTheme();
 
-		actionsWidget.clear();
-		commander.applied().clear();
-		m_canvas.push(&mesh);
+		resetCamera();
 
 	}
 

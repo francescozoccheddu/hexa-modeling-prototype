@@ -22,11 +22,10 @@ namespace HMP::Gui::Widgets
 {
 
 	Projection::Projection():
-		SidebarWidget{ "Projection" }, 
+		SidebarWidget{ "Projection" },
 		m_options{}, m_paths(1), m_featureFinderOptions{}, m_usePathAsCrease{ false }, m_featureFinderCreaseAngle{ 60.0f },
-		m_showPaths{ false }, m_showAllPaths{ false }, m_currentPath{}, onProjectRequest{}
-	{
-	}
+		m_showPaths{ false }, m_showAllPaths{ false }, m_currentPath{}
+	{}
 
 	void Projection::attached()
 	{
@@ -92,7 +91,7 @@ namespace HMP::Gui::Widgets
 		points.reserve(m_paths.size() * 2);
 		std::vector<EidsPath> paths;
 		paths.reserve(m_paths.size());
-		const cinolib::Polygonmesh<>& targetMesh{ app().targetWidget.meshForProjection() };
+		cinolib::Polygonmesh<> targetMesh{ std::move(app().targetWidget.meshForProjection()) };
 		for (const EidsPath& path : m_paths)
 		{
 			if (path.sourceEids.empty() || path.targetEids.empty())
@@ -105,7 +104,7 @@ namespace HMP::Gui::Widgets
 				points.push_back(point);
 			}
 		}
-		onProjectRequest(targetMesh, points, paths, m_options);
+		app().applyAction(*new HMP::Actions::Project{ std::move(targetMesh), points, paths, m_options });
 	}
 
 	bool Projection::canReproject() const

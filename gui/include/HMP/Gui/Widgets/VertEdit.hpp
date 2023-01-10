@@ -56,9 +56,15 @@ namespace HMP::Gui::Widgets
 
 		void printUsage() const override;
 
+		void actionApplied() override;
+
+		void actionPrepared() override;
+
 		void onSelect(ESelectionSource _source, ESelectionMode _mode);
 
 		void onSelectAll(bool _selected);
+
+		void attached() override;
 
 	public:
 
@@ -67,10 +73,6 @@ namespace HMP::Gui::Widgets
 		using Vids = decltype(cpputils::range::ofc(m_verts).map(&vertsToVidsConvert));
 
 		cpputils::collections::Event<VertEdit> onVidsChanged{};
-		cpputils::collections::Event<VertEdit> onCentroidChanged{};
-		cpputils::collections::Event<VertEdit> onMeshUpdated{};
-		cpputils::collections::Event<VertEdit> onPendingActionChanged{};
-		cpputils::collections::Event<VertEdit, std::vector<Id>, Mat4> onApplyAction{};
 
 		VertEdit();
 

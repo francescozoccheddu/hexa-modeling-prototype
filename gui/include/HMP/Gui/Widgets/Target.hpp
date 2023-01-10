@@ -31,12 +31,14 @@ namespace HMP::Gui::Widgets
 
 		void drawSidebar() override;
 
-		void serialize(HMP::Utils::Serialization::Serializer& _serializer) const;
-		void deserialize(HMP::Utils::Serialization::Deserializer& _deserializer);
+		void serialize(HMP::Utils::Serialization::Serializer& _serializer) const override;
+		void deserialize(HMP::Utils::Serialization::Deserializer& _deserializer) override;
 
-		bool onKeyPressed(const cinolib::KeyBinding& _key);
+		bool keyPressed(const cinolib::KeyBinding& _key) override;
 
-		void printUsage() const;
+		void printUsage() const override;
+
+		std::vector<const cinolib::DrawableObject*> additionalDrawables() const override;
 
 	public:
 
@@ -48,8 +50,6 @@ namespace HMP::Gui::Widgets
 		Target();
 
 		mutable cpputils::collections::Event<Target> onMeshChanged;
-		mutable cpputils::collections::Event<Target> onMeshShapeChanged;
-		mutable cpputils::collections::Event<Target, const Mat4&> onApplyTransformToSource;
 
 		bool hasMesh() const;
 		const cinolib::DrawablePolygonmesh<>& meshForDisplay() const;

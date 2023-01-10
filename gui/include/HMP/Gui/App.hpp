@@ -111,11 +111,6 @@ namespace HMP::Gui
 
 		// mesher events
 		void onMesherRestored(const Meshing::Mesher::State& _state);
-		void onMesherElementVisibilityChanged(const Dag::Element& _element, bool _visible);
-
-		// vert edit events
-		void onApplyVertEdit(const std::vector<Id>& _vids, const Mat4& _transform);
-		void onVertEditPendingActionChanged();
 
 		// canvas events
 		void onCameraChanged();
@@ -124,12 +119,6 @@ namespace HMP::Gui
 		bool onKeyPressed(int _key, int _modifiers);
 		bool onMouseMoved(double _x, double _y);
 		void onFilesDropped(const std::vector<std::string>& _files);
-
-		// user operation
-		void onProjectToTarget(const cinolib::Polygonmesh<>& _target, const std::vector<Projection::Utils::Point>& _pointFeats, const std::vector<Projection::Utils::EidsPath>& _pathFeats, const Projection::Options& _options);
-		void onApplyTargetTransform(const Mat4& _transform);
-		void onPad(Real _length, I _smoothIterations, Real _smoothSurfVertWeight, Real _cornerShrinkFactor);
-		void onSmooth(I _surfaceIterations, I _internalIterations, Real _surfVertWeight);
 
 		void loadTargetMeshOrProjectFile(const std::string& _file);
 
@@ -154,6 +143,7 @@ namespace HMP::Gui
 
 		bool updateCursor();
 		void refitScene();
+		void resetCamera();
 
 		void serialize(const std::string& _filename) const;
 		void deserialize(const std::string& _filename);
