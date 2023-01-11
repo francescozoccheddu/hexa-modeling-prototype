@@ -334,7 +334,7 @@ namespace HMP::Gui
 
 	App::App():
 		m_project{}, mesher{ m_project.mesher() }, mesh{ mesher.mesh() }, commander{ m_project.commander() },
-		m_canvas{ 700, 600, 13, 1.0f }, canvas{ m_canvas },
+		m_canvas{ 700, 600, 13, 1 }, canvas{ m_canvas },
 		dagNamer{},
 		m_mouse{}, m_cursor{}, mouse{ m_mouse }, cursor{ m_cursor },
 		commanderWidget{ *new Widgets::Commander{} },
