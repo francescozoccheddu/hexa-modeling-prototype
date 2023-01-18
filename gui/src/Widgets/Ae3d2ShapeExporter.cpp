@@ -11,6 +11,7 @@
 #include <ctime>
 #include <cassert>
 #include <iomanip>
+#include <cinolib/quality_hex.h>
 #include <HMP/Gui/Widgets/Target.hpp>
 
 namespace HMP::Gui::Widgets
@@ -44,7 +45,7 @@ namespace HMP::Gui::Widgets
 	Ae3d2ShapeExporter::Ae3d2ShapeExporter(): SidebarWidget{ "ae-3d2shape exporter" }, m_keyframes{}, m_sampleError{}
 	{}
 
-	bool Ae3d2ShapeExporter::exportKeyframes(const std::vector<Ae3d2ShapeExporter::Keyframe>& _keyframes)
+	bool Ae3d2ShapeExporter::exportKeyframes(const std::vector<Ae3d2ShapeExporter::Keyframe>& _keyframes) const
 	{
 		static constexpr double c_keyframeDuration{ 1.0 };
 		assert(!_keyframes.empty());
@@ -113,7 +114,7 @@ namespace HMP::Gui::Widgets
 					{
 						file << JProp{ "polygons" } << '['; // project.keyframes[k].polygons
 						bool firstPolygon{ true };
-						for (const std::vector<Vec>& face : _keyframes[k].polygons)
+						for (const Polygon& face : _keyframes[k].polygons)
 						{
 							if (!firstPolygon)
 							{
@@ -122,7 +123,7 @@ namespace HMP::Gui::Widgets
 							firstPolygon = false;
 							file << '{' << JProp{ "vertices" } << '[';
 							bool firstVert{ true };
-							for (const Vec& vert : face)
+							for (const Vec& vert : face.vertices)
 							{
 								if (!firstVert)
 								{
@@ -132,6 +133,14 @@ namespace HMP::Gui::Widgets
 								file << JVec{ vert };
 							}
 							file << ']'; // project.keyframes[k].polygons[p].vertices
+							constexpr int colorCount{ 1000 };
+							const cinolib::Color qualityColor{
+								face.quality > 0.0
+								? cinolib::Color::parula_ramp(colorCount, static_cast<int>(std::round(face.quality * static_cast<Real>(colorCount - 1))))
+								: cinolib::Color::RED()
+							};
+							const cinolib::Color color{ cinolib::Color::lerp(cinolib::Color::WHITE(), qualityColor, _keyframes[k].qualityFactor) };
+							file << ',' << JProp{ "color" } << JVec{ cinolib::vec3f{ color.r(), color.g(), color.b() }.cast<Real>() }; // project.keyframes[k].polygons[p].color
 							file << '}'; // project.keyframes[k].polygons[p]
 						}
 						file << ']'; // project.keyframes[k].scene.polygons
@@ -141,12 +150,15 @@ namespace HMP::Gui::Widgets
 				}
 				file << ']'; // project.keyframes
 			}
-			file << ','; // project
+			if (m_includeFrameSize)
 			{
-				file << JProp{ "frameSize" } << '{'
-					<< JProp{ "width" } << _keyframes[0].camera.projection.aspectRatio << ','
-					<< JProp{ "height" } << 1
-					<< '}'; // project.frameSize
+				file << ','; // project
+				{
+					file << JProp{ "frameSize" } << '{'
+						<< JProp{ "width" } << _keyframes[0].camera.projection.aspectRatio << ','
+						<< JProp{ "height" } << 1
+						<< '}'; // project.frameSize
+				}
 			}
 			file << '}'; // project
 			file.close();
@@ -164,13 +176,17 @@ namespace HMP::Gui::Widgets
 	{
 		Keyframe frame{
 			.polygons{},
-			.camera { app().canvas.camera }
+			.camera { app().canvas.camera },
+			.qualityFactor = 0.0
 		};
 		const cinolib::Polygonmesh<>& mesh{ app().targetWidget.meshForProjection() };
 		frame.polygons.reserve(toI(mesh.num_polys()));
 		for (Id fid{}; fid < mesh.num_polys(); fid++)
 		{
-			frame.polygons.push_back(mesh.poly_verts(fid));
+			frame.polygons.push_back(Polygon{
+				.vertices{mesh.poly_verts(fid)},
+				.quality = 1.0
+				});
 		}
 		return exportKeyframes({ frame });
 	}
@@ -184,6 +200,7 @@ namespace HMP::Gui::Widgets
 		}
 		Keyframe keyframe{};
 		keyframe.camera = app().canvas.camera;
+		keyframe.qualityFactor = m_qualityFactor;
 		for (Id fid{}; fid < app().mesh.num_faces(); fid++)
 		{
 			Id pid;
@@ -194,7 +211,19 @@ namespace HMP::Gui::Widgets
 				{
 					std::reverse(verts.begin(), verts.end());
 				}
-				keyframe.polygons.push_back(verts);
+				keyframe.polygons.push_back(Polygon{
+					.vertices{verts},
+					.quality = cinolib::hex_scaled_jacobian(
+						app().mesh.poly_vert(pid, 0),
+						app().mesh.poly_vert(pid, 1),
+						app().mesh.poly_vert(pid, 2),
+						app().mesh.poly_vert(pid, 3),
+						app().mesh.poly_vert(pid, 4),
+						app().mesh.poly_vert(pid, 5),
+						app().mesh.poly_vert(pid, 6),
+						app().mesh.poly_vert(pid, 7)
+					)
+					});
 			}
 		}
 		if (!m_keyframes.empty() && m_keyframes[0].polygons.size() != keyframe.polygons.size())
@@ -225,6 +254,7 @@ namespace HMP::Gui::Widgets
 
 	void Ae3d2ShapeExporter::drawSidebar()
 	{
+		Utils::Controls::sliderPercentage("Quality factor", m_qualityFactor);
 		if (ImGui::Button("Sample"))
 		{
 			requestSample();
@@ -241,11 +271,12 @@ namespace HMP::Gui::Widgets
 			ImGui::TextColored(themer->sbErr, "%s", m_sampleError->c_str());
 		}
 		ImGui::Spacing();
-		if (Utils::Controls::disabledButton("Export", !empty()))
+		ImGui::Checkbox("Include frame size", &m_includeFrameSize);
+		if (Utils::Controls::disabledButton("Export keyframes", !empty()))
 		{
 			requestExport();
 		}
-		ImGui::Spacing();
+		ImGui::SameLine();
 		if (Utils::Controls::disabledButton("Export target", app().targetWidget.hasMesh()))
 		{
 			requestTargetExport();

@@ -15,16 +15,25 @@ namespace HMP::Gui::Widgets
 
 	private:
 
+		struct Polygon final
+		{
+			std::vector<Vec> vertices;
+			Real quality;
+		};
+
 		struct Keyframe final
 		{
-			std::vector<std::vector<Vec>> polygons{};
+			std::vector<Polygon> polygons{};
 			cinolib::FreeCamera<Real> camera{};
+			Real qualityFactor;
 		};
 
 		std::vector<Keyframe> m_keyframes;
 		std::optional<std::string> m_sampleError;
+		bool m_includeFrameSize{ false };
+		Real m_qualityFactor{ 0.0 };
 
-		static bool exportKeyframes(const std::vector<Ae3d2ShapeExporter::Keyframe>& _keyframes);
+		bool exportKeyframes(const std::vector<Ae3d2ShapeExporter::Keyframe>& _keyframes) const;
 
 		bool requestExport() const;
 
