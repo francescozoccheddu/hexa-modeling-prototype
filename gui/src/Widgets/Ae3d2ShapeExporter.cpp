@@ -133,10 +133,10 @@ namespace HMP::Gui::Widgets
 								file << JVec{ vert };
 							}
 							file << ']'; // project.keyframes[k].polygons[p].vertices
-							constexpr int colorCount{ 1000 };
+							constexpr int colorCount{ 8192 };
 							const cinolib::Color qualityColor{
 								face.quality > 0.0
-								? cinolib::Color::parula_ramp(colorCount, static_cast<int>(std::round(face.quality * static_cast<Real>(colorCount - 1))))
+								? cinolib::Color::parula_ramp(colorCount, static_cast<int>(std::round((1.0 - face.quality) * static_cast<Real>(colorCount - 1))))
 								: cinolib::Color::RED()
 							};
 							const cinolib::Color color{ cinolib::Color::lerp(cinolib::Color::WHITE(), qualityColor, _keyframes[k].qualityFactor) };
