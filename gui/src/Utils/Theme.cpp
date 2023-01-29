@@ -35,7 +35,7 @@ namespace HMP::Gui::Utils
             .sbWarn{ toImVec4(hsv(warnHue, 0.8f, 0.45f))},
             .sbErr{ toImVec4(hsv(errHue, 0.85f, 0.45f))},
             .bg{ hsv(hue, 0.0f, 0.97f) },
-            .ovHi = toImU32(hsv(hue, 0.8f, 1.0f)),
+            .ovHi = toImU32(hsv(hue, 0.8f, 0.9f)),
             .ovMut = toImU32(hsv(hue, 0.0f, 0.0f, 0.28f)),
             .ovWarn = toImU32(hsv(warnHue, 0.8f, 0.55f)),
             .ovErr = toImU32(hsv(errHue, 1.0f, 0.75f)),
