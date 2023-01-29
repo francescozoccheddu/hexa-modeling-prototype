@@ -2,8 +2,10 @@
 
 #include <HMP/Meshing/types.hpp>
 #include <HMP/Gui/SidebarWidget.hpp>
+#include <cinolib/meshes/polygonmesh.h>
 #include <cinolib/drawable_segment_soup.h>
 #include <HMP/Refinement/Schemes.hpp>
+#include <vector>
 
 namespace HMP::Gui::Widgets
 {
@@ -30,6 +32,7 @@ namespace HMP::Gui::Widgets
         float themeHue{ 32.0f };
         bool themeDark{ true };
         float themeScale{ 1.0f };
+        bool exportColors{ false };
         I fi{}, fiVi{};
         Refinement::EScheme refineSingleScheme{ Refinement::EScheme::Test };
         bool showElements{ false }, showVids{ false }, showEids{ false }, showFids{ false }, showPids{ false };
@@ -53,6 +56,8 @@ namespace HMP::Gui::Widgets
         std::vector<const cinolib::DrawableObject*> additionalDrawables() const override;
 
         void attached() override;
+
+        static void exportWithColors(const cinolib::Polygonmesh<>& _mesh, const std::vector<Real>& _fidQuality, const char* _file);
 
     public:
 
