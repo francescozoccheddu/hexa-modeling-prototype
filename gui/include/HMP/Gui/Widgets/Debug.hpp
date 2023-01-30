@@ -59,6 +59,10 @@ namespace HMP::Gui::Widgets
 
         static void exportWithColors(const cinolib::Polygonmesh<>& _mesh, const std::vector<Real>& _fidQuality, const char* _file);
 
+        Real pidQuality(Id _pid) const;
+
+        void exportQualityList() const;
+
     public:
 
         Debug();
