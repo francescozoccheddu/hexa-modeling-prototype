@@ -523,12 +523,14 @@ namespace HMP::Gui::Widgets
 		for (Id fid{}; fid < vol.num_faces(); fid++)
 		{
 			bool visible{ false };
+			Id pid{ noId };
 			for (const Id adjPid : vol.adj_f2p(fid))
 			{
 				if (app().mesher.shown(adjPid) && (!sectionExports || (sectionExportsInv != vol.poly_centroid(adjPid)[dim] >= v)))
 				{
 					if (_includeInterior)
 					{
+						pid = adjPid;
 						visible = true;
 						break;
 					}
@@ -539,6 +541,7 @@ namespace HMP::Gui::Widgets
 							visible = false;
 							break;
 						}
+						pid = adjPid;
 						visible = true;
 					}
 				}
@@ -557,7 +560,7 @@ namespace HMP::Gui::Widgets
 					fidVids.push_back(vidsMap[vi]);
 				}
 				srf.poly_add(fidVids);
-				fidQuality.push_back(pidQuality(vol.adj_f2p(fid).front()));
+				fidQuality.push_back(pidQuality(pid));
 			}
 		}
 		srf.update_bbox();
