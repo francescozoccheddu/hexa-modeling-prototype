@@ -107,8 +107,7 @@ namespace HMP::Gui::Widgets
 		{
 			if (app().mesher.shown(pid))
 			{
-				const std::vector<Vec>& verts{ app().mesh.poly_verts(pid) };
-				if (cinolib::hex_scaled_jacobian(verts[0], verts[1], verts[2], verts[3], verts[4], verts[5], verts[6], verts[7]) < 0.0)
+				if (pidQuality(pid) < 0.0)
 				{
 					app().vertEditWidget.add(app().mesh.adj_p2v(pid));
 					m_negJacTestRes++;
@@ -269,8 +268,16 @@ namespace HMP::Gui::Widgets
 			ImGui::TableNextColumn();
 			ImGui::Text("Target surface");
 
-			ImGui::Spacing();
+			ImGui::TableNextColumn();
+			if (ImGui::SmallButton("Export##quality"))
+			{
+				exportQualityList();
+			}
+			ImGui::TableNextColumn();
+			ImGui::Text("Quality list");
+
 			ImGui::EndTable();
+			ImGui::Spacing();
 			ImGui::TreePop();
 		}
 		// theme
@@ -550,8 +557,7 @@ namespace HMP::Gui::Widgets
 					fidVids.push_back(vidsMap[vi]);
 				}
 				srf.poly_add(fidVids);
-				const HexVerts verts{ Meshing::Utils::verts(vol, Meshing::Utils::pidVids(vol, vol.adj_f2p(fid).front())) };
-				fidQuality.push_back(cinolib::hex_scaled_jacobian(verts[0], verts[1], verts[2], verts[3], verts[4], verts[5], verts[6], verts[7]));
+				fidQuality.push_back(pidQuality(vol.adj_f2p(fid).front()));
 			}
 		}
 		srf.update_bbox();
@@ -564,6 +570,27 @@ namespace HMP::Gui::Widgets
 		else
 		{
 			srf.save(filename->c_str());
+		}
+	}
+
+	Real Debug::pidQuality(Id _pid) const
+	{
+		const HexVerts verts{ Meshing::Utils::verts(app().mesh, Meshing::Utils::pidVids(app().mesh, _pid))};
+		return cinolib::hex_scaled_jacobian(verts[0], verts[1], verts[2], verts[3], verts[4], verts[5], verts[6], verts[7]);
+	}
+
+	void Debug::exportQualityList() const
+	{
+		const std::optional<std::string> filename{ Utils::FilePicking::save("csv") };
+		if (filename)
+		{
+			std::ofstream file{};
+			file.open(*filename);
+			for (Id pid{}; pid < app().mesh.num_polys(); pid++)
+			{
+				file << pidQuality(pid) << '\n';
+			}
+			file.close();
 		}
 	}
 
