@@ -591,7 +591,10 @@ namespace HMP::Gui::Widgets
 			file.open(*filename);
 			for (Id pid{}; pid < app().mesh.num_polys(); pid++)
 			{
-				file << pidQuality(pid) << '\n';
+				if (app().mesher.shown(pid))
+				{
+					file << pidQuality(pid) << '\n';
+				}
 			}
 			file.close();
 		}
