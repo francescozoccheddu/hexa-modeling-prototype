@@ -367,7 +367,7 @@ namespace HMP::Gui::Widgets
 					text(drawList, "???", toImVec2(m_start + textMargin), textSize, themer->ovErr, EAlign::LeftTop, EAlign::LeftTop);
 				}
 				const Vec trs{ app().vertEditWidget.transform().translation };
-				ImGui::TextColored(toImVec4(themer->ovWarn), "Translating %d %s by %3.f,%3.f,%.3f via direct manipulation", vertexCount, verticesLit, trs.x(), trs.y(), trs.z());
+				ImGui::TextColored(toImVec4(themer->ovWarn), "Translating %d %s by %.3f,%.3f,%.3f via direct manipulation", vertexCount, verticesLit, trs.x(), trs.y(), trs.z());
 			}
 			break;
 		}
