@@ -20,6 +20,7 @@ namespace HMP::Gui::Widgets
 
 		static constexpr cinolib::KeyBinding c_kbAddPathEdge{ GLFW_KEY_I, GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbRemovePathEdge{ GLFW_KEY_I, GLFW_MOD_CONTROL };
+		static constexpr cinolib::KeyBinding c_kbClosePath{ GLFW_KEY_I, GLFW_MOD_ALT };
 
 		using EidsPath = HMP::Projection::Utils::EidsPath;
 		using Point = HMP::Projection::Utils::Point;
@@ -70,6 +71,10 @@ namespace HMP::Gui::Widgets
 		void printUsage() const override;
 
 		bool keyPressed(const cinolib::KeyBinding& _key) override;
+
+		void closePath();
+
+		void addOrRemovePathEdge(bool _add);
 
 	public:
 

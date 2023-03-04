@@ -4,6 +4,7 @@
 #include <HMP/Actions/Project.hpp>
 #include <cinolib/export_surface.h>
 #include <cinolib/deg_rad.h>
+#include <cinolib/dijkstra.h>
 #include <cinolib/feature_mapping.h>
 #include <cinolib/feature_network.h>
 #include <cinolib/meshes/polygonmesh.h>
@@ -614,34 +615,98 @@ namespace HMP::Gui::Widgets
 	{
 		cinolib::print_binding(c_kbAddPathEdge.name(), "add path edge");
 		cinolib::print_binding(c_kbRemovePathEdge.name(), "remove path edge");
+		cinolib::print_binding(c_kbClosePath.name(), "close path");
 	}
 
-	bool Projection::keyPressed(const cinolib::KeyBinding& _key)
+	void Projection::closePath()
 	{
-		bool add;
-		if (_key == c_kbAddPathEdge)
+		const bool target{ app().targetWidget.hasMesh() && app().targetWidget.visible };
+		if (m_showPaths && !m_showAllPaths && !m_paths.empty())
 		{
-			add = true;
+			std::vector<Id>& eids{ m_paths[m_currentPath].eids(!target) };
+			if (!eids.empty())
+			{
+				std::vector<Id> addedEids{};
+				if (target)
+				{
+					const cinolib::Polygonmesh<>& mesh{app().targetWidget.meshForDisplay()};
+					const std::vector<Id> endVids{HMP::Projection::Utils::eidsPathEndVids(mesh, eids)};
+					std::vector<bool> mask(toI(mesh.num_edges()), false);
+					for (const Id eid : eids)
+					{
+						mask[toI(eid)] = true;
+					}
+					std::vector<Id> addedVids{};
+					cinolib::dijkstra_mask_on_edges(
+						mesh,
+						endVids[1],
+						endVids[0],
+						mask,
+						addedVids
+					);
+					addedEids = HMP::Projection::Utils::vidsToEidsPath(mesh, addedVids);
+				}
+				else
+				{
+					const Meshing::Mesher::Mesh& mesh{app().mesh};
+					const std::vector<Id> endVids{HMP::Projection::Utils::eidsPathEndVids(mesh, eids)};
+					std::vector<bool> mask(toI(mesh.num_edges()), false);
+					for (Id eid{}; eid < mesh.num_edges(); eid++)
+					{
+						mask[toI(eid)] = !mesh.edge_is_on_srf(eid);
+					}
+					for (const Id eid : eids)
+					{
+						mask[toI(eid)] = true;
+					}
+					std::vector<Id> addedVids{};
+					cinolib::dijkstra_mask_on_edges(
+						mesh,
+						endVids[1],
+						endVids[0],
+						mask,
+						addedVids
+					);
+					addedEids = HMP::Projection::Utils::vidsToEidsPath(mesh, addedVids);
+				}
+				eids.insert(eids.end(), addedEids.begin(), addedEids.end());
+			}
 		}
-		else if (_key == c_kbRemovePathEdge)
-		{
-			add = false;
-		}
-		else
-		{
-			return false;
-		}
+	}
+
+	void Projection::addOrRemovePathEdge(bool _add)
+	{
 		Vec point;
 		if (app().canvas.unproject(app().mouse, point))
 		{
 			if (app().targetWidget.hasMesh() && app().targetWidget.visible)
 			{
-				setTargetPathEdgeAtPoint(point, add);
+				setTargetPathEdgeAtPoint(point, _add);
 			}
 			else
 			{
-				setSourcePathEdgeAtPoint(point, add);
+				setSourcePathEdgeAtPoint(point, _add);
 			}
+		}
+	}
+
+	bool Projection::keyPressed(const cinolib::KeyBinding& _key)
+	{
+		if (_key == c_kbAddPathEdge)
+		{
+			addOrRemovePathEdge(true);
+		}
+		else if (_key == c_kbRemovePathEdge)
+		{
+			addOrRemovePathEdge(false);
+		}
+		else if (_key == c_kbClosePath)
+		{
+			closePath();
+		}
+		else
+		{
+			return false;
 		}
 		return true;
 	}
