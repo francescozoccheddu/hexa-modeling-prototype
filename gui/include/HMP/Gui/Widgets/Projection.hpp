@@ -35,9 +35,9 @@ namespace HMP::Gui::Widgets
 
 		void attached() override;
 
-		void matchAllPaths(I _first, I _lastEx, bool _fromSource);
+		void matchPath(I _i, bool _fromSource);
 
-		void matchAnyPath(I _first, I _lastEx, bool _fromSource);
+		void matchPaths(I _first, I _lastEx, bool _fromSource);
 
 		void findPaths(bool _inSource);
 
