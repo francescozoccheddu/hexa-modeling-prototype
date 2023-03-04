@@ -236,7 +236,7 @@ namespace HMP::Gui::Widgets
 				std::vector<bool> mask(source.num_verts(), false);
 				for (Id vid{}; vid < source.num_verts(); vid++)
 				{
-					mask[toI(vid)] = !source.vert_is_on_srf(vid);
+					mask[toI(vid)] = !source.vert_is_visible(vid) || !source.vert_is_on_srf(vid);
 				}
 				joinPaths(toVids, source, mask);
 			}
@@ -731,7 +731,7 @@ namespace HMP::Gui::Widgets
 					std::vector<bool> mask(toI(mesh.num_edges()), false);
 					for (Id eid{}; eid < mesh.num_edges(); eid++)
 					{
-						mask[toI(eid)] = !mesh.edge_is_on_srf(eid);
+						mask[toI(eid)] = !mesh.edge_is_visible(eid) || !mesh.edge_is_on_srf(eid);
 					}
 					for (const Id eid : eids)
 					{
