@@ -281,6 +281,10 @@ namespace HMP::Gui::Widgets
 
 	void Projection::drawSidebar()
 	{
+#ifdef HMP_ENABLE_ALT_PROJ
+		ImGui::Checkbox("Alternative method", &m_options.alternativeMethod);
+		ImGui::Spacing();
+#endif
 		static constexpr auto tweak{ [](HMP::Projection::Utils::Tweak& _tweak, const char* _label) {
 			ImGui::PushID(&_tweak);
 			ImGui::Text("%s", _label);
@@ -290,50 +294,53 @@ namespace HMP::Gui::Widgets
 			_tweak = { min, power };
 			ImGui::PopID();
 		} };
-		if (ImGui::TreeNode("Weights"))
+		if (!m_options.alternativeMethod)
 		{
-			ImGui::Spacing();
-			Utils::Controls::combo("Displace mode", m_options.displaceMode, { "NormDirAvgAndDirNormAvg", "NormDirAvgAndDirAvg", "DirAvg", "VertAvg" });
-			ImGui::Spacing();
-			tweak(m_options.baseWeightTweak, "Base weight factor");
-			Utils::Controls::combo("Mode", m_options.baseWeightMode, { "Distance", "Barycentric coords" });
-			ImGui::Spacing();
-			tweak(m_options.normalDotTweak, "Normal dot factor");
-			ImGui::Spacing();
-			ImGui::Text("Distance weight factor");
-			Utils::Controls::sliderReal("Weight", m_options.distanceWeight, 0.0, 10.0);
-			Utils::Controls::sliderReal("Power", m_options.distanceWeightPower, 0.0, 4.0, true);
-			ImGui::Spacing();
-			ImGui::TreePop();
-		}
-		if (ImGui::TreeNode("Fill and advance"))
-		{
-			ImGui::Spacing();
-			tweak(m_options.unsetVertsDistWeightTweak, "Fill distance factor");
-			ImGui::Spacing();
-			ImGui::Text("Advance");
-			Utils::Controls::sliderPercentage("Advance percentile", m_options.advancePercentile);
-			ImGui::Spacing();
-			ImGui::TreePop();
-		}
-		if (ImGui::TreeNode("Smoothing"))
-		{
-			ImGui::Spacing();
-			Utils::Controls::sliderI("Surface iterations", m_options.smoothSurfaceIterations, 0, 20);
-			Utils::Controls::sliderI("Internal iterations", m_options.smoothInternalIterations, 0, 20);
-			Utils::Controls::sliderPercentage("Internal done weight", m_options.smoothInternalDoneWeight, 0.25, 4.0);
-			ImGui::Spacing();
-			ImGui::TreePop();
-		}
-		if (ImGui::TreeNode("Jacobian check"))
-		{
-			ImGui::Spacing();
-			Utils::Controls::combo("Target", m_options.jacobianCheckMode, { "None", "Surface only", "All" });
-			Utils::Controls::combo("Advance mode", m_options.jacobianAdvanceMode, { "Length", "Lerp" });
-			Utils::Controls::sliderI("Max tests", m_options.jacobianAdvanceMaxTests, 2, 20);
-			Utils::Controls::sliderPercentage("Stop threshold", m_options.jacobianAdvanceStopThreshold, 0.01, 0.4);
-			ImGui::Spacing();
-			ImGui::TreePop();
+			if (ImGui::TreeNode("Weights"))
+			{
+				ImGui::Spacing();
+				Utils::Controls::combo("Displace mode", m_options.displaceMode, { "NormDirAvgAndDirNormAvg", "NormDirAvgAndDirAvg", "DirAvg", "VertAvg" });
+				ImGui::Spacing();
+				tweak(m_options.baseWeightTweak, "Base weight factor");
+				Utils::Controls::combo("Mode", m_options.baseWeightMode, { "Distance", "Barycentric coords" });
+				ImGui::Spacing();
+				tweak(m_options.normalDotTweak, "Normal dot factor");
+				ImGui::Spacing();
+				ImGui::Text("Distance weight factor");
+				Utils::Controls::sliderReal("Weight", m_options.distanceWeight, 0.0, 10.0);
+				Utils::Controls::sliderReal("Power", m_options.distanceWeightPower, 0.0, 4.0, true);
+				ImGui::Spacing();
+				ImGui::TreePop();
+			}
+			if (ImGui::TreeNode("Fill and advance"))
+			{
+				ImGui::Spacing();
+				tweak(m_options.unsetVertsDistWeightTweak, "Fill distance factor");
+				ImGui::Spacing();
+				ImGui::Text("Advance");
+				Utils::Controls::sliderPercentage("Advance percentile", m_options.advancePercentile);
+				ImGui::Spacing();
+				ImGui::TreePop();
+			}
+			if (ImGui::TreeNode("Smoothing"))
+			{
+				ImGui::Spacing();
+				Utils::Controls::sliderI("Surface iterations", m_options.smoothSurfaceIterations, 0, 20);
+				Utils::Controls::sliderI("Internal iterations", m_options.smoothInternalIterations, 0, 20);
+				Utils::Controls::sliderPercentage("Internal done weight", m_options.smoothInternalDoneWeight, 0.25, 4.0);
+				ImGui::Spacing();
+				ImGui::TreePop();
+			}
+			if (ImGui::TreeNode("Jacobian check"))
+			{
+				ImGui::Spacing();
+				Utils::Controls::combo("Target", m_options.jacobianCheckMode, { "None", "Surface only", "All" });
+				Utils::Controls::combo("Advance mode", m_options.jacobianAdvanceMode, { "Length", "Lerp" });
+				Utils::Controls::sliderI("Max tests", m_options.jacobianAdvanceMaxTests, 2, 20);
+				Utils::Controls::sliderPercentage("Stop threshold", m_options.jacobianAdvanceStopThreshold, 0.01, 0.4);
+				ImGui::Spacing();
+				ImGui::TreePop();
+			}
 		}
 		ImGui::SetNextItemOpen(m_showPaths, ImGuiCond_Always);
 		m_showPaths = ImGui::TreeNode("Paths");
