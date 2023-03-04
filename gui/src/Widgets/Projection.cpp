@@ -136,6 +136,45 @@ namespace HMP::Gui::Widgets
 		}
 	}
 
+	template<typename M, typename V, typename E, typename P>
+	void joinPaths(std::vector<std::vector<Id>>& _vids, const cinolib::AbstractMesh<M, V, E, P>& _mesh, std::vector<bool>& _mask)
+	{
+		assert(_mask.size() == toI(_mesh.num_verts()));
+		std::vector<Id> fullVids{}, tempVids{};
+		for (const std::vector<Id>& vids : _vids)
+		{
+			assert(vids.size() > 1);
+			for (const Id vid : vids)
+			{
+				_mask[toI(vid)] = true;
+			}
+			_mask[toI(vids.front())] = false;
+			_mask[toI(vids.back())] = false;
+		}
+		for (I i{}; i < _vids.size(); i++)
+		{
+			tempVids.clear();
+			if (!fullVids.empty() && _vids[i].front() == fullVids.back())
+			{
+				fullVids.pop_back();
+			}
+			fullVids.insert(fullVids.end(), _vids[i].begin(), _vids[i].end());
+			cinolib::dijkstra(_mesh, _vids[i].back(), _vids[(i + 1) % _vids.size()].front(), _mask, tempVids);
+			if (tempVids.size() > 2)
+			{
+				fullVids.insert(fullVids.end(), tempVids.begin() + 1, tempVids.end() - 1);
+			}
+		}
+		_vids = { fullVids };
+	}
+
+	template<typename M, typename V, typename E, typename P>
+	void joinPaths(std::vector<std::vector<Id>>& _vids, const cinolib::AbstractMesh<M, V, E, P>& _mesh)
+	{
+		std::vector<bool> mask(toI(_mesh.num_verts()), false);
+		joinPaths(_vids, _mesh, mask);
+	}
+
 	void Projection::matchPath(I _i, bool _fromSource)
 	{
 		cinolib::Polygonmesh<> target{ app().targetWidget.meshForProjection() };
@@ -146,14 +185,26 @@ namespace HMP::Gui::Widgets
 				? HMP::Projection::Utils::eidsToVidsPath(source, m_paths[_i].sourceEids)
 				: HMP::Projection::Utils::eidsToVidsPath(target, m_paths[_i].targetEids)
 		}, toVids;
+		if (HMP::Projection::Utils::isVidsPathClosed(fromVids[0]))
+		{
+			const I midI{ fromVids[0].size() / 2 };
+			const std::vector<Id> fullVids{fromVids[0]};
+			fromVids = {
+				std::vector<Id>(fullVids.begin(), fullVids.begin() + midI),
+				std::vector<Id>(fullVids.begin() + midI, fullVids.end())
+			};
+		}
 		std::unordered_map<Id, Id> surf2vol, vol2surf;
 		cinolib::Polygonmesh<> sourceSurf{};
 		cinolib::export_surface(source, sourceSurf, vol2surf, surf2vol, false);
 		if (_fromSource)
 		{
-			for (Id& vid : fromVids[0])
+			for (std::vector<Id>& vids : fromVids)
 			{
-				vid = vol2surf[vid];
+				for (Id& vid : vids)
+				{
+					vid = vol2surf[vid];
+				}
 			}
 			if (!cinolib::feature_mapping(sourceSurf, fromVids, target, toVids))
 			{
@@ -166,9 +217,28 @@ namespace HMP::Gui::Widgets
 			{
 				return;
 			}
-			for (Id& vid : toVids[0])
+			for (std::vector<Id>& vids : toVids)
 			{
-				vid = surf2vol[vid];
+				for (Id& vid : vids)
+				{
+					vid = surf2vol[vid];
+				}
+			}
+		}
+		if (toVids.size() > 1)
+		{
+			if (_fromSource)
+			{
+				joinPaths(toVids, target);
+			}
+			else
+			{
+				std::vector<bool> mask(source.num_verts(), false);
+				for (Id vid{}; vid < source.num_verts(); vid++)
+				{
+					mask[toI(vid)] = !source.vert_is_on_srf(vid);
+				}
+				joinPaths(toVids, source, mask);
 			}
 		}
 		if (_fromSource)
