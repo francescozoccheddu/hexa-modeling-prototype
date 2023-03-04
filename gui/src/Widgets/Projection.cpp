@@ -128,7 +128,15 @@ namespace HMP::Gui::Widgets
 		requestProjection();
 	}
 
-	void Projection::matchPaths(I _first, I _lastEx, bool _fromSource)
+	void Projection::matchAnyPath(I _first, I _lastEx, bool _fromSource)
+	{
+		for (I i{ _first }; i < _lastEx; i++)
+		{
+			matchAllPaths(i, i + 1, _fromSource);
+		}
+	}
+
+	void Projection::matchAllPaths(I _first, I _lastEx, bool _fromSource)
 	{
 		cinolib::Polygonmesh<> target{ app().targetWidget.meshForProjection() };
 		const Meshing::Mesher::Mesh& source{ app().mesh };
@@ -416,12 +424,12 @@ namespace HMP::Gui::Widgets
 				ImGui::TableNextColumn();
 				if (Utils::Controls::disabledButton("Match source", !removed && !m_paths[i].targetEids.empty()))
 				{
-					matchPaths(i, i + 1, false);
+					matchAllPaths(i, i + 1, false);
 				}
 				ImGui::TableNextColumn();
 				if (Utils::Controls::disabledButton("Match target", !removed && !m_paths[i].sourceEids.empty()))
 				{
-					matchPaths(i, i + 1, true);
+					matchAllPaths(i, i + 1, true);
 				}
 				if (!app().targetWidget.hasMesh()) { ImGui::EndDisabled(); }
 				ImGui::PopID();
@@ -448,12 +456,12 @@ namespace HMP::Gui::Widgets
 				ImGui::SameLine();
 				if (ImGui::SmallButton("Match all source"))
 				{
-					matchPaths(0, m_paths.size(), false);
+					matchAnyPath(0, m_paths.size(), false);
 				}
 				ImGui::SameLine();
 				if (ImGui::SmallButton("Match all target"))
 				{
-					matchPaths(0, m_paths.size(), true);
+					matchAnyPath(0, m_paths.size(), true);
 				}
 			}
 			if (m_paths.empty()) { ImGui::EndDisabled(); }
@@ -541,15 +549,29 @@ namespace HMP::Gui::Widgets
 		} };
 		if (m_showPaths)
 		{
-			if (m_showAllPaths)
+			if (m_paths.empty())
 			{
+				ImGui::TextColored(Utils::Drawing::toImVec4(themer->ovMut), "No feature path to show");
+			}
+			else if (m_showAllPaths)
+			{
+				ImGui::TextColored(Utils::Drawing::toImVec4(themer->ovMut), "Showing all feature paths (%d)", static_cast<int>(m_paths.size()));
 				for (I i{}; i < m_paths.size(); i++)
 				{
 					drawPath(i);
 				}
 			}
-			else if (!m_paths.empty())
+			else
 			{
+				const EidsPath& path{ m_paths[m_currentPath] };
+				ImGui::TextColored(Utils::Drawing::toImVec4(themer->ovMut),
+					"Showing feature path %d (%d,%d edges; %c,%c)",
+					static_cast<int>(m_currentPath),
+					static_cast<int>(path.sourceEids.size()),
+					static_cast<int>(path.targetEids.size()),
+					HMP::Projection::Utils::isEidsPathClosed(app().mesh, path.sourceEids) ? 'C' : 'O',
+					HMP::Projection::Utils::isEidsPathClosed(app().targetWidget.meshForDisplay(), path.targetEids) ? 'C' : 'O'
+				);
 				drawPath(m_currentPath);
 			}
 		}
