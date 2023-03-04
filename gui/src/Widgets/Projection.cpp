@@ -128,70 +128,56 @@ namespace HMP::Gui::Widgets
 		requestProjection();
 	}
 
-	void Projection::matchAnyPath(I _first, I _lastEx, bool _fromSource)
+	void Projection::matchPaths(I _first, I _lastEx, bool _fromSource)
 	{
 		for (I i{ _first }; i < _lastEx; i++)
 		{
-			matchAllPaths(i, i + 1, _fromSource);
+			matchPath(i, _fromSource);
 		}
 	}
 
-	void Projection::matchAllPaths(I _first, I _lastEx, bool _fromSource)
+	void Projection::matchPath(I _i, bool _fromSource)
 	{
 		cinolib::Polygonmesh<> target{ app().targetWidget.meshForProjection() };
 		const Meshing::Mesher::Mesh& source{ app().mesh };
-		for (I i{ _first }; i < _lastEx; i++)
-		{
-			m_paths[i].eids(!_fromSource).clear();
-		}
-		std::vector<std::vector<Id>> from(_lastEx - _first), to;
-		for (I i{ _first }; i < _lastEx; i++)
-		{
-			from[i - _first] = _fromSource
-				? HMP::Projection::Utils::eidsToVidsPath(source, m_paths[i].sourceEids)
-				: HMP::Projection::Utils::eidsToVidsPath(target, m_paths[i].targetEids);
-		}
+		m_paths[_i].eids(!_fromSource).clear();
+		std::vector<std::vector<Id>> fromVids{
+			_fromSource
+				? HMP::Projection::Utils::eidsToVidsPath(source, m_paths[_i].sourceEids)
+				: HMP::Projection::Utils::eidsToVidsPath(target, m_paths[_i].targetEids)
+		}, toVids;
 		std::unordered_map<Id, Id> surf2vol, vol2surf;
 		cinolib::Polygonmesh<> sourceSurf{};
 		cinolib::export_surface(source, sourceSurf, vol2surf, surf2vol, false);
 		if (_fromSource)
 		{
-			for (auto& vids : from)
+			for (Id& vid : fromVids[0])
 			{
-				for (Id& vid : vids)
-				{
-					vid = vol2surf[vid];
-				}
+				vid = vol2surf[vid];
 			}
-			if (!cinolib::feature_mapping(sourceSurf, from, target, to))
+			if (!cinolib::feature_mapping(sourceSurf, fromVids, target, toVids))
 			{
 				return;
 			}
 		}
 		else
 		{
-			if (!cinolib::feature_mapping(target, from, sourceSurf, to))
+			if (!cinolib::feature_mapping(target, fromVids, sourceSurf, toVids))
 			{
 				return;
 			}
-			for (auto& vids : to)
+			for (Id& vid : toVids[0])
 			{
-				for (Id& vid : vids)
-				{
-					vid = surf2vol[vid];
-				}
+				vid = surf2vol[vid];
 			}
 		}
-		for (I i{ _first }; i < _lastEx; i++)
+		if (_fromSource)
 		{
-			if (_fromSource)
-			{
-				m_paths[i].targetEids = HMP::Projection::Utils::vidsToEidsPath(target, to[i - _first]);
-			}
-			else
-			{
-				m_paths[i].sourceEids = HMP::Projection::Utils::vidsToEidsPath(source, to[i - _first]);
-			}
+			m_paths[_i].targetEids = HMP::Projection::Utils::vidsToEidsPath(target, toVids[0]);
+		}
+		else
+		{
+			m_paths[_i].sourceEids = HMP::Projection::Utils::vidsToEidsPath(source, toVids[0]);
 		}
 	}
 
@@ -424,12 +410,12 @@ namespace HMP::Gui::Widgets
 				ImGui::TableNextColumn();
 				if (Utils::Controls::disabledButton("Match source", !removed && !m_paths[i].targetEids.empty()))
 				{
-					matchAllPaths(i, i + 1, false);
+					matchPath(i, false);
 				}
 				ImGui::TableNextColumn();
 				if (Utils::Controls::disabledButton("Match target", !removed && !m_paths[i].sourceEids.empty()))
 				{
-					matchAllPaths(i, i + 1, true);
+					matchPath(i, true);
 				}
 				if (!app().targetWidget.hasMesh()) { ImGui::EndDisabled(); }
 				ImGui::PopID();
@@ -456,12 +442,12 @@ namespace HMP::Gui::Widgets
 				ImGui::SameLine();
 				if (ImGui::SmallButton("Match all source"))
 				{
-					matchAnyPath(0, m_paths.size(), false);
+					matchPaths(0, m_paths.size(), false);
 				}
 				ImGui::SameLine();
 				if (ImGui::SmallButton("Match all target"))
 				{
-					matchAnyPath(0, m_paths.size(), true);
+					matchPaths(0, m_paths.size(), true);
 				}
 			}
 			if (m_paths.empty()) { ImGui::EndDisabled(); }
