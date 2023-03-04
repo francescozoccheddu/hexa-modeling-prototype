@@ -559,6 +559,7 @@ namespace HMP::Gui::Widgets
 				drawPath(m_currentPath);
 			}
 		}
+		ImGui::Text("To test the projection: TAB > Projection > Project > Project");
 	}
 
 	void Projection::serialize(HMP::Utils::Serialization::Serializer& _serializer) const
