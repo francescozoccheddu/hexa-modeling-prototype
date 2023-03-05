@@ -36,18 +36,26 @@ namespace HMP::Projection
     {
         return {
             ._pts{cpputils::range::of(_source.vector_verts()).map(&toAltVec).toVector()},
-            ._hexes{cpputils::range::of(_source.vector_polys()).map([](const std::vector<Id>& _poly) {
-                return cpputils::range::of(std::array<Id,8>{
-                    _poly[0 + 0],
-                    _poly[1 + 0],
-                    _poly[3 + 0],
-                    _poly[2 + 0],
-                    _poly[0 + 4],
-                    _poly[1 + 4],
-                    _poly[3 + 4],
-                    _poly[2 + 4],
-                }).cast<int>().toArray();
-            }).toVector()}
+            ._hexes{cpputils::range::count(_source.num_polys())
+                .filter([&](const Id _pid) {
+                    return !_source.poly_data(_pid).flags[cinolib::HIDDEN];
+                })
+                .map([&](const Id _pid) {
+                    const std::vector<Id>& _poly{_source.adj_p2v(_pid)};
+                    return cpputils::range::of(std::array<Id,8>{
+                        _poly[0 + 0],
+                        _poly[1 + 0],
+                        _poly[3 + 0],
+                        _poly[2 + 0],
+                        _poly[0 + 4],
+                        _poly[1 + 4],
+                        _poly[3 + 4],
+                        _poly[2 + 4],
+                    })
+                    .cast<int>()
+                    .toArray();
+                })
+                .toVector()}
         };
     }
 
