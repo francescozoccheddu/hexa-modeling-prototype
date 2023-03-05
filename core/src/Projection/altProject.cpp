@@ -4,13 +4,10 @@
 
 #include <HMP/Projection/altProject.hpp>
 
-// fprotais' hexsmoothing
 #include <lib/vertex_based_smoothing.h>
 #include <utils/meshStructures.h>
-// STL
 #include <cassert>
 #include <utility>
-// cpputils
 #include <cpputils/range/of.hpp>
 #include <cpputils/range/index.hpp>
 
@@ -19,20 +16,17 @@ namespace HMP::Projection
 
     // ---------- CONVERSION UTILS ----------
 
-    // HMP's vector to fprotais' vector
     utilities::vec3 toAltVec(const Vec& _vec)
     {
         return { _vec.x(), _vec.y(), _vec.z() };
     }
 
-    // fprotais' vector to HMP's vector
     Vec toMainVec(const utilities::vec3& _vec)
     {
         return { _vec.x, _vec.y, _vec.z };
     }
 
-    // HMP's hexmesh to fprotais' hexmesh
-    utilities::HexahedralMesh toAltMesh(const Meshing::Mesher::Mesh& _source)
+    utilities::HexahedralMesh toAltHexMesh(const Meshing::Mesher::Mesh& _source)
     {
         return {
             ._pts{cpputils::range::of(_source.vector_verts()).map(&toAltVec).toVector()},
@@ -59,8 +53,7 @@ namespace HMP::Projection
         };
     }
 
-    // HMP's polygon mesh to fprotais' trimesh
-    utilities::TriangleMesh toAltMesh(const cinolib::AbstractPolygonMesh<>& _target)
+    utilities::TriangleMesh toAltTriMesh(const cinolib::AbstractPolygonMesh<>& _target)
     {
         std::vector<std::array<int, 3>> tris;
         tris.reserve(toI(_target.num_polys()) * 3);
@@ -84,27 +77,28 @@ namespace HMP::Projection
 
     // --------------------------------------
 
-    // main projection function
-    // _source: the source hexmesh to project
-    // _target: the target polygon mesh to project onto
-    // _pointFeats: list of mapped (source point, target point) pairs
-    // _pathFeats: list of mapped (source edge chain, target edge chain) pairs
-    // _options: only _options.iterations matters here, all other fields are to be ignored
-    // returns the new vertex positions vector, with the same size and order as _source.vector_verts()
     std::vector<Vec> altProject(const Meshing::Mesher::Mesh& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::vector<Utils::Point>& _pointFeats, const std::vector<Utils::EidsPath>& _pathFeats, const Options& _options)
     {
         assert(_options.alternativeMethod);
-        utilities::HexahedralMesh altSource{toAltMesh(_source)};
-        const utilities::TriangleMesh altTarget{toAltMesh(_target)};
+        utilities::HexahedralMesh altSource{toAltHexMesh(_source)};
+        const utilities::TriangleMesh altTarget{toAltTriMesh(_target)};
+        const utilities::CurveMesh altTargetCurves{};
 
-        vertex_smoother smoother(altSource); // <-- CRASH!
+        vertex_smoother smoother(altSource);
+        const std::vector<bool> locks(altSource._pts.size(), false);
+        const std::vector<int> allTris{cpputils::range::count(static_cast<int>(altTarget._tris.size())).toVector()};
+        smoother.set_locked_vertices(locks);
         smoother.set_bnd_triangles(altTarget);
-
-        // this is for the sharp features; can be ignored, for now
-        /*
-        utilities::CurveMesh altTargetCurves;
-        smoother.set_locked_vertices(...);
         smoother.set_features_segment(altTargetCurves);
+        for (Id vid{}; vid < _source.num_verts(); vid++)
+        {
+            if (_source.vert_is_on_srf(vid) && _source.vert_is_visible(vid))
+            {
+                smoother.set_vertex_triangles(static_cast<int>(vid), allTris);
+            }
+        }
+
+        /*
         for each vertex v in altSource {
             if v is in volume : continue;
             if v is CAD corner : smoother.set_vertex_point(v, coordinate);

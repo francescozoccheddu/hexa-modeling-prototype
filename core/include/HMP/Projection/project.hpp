@@ -45,7 +45,7 @@ namespace HMP::Projection
         double advancePercentile{ 0.5 };
         I iterations{ 5 };
 #ifdef HMP_ENABLE_ALT_PROJ
-        bool alternativeMethod{ true };
+        bool alternativeMethod{ false };
 #else
         static constexpr bool alternativeMethod{ false };
 #endif

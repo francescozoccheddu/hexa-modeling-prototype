@@ -124,7 +124,6 @@ namespace HMP::Gui
 	public:
 
 		static int run(const std::optional<std::string>& _file = std::nullopt);
-		static int test(); // TEST ONLY!
 
 		Dag::Element* copiedElement{};
 
