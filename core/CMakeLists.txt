@@ -59,3 +59,15 @@ target_link_libraries (core
     PUBLIC cinolib
     PUBLIC cpputils
 )
+
+if (HMP_ENABLE_ALT_PROJ)
+
+    target_sources(core
+        PRIVATE "src/Projection/altProject.cpp"
+    )
+
+    target_link_libraries(core
+        PUBLIC libhexsmoothing
+    )
+
+endif()

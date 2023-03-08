@@ -14,6 +14,9 @@
 #include <array>
 #include <cinolib/parallel_for.h>
 #include <cassert>
+#ifdef HMP_ENABLE_ALT_PROJ
+#include <HMP/Projection/altProject.hpp>
+#endif
 
 #define HMP_PROJECTION_PROJECT_DEBUG_LOG
 
@@ -302,7 +305,7 @@ namespace HMP::Projection
 
     // final projection
 
-    std::vector<Vec> project(const Meshing::Mesher::Mesh& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::vector<Utils::Point>& _pointFeats, const std::vector<Utils::EidsPath>& _pathFeats, const Options& _options)
+    std::vector<Vec> mainProject(const Meshing::Mesher::Mesh& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::vector<Utils::Point>& _pointFeats, const std::vector<Utils::EidsPath>& _pathFeats, const Options& _options)
     {
         Utils::SurfaceExporter exporter{ _source };
         const std::vector<Id> onSurfVolVids{ exporter.onSurfVolVids() };
@@ -387,6 +390,17 @@ namespace HMP::Projection
         }
 #endif
         return exporter.vol.vector_verts();
+    }
+
+    std::vector<Vec> project(const Meshing::Mesher::Mesh& _source, const cinolib::AbstractPolygonMesh<>& _target, const std::vector<Utils::Point>& _pointFeats, const std::vector<Utils::EidsPath>& _pathFeats, const Options& _options)
+    {
+#ifdef HMP_ENABLE_ALT_PROJ
+        if (_options.alternativeMethod)
+        {
+            return altProject(_source, _target, _pointFeats, _pathFeats, _options);
+        }
+#endif
+        return mainProject(_source, _target, _pointFeats, _pathFeats, _options);
     }
 
 }
