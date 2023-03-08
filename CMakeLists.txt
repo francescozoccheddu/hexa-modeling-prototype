@@ -10,6 +10,7 @@ add_compile_definitions(HMP_VERSION=\"${CMAKE_PROJECT_VERSION}\")
 
 option (HMP_GUI_ENABLE_DAG_VIEWER "Enable dag viewer widget" OFF)
 option (HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER "Enable ae-3d2shape exporter" OFF)
+option (HMP_ENABLE_ALT_PROJ "Enable alternative projection" ON)
 option (HMP_AGGRESSIVE_DEBUG "Enable ASAN and debug libc" OFF)
 option (HMP_AGGRESSIVE_WARNINGS "Enable a lot of warnings" OFF)
 
@@ -35,6 +36,19 @@ if (HMP_GUI_ENABLE_DAG_VIEWER)
         GIT_PROGRESS TRUE
     )
     FetchContent_MakeAvailable (ogdf)
+endif()
+
+# fprotais/hexsmoothing
+if (HMP_ENABLE_ALT_PROJ)
+    add_compile_definitions(HMP_ENABLE_ALT_PROJ)
+    FetchContent_Declare (
+        fprotais
+        GIT_REPOSITORY "https://github.com/fprotais/hexsmoothing"
+        GIT_TAG "b538f7270d91a5e8baaa25287c06ab4a5c5d4cfb"
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+    )
+    FetchContent_MakeAvailable (fprotais)
 endif()
 
 # updatable_priority_queue
