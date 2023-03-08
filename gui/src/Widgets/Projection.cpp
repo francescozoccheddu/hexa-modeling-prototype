@@ -565,7 +565,7 @@ namespace HMP::Gui::Widgets
 		if (ImGui::TreeNode("Project"))
 		{
 			ImGui::Spacing();
-			Utils::Controls::sliderI("Iterations", m_options.iterations, 1, 20);
+			Utils::Controls::sliderI("Iterations", m_options.iterations, 1, 100);
 			if (app().targetWidget.hasMesh())
 			{
 				if (ImGui::Button("Project"))
