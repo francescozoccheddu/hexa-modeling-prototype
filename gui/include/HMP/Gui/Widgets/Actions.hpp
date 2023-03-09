@@ -16,9 +16,10 @@ namespace HMP::Gui::Widgets
 		static constexpr cinolib::KeyBinding c_kbExtrudeFace{ GLFW_KEY_E };
 		static constexpr cinolib::KeyBinding c_kbExtrudeEdge{ GLFW_KEY_E, GLFW_MOD_ALT };
 		static constexpr cinolib::KeyBinding c_kbExtrudeVertex{ GLFW_KEY_E, GLFW_MOD_ALT | GLFW_MOD_CONTROL };
-		static constexpr cinolib::KeyBinding c_kbExtrudeSelected{ GLFW_KEY_E, GLFW_MOD_SHIFT };
+		static constexpr cinolib::KeyBinding c_kbExtrudeSelectedFace{ GLFW_KEY_E, GLFW_MOD_SHIFT };
+		static constexpr cinolib::KeyBinding c_kbRefineSelectedElements{ GLFW_KEY_H, GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbRefine{ GLFW_KEY_H };
-		static constexpr cinolib::KeyBinding c_kbDoubleRefine{ GLFW_KEY_H, GLFW_MOD_SHIFT };
+		static constexpr cinolib::KeyBinding c_kbDoubleRefine{ GLFW_KEY_H, GLFW_MOD_ALT };
 		static constexpr cinolib::KeyBinding c_kbFaceRefine{ GLFW_KEY_F };
 		static constexpr cinolib::KeyBinding c_kbDelete{ GLFW_KEY_D };
 		static constexpr cinolib::KeyBinding c_kbCopy{ GLFW_KEY_C };
@@ -35,7 +36,7 @@ namespace HMP::Gui::Widgets
 
 		bool hoveredExtrudeElements(Dag::Extrude::ESource _source, cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, cpputils::collections::FixedVector<I, 3>& _fis, I& _firstVi, bool& _clockwise);
 		void onExtrude(Dag::Extrude::ESource _source);
-		void onExtrudeSelected();
+		void onExtrudeSelectedFace();
 		void onCopy();
 		void onPaste(Dag::Extrude::ESource _source);
 		void onRefineElement(bool _twice);
@@ -44,6 +45,7 @@ namespace HMP::Gui::Widgets
 		void onMakeConformant();
 		void onClear();
 		void onSubdivideAll();
+		void onRefineSelectedElements();
 
 	public:
 

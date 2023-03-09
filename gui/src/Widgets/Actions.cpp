@@ -41,9 +41,9 @@ namespace HMP::Gui::Widgets
 			onExtrude(Dag::Extrude::ESource::Vertex);
 		}
 		// extrude selected
-		else if (_key == c_kbExtrudeSelected)
+		else if (_key == c_kbExtrudeSelectedFace)
 		{
-			onExtrudeSelected();
+			onExtrudeSelectedFace();
 		}
 		// copy
 		else if (_key == c_kbCopy)
@@ -98,6 +98,11 @@ namespace HMP::Gui::Widgets
 		{
 			onSubdivideAll();
 		}
+		// subdivide selected elements
+		else if (_key == c_kbRefineSelectedElements)
+		{
+			onRefineSelectedElements();
+		}
 		else
 		{
 			return false;
@@ -105,12 +110,33 @@ namespace HMP::Gui::Widgets
 		return true;
 	}
 
+	void Actions::onRefineSelectedElements()
+	{
+		std::unordered_set<Id> pids{};
+		for (Id pid{}; pid < app().mesh.num_polys(); pid++)
+		{
+			for (const Id vid : app().mesh.adj_p2v(pid))
+			{
+				if (!app().vertEditWidget.has(vid))
+				{
+					goto skip;
+				}
+			}
+			pids.insert(pid);
+		skip:;
+		}
+		for (const Id pid : pids)
+		{
+			app().applyAction(*new HMP::Actions::Refine{ app().mesher.element(pid), 0, 0, Refinement::EScheme::Subdivide3x3 }); // TODO Use a new action! This way the action history gets clogged up!
+		}
+	}
+
 	void Actions::printUsage() const
 	{
 		cinolib::print_binding(c_kbExtrudeFace.name(), "extrude face");
 		cinolib::print_binding(c_kbExtrudeEdge.name(), "extrude edge");
 		cinolib::print_binding(c_kbExtrudeVertex.name(), "extrude vertex");
-		cinolib::print_binding(c_kbExtrudeSelected.name(), "extrude selected");
+		cinolib::print_binding(c_kbExtrudeSelectedFace.name(), "extrude selected face");
 		cinolib::print_binding(c_kbRefine.name(), "refine");
 		cinolib::print_binding(c_kbDoubleRefine.name(), "refine twice");
 		cinolib::print_binding(c_kbFaceRefine.name(), "refine face");
@@ -121,6 +147,7 @@ namespace HMP::Gui::Widgets
 		cinolib::print_binding(c_kbPasteVertex.name(), "paste vertex");
 		cinolib::print_binding(c_kbClear.name(), "clear");
 		cinolib::print_binding(c_kbSubdivideAll.name(), "subdivide all");
+		cinolib::print_binding(c_kbRefineSelectedElements.name(), "refine selected elements");
 		cinolib::print_binding(c_kbMakeConforming.name(), "make conforming");
 	}
 
@@ -137,7 +164,7 @@ namespace HMP::Gui::Widgets
 			{
 				const cinolib::Plane firstPlane{
 					app().mesh.face_centroid(fids[0]),
-					app().mesh.poly_face_normal(pids[0], fids[0])
+						app().mesh.poly_face_normal(pids[0], fids[0])
 				};
 				for (const Id adjFid : app().mesh.adj_e2f(firstEid))
 				{
@@ -202,8 +229,8 @@ namespace HMP::Gui::Widgets
 			}).toFixedVector<3>();
 			_fis = cpputils::range::zip(fids, _elements).map([&](const auto& _fidAndElement) {
 				const auto& [fid, element] {_fidAndElement};
-			const QuadVertIds vids{ Meshing::Utils::fidVids(app().mesh, fid) };
-			return Meshing::Utils::fi(element->vids, vids);
+				const QuadVertIds vids{ Meshing::Utils::fidVids(app().mesh, fid) };
+				return Meshing::Utils::fi(element->vids, vids);
 			}).toFixedVector<3>();
 			_firstVi = app().cursor.vi;
 			return true;
@@ -223,7 +250,7 @@ namespace HMP::Gui::Widgets
 		}
 	}
 
-	void Actions::onExtrudeSelected()
+	void Actions::onExtrudeSelectedFace()
 	{
 		const std::vector<Id> vids{ app().vertEditWidget.vids().toVector() };
 		if (vids.size() != 4)
