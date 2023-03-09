@@ -535,6 +535,7 @@ namespace HMP::Gui::Widgets
 		cinolib::print_binding(cinolib::KeyBinding::mod_names(c_kmodSelectRemove), "add to selection (hold down)");
 		cinolib::print_binding(c_kbSelectAll.name(), "select all vertices");
 		cinolib::print_binding(c_kbDeselectAll.name(), "deselect all vertices");
+		cinolib::print_binding(c_kbInvertSelection.name(), "invert selection");
 	}
 
 }
