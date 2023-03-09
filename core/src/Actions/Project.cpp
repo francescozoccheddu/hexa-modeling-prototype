@@ -11,6 +11,18 @@ namespace HMP::Actions
 		{
 			m_prepared = true;
 			m_otherVerts = Projection::project(mesher().mesh(), m_target, m_pointFeats, m_pathFeats, m_options);
+			if (m_options.vertexMask)
+			{
+				const std::vector<bool>& mask{*m_options.vertexMask};
+				const std::vector<Vec>& oldVerts{mesher().mesh().vector_verts()};
+				for (I vi{}; vi < m_otherVerts.size(); vi++)
+				{
+					if (!mask[vi])
+					{
+						m_otherVerts[vi] = oldVerts[vi];
+					}
+				}
+			}
 		}
 		std::vector<Vec> oldVerts{ mesher().mesh().vector_verts() };
 		for (I vi{}; vi < m_otherVerts.size(); vi++)

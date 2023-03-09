@@ -32,6 +32,7 @@ namespace HMP::Gui::Widgets
 		float m_featureFinderCreaseAngle;
 		bool m_showPaths, m_showAllPaths;
 		I m_currentPath;
+		bool m_lockSelectedVertices{ false };
 
 		void attached() override;
 
