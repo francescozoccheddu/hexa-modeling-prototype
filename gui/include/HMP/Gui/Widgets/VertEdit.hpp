@@ -25,6 +25,7 @@ namespace HMP::Gui::Widgets
 		static constexpr cinolib::KeyBinding c_kbSelectUpFace{ GLFW_KEY_3, GLFW_MOD_ALT };
 		static constexpr cinolib::KeyBinding c_kbSelectPoly{ GLFW_KEY_4 };
 		static constexpr cinolib::KeyBinding c_kbDeselectAll{ GLFW_KEY_A, GLFW_MOD_CONTROL };
+		static constexpr cinolib::KeyBinding c_kbInvertSelection{ GLFW_KEY_A, GLFW_MOD_ALT };
 		static constexpr cinolib::KeyBinding c_kbSelectAll{ GLFW_KEY_A, GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbSelectBox{ GLFW_KEY_K };
 		static constexpr int c_kmodSelectAdd{ GLFW_MOD_SHIFT };

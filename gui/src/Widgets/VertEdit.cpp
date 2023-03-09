@@ -10,6 +10,7 @@
 #include <HMP/Gui/App.hpp>
 #include <HMP/Actions/Transform.hpp>
 #include <HMP/Meshing/Utils.hpp>
+#include <cpputils/range/index.hpp>
 
 namespace HMP::Gui::Widgets
 {
@@ -294,11 +295,11 @@ namespace HMP::Gui::Widgets
 		{
 			const Vec vert{ app().mesh.vert(vid) };
 			const auto pos{ Utils::Drawing::project(app().canvas, vert) };
-			Utils::Drawing::circleFilled(drawList, pos, radius, themer->ovHi,4);
+			Utils::Drawing::circleFilled(drawList, pos, radius, themer->ovHi, 4);
 		}
 		if (!empty())
 		{
-			Utils::Drawing::cross(drawList, Utils::Drawing::project(app().canvas, m_centroid), radius*2.0f, themer->ovHi, lineThickness);
+			Utils::Drawing::cross(drawList, Utils::Drawing::project(app().canvas, m_centroid), radius * 2.0f, themer->ovHi, lineThickness);
 			const char* verticesLit{ m_verts.size() == 1 ? "vertex" : "vertices" };
 			const int vertexCount{ static_cast<int>(m_verts.size()) };
 			ImGui::TextColored(Utils::Drawing::toImVec4(themer->ovMut), "%d %s selected", vertexCount, verticesLit);
@@ -399,6 +400,16 @@ namespace HMP::Gui::Widgets
 		{
 			onBoxSelect(ESelectionMode::Remove);
 		}
+		else if (_key == c_kbInvertSelection)
+		{
+			std::unordered_set<Id> newVids{cpputils::range::count(app().mesh.num_verts()).toUnorderedSet()};
+			for (const Id vid : app().vertEditWidget.vids())
+			{
+				newVids.erase(vid);
+			}
+			app().vertEditWidget.clear();
+			app().vertEditWidget.add(cpputils::range::of(newVids).toVector());
+		}
 		else
 		{
 			return false;
@@ -429,7 +440,7 @@ namespace HMP::Gui::Widgets
 			Vec2 vert2d;
 			GLdouble depth;
 			app().canvas.project(app().mesh.vert(vid), vert2d, depth);
-			if (depth >= 0.0 
+			if (depth >= 0.0
 				&& depth <= 1.0
 				&& vert2d.x() >= min.x()
 				&& vert2d.y() >= min.y()
