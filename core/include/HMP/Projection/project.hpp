@@ -3,6 +3,7 @@
 #include <HMP/Meshing/types.hpp>
 #include <cinolib/meshes/abstract_polygonmesh.h>
 #include <vector>
+#include <optional>
 #include <HMP/Meshing/Mesher.hpp>
 #include <HMP/Projection/Utils.hpp>
 #include <HMP/Projection/jacobianAdvance.hpp>
@@ -43,6 +44,7 @@ namespace HMP::Projection
         double distanceWeight{ 0.0 };
         double distanceWeightPower{ 1.0 };
         double advancePercentile{ 0.5 };
+        std::optional<std::vector<bool>> vertexMask{std::nullopt};
         I iterations{ 5 };
 #ifdef HMP_ENABLE_ALT_PROJ
         bool alternativeMethod{ false };

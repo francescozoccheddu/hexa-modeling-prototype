@@ -21,6 +21,7 @@
 #include <cpputils/range/of.hpp>
 #include <HMP/Gui/themer.hpp>
 #include <HMP/Gui/Widgets/Target.hpp>
+#include <HMP/Gui/Widgets/VertEdit.hpp>
 #include <HMP/Gui/App.hpp>
 
 namespace HMP::Gui::Widgets
@@ -108,6 +109,19 @@ namespace HMP::Gui::Widgets
 			{
 				points.push_back(point);
 			}
+		}
+		if (m_lockSelectedVertices)
+		{
+			std::vector<bool> mask(toI(app().mesh.num_verts()), true);
+			for (const Id vid : app().vertEditWidget.vids())
+			{
+				mask[toI(vid)] = false;
+			}
+			m_options.vertexMask = mask;
+		}
+		else
+		{
+			m_options.vertexMask = std::nullopt;
 		}
 		app().applyAction(*new HMP::Actions::Project{ std::move(targetMesh), points, paths, m_options });
 	}
@@ -565,6 +579,15 @@ namespace HMP::Gui::Widgets
 		if (ImGui::TreeNode("Project"))
 		{
 			ImGui::Spacing();
+			if (app().vertEditWidget.empty())
+			{
+				ImGui::BeginDisabled();
+			}
+			ImGui::Checkbox("Lock selected vertices", &m_lockSelectedVertices);
+			if (app().vertEditWidget.empty())
+			{
+				ImGui::EndDisabled();
+			}
 			Utils::Controls::sliderI("Iterations", m_options.iterations, 1, 100);
 			if (app().targetWidget.hasMesh())
 			{
