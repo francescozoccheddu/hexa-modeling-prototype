@@ -8,7 +8,7 @@
 namespace HMP::Gui::Widgets
 {
 
-	class Actions final: public Widget
+	class Actions final : public Widget
 	{
 
 	private:
@@ -29,6 +29,7 @@ namespace HMP::Gui::Widgets
 		static constexpr cinolib::KeyBinding c_kbMakeConforming{ GLFW_KEY_Q };
 		static constexpr cinolib::KeyBinding c_kbClear{ GLFW_KEY_N, GLFW_MOD_CONTROL };
 		static constexpr cinolib::KeyBinding c_kbSubdivideAll{ GLFW_KEY_0, GLFW_MOD_CONTROL };
+		static constexpr cinolib::KeyBinding c_kbFitCircle{ GLFW_KEY_G };
 
 		bool keyPressed(const cinolib::KeyBinding& _key) override;
 
@@ -46,6 +47,7 @@ namespace HMP::Gui::Widgets
 		void onClear();
 		void onSubdivideAll();
 		void onRefineSelectedElements();
+		void onFitCircle();
 
 	public:
 

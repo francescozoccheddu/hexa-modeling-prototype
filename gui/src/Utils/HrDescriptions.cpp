@@ -233,6 +233,15 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return describe(_action.operation(), _action.elements().address().toFixedVector<3>(), _dagNamer);
 	}
 
+	std::string describe(const Actions::FitCircle& _action)
+	{
+		std::ostringstream stream{};
+		stream
+			<< "Fit circle in"
+			<< " " << _action.vids().size() << " verts";
+		return stream.str();
+	}
+
 	std::string describe(const Actions::Pad& _action)
 	{
 		std::ostringstream stream{};
@@ -406,6 +415,10 @@ namespace HMP::Gui::Utils::HrDescriptions
 			return describe(*action);
 		}
 		if (const Actions::RefineSome* action{ dynamic_cast<const Actions::RefineSome*>(&_action) }; action)
+		{
+			return describe(*action);
+		}
+		if (const Actions::FitCircle* action{ dynamic_cast<const Actions::FitCircle*>(&_action) }; action)
 		{
 			return describe(*action);
 		}
