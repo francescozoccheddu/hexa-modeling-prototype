@@ -148,7 +148,7 @@ namespace HMP::Meshing
 		: m_pids{ _pids }, m_fids{ _fids }, m_eids{ _eids }, m_vids{ _vids }
 	{}
 
-	Mesher::State::State(): State{ 0,0,0,0 } {}
+	Mesher::State::State() : State{ 0,0,0,0 } {}
 
 	Id Mesher::State::pidsCount() const
 	{
@@ -275,6 +275,11 @@ namespace HMP::Meshing
 	bool Mesher::shown(Id _pid) const
 	{
 		return !m_mesh.poly_data(_pid).flags[cinolib::HIDDEN];
+	}
+
+	bool Mesher::vidShown(Id _vid) const
+	{
+		return m_mesh.vert_is_visible(_vid);
 	}
 
 	bool Mesher::shown(const Dag::Element& _element) const
