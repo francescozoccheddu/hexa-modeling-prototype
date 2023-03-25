@@ -14,6 +14,7 @@
 #include <HMP/Actions/MakeConforming.hpp>
 #include <HMP/Actions/Project.hpp>
 #include <HMP/Actions/Refine.hpp>
+#include <HMP/Actions/RefineSome.hpp>
 #include <HMP/Actions/Paste.hpp>
 #include <HMP/Actions/Transform.hpp>
 #include <HMP/Actions/Smooth.hpp>
@@ -119,6 +120,10 @@ namespace HMP::Gui::Widgets
 		std::unordered_set<Id> pids{};
 		for (Id pid{}; pid < app().mesh.num_polys(); pid++)
 		{
+			if (!app().mesher.shown(pid))
+			{
+				goto skip;
+			}
 			for (const Id vid : app().mesh.adj_p2v(pid))
 			{
 				if (!app().vertEditWidget.has(vid))
@@ -129,10 +134,13 @@ namespace HMP::Gui::Widgets
 			pids.insert(pid);
 		skip:;
 		}
-		for (const Id pid : pids)
-		{
-			app().applyAction(*new HMP::Actions::Refine{ app().mesher.element(pid), 0, 0, Refinement::EScheme::Subdivide3x3 }); // TODO Use a new action! This way the action history gets clogged up!
-		}
+		const std::vector<Dag::Element*> elements{
+			cpputils::range::of(pids).map([&](const Id _pid)
+			{
+				return &app().mesher.element(_pid);
+			}).toVector()
+		};
+		app().applyAction(*new HMP::Actions::RefineSome{ elements });
 	}
 
 	void Actions::printUsage() const
@@ -179,9 +187,10 @@ namespace HMP::Gui::Widgets
 					{
 						if (fids.size() == 2)
 						{
-							const auto edgeVec{ [&](const Id _pid, const Id _fid) {
-								return app().mesh.edge_vec(static_cast<Id>(app().mesh.edge_id(commVid, app().mesh.poly_vert_opposite_to(_pid, _fid, commVid))), true);
-							} };
+							const auto edgeVec{ [&](const Id _pid, const Id _fid)
+ {
+return app().mesh.edge_vec(static_cast<Id>(app().mesh.edge_id(commVid, app().mesh.poly_vert_opposite_to(_pid, _fid, commVid))), true);
+} };
 							const Vec firstEdge{ edgeVec(pids[0], fids[0]) };
 							const Vec currSecondEdge{ edgeVec(pids[1], fids[1]) };
 							const Vec candSecondEdge{ edgeVec(adjPid, adjFid) };
@@ -228,16 +237,18 @@ namespace HMP::Gui::Widgets
 				}
 			}
 			_clockwise = Meshing::Utils::isEdgeCW(app().mesh, pids[0], fids[0], commVid, firstEid);
-			_elements = cpputils::range::of(pids).map([&](Id _pid) {
-				return &app().mesher.element(_pid);
-			}).toFixedVector<3>();
-			_fis = cpputils::range::zip(fids, _elements).map([&](const auto& _fidAndElement) {
-				const auto& [fid, element] {_fidAndElement};
-				const QuadVertIds vids{ Meshing::Utils::fidVids(app().mesh, fid) };
-				return Meshing::Utils::fi(element->vids, vids);
-			}).toFixedVector<3>();
-			_firstVi = app().cursor.vi;
-			return true;
+			_elements = cpputils::range::of(pids).map([&](Id _pid)
+				{
+					return &app().mesher.element(_pid);
+				}).toFixedVector<3>();
+				_fis = cpputils::range::zip(fids, _elements).map([&](const auto& _fidAndElement)
+					{
+						const auto& [fid, element] { _fidAndElement };
+						const QuadVertIds vids{ Meshing::Utils::fidVids(app().mesh, fid) };
+						return Meshing::Utils::fi(element->vids, vids);
+					}).toFixedVector<3>();
+					_firstVi = app().cursor.vi;
+					return true;
 		}
 		return false;
 	}
