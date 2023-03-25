@@ -19,7 +19,9 @@
 #include <HMP/Actions/Transform.hpp>
 #include <HMP/Actions/Smooth.hpp>
 #include <HMP/Actions/SubdivideAll.hpp>
+#include <HMP/Actions/FitCircle.hpp>
 #include <HMP/Gui/Widgets/VertEdit.hpp>
+#include <algorithm>
 #include <vector>
 #include <iostream>
 
@@ -108,11 +110,30 @@ namespace HMP::Gui::Widgets
 		{
 			onRefineSelectedElements();
 		}
+		// fit circle
+		else if (_key == c_kbFitCircle)
+		{
+			onFitCircle();
+		}
 		else
 		{
 			return false;
 		}
 		return true;
+	}
+
+	void Actions::onFitCircle()
+	{
+		if (app().vertEditWidget.vids().size() > 2)
+		{
+			std::vector<Id> vids{ app().vertEditWidget.vids().toVector() };
+			const auto it{ std::find(vids.begin(), vids.end(), app().cursor.vid) };
+			if (it != vids.end())
+			{
+				std::swap(vids[0], *it);
+			}
+			app().applyAction(*new HMP::Actions::FitCircle{ app().vertEditWidget.vids().toVector() });
+		}
 	}
 
 	void Actions::onRefineSelectedElements()
