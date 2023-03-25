@@ -15,12 +15,12 @@
 namespace HMP::Meshing
 {
 
-	class Mesher final: public cpputils::mixins::ReferenceClass
+	class Mesher final : public cpputils::mixins::ReferenceClass
 	{
 
 	public:
 
-		class PolyAttributes final: public cinolib::Polyhedron_std_attributes
+		class PolyAttributes final : public cinolib::Polyhedron_std_attributes
 		{
 
 		private:
@@ -95,6 +95,7 @@ namespace HMP::Meshing
 		void show(Id _pid, bool _visible);
 		void show(Dag::Element& _element, bool _visible);
 		bool shown(Id _pid) const;
+		bool vidShown(Id _vid) const;
 		bool shown(const Dag::Element& _element) const;
 
 		void updateColors(bool _poly = true, bool _edge = true);

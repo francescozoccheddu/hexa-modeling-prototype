@@ -48,7 +48,7 @@ namespace HMP::Gui::Widgets
 		return changed;
 	}
 
-	VertEdit::VertEdit():
+	VertEdit::VertEdit() :
 		SidebarWidget{ "Vertex editor" },
 		m_verts{}, m_pendingAction{ false },
 		m_unappliedTransform{}, m_appliedTransform{}, m_centroid{}
@@ -190,12 +190,15 @@ namespace HMP::Gui::Widgets
 
 	void VertEdit::attached()
 	{
-		app().mesher.onRestored += [this](const Meshing::Mesher::State&) {
-			remove(vids().filter([&](const Id _vid) {
-				return _vid >= app().mesh.num_verts();
-			}).toVector());
+		app().mesher.onRestored += [this](const Meshing::Mesher::State&)
+		{
+			remove(vids().filter([&](const Id _vid)
+				{
+					return _vid >= app().mesh.num_verts();
+				}).toVector());
 		};
-		app().mesher.onElementVisibilityChanged += [this](const Dag::Element& _element, bool _visible) {
+		app().mesher.onElementVisibilityChanged += [this](const Dag::Element& _element, bool _visible)
+		{
 			if (!_visible)
 			{
 				remove(app().mesh.poly_dangling_vids(_element.pid));
@@ -402,13 +405,17 @@ namespace HMP::Gui::Widgets
 		}
 		else if (_key == c_kbInvertSelection)
 		{
-			std::unordered_set<Id> newVids{cpputils::range::count(app().mesh.num_verts()).toUnorderedSet()};
-			for (const Id vid : app().vertEditWidget.vids())
+			std::vector<Id> vids;
+			vids.reserve(toI(app().mesh.num_verts()));
+			for (Id vid{}; vid < app().mesh.num_verts(); vid++)
 			{
-				newVids.erase(vid);
+				if (app().mesher.vidShown(vid) && !has(vid))
+				{
+					vids.push_back(vid);
+				}
 			}
 			app().vertEditWidget.clear();
-			app().vertEditWidget.add(cpputils::range::of(newVids).toVector());
+			app().vertEditWidget.add(vids);
 		}
 		else
 		{
@@ -437,17 +444,20 @@ namespace HMP::Gui::Widgets
 		std::vector<Id> vids{};
 		for (Id vid{}; vid < app().mesh.num_verts(); ++vid)
 		{
-			Vec2 vert2d;
-			GLdouble depth;
-			app().canvas.project(app().mesh.vert(vid), vert2d, depth);
-			if (depth >= 0.0
-				&& depth <= 1.0
-				&& vert2d.x() >= min.x()
-				&& vert2d.y() >= min.y()
-				&& vert2d.x() <= max.x()
-				&& vert2d.y() <= max.y())
+			if (app().mesher.vidShown(vid))
 			{
-				vids.push_back(vid);
+				Vec2 vert2d;
+				GLdouble depth;
+				app().canvas.project(app().mesh.vert(vid), vert2d, depth);
+				if (depth >= 0.0
+					&& depth <= 1.0
+					&& vert2d.x() >= min.x()
+					&& vert2d.y() >= min.y()
+					&& vert2d.x() <= max.x()
+					&& vert2d.y() <= max.y())
+				{
+					vids.push_back(vid);
+				}
 			}
 		}
 		if (_mode == ESelectionMode::Set)
@@ -510,10 +520,14 @@ namespace HMP::Gui::Widgets
 	{
 		if (_selected)
 		{
-			std::vector<Id> vids(toI(app().mesh.num_verts()));
-			for (I i{}; i < vids.size(); i++)
+			std::vector<Id> vids;
+			vids.reserve(toI(app().mesh.num_verts()));
+			for (Id vid{}; vid < app().mesh.num_verts(); vid++)
 			{
-				vids[i] = toId(i);
+				if (app().mesher.vidShown(vid))
+				{
+					vids.push_back(vid);
+				}
 			}
 			add(vids);
 		}
