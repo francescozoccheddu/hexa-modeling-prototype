@@ -213,6 +213,16 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return describe(_operation, _operation.parents.single(), _dagNamer);
 	}
 
+	std::string describe(const Actions::RefineSome& _action)
+	{
+		std::ostringstream stream{};
+		stream
+			<< "Refine"
+			<< " " << _action.operations().size() << " elements"
+			<< " with scheme " << describe(HMP::Refinement::EScheme::Subdivide3x3);
+		return stream.str();
+	}
+
 	std::string describe(const Actions::Delete& _action, DagNamer& _dagNamer)
 	{
 		return describe(_action.operation(), _action.element(), _dagNamer);
@@ -246,7 +256,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 	{
 		std::ostringstream stream{};
 		stream
-			<< "SubdivideAll"
+			<< "Subdivide all"
 			<< " (" << _action.operations().size() << " operations)";
 		return stream.str();
 	}
@@ -308,7 +318,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 	{
 		std::ostringstream stream{};
 		stream
-			<< "Project to target"
+			<< "Project"
 			<< " ("
 			<< _action.options().iterations
 			<< " iterations)";
@@ -392,6 +402,10 @@ namespace HMP::Gui::Utils::HrDescriptions
 			return describe(*action);
 		}
 		if (const Actions::Smooth* action{ dynamic_cast<const Actions::Smooth*>(&_action) }; action)
+		{
+			return describe(*action);
+		}
+		if (const Actions::RefineSome* action{ dynamic_cast<const Actions::RefineSome*>(&_action) }; action)
 		{
 			return describe(*action);
 		}

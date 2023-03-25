@@ -17,6 +17,7 @@
 #include <HMP/Actions/Refine.hpp>
 #include <HMP/Actions/SubdivideAll.hpp>
 #include <HMP/Actions/Transform.hpp>
+#include <HMP/Actions/RefineSome.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <cpputils/collections/FixedVector.hpp>
 #include <cpputils/collections/Namer.hpp>
@@ -51,6 +52,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 	std::string describe(const Actions::Refine& _action, DagNamer& _dagNamer);
 	std::string describe(const Actions::Transform& _action);
 	std::string describe(const Actions::SubdivideAll& _action);
+	std::string describe(const Actions::RefineSome& _action);
 	std::string describe(const Actions::Pad& _action);
 	std::string describe(const Actions::Smooth& _action);
 	std::string describe(const Commander::Action& _action, DagNamer& _dagNamer);
