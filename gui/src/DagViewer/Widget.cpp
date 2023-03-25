@@ -32,6 +32,11 @@ namespace HMP::Gui::DagViewer
 		m_needsLayoutUpdate = true;
 	}
 
+	const Dag::Node* Widget::hovered() const 
+	{
+		return m_hovered;
+	}
+
 	std::vector<cinolib::GLcanvas::Font> Widget::additionalFonts(const std::vector<cinolib::GLcanvas::Font>& _fonts) const
 	{
 		constexpr unsigned int c_minSize{ 128 };

@@ -44,6 +44,8 @@ namespace HMP::Gui::DagViewer
 
 		Widget();
 
+		const Dag::Node* hovered() const;
+
 	};
 
 }

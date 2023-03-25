@@ -22,6 +22,10 @@
 #include <vector>
 #include <iostream>
 
+#ifdef HMP_GUI_ENABLE_DAG_VIEWER
+#include <HMP/Gui/DagViewer/Widget.hpp>
+#endif
+
 namespace HMP::Gui::Widgets
 {
 
@@ -284,6 +288,12 @@ namespace HMP::Gui::Widgets
 		{
 			app().copiedElement = app().cursor.element;
 		}
+#ifdef HMP_GUI_ENABLE_DAG_VIEWER
+		else if (app().dagViewerWidget.hovered() && app().dagViewerWidget.hovered()->isElement() && app().dagViewerWidget.hovered()->element().parents.first().primitive == Dag::Operation::EPrimitive::Extrude)
+		{
+			app().copiedElement = const_cast<Dag::Element*>(&app().dagViewerWidget.hovered()->element());
+		}
+#endif
 		else
 		{
 			app().copiedElement = nullptr;
