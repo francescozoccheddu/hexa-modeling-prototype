@@ -20,6 +20,7 @@
 #include <HMP/Actions/Smooth.hpp>
 #include <HMP/Actions/SubdivideAll.hpp>
 #include <HMP/Actions/FitCircle.hpp>
+#include <HMP/Actions/SplitPlane.hpp>
 #include <HMP/Actions/DeleteSome.hpp>
 #include <HMP/Gui/Widgets/VertEdit.hpp>
 #include <algorithm>
@@ -121,11 +122,24 @@ namespace HMP::Gui::Widgets
 		{
 			onDeleteSelectedElements();
 		}
+		// split plane
+		else if (_key == c_kbSplitPlane)
+		{
+			onSplitPlane();
+		}
 		else
 		{
 			return false;
 		}
 		return true;
+	}
+
+	void Actions::onSplitPlane()
+	{
+		if (app().cursor.element)
+		{
+			app().applyAction(*new HMP::Actions::SplitPlane{ app().cursor.eid });
+		}
 	}
 
 	void Actions::onFitCircle()
@@ -197,6 +211,7 @@ namespace HMP::Gui::Widgets
 		cinolib::print_binding(c_kbMakeConforming.name(), "make conforming");
 		cinolib::print_binding(c_kbDeleteSelectedElements.name(), "delete selected elements");
 		cinolib::print_binding(c_kbFitCircle.name(), "fit circle in selected vertices");
+		cinolib::print_binding(c_kbSplitPlane.name(), "split plane");
 	}
 
 	bool Actions::hoveredExtrudeElements(Dag::Extrude::ESource _source, cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, cpputils::collections::FixedVector<I, 3>& _fis, I& _firstVi, bool& _clockwise)

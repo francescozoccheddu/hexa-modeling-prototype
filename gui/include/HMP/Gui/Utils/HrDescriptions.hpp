@@ -20,6 +20,7 @@
 #include <HMP/Actions/DeleteSome.hpp>
 #include <HMP/Actions/RefineSome.hpp>
 #include <HMP/Actions/FitCircle.hpp>
+#include <HMP/Actions/SplitPlane.hpp>
 #include <HMP/Meshing/Utils.hpp>
 #include <cpputils/collections/FixedVector.hpp>
 #include <cpputils/collections/Namer.hpp>
@@ -59,6 +60,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 	std::string describe(const Actions::Pad& _action);
 	std::string describe(const Actions::Smooth& _action);
 	std::string describe(const Actions::FitCircle& _action);
+	std::string describe(const Actions::SplitPlane& _action, DagNamer& _dagNamer);
 	std::string describe(const Commander::Action& _action, DagNamer& _dagNamer);
 
 }

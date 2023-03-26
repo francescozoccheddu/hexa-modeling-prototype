@@ -277,6 +277,28 @@ namespace HMP::Refinement
 			}
 		};
 
+		const Scheme planeSplit{
+			2,
+			std::vector<IVec>{
+				IVec{1, 0, 0},
+				IVec{2, 0, 0},
+				IVec{1, 2, 0},
+				IVec{2, 2, 0},
+				IVec{1, 0, 2},
+				IVec{2, 0, 2},
+				IVec{1, 2, 2},
+				IVec{2, 2, 2},
+				IVec{0, 0, 0},
+				IVec{0, 2, 0},
+				IVec{0, 0, 2},
+				IVec{0, 2, 2},
+			},
+			std::vector<HexVertIs>{
+				HexVertIs{0, 2, 3, 1, 4, 6, 7, 5, },
+				HexVertIs{8, 9, 2, 0, 10, 11, 6, 4, },
+			}
+		};
+
 		const Scheme adapterEdgeSubdivide3x3{
 			3,
 			std::vector<IVec>{
@@ -477,7 +499,8 @@ namespace HMP::Refinement
 		{EScheme::AdapterEdgeSubdivide3x3, Schemes::adapterEdgeSubdivide3x3},
 		{EScheme::Inset, Schemes::inset},
 		{EScheme::Test, Schemes::test},
-		{EScheme::Subdivide2x2, Schemes::subdivide2x2}
+		{EScheme::Subdivide2x2, Schemes::subdivide2x2},
+		{EScheme::PlaneSplit, Schemes::planeSplit}
 	};
 
 }

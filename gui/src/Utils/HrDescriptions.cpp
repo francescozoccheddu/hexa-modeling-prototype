@@ -47,6 +47,8 @@ namespace HMP::Gui::Utils::HrDescriptions
 				return "AdapterFaceSubdivide3x3";
 			case Refinement::EScheme::Subdivide2x2:
 				return "Subdivide2x2";
+			case Refinement::EScheme::PlaneSplit:
+				return "PlaneSplit";
 			default:
 				return "Unknown";
 		}
@@ -220,6 +222,16 @@ namespace HMP::Gui::Utils::HrDescriptions
 			<< "Refine"
 			<< " " << _action.operations().size() << " elements"
 			<< " with scheme " << describe(HMP::Refinement::EScheme::Subdivide3x3);
+		return stream.str();
+	}
+
+	std::string describe(const Actions::SplitPlane& _action, DagNamer& _dagNamer)
+	{
+		std::ostringstream stream{};
+		stream
+			<< "Split plane"
+			<< " from" << _action.eid()
+			<< " (" << _action.operations().size() << " operations)";
 		return stream.str();
 	}
 
@@ -434,6 +446,10 @@ namespace HMP::Gui::Utils::HrDescriptions
 		if (const Actions::DeleteSome* action{ dynamic_cast<const Actions::DeleteSome*>(&_action) }; action)
 		{
 			return describe(*action);
+		}
+		if (const Actions::SplitPlane* action{ dynamic_cast<const Actions::SplitPlane*>(&_action) }; action)
+		{
+			return describe(*action, _dagNamer);
 		}
 		return "Unknown action";
 	}
