@@ -4,6 +4,8 @@
 #include <HMP/Gui/Widget.hpp>
 #include <cinolib/gl/key_bindings.hpp>
 #include <HMP/Dag/Extrude.hpp>
+#include <HMP/Dag/Element.hpp>
+#include <vector>
 
 namespace HMP::Gui::Widgets
 {
@@ -18,6 +20,7 @@ namespace HMP::Gui::Widgets
 		static constexpr cinolib::KeyBinding c_kbExtrudeVertex{ GLFW_KEY_E, GLFW_MOD_ALT | GLFW_MOD_CONTROL };
 		static constexpr cinolib::KeyBinding c_kbExtrudeSelectedFace{ GLFW_KEY_E, GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbRefineSelectedElements{ GLFW_KEY_H, GLFW_MOD_SHIFT };
+		static constexpr cinolib::KeyBinding c_kbDeleteSelectedElements{ GLFW_KEY_D, GLFW_MOD_SHIFT };
 		static constexpr cinolib::KeyBinding c_kbRefine{ GLFW_KEY_H };
 		static constexpr cinolib::KeyBinding c_kbDoubleRefine{ GLFW_KEY_H, GLFW_MOD_ALT };
 		static constexpr cinolib::KeyBinding c_kbFaceRefine{ GLFW_KEY_F };
@@ -47,7 +50,10 @@ namespace HMP::Gui::Widgets
 		void onClear();
 		void onSubdivideAll();
 		void onRefineSelectedElements();
+		void onDeleteSelectedElements();
 		void onFitCircle();
+
+		std::vector<Dag::Element*> selectedElements();
 
 	public:
 

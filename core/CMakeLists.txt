@@ -2,6 +2,7 @@
 
 add_library (core STATIC
     "src/Actions/Delete.cpp"
+    "src/Actions/DeleteSome.cpp"
     "src/Actions/FitCircle.cpp"
     "src/Actions/Extrude.cpp"
     "src/Actions/Root.cpp"

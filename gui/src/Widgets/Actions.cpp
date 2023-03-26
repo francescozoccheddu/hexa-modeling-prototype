@@ -20,6 +20,7 @@
 #include <HMP/Actions/Smooth.hpp>
 #include <HMP/Actions/SubdivideAll.hpp>
 #include <HMP/Actions/FitCircle.hpp>
+#include <HMP/Actions/DeleteSome.hpp>
 #include <HMP/Gui/Widgets/VertEdit.hpp>
 #include <algorithm>
 #include <vector>
@@ -115,6 +116,11 @@ namespace HMP::Gui::Widgets
 		{
 			onFitCircle();
 		}
+		// delete some
+		else if (_key == c_kbDeleteSelectedElements)
+		{
+			onDeleteSelectedElements();
+		}
 		else
 		{
 			return false;
@@ -138,6 +144,16 @@ namespace HMP::Gui::Widgets
 
 	void Actions::onRefineSelectedElements()
 	{
+		app().applyAction(*new HMP::Actions::RefineSome{ selectedElements() });
+	}
+
+	void Actions::onDeleteSelectedElements()
+	{
+		app().applyAction(*new HMP::Actions::DeleteSome{ selectedElements() });
+	}
+
+	std::vector<Dag::Element*> Actions::selectedElements()
+	{
 		std::unordered_set<Id> pids{};
 		for (Id pid{}; pid < app().mesh.num_polys(); pid++)
 		{
@@ -155,13 +171,10 @@ namespace HMP::Gui::Widgets
 			pids.insert(pid);
 		skip:;
 		}
-		const std::vector<Dag::Element*> elements{
-			cpputils::range::of(pids).map([&](const Id _pid)
+		return cpputils::range::of(pids).map([&](const Id _pid)
 			{
 				return &app().mesher.element(_pid);
-			}).toVector()
-		};
-		app().applyAction(*new HMP::Actions::RefineSome{ elements });
+			}).toVector();
 	}
 
 	void Actions::printUsage() const
@@ -182,6 +195,8 @@ namespace HMP::Gui::Widgets
 		cinolib::print_binding(c_kbSubdivideAll.name(), "subdivide all");
 		cinolib::print_binding(c_kbRefineSelectedElements.name(), "refine selected elements");
 		cinolib::print_binding(c_kbMakeConforming.name(), "make conforming");
+		cinolib::print_binding(c_kbDeleteSelectedElements.name(), "delete selected elements");
+		cinolib::print_binding(c_kbFitCircle.name(), "fit circle in selected vertices");
 	}
 
 	bool Actions::hoveredExtrudeElements(Dag::Extrude::ESource _source, cpputils::collections::FixedVector<Dag::Element*, 3>& _elements, cpputils::collections::FixedVector<I, 3>& _fis, I& _firstVi, bool& _clockwise)
@@ -209,9 +224,9 @@ namespace HMP::Gui::Widgets
 						if (fids.size() == 2)
 						{
 							const auto edgeVec{ [&](const Id _pid, const Id _fid)
- {
-return app().mesh.edge_vec(static_cast<Id>(app().mesh.edge_id(commVid, app().mesh.poly_vert_opposite_to(_pid, _fid, commVid))), true);
-} };
+							 {
+							return app().mesh.edge_vec(static_cast<Id>(app().mesh.edge_id(commVid, app().mesh.poly_vert_opposite_to(_pid, _fid, commVid))), true);
+							} };
 							const Vec firstEdge{ edgeVec(pids[0], fids[0]) };
 							const Vec currSecondEdge{ edgeVec(pids[1], fids[1]) };
 							const Vec candSecondEdge{ edgeVec(adjPid, adjFid) };
