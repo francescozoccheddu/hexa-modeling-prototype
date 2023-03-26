@@ -95,7 +95,7 @@ namespace HMP::Gui::Widgets
 				}
 			}
 			clear();
-			return addOrRemove(&_vids[0], _vids.size(), true, _update);
+			return addOrRemove(&vids[0], vids.size(), true, _update);
 		}
 		return false;
 	}
@@ -400,6 +400,30 @@ namespace HMP::Gui::Widgets
 		else if (_key == (c_kbSelectPoly | c_kmodSelectRemove))
 		{
 			onSelect(ESelectionSource::Poly, ESelectionMode::Remove);
+		}
+		else if (_key == (c_kbSelectVertex | c_kmodSelectIntersect))
+		{
+			onSelect(ESelectionSource::Vertex, ESelectionMode::Intersect);
+		}
+		else if (_key == (c_kbSelectEdge | c_kmodSelectIntersect))
+		{
+			onSelect(ESelectionSource::Edge, ESelectionMode::Intersect);
+		}
+		else if (_key == (c_kbSelectUpEdge | c_kmodSelectIntersect))
+		{
+			onSelect(ESelectionSource::UpEdge, ESelectionMode::Intersect);
+		}
+		else if (_key == (c_kbSelectFace | c_kmodSelectIntersect))
+		{
+			onSelect(ESelectionSource::Face, ESelectionMode::Intersect);
+		}
+		else if (_key == (c_kbSelectUpFace | c_kmodSelectIntersect))
+		{
+			onSelect(ESelectionSource::UpFace, ESelectionMode::Intersect);
+		}
+		else if (_key == (c_kbSelectPoly | c_kmodSelectIntersect))
+		{
+			onSelect(ESelectionSource::Poly, ESelectionMode::Intersect);
 		}
 		else if (_key == c_kbDeselectAll)
 		{
