@@ -30,7 +30,8 @@ namespace HMP::Gui::Widgets
 	{
 		m_sectionSoup.set_color(Utils::Drawing::toColor(themer->ovHi));
 		m_sectionSoup.set_thickness(sectionLineThickness * themer->ovScale);
-		themer.onThemeChange += [this]() {
+		themer.onThemeChange += [this]()
+		{
 			m_sectionSoup.set_color(Utils::Drawing::toColor(themer->ovHi));
 			m_sectionSoup.set_thickness(sectionLineThickness * themer->ovScale);
 		};
@@ -41,7 +42,8 @@ namespace HMP::Gui::Widgets
 
 	void Debug::attached()
 	{
-		app().mesher.onUpdated += [this]() {
+		app().mesher.onUpdated += [this]()
+		{
 			updateSection();
 		};
 	}
@@ -366,7 +368,7 @@ namespace HMP::Gui::Widgets
 				ImGui::Spacing();
 				static constexpr double minEps{ 1e-9 }, maxEps{ 1e-3 };
 				ImGui::SliderScalar("Epsilon", ImGuiDataType_Double, &testEps, &minEps, &maxEps, "%.3e", ImGuiSliderFlags_AlwaysClamp);
-				Utils::Controls::combo<Refinement::EScheme>("Refinement scheme", refineSingleScheme, { "Subdivide3x3", "AdapterFaceSubdivide3x3", "Adapter2FacesSubdivide3x3", "AdapterEdgeSubdivide3x3", "Inset", "Subdivide2x2", "Test" });
+				Utils::Controls::combo<Refinement::EScheme>("Refinement scheme", refineSingleScheme, { "Subdivide3x3", "AdapterFaceSubdivide3x3", "Adapter2FacesSubdivide3x3", "AdapterEdgeSubdivide3x3", "Inset", "Subdivide2x2", "Test", "PlaneSplit" });
 				Utils::Controls::sliderI("Fi", fi, 0, 5);
 				Utils::Controls::sliderI("Fi vi", fiVi, 0, 3);
 				ImGui::Spacing();
@@ -578,7 +580,7 @@ namespace HMP::Gui::Widgets
 
 	Real Debug::pidQuality(Id _pid) const
 	{
-		const HexVerts verts{ Meshing::Utils::verts(app().mesh, Meshing::Utils::pidVids(app().mesh, _pid))};
+		const HexVerts verts{ Meshing::Utils::verts(app().mesh, Meshing::Utils::pidVids(app().mesh, _pid)) };
 		return cinolib::hex_scaled_jacobian(verts[0], verts[1], verts[2], verts[3], verts[4], verts[5], verts[6], verts[7]);
 	}
 

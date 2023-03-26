@@ -32,6 +32,7 @@ namespace HMP::Gui::Widgets
 		static constexpr cinolib::KeyBinding c_kbMakeConforming{ GLFW_KEY_Q };
 		static constexpr cinolib::KeyBinding c_kbClear{ GLFW_KEY_N, GLFW_MOD_CONTROL };
 		static constexpr cinolib::KeyBinding c_kbSubdivideAll{ GLFW_KEY_0, GLFW_MOD_CONTROL };
+		static constexpr cinolib::KeyBinding c_kbSplitPlane{ GLFW_KEY_J };
 		static constexpr cinolib::KeyBinding c_kbFitCircle{ GLFW_KEY_G };
 
 		bool keyPressed(const cinolib::KeyBinding& _key) override;
@@ -52,6 +53,7 @@ namespace HMP::Gui::Widgets
 		void onRefineSelectedElements();
 		void onDeleteSelectedElements();
 		void onFitCircle();
+		void onSplitPlane();
 
 		std::vector<Dag::Element*> selectedElements();
 
