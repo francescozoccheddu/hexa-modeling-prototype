@@ -223,6 +223,15 @@ namespace HMP::Gui::Utils::HrDescriptions
 		return stream.str();
 	}
 
+	std::string describe(const Actions::DeleteSome& _action)
+	{
+		std::ostringstream stream{};
+		stream
+			<< "Delete"
+			<< " " << _action.operations().size() << " elements";
+		return stream.str();
+	}
+
 	std::string describe(const Actions::Delete& _action, DagNamer& _dagNamer)
 	{
 		return describe(_action.operation(), _action.element(), _dagNamer);
@@ -419,6 +428,10 @@ namespace HMP::Gui::Utils::HrDescriptions
 			return describe(*action);
 		}
 		if (const Actions::FitCircle* action{ dynamic_cast<const Actions::FitCircle*>(&_action) }; action)
+		{
+			return describe(*action);
+		}
+		if (const Actions::DeleteSome* action{ dynamic_cast<const Actions::DeleteSome*>(&_action) }; action)
 		{
 			return describe(*action);
 		}

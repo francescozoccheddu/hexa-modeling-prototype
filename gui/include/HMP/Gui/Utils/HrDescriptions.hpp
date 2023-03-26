@@ -17,6 +17,7 @@
 #include <HMP/Actions/Refine.hpp>
 #include <HMP/Actions/SubdivideAll.hpp>
 #include <HMP/Actions/Transform.hpp>
+#include <HMP/Actions/DeleteSome.hpp>
 #include <HMP/Actions/RefineSome.hpp>
 #include <HMP/Actions/FitCircle.hpp>
 #include <HMP/Meshing/Utils.hpp>
@@ -54,6 +55,7 @@ namespace HMP::Gui::Utils::HrDescriptions
 	std::string describe(const Actions::Transform& _action);
 	std::string describe(const Actions::SubdivideAll& _action);
 	std::string describe(const Actions::RefineSome& _action);
+	std::string describe(const Actions::DeleteSome& _action);
 	std::string describe(const Actions::Pad& _action);
 	std::string describe(const Actions::Smooth& _action);
 	std::string describe(const Actions::FitCircle& _action);

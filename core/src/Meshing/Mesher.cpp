@@ -279,7 +279,14 @@ namespace HMP::Meshing
 
 	bool Mesher::vidShown(Id _vid) const
 	{
-		return m_mesh.vert_is_visible(_vid);
+		for (const Id pid : m_mesh.adj_v2p(_vid))
+		{
+			if (shown(pid))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	bool Mesher::shown(const Dag::Element& _element) const
