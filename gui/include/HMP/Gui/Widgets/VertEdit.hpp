@@ -13,7 +13,7 @@
 namespace HMP::Gui::Widgets
 {
 
-	class VertEdit final: public SidebarWidget
+	class VertEdit final : public SidebarWidget
 	{
 
 	private:
@@ -30,6 +30,7 @@ namespace HMP::Gui::Widgets
 		static constexpr cinolib::KeyBinding c_kbSelectBox{ GLFW_KEY_K };
 		static constexpr int c_kmodSelectAdd{ GLFW_MOD_SHIFT };
 		static constexpr int c_kmodSelectRemove{ GLFW_MOD_CONTROL };
+		static constexpr int c_kmodSelectIntersect{ GLFW_MOD_ALT };
 
 		enum class ESelectionSource
 		{
@@ -38,7 +39,7 @@ namespace HMP::Gui::Widgets
 
 		enum class ESelectionMode
 		{
-			Add, Remove, Set
+			Add, Remove, Set, Intersect
 		};
 
 		static constexpr Id vertsToVidsConvert(const std::unordered_map<Id, Vec>::value_type& _entry)
@@ -91,6 +92,8 @@ namespace HMP::Gui::Widgets
 		bool add(const std::vector<Id>& _vids, bool _update = true);
 
 		bool remove(const std::vector<Id>& _vids, bool _update = true);
+
+		bool intersect(const std::vector<Id>& _vids, bool _update = true);
 
 		bool has(Id _vid) const;
 
