@@ -13,10 +13,10 @@ namespace HMP::Actions
 
 	void SplitPlane::apply()
 	{
+		m_oldState = mesher().state();
 		if (!m_prepared)
 		{
 			m_prepared = true;
-			m_oldState = mesher().state();
 			const Meshing::Mesher::Mesh& mesh{ mesher().mesh() };
 			std::unordered_set<Id> visitedEids;
 			std::unordered_set<Id> visitedPids;
@@ -29,7 +29,7 @@ namespace HMP::Actions
 				toVisitEids.pop();
 				for (const Id adjPid : mesh.adj_e2p(currEid))
 				{
-					if (!visitedPids.contains(adjPid))
+					if (mesher().shown(adjPid) && !visitedPids.contains(adjPid))
 					{
 						visitedPids.insert(adjPid);
 						Id fid;
