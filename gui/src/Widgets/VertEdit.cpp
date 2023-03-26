@@ -82,6 +82,24 @@ namespace HMP::Gui::Widgets
 		return false;
 	}
 
+	bool VertEdit::intersect(const std::vector<Id>& _vids, bool _update)
+	{
+		if (!_vids.empty())
+		{
+			std::vector<Id> vids;
+			for (const Id vid : _vids)
+			{
+				if (has(vid))
+				{
+					vids.push_back(vid);
+				}
+			}
+			clear();
+			return addOrRemove(&_vids[0], _vids.size(), true, _update);
+		}
+		return false;
+	}
+
 	bool VertEdit::has(Id _vid) const
 	{
 		return m_verts.contains(_vid);
@@ -403,6 +421,10 @@ namespace HMP::Gui::Widgets
 		{
 			onBoxSelect(ESelectionMode::Remove);
 		}
+		else if (_key == (c_kbSelectBox | c_kmodSelectIntersect))
+		{
+			onBoxSelect(ESelectionMode::Intersect);
+		}
 		else if (_key == c_kbInvertSelection)
 		{
 			std::vector<Id> vids;
@@ -460,17 +482,21 @@ namespace HMP::Gui::Widgets
 				}
 			}
 		}
-		if (_mode == ESelectionMode::Set)
+		switch (_mode)
 		{
-			clear();
-		}
-		if (_mode == ESelectionMode::Remove)
-		{
-			remove(vids);
-		}
-		else
-		{
-			add(vids);
+			case ESelectionMode::Add:
+				add(vids);
+				break;
+			case ESelectionMode::Set:
+				clear();
+				add(vids);
+				break;
+			case ESelectionMode::Remove:
+				remove(vids);
+				break;
+			case ESelectionMode::Intersect:
+				intersect(vids);
+				break;
 		}
 	}
 
@@ -501,17 +527,21 @@ namespace HMP::Gui::Widgets
 					vids = app().mesh.poly_verts_id(curs.pid);
 					break;
 			}
-			if (_mode == ESelectionMode::Set)
+			switch (_mode)
 			{
-				clear();
-			}
-			if (_mode == ESelectionMode::Remove)
-			{
-				remove(vids);
-			}
-			else
-			{
-				add(vids);
+				case ESelectionMode::Add:
+					add(vids);
+					break;
+				case ESelectionMode::Set:
+					clear();
+					add(vids);
+					break;
+				case ESelectionMode::Remove:
+					remove(vids);
+					break;
+				case ESelectionMode::Intersect:
+					intersect(vids);
+					break;
 			}
 		}
 	}
