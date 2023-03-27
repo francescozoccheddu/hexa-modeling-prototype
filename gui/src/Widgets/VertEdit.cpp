@@ -227,6 +227,9 @@ namespace HMP::Gui::Widgets
 	void VertEdit::actionApplied()
 	{
 		updateCentroid();
+		const std::vector<Id> vids{ this->vids().filter([&](const Id _vid) { return app().mesher.vidShown(_vid); }).toVector() };
+		clear();
+		add(vids);
 	}
 
 	void VertEdit::actionPrepared()
