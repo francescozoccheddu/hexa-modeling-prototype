@@ -25,7 +25,7 @@ namespace HMP::Gui::Utils::Controls
 	bool dragScaleVec(const char* _label, Vec& _scale, Real _defScale)
 	{
 		Vec percScale{ _scale * 100.0 };
-		const bool changed{ dragVec(_label, percScale, 100.0 * _defScale, 100.0 / 100.0 * _defScale, 100.0 * 100.0 * _defScale, "%.2f%%") };
+		const bool changed{ dragVec(_label, percScale, 100.0 * _defScale, -100.0 * 100.0 * _defScale, 100.0 * 100.0 * _defScale, "%.2f%%") };
 		if (changed)
 		{
 			_scale = percScale / 100.0;
