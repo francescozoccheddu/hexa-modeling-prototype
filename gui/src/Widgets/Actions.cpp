@@ -152,7 +152,7 @@ namespace HMP::Gui::Widgets
 			{
 				std::swap(vids[0], *it);
 			}
-			app().applyAction(*new HMP::Actions::FitCircle{ app().vertEditWidget.vids().toVector() });
+			app().applyAction(*new HMP::Actions::FitCircle{ vids });
 		}
 	}
 
