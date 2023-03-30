@@ -13,7 +13,7 @@ namespace HMP::Gui::Widgets
 	class Debug final : public SidebarWidget
 	{
 
-	public:
+	private:
 
 		cinolib::DrawableSegmentSoup m_sectionSoup;
 
@@ -29,9 +29,6 @@ namespace HMP::Gui::Widgets
 		Real sectionFactor{ 0.0 };
 		int sectionDim{ 1 };
 		float sectionLineThickness{ 1.0f };
-		float themeHue{ 32.0f };
-		bool themeDark{ true };
-		float themeScale{ 1.0f };
 		bool exportColors{ false };
 		I fi{}, fiVi{};
 		Refinement::EScheme refineSingleScheme{ Refinement::EScheme::Test };
@@ -65,6 +62,10 @@ namespace HMP::Gui::Widgets
 		void exportQualityList() const;
 
 	public:
+
+		float themeHue{ 32.0f };
+		bool themeDark{ true };
+		float themeScale{ 1.0f };
 
 		Debug();
 

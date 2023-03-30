@@ -9,6 +9,7 @@
 #include <ctime>
 #include <cmath>
 #include <string>
+#include <chrono>
 #include <vector>
 #include <GLFW/glfw3.h>
 #include <HMP/Dag/Utils.hpp>
@@ -28,6 +29,7 @@
 #include <HMP/Gui/Widgets/Smooth.hpp>
 #include <HMP/Gui/Widgets/Highlight.hpp>
 #include <HMP/Gui/Widgets/Actions.hpp>
+#include <HMP/Gui/Utils/HrDescriptions.hpp>
 
 #ifdef HMP_GUI_ENABLE_DAG_VIEWER
 #include <HMP/Gui/DagViewer/Widget.hpp>
@@ -70,7 +72,10 @@ namespace HMP::Gui
 		{
 			widget->actionPrepared();
 		}
+		const auto t1{ std::chrono::high_resolution_clock::now() };
 		commander.apply(_action);
+		const auto t2{ std::chrono::high_resolution_clock::now() };
+		lastActionDurationMicro = static_cast<unsigned long long int>(std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count());
 		onActionApplied();
 	}
 
@@ -330,9 +335,52 @@ namespace HMP::Gui
 		m_canvas.reset_camera();
 	}
 
+#ifdef HMP_GUI_CAPTURE
+
+	void App::prepareForCapture()
+	{
+		m_canvas.camera = m_canvas.camera.deserialize("1.24411 0.0117405 117.405 2.60793 0 8.12292 8.21402 -11.186  -0.300145 0.859694 0.413328  -0.505145 -0.51081 0.69563   ");
+		m_canvas.camera_pivot_depth(16.0804);
+		static constexpr int width{ 1920 }, height{ 1080 }, posX{ 20 }, posY{ 20 };
+		m_canvas.camera_settings.near_scene_radius_factor /= 10.0;
+		m_canvas.camera_settings.far_scene_radius_factor *= 10.0;
+		m_canvas.camera.updateProjectionAndView();
+		m_canvas.update_GL_matrices();
+		debugWidget.themeScale = 1.75f;
+		debugWidget.themeDark = true;
+		debugWidget.themeHue = 32.0f;
+		debugWidget.updateTheme();
+		targetWidget.edgeThickness = 1.0f;
+		//targetWidget.edgeColor = cinolib::Color{ 0.0f / 255.0f, 116.0f / 255.0f, 74.0f / 255.0f, 61.0f / 255.0f };
+		//targetWidget.faceColor = cinolib::Color{ 0.0f / 255.0f, 255.0f / 255.0f, 138.0f / 255.0f, 20.0f / 255.0f };
+		//m_canvas.show_sidebar(true, true, false);
+		glfwSetWindowPos(m_canvas.window, posX, posY);
+		glfwSetWindowSize(m_canvas.window, width, height);
+		glfwSetWindowPosCallback(m_canvas.window, [](GLFWwindow* w, int, int)
+			{
+				glfwSetWindowPos(w, posX, posY);
+				glfwSetWindowSize(w, width, height);
+			});
+		/*
+		glfwSetWindowFocusCallback(m_canvas.window, [](GLFWwindow* w, int)
+			{
+				glfwFocusWindow(w);
+			});
+		*/
+#ifdef NDEBUG
+#define HMP_GUI_APP_TITLE HMP_NAME " v" HMP_VERSION " (CAPTURE)"
+#else
+#define HMP_GUI_APP_TITLE HMP_NAME " v" HMP_VERSION " (DEV)" " (CAPTURE)"
+#endif
+		glfwSetWindowTitle(m_canvas.window, HMP_GUI_APP_TITLE);
+#undef HMP_GUI_APP_TITLE
+	}
+
+#endif
+
 	// launch
 
-	App::App():
+	App::App() :
 		m_project{}, mesher{ m_project.mesher() }, mesh{ mesher.mesh() }, commander{ m_project.commander() },
 		m_canvas{ 700, 600, 13, 1 }, canvas{ m_canvas },
 		dagNamer{},
@@ -430,6 +478,10 @@ namespace HMP::Gui
 		debugWidget.updateTheme();
 
 		resetCamera();
+
+#ifdef HMP_GUI_CAPTURE
+		prepareForCapture();
+#endif
 
 	}
 

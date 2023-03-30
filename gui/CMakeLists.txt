@@ -78,3 +78,11 @@ if (HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER)
     )
 
 endif()
+
+if (HMP_GUI_CAPTURE)
+
+    target_compile_definitions(gui 
+        PUBLIC HMP_GUI_CAPTURE
+    )
+
+endif()

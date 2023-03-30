@@ -37,7 +37,7 @@ namespace HMP::Gui
 
 	}
 
-	class App final: public cpputils::mixins::ReferenceClass
+	class App final : public cpputils::mixins::ReferenceClass
 	{
 
 	public:
@@ -69,6 +69,7 @@ namespace HMP::Gui
 		cpputils::collections::SetNamer<const HMP::Dag::Node*> dagNamer;
 		const Vec2& mouse;
 		const Cursor& cursor;
+		unsigned long long int lastActionDurationMicro{};
 
 		Widgets::Actions& actionsWidget;
 		Widgets::Commander& commanderWidget;
@@ -117,6 +118,10 @@ namespace HMP::Gui
 		int launch();
 
 		void setCursor();
+
+#ifdef HMP_GUI_CAPTURE
+		void prepareForCapture();
+#endif
 
 		App();
 		~App();

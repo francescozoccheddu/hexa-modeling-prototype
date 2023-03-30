@@ -463,10 +463,10 @@ namespace HMP::Gui::Widgets
 			ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(app().mesh.num_edges()));
 			ImGui::TableNextColumn(); ImGui::Text("Vert count");
 			ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(app().mesh.num_verts()));
-#ifndef NDEBUG
+			ImGui::TableNextColumn(); ImGui::Text("Last action time (microseconds)");
+			ImGui::TableNextColumn(); ImGui::Text("%llu", app().lastActionDurationMicro);
 			ImGui::TableNextColumn(); ImGui::Text("Allocated node count");
 			ImGui::TableNextColumn(); ImGui::Text("%u", static_cast<unsigned int>(Dag::Node::allocatedNodeCount()));
-#endif
 			ImGui::EndTable();
 			ImGui::Spacing();
 			ImGui::TreePop();
@@ -662,4 +662,4 @@ namespace HMP::Gui::Widgets
 		file.close();
 	}
 
-		}
+}

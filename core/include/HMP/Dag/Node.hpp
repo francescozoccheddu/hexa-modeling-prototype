@@ -16,11 +16,8 @@ namespace HMP::Dag
 	class Element;
 	class Operation;
 
-	class Node: public cpputils::mixins::ReferenceClass
+	class Node : public cpputils::mixins::ReferenceClass
 	{
-
-
-#ifndef NDEBUG
 
 	private:
 
@@ -29,8 +26,6 @@ namespace HMP::Dag
 	public:
 
 		static I allocatedNodeCount();
-
-#endif
 
 	public:
 

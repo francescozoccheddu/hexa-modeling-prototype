@@ -13,6 +13,7 @@ option (HMP_GUI_ENABLE_AE3D2SHAPE_EXPORTER "Enable ae-3d2shape exporter" OFF)
 option (HMP_ENABLE_ALT_PROJ "Enable alternative projection" ON)
 option (HMP_AGGRESSIVE_DEBUG "Enable ASAN and debug libc" OFF)
 option (HMP_AGGRESSIVE_WARNINGS "Enable a lot of warnings" OFF)
+option (HMP_GUI_CAPTURE "Setup for recording modeling sessions" OFF)
 
 # cinolib
 set (CINOLIB_HEADER_ONLY OFF)
