@@ -15,6 +15,7 @@
 #include <HMP/Gui/Utils/Controls.hpp>
 #include <HMP/Gui/Utils/FilePicking.hpp>
 #include <HMP/Gui/themer.hpp>
+#include <HMP/Refinement/Utils.hpp>
 #include <cinolib/color.h>
 #include <HMP/Gui/App.hpp>
 #include <HMP/Actions/Refine.hpp>
@@ -398,6 +399,29 @@ namespace HMP::Gui::Widgets
 			ImGui::Spacing();
 			ImGui::TreePop();
 		}
+		// weld
+		if (ImGui::TreeNode("Vertex matching"))
+		{
+			ImGui::Spacing();
+			ImGui::Checkbox("Absolute epsilon", &Refinement::Utils::absWeldEps);
+			if (Refinement::Utils::absWeldEps)
+			{
+
+				if (Utils::Controls::sliderReal("Epsilon exponent", weldAbsEpsExp, -10, -1))
+				{
+					Refinement::Utils::weldEps = std::pow(10, weldAbsEpsExp);
+				}
+			}
+			else
+			{
+				if (Utils::Controls::sliderReal("Epsilon exponent factor", weldEpsFactorExp, -10, -1))
+				{
+					Refinement::Utils::weldEpsFactor = std::pow(10, weldEpsFactorExp);
+				}
+			}
+			ImGui::Spacing();
+			ImGui::TreePop();
+		}
 		// stats
 		if (ImGui::TreeNode("Stats"))
 		{
@@ -638,4 +662,4 @@ namespace HMP::Gui::Widgets
 		file.close();
 	}
 
-}
+		}

@@ -10,11 +10,14 @@
 #include <vector>
 #include <cstddef>
 #include <algorithm>
-#include <map>
 #include <limits>
 
 namespace HMP::Refinement::Utils
 {
+
+	Real weldEpsFactor{ 1e-1 };
+	Real weldEps{ 1e-6 };
+	bool absWeldEps{ false };
 
 	Dag::Refine& prepare(I _forwardFi, I _firstVi, Refinement::EScheme _scheme)
 	{
@@ -47,11 +50,11 @@ namespace HMP::Refinement::Utils
 			parentVerts[7],
 			parentVerts[6]
 		};
-		static constexpr Real epsFactor{ 1e-3 };
-		const Real eps{ Meshing::Utils::avgEdgeLength(parentVerts) / static_cast<Real>(scheme.gridSize) * epsFactor };
-		std::map<Vec, Id, Meshing::Utils::VertComparer> vertMap{ {.eps = eps} };
+		const Real eps{ absWeldEps ? weldEps : Meshing::Utils::avgEdgeLength(parentVerts) / static_cast<Real>(scheme.gridSize) * weldEpsFactor };
+		std::vector<Id> vertMap;
 		const Meshing::Mesher::Mesh& mesh{ _mesher.mesh() };
-		const auto processAdjPid{ [&](const Id _pid) {
+		const auto processAdjPid{ [&](const Id _pid)
+		{
 			const Dag::Refine* adjRefine{
 				_mesher
 				.element(_pid)
@@ -68,7 +71,7 @@ namespace HMP::Refinement::Utils
 				{
 					for (const Id vid : adjRefine->surfVids)
 					{
-						vertMap.insert_or_assign(mesh.vert(vid), vid);
+						vertMap.push_back(vid);
 					}
 				}
 			}
@@ -95,10 +98,21 @@ namespace HMP::Refinement::Utils
 			}
 			const Vec progress{ ivert.cast<Real>() / static_cast<Real>(scheme.gridSize) };
 			const Vec vert{ cinolib::lerp3(lerpVerts, progress) };
-			const auto it{ vertMap.find(vert) };
-			if (it != vertMap.end())
+			Real minDist{ std::numeric_limits<Real>::infinity() };
+			Id minVid{ noId };
+			for (const Id candVid : vertMap)
 			{
-				vid = it->second;
+				const Vec& candVert{ mesh.vert(candVid) };
+				const Real dist{ vert.dist(candVert) };
+				if (dist < minDist)
+				{
+					minDist = dist;
+					minVid = candVid;
+				}
+			}
+			if (minVid != noId && minDist <= eps)
+			{
+				vid = minVid;
 			}
 		}
 	}
@@ -147,13 +161,14 @@ namespace HMP::Refinement::Utils
 		// create elements
 		{
 			const std::vector<Dag::Element*> elements{
-				_refine.children.zip(scheme.polys).map([&](const auto& _elAndVis) {
-					const auto& [el, vis] { _elAndVis };
-					for (const auto& [vid, vi] : cpputils::range::zip(el.vids, vis))
-					{
-						vid = schemeVids[vi];
-					}
-					return &el;
+				_refine.children.zip(scheme.polys).map([&](const auto& _elAndVis)
+			{
+				const auto& [el, vis] { _elAndVis };
+				for (const auto& [vid, vi] : cpputils::range::zip(el.vids, vis))
+				{
+					vid = schemeVids[vi];
+				}
+				return &el;
 			}).toVector() };
 			_refine.surfVids = cpputils::range::of(scheme.surfVis).map([&](const I _vi) { return schemeVids[_vi]; }).toVector();
 			_mesher.show(parent, false);

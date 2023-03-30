@@ -15,7 +15,11 @@
 namespace HMP::Refinement::Utils
 {
 
-    Dag::Refine& prepare(I _forwardFi, I _firstVi, Refinement::EScheme _scheme);
-    void apply(Meshing::Mesher& _mesher, Dag::Refine& _refine);
+	extern Real weldEpsFactor;
+	extern Real weldEps;
+	extern bool absWeldEps;
+
+	Dag::Refine& prepare(I _forwardFi, I _firstVi, Refinement::EScheme _scheme);
+	void apply(Meshing::Mesher& _mesher, Dag::Refine& _refine);
 
 }
