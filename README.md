@@ -1,3 +1,6 @@
+> **Warning**  
+> This project has been moved to [cg3hci/HexBox](https://github.com/cg3hci/HexBox).
+
 # Hexa Modeling Prototype
 
 ## Setup
